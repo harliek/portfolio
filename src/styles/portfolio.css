@@ -1,0 +1,218 @@
+/* Portfolio-specific styles for editorial depth and texture */
+
+:root {
+  --accent-red: #D32F2F;
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-medium: 0 8px 30px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-deep: 0 12px 40px rgba(0, 0, 0, 0.15), 0 6px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lifted: 0 16px 50px rgba(0, 0, 0, 0.18), 0 8px 20px rgba(0, 0, 0, 0.12);
+  --paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Background handled by video in App.tsx */
+  background-color: transparent;
+}
+
+.font-serif {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-script {
+  font-family: 'Dancing Script', cursive;
+}
+
+/* Depth and layering utilities */
+.depth-soft {
+  box-shadow: var(--shadow-soft);
+}
+
+.depth-medium {
+  box-shadow: var(--shadow-medium);
+}
+
+.depth-deep {
+  box-shadow: var(--shadow-deep);
+}
+
+.editorial-card {
+  background: white;
+  box-shadow: var(--shadow-soft);
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.editorial-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--paper-texture);
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Mounted image - appears lifted off background with shadow */
+.mounted-image {
+  background: white;
+  box-shadow: var(--shadow-medium);
+  position: relative;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateZ(0);
+}
+
+/* Hover enhancement for all mounted images - cinematic zoom */
+.mounted-image:hover {
+  box-shadow: var(--shadow-lifted);
+  transform: translateY(-4px) translateZ(0);
+}
+
+.mounted-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Text block with depth */
+.text-mounted {
+  background: white;
+  padding: 2rem;
+  box-shadow: var(--shadow-soft);
+  position: relative;
+}
+
+.text-mounted::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--paper-texture);
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* Video container with depth */
+.video-container {
+  position: relative;
+  background: #000;
+  box-shadow: var(--shadow-deep);
+  overflow: hidden;
+}
+
+.video-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Smooth animations */
+.slow-ease {
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Perspective tilt on hover */
+.tilt-on-hover {
+  transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tilt-on-hover:hover {
+  transform: perspective(1000px) rotateX(1deg) rotateY(-2deg);
+  box-shadow: var(--shadow-deep);
+}
+
+/* Refined heading styles */
+.editorial-heading {
+  font-family: 'Playfair Display', Georgia, serif;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.script-accent {
+  font-family: 'Alex Brush', cursive;
+  color: var(--accent-red);
+  font-style: italic;
+  letter-spacing: 0.02em;
+  font-weight: 300;
+}
+
+/* Delicate signature style */
+.signature-script {
+  font-family: 'Allura', cursive;
+  color: var(--accent-red);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+
+/* Small caps utility */
+.small-caps {
+  font-variant: small-caps;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+}
+
+/* Float effect */
+.float-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Red accent line - hand-drawn feel */
+.red-accent-line {
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--accent-red) 20%, 
+    var(--accent-red) 80%, 
+    transparent 100%);
+  opacity: 0.6;
+  position: relative;
+}
+
+.red-accent-line::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: var(--accent-red);
+  opacity: 0.3;
+  filter: blur(1px);
+}
+
+/* Bohemian red mark accents */
+.red-mark {
+  position: absolute;
+  background: var(--accent-red);
+  opacity: 0.7;
+}
+
+.red-mark-horizontal {
+  height: 1px;
+  width: 40px;
+  transform: rotate(-2deg);
+}
+
+.red-mark-vertical {
+  width: 1px;
+  height: 30px;
+  transform: rotate(3deg);
+}

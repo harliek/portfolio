@@ -1,0 +1,11 @@
+/* Import serif font for headings - Playfair Display */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+/* Import delicate cursive script for signature - Allura */
+@import url('https://fonts.googleapis.com/css2?family=Allura&display=swap');
+
+/* Import script font for accents - Dancing Script */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&display=swap');
+
+/* Import sans-serif for body - Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');

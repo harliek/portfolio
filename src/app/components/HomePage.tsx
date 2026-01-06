@@ -1,47 +1,114 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 type NavTile = {
   id: string;
   label: string;
   path: string;
-  videoSrc: string;
-  posterSrc?: string;
+  youtubeId?: string; // YouTube video ID (not full URL)
+  fallbackImg: string; // only used when there is NO video (ex: Design for now)
 };
+
+function NavMediaTile({
+  label,
+  youtubeId,
+  fallbackImg,
+}: {
+  label: string;
+  youtubeId?: string;
+  fallbackImg: string;
+}) {
+  const [ready, setReady] = useState(false);
+
+  // If no YouTube video provided, show the actual image (Design tile for now).
+  if (!youtubeId) {
+    return (
+      <img
+        src={fallbackImg}
+        alt={label}
+        className="absolute inset-0 w-full h-full object-cover"
+        draggable={false}
+      />
+    );
+  }
+
+  // Autoplay + muted + loop + minimal UI.
+  // Loop requires playlist=<videoId>
+  const embedSrc =
+    `https://www.youtube.com/embed/${youtubeId}` +
+    `?autoplay=1` +
+    `&mute=1` +
+    `&loop=1` +
+    `&playlist=${youtubeId}` +
+    `&controls=0` +
+    `&modestbranding=1` +
+    `&rel=0` +
+    `&playsinline=1` +
+    `&fs=0` +
+    `&disablekb=1` +
+    `&iv_load_policy=3`;
+
+  // If load event is delayed, we still fade in after a short moment.
+  // (Avoids staying “blank” forever if the browser doesn’t fire onLoad reliably.)
+  useEffect(() => {
+    const t = window.setTimeout(() => setReady(true), 1200);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {/* IMPORTANT: no fallback image while loading (prevents “background photo flash”).
+          Instead, show a neutral dark poster so it feels intentional. */}
+      <div
+        className={`absolute inset-0 tile-poster transition-opacity duration-500 ${
+          ready ? "opacity-0" : "opacity-100"
+        }`}
+        aria-hidden="true"
+      />
+
+      <iframe
+        src={embedSrc}
+        title={label}
+        className={`yt-cover pointer-events-none transition-opacity duration-700 ${
+          ready ? "opacity-100" : "opacity-0"
+        }`}
+        frameBorder="0"
+        allow="autoplay; encrypted-media"
+        allowFullScreen={false}
+        referrerPolicy="strict-origin-when-cross-origin"
+        onLoad={() => setReady(true)}
+      />
+    </div>
+  );
+}
 
 export function HomePage() {
   const navigate = useNavigate();
 
-  // IMPORTANT:
-  // These files must exist in /public AND be committed/pushed so Netlify can serve them:
-  // - public/filmvid-tile.mp4
-  // - public/artvideo-tile.mp4
-  // - public/design-tile.mp4
-  //
-  // Optional (recommended): posters in /public to avoid black frames while loading:
-  // - public/filmvid-poster.jpg
-  // - public/artvideo-poster.jpg
-  // - public/design-poster.jpg
+  // You said Film/Art were switched, so:
+  // Film gets 4R6ptmrdATk
+  // Art gets F6OdhvQRKAc
   const navigationTiles: NavTile[] = [
     {
       id: "film",
       label: "Film",
-      videoSrc: "/filmvid-tile.mp4",
-      posterSrc: "/filmvid-poster.jpg",
+      youtubeId: "4R6ptmrdATk",
+      fallbackImg: "/back.png", // not used while video exists
       path: "/films",
     },
     {
       id: "art",
       label: "Art",
-      videoSrc: "/artvideo-tile.mp4",
-      posterSrc: "/artvideo-poster.jpg",
+      youtubeId: "F6OdhvQRKAc",
+      fallbackImg: "/back1.png", // not used while video exists
       path: "/art",
     },
     {
       id: "design",
       label: "Design",
-      videoSrc: "/design-tile.mp4",
-      posterSrc: "/design-poster.jpg",
+      // no youtubeId yet
+      fallbackImg: "/top.png",
       path: "/designs",
     },
   ];
@@ -55,7 +122,6 @@ export function HomePage() {
           <div className="w-[860px] max-w-full ml-6">
             {/* TITLE */}
             <div className="text-center relative mt-6 mb-8">
-              {/* CREATIVE */}
               <div className="flex items-center justify-center gap-5 mb-2">
                 <div className="w-14 h-[2px] bg-red-600" />
                 <div className="text-[15px] tracking-[0.45em] uppercase text-gray-800">
@@ -64,7 +130,6 @@ export function HomePage() {
                 <div className="w-14 h-[2px] bg-red-600" />
               </div>
 
-              {/* PORTFOLIO */}
               <h1 className="editorial-heading text-[clamp(64px,6vw,104px)] inline-flex justify-center gap-1 leading-none">
                 {portfolioLetters.map((letter, i) => (
                   <motion.span
@@ -77,7 +142,6 @@ export function HomePage() {
                 ))}
               </h1>
 
-              {/* NAME */}
               <div className="signature-script text-[clamp(52px,4.2vw,84px)] text-red-600 -mt-7 italic">
                 Harlie Katz
               </div>
@@ -105,27 +169,14 @@ export function HomePage() {
                       if (e.key === "Enter" || e.key === " ") navigate(item.path);
                     }}
                   >
-                    <video
-                      src={item.videoSrc}
-                      poster={item.posterSrc}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="auto"
-                      controls={false}
-                      disablePictureInPicture
-                      className="absolute inset-0 w-full h-full object-cover"
-                      onCanPlay={(e) => {
-                        const v = e.currentTarget;
-                        v.play().catch(() => {});
-                      }}
+                    <NavMediaTile
+                      label={item.label}
+                      youtubeId={item.youtubeId}
+                      fallbackImg={item.fallbackImg}
                     />
 
-                    {/* soft overlay */}
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-black/15 transition-colors duration-500 pointer-events-none" />
 
-                    {/* OVERLAY TEXT */}
                     <div className="absolute inset-0 flex items-center justify-center text-white pointer-events-none">
                       <div className="font-semibold tracking-[0.28em] text-[clamp(15px,1.8vw,28px)] drop-shadow">
                         {item.label.toUpperCase()}
@@ -163,6 +214,31 @@ export function HomePage() {
               .nav-tile {
                 transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
                 will-change: transform;
+              }
+
+              /*
+                Neutral poster while YouTube loads:
+                eliminates the “background image flashes in tiles” effect.
+              */
+              .tile-poster {
+                background:
+                  radial-gradient(circle at 35% 30%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 28%, rgba(0,0,0,0) 60%),
+                  linear-gradient(180deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.96) 100%);
+                filter: saturate(110%);
+              }
+
+              /*
+                Harder “cover” crop (zoom in more) so there are no top/bottom bars.
+                If you STILL see bars on a specific tile, bump 230% -> 250%.
+              */
+              .yt-cover {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 230%;
+                height: 230%;
+                transform: translate(-50%, -50%);
+                border: 0;
               }
             `}</style>
           </div>

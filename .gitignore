@@ -1,8 +1,12 @@
 node_modules
+dist/
 
-# large videos
+# ignore large videos by default
 public/*.mp4
+public/*.mov
+public/*.webm
 
+# but keep the small tile videos tracked if you add them
 !public/filmvid-tile.mp4
 !public/artvideo-tile.mp4
 !public/design-tile.mp4

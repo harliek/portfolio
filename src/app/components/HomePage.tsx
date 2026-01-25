@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
 
 type NavTile = {
   id: string;
   label: string;
   path: string;
+<<<<<<< HEAD
   youtubeId?: string; // YouTube video ID (not full URL)
   fallbackImg: string; // only used when there is NO video (ex: Design for now)
 };
@@ -89,6 +89,17 @@ export function HomePage() {
   // You said Film/Art were switched, so:
   // Film gets 4R6ptmrdATk
   // Art gets F6OdhvQRKAc
+=======
+  videoSrc: string;
+};
+
+export function HomePage() {
+  const navigate = useNavigate();
+
+  // IMPORTANT:
+  // 1) Put the small compressed tile videos in /public
+  // 2) Ensure .gitignore allows these specific files (see notes below)
+>>>>>>> 5a3b42f (Add homepage film tile video)
   const navigationTiles: NavTile[] = [
     {
       id: "film",
@@ -122,6 +133,7 @@ export function HomePage() {
           <div className="w-[860px] max-w-full ml-6">
             {/* TITLE */}
             <div className="text-center relative mt-6 mb-8">
+              {/* CREATIVE */}
               <div className="flex items-center justify-center gap-5 mb-2">
                 <div className="w-14 h-[2px] bg-red-600" />
                 <div className="text-[15px] tracking-[0.45em] uppercase text-gray-800">
@@ -130,6 +142,7 @@ export function HomePage() {
                 <div className="w-14 h-[2px] bg-red-600" />
               </div>
 
+              {/* PORTFOLIO */}
               <h1 className="editorial-heading text-[clamp(64px,6vw,104px)] inline-flex justify-center gap-1 leading-none">
                 {portfolioLetters.map((letter, i) => (
                   <motion.span
@@ -142,6 +155,7 @@ export function HomePage() {
                 ))}
               </h1>
 
+              {/* NAME */}
               <div className="signature-script text-[clamp(52px,4.2vw,84px)] text-red-600 -mt-7 italic">
                 Harlie Katz
               </div>
@@ -169,6 +183,7 @@ export function HomePage() {
                       if (e.key === "Enter" || e.key === " ") navigate(item.path);
                     }}
                   >
+<<<<<<< HEAD
                     <NavMediaTile
                       label={item.label}
                       youtubeId={item.youtubeId}
@@ -177,6 +192,23 @@ export function HomePage() {
 
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-black/15 transition-colors duration-500 pointer-events-none" />
 
+=======
+                    <video
+                      src={item.videoSrc}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      controls={false}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+
+                    {/* soft overlay */}
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/15 transition-colors duration-500 pointer-events-none" />
+
+                    {/* OVERLAY TEXT */}
+>>>>>>> 5a3b42f (Add homepage film tile video)
                     <div className="absolute inset-0 flex items-center justify-center text-white pointer-events-none">
                       <div className="font-semibold tracking-[0.28em] text-[clamp(15px,1.8vw,28px)] drop-shadow">
                         {item.label.toUpperCase()}

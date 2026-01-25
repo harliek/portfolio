@@ -6,18 +6,44 @@ type NavTile = {
   label: string;
   path: string;
   videoSrc: string;
+  posterSrc?: string;
 };
 
 export function HomePage() {
   const navigate = useNavigate();
 
   // IMPORTANT:
-  // 1) Put the small compressed tile videos in /public
-  // 2) Ensure .gitignore allows these specific files (see notes below)
+  // These files must exist in /public AND be committed/pushed so Netlify can serve them:
+  // - public/filmvid-tile.mp4
+  // - public/artvideo-tile.mp4
+  // - public/design-tile.mp4
+  //
+  // Optional (recommended): posters in /public to avoid black frames while loading:
+  // - public/filmvid-poster.jpg
+  // - public/artvideo-poster.jpg
+  // - public/design-poster.jpg
   const navigationTiles: NavTile[] = [
-    { id: "film", label: "Film", videoSrc: "/filmvid-tile.mp4", path: "/films" },
-    { id: "art", label: "Art", videoSrc: "/artvideo-tile.mp4", path: "/art" },
-    { id: "design", label: "Design", videoSrc: "/design-tile.mp4", path: "/designs" },
+    {
+      id: "film",
+      label: "Film",
+      videoSrc: "/filmvid-tile.mp4",
+      posterSrc: "/filmvid-poster.jpg",
+      path: "/films",
+    },
+    {
+      id: "art",
+      label: "Art",
+      videoSrc: "/artvideo-tile.mp4",
+      posterSrc: "/artvideo-poster.jpg",
+      path: "/art",
+    },
+    {
+      id: "design",
+      label: "Design",
+      videoSrc: "/design-tile.mp4",
+      posterSrc: "/design-poster.jpg",
+      path: "/designs",
+    },
   ];
 
   const portfolioLetters = "PORTFOLIO".split("");
@@ -81,13 +107,19 @@ export function HomePage() {
                   >
                     <video
                       src={item.videoSrc}
+                      poster={item.posterSrc}
                       autoPlay
                       muted
                       loop
                       playsInline
                       preload="auto"
                       controls={false}
+                      disablePictureInPicture
                       className="absolute inset-0 w-full h-full object-cover"
+                      onCanPlay={(e) => {
+                        const v = e.currentTarget;
+                        v.play().catch(() => {});
+                      }}
                     />
 
                     {/* soft overlay */}

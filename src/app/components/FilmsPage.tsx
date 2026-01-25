@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 type Film = {
   id: string;
   title: string;
-  youtubeId?: string;
+  youtubeId: string;
   description?: string;
   awards?: string[];
 };
@@ -16,8 +16,7 @@ function extractYouTubeId(urlOrId: string): string {
     if (!urlOrId.includes("http")) return urlOrId.trim();
     const u = new URL(urlOrId);
     if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "").trim();
-    if (u.hostname.includes("youtube.com"))
-      return (u.searchParams.get("v") || "").trim();
+    if (u.hostname.includes("youtube.com")) return (u.searchParams.get("v") || "").trim();
     return urlOrId.trim();
   } catch {
     return urlOrId.trim();
@@ -74,7 +73,7 @@ export function FilmsPage() {
   const pageTitle = "FILM".split("");
 
   return (
-    <div className="relative min-h-screen text-white">
+    <div className="relative min-h-screen text-white bg-black">
       {/* HERO */}
       <section className="relative h-screen w-full overflow-hidden">
         <div className="absolute inset-0 scale-[1.2]">
@@ -83,10 +82,11 @@ export function FilmsPage() {
             className="absolute inset-0 w-full h-full pointer-events-none"
             allow="autoplay; encrypted-media; picture-in-picture"
             allowFullScreen={false}
+            title="Films Hero"
           />
         </div>
 
-        {/* CINEMATIC TITLE — NO OVERLAY */}
+        {/* Title */}
         <div className="absolute left-[8%] top-[38%] -translate-y-1/2 z-10 max-w-[720px]">
           <div className="flex items-center gap-5 mb-6">
             <div className="h-[1px] w-14 bg-white/70" />
@@ -115,13 +115,14 @@ export function FilmsPage() {
           </h1>
 
           <p className="mt-8 max-w-[420px] text-white/85 text-sm leading-relaxed">
-            Narrative and experimental films exploring memory, identity, time,
-            and impermanence.
+            Narrative and experimental films exploring memory, identity, time, and impermanence.
           </p>
         </div>
+
+        <div className="absolute inset-0 bg-black/20" />
       </section>
 
-      {/* FILM GRID */}
+      {/* GRID */}
       <section className="relative bg-black">
         <div className="max-w-[1180px] mx-auto px-10 md:px-14 py-20">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-14 max-w-[980px] mx-auto">
@@ -140,30 +141,30 @@ export function FilmsPage() {
                 >
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <motion.img
-                      src={ytThumb(film.youtubeId as string)}
+                      src={ytThumb(film.youtubeId)}
                       alt={film.title}
                       className="absolute inset-0 w-full h-full object-cover"
                       initial={{ scale: 1 }}
                       whileHover={{ scale: 1.12 }}
-                      transition={{
-                        duration: 1.1,
-                        ease: [0.16, 1, 0.3, 1],
-                      }}
+                      transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+                      draggable={false}
                     />
 
+                    <div className="absolute inset-0 bg-black/25 opacity-70 group-hover:opacity-40 transition-opacity" />
+
                     <div className="absolute bottom-0 left-0 right-0 p-5">
-                      <div className="editorial-heading text-xl">
-                        {film.title}
-                      </div>
+                      <div className="editorial-heading text-xl">{film.title}</div>
                     </div>
                   </div>
 
                   <div className="p-5">
-                    <p className="text-sm text-white/75 leading-relaxed">
-                      {film.description}
-                    </p>
+                    {film.description && (
+                      <p className="text-sm text-white/75 leading-relaxed">
+                        {film.description}
+                      </p>
+                    )}
 
-                    {film.awards && (
+                    {film.awards && film.awards.length > 0 && (
                       <div className="mt-4 flex flex-wrap gap-2">
                         {film.awards.map((award, i) => (
                           <span
@@ -203,7 +204,7 @@ export function FilmsPage() {
             >
               <div className="rounded-2xl overflow-hidden bg-black">
                 <iframe
-                  src={ytEmbedSrc(activeFilm.youtubeId as string)}
+                  src={ytEmbedSrc(activeFilm.youtubeId)}
                   title={activeFilm.title}
                   className="w-full aspect-video"
                   allow="autoplay; encrypted-media; picture-in-picture"

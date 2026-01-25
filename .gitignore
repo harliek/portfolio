@@ -3,3 +3,6 @@ node_modules
 # large videos
 public/*.mp4
 
+!public/filmvid-tile.mp4
+!public/artvideo-tile.mp4
+!public/design-tile.mp4

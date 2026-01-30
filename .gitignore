@@ -10,4 +10,6 @@ public/*.webm
 !public/filmvid-tile.mp4
 !public/artvideo-tile.mp4
 !public/design-tile.mp4
+
+# ignore random screenshots in art folder
 public/art/Screenshot*.png

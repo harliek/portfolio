@@ -1,27 +1,28 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type NavTile = {
   id: string;
   label: string;
   path: string;
-  videoSrc?: string;
-  fallbackImg: string;
+  youtubeId?: string; // YouTube video ID (not full URL)
+  fallbackImg: string; // used when there is NO video (ex: Design for now)
 };
 
 function NavMediaTile({
   label,
-  videoSrc,
+  youtubeId,
   fallbackImg,
 }: {
   label: string;
-  videoSrc?: string;
+  youtubeId?: string;
   fallbackImg: string;
 }) {
-  const [videoFailed, setVideoFailed] = useState(false);
+  const [ready, setReady] = useState(false);
 
-  if (!videoSrc || videoFailed) {
+  // If no YouTube video provided, show the actual image (Design tile for now).
+  if (!youtubeId) {
     return (
       <img
         src={fallbackImg}
@@ -32,23 +33,52 @@ function NavMediaTile({
     );
   }
 
+  // Autoplay + muted + loop + minimal UI.
+  // Loop requires playlist=<videoId>
+  const embedSrc =
+    `https://www.youtube.com/embed/${youtubeId}` +
+    `?autoplay=1` +
+    `&mute=1` +
+    `&loop=1` +
+    `&playlist=${youtubeId}` +
+    `&controls=0` +
+    `&modestbranding=1` +
+    `&rel=0` +
+    `&playsinline=1` +
+    `&fs=0` +
+    `&disablekb=1` +
+    `&iv_load_policy=3`;
+
+  // If load event is delayed, we still fade in after a short moment.
+  useEffect(() => {
+    const t = window.setTimeout(() => setReady(true), 1200);
+    return () => window.clearTimeout(t);
+  }, []);
+
   return (
-    <video
-      src={videoSrc}
-      autoPlay
-      muted
-      loop
-      playsInline
-      preload="auto"
-      controls={false}
-      disablePictureInPicture
-      className="absolute inset-0 w-full h-full object-cover"
-      onError={() => setVideoFailed(true)}
-      onCanPlay={(e) => {
-        const v = e.currentTarget;
-        v.play().catch(() => {});
-      }}
-    />
+    <div className="absolute inset-0 overflow-hidden">
+      {/* No fallback image while loading to prevent “flash”.
+          Use a neutral dark poster so it feels intentional. */}
+      <div
+        className={`absolute inset-0 tile-poster transition-opacity duration-500 ${
+          ready ? "opacity-0" : "opacity-100"
+        }`}
+        aria-hidden="true"
+      />
+
+      <iframe
+        src={embedSrc}
+        title={label}
+        className={`yt-cover pointer-events-none transition-opacity duration-700 ${
+          ready ? "opacity-100" : "opacity-0"
+        }`}
+        frameBorder="0"
+        allow="autoplay; encrypted-media"
+        allowFullScreen={false}
+        referrerPolicy="strict-origin-when-cross-origin"
+        onLoad={() => setReady(true)}
+      />
+    </div>
   );
 }
 
@@ -59,22 +89,21 @@ export function HomePage() {
     {
       id: "film",
       label: "Film",
-      videoSrc: "/filmvid-tile.mp4",
-      fallbackImg: "/back.png",
+      youtubeId: "4R6ptmrdATk",
+      fallbackImg: "/back.png", // not used while video exists
       path: "/films",
     },
     {
       id: "art",
       label: "Art",
-      videoSrc: "/artvideo-tile.mp4",
-      fallbackImg: "/back1.png",
+      youtubeId: "F6OdhvQRKAc",
+      fallbackImg: "/back1.png", // not used while video exists
       path: "/art",
     },
     {
       id: "design",
       label: "Design",
-      // If you don’t have /public/design-tile.mp4 yet, leave this undefined and it will use the image.
-      videoSrc: "/design-tile.mp4",
+      // no youtubeId yet
       fallbackImg: "/top.png",
       path: "/designs",
     },
@@ -138,7 +167,7 @@ export function HomePage() {
                   >
                     <NavMediaTile
                       label={item.label}
-                      videoSrc={item.videoSrc}
+                      youtubeId={item.youtubeId}
                       fallbackImg={item.fallbackImg}
                     />
 
@@ -157,7 +186,9 @@ export function HomePage() {
             {/* CONTACT */}
             <div className="text-center">
               <div className="w-20 h-[2px] bg-red-600 mx-auto mb-5" />
-              <div className="text-sm tracking-widest text-red-600 mb-4">CONTACT</div>
+              <div className="text-sm tracking-widest text-red-600 mb-4">
+                CONTACT
+              </div>
 
               <div className="flex flex-col gap-2 text-[14.5px] tracking-wide text-gray-800">
                 <a
@@ -166,7 +197,10 @@ export function HomePage() {
                 >
                   harliekatz@berkeley.edu
                 </a>
-                <a href="tel:+18137652936" className="hover:text-red-600 transition">
+                <a
+                  href="tel:+18137652936"
+                  className="hover:text-red-600 transition"
+                >
                   +1 (813) 765-2936
                 </a>
               </div>
@@ -176,6 +210,23 @@ export function HomePage() {
               .nav-tile {
                 transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
                 will-change: transform;
+              }
+
+              .tile-poster {
+                background:
+                  radial-gradient(circle at 35% 30%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 28%, rgba(0,0,0,0) 60%),
+                  linear-gradient(180deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.96) 100%);
+                filter: saturate(110%);
+              }
+
+              .yt-cover {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 230%;
+                height: 230%;
+                transform: translate(-50%, -50%);
+                border: 0;
               }
             `}</style>
           </div>

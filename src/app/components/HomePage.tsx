@@ -149,7 +149,8 @@ export function HomePage() {
       </div>
 
       <div className="relative z-10">
-        <section className="relative h-[92vh] w-full">
+        {/* CHANGED: hero height reduced so tiles sit higher */}
+        <section className="relative h-[84vh] w-full">
           <div className="absolute left-[8%] top-[40%] -translate-y-1/2 max-w-[820px]">
             <div className="flex items-center gap-5 mb-6">
               <div className="h-[1px] w-14 bg-white/70" />
@@ -174,7 +175,8 @@ export function HomePage() {
         </section>
 
         <section className="relative pb-24">
-          <div className="h-10" />
+          {/* CHANGED: spacer reduced so grid starts higher */}
+          <div className="h-4" />
 
           <div className="max-w-[1180px] mx-auto px-10 md:px-14">
             <div className="max-w-[980px] mx-auto">
@@ -203,7 +205,11 @@ export function HomePage() {
                       tabIndex={item.isComingSoon ? -1 : 0}
                       aria-label={`Go to ${item.label}`}
                       onKeyDown={(e) => {
-                        if (!item.isComingSoon && item.path && (e.key === "Enter" || e.key === " ")) {
+                        if (
+                          !item.isComingSoon &&
+                          item.path &&
+                          (e.key === "Enter" || e.key === " ")
+                        ) {
                           navigate(item.path);
                         }
                       }}
@@ -309,7 +315,9 @@ function YouTubeThumb({
     >
       <img
         src={src}
-        className={`w-full h-full ${fit === "cover" ? "object-cover" : "object-contain bg-black"}`}
+        className={`w-full h-full ${
+          fit === "cover" ? "object-cover" : "object-contain bg-black"
+        }`}
         style={fit === "cover" ? { transform: `scale(${zoom}) translateY(${y}px)` } : undefined}
         draggable={false}
         alt=""
@@ -341,7 +349,8 @@ export function FilmsPage() {
       id: "3",
       title: "Velvet is Her Blood",
       youtubeId: extractYouTubeId("https://youtu.be/Rp-lu6UEQoY"),
-      description: "Assistant editor on an experimental short following a detective and a seductive serial killer.",
+      description:
+        "Assistant editor on an experimental short following a detective and a seductive serial killer.",
       thumbZoom: 1.16,
     },
     {
@@ -376,7 +385,8 @@ export function FilmsPage() {
       id: "7",
       title: "Relay for Life",
       youtubeId: extractYouTubeId("https://youtu.be/jFiozBBbywc"),
-      description: "Director and interviewer for a documentary produced for the American Cancer Society.",
+      description:
+        "Director and interviewer for a documentary produced for the American Cancer Society.",
       thumbFit: "cover",
       thumbZoom: 1.16,
     },
@@ -384,7 +394,8 @@ export function FilmsPage() {
       id: "8",
       title: "First Edition",
       youtubeId: extractYouTubeId("https://youtu.be/W4bSTrXk25A"),
-      description: "Director and editor of a documentary client project on the world’s first solar-electric catamaran.",
+      description:
+        "Director and editor of a documentary client project on the world’s first solar-electric catamaran.",
       thumbZoom: 1.16,
     },
   ];
@@ -428,7 +439,10 @@ export function FilmsPage() {
                 style={{ zIndex: 0 }}
                 whileHover={{ zIndex: 50 }}
               >
-                <motion.div className="rounded-2xl border border-white/15 bg-white/5 overflow-hidden" {...cardHover}>
+                <motion.div
+                  className="rounded-2xl border border-white/15 bg-white/5 overflow-hidden"
+                  {...cardHover}
+                >
                   <button onClick={() => setActiveFilm(film)} className="block w-full text-left">
                     <div className={`aspect-[${THUMB_ASPECT}] overflow-hidden bg-black`}>
                       <YouTubeThumb

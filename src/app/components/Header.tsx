@@ -17,12 +17,15 @@ export function Header() {
     "small-caps text-sm tracking-wider transition-colors duration-500 hover:text-[var(--accent-red)]";
 
   return (
-    <header className="float-header py-6 px-8">
+    <header
+      className="float-header fixed top-0 left-0 right-0 z-[9999] py-5 px-8 bg-black/45 text-white backdrop-blur-md border-b border-white/10"
+      style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
+    >
       <div className="max-w-[1800px] mx-auto flex items-center justify-between">
         {/* Left: Back Button */}
         <motion.button
           onClick={handleBack}
-          className="flex items-center gap-2 small-caps text-sm tracking-wider text-gray-600 hover:text-[var(--accent-red)] transition-colors duration-500 group"
+          className="flex items-center gap-2 small-caps text-sm tracking-wider text-white hover:text-[var(--accent-red)] transition-colors duration-500 group"
           whileHover={{ x: -3 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
@@ -34,36 +37,36 @@ export function Header() {
         <nav className="flex items-center gap-8">
           <Link
             to="/"
-            className={`${navLinkBase} ${isActive("/") ? "text-[var(--accent-red)]" : "text-gray-600"}`}
+            className={`${navLinkBase} ${
+              isActive("/") ? "text-[var(--accent-red)]" : "text-white"
+            }`}
           >
             Home
           </Link>
 
           <Link
-            to="/art"
-            className={`${navLinkBase} ${isActive("/art") ? "text-[var(--accent-red)]" : "text-gray-600"}`}
-          >
-            Art
-          </Link>
-
-          <Link
             to="/films"
-            className={`${navLinkBase} ${isActive("/films") ? "text-[var(--accent-red)]" : "text-gray-600"}`}
+            className={`${navLinkBase} ${
+              isActive("/films") ? "text-[var(--accent-red)]" : "text-white"
+            }`}
           >
             Film
           </Link>
 
           <Link
-            to="/designs"
-            className={`${navLinkBase} ${isActive("/designs") ? "text-[var(--accent-red)]" : "text-gray-600"}`}
+            to="/art"
+            className={`${navLinkBase} ${
+              isActive("/art") ? "text-[var(--accent-red)]" : "text-white"
+            }`}
           >
-            Design
+            Art
           </Link>
 
-          {/* ABOUT LAST */}
           <Link
             to="/about"
-            className={`${navLinkBase} ${isActive("/about") ? "text-[var(--accent-red)]" : "text-gray-600"}`}
+            className={`${navLinkBase} ${
+              isActive("/about") ? "text-[var(--accent-red)]" : "text-white"
+            }`}
           >
             About Me
           </Link>

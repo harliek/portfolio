@@ -1,216 +1,298 @@
-import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+/* =========================
+   FilmsPage.tsx
+   ========================= */
+   import { useMemo, useState, useEffect } from "react";
+   import { motion, AnimatePresence } from "framer-motion";
+   
+   type Film = {
+     id: string;
+     title: string;
+     youtubeId: string;
+     description?: string;
+     awards?: string[];
+     thumbFit?: "cover" | "contain";
+     thumbZoom?: number;
+     thumbY?: number;
+   };
+   
+   const THUMB_ASPECT = "26/9";
+   const BG_YT_ID = "29XFRArgneA";
+   
+   function extractYouTubeId(urlOrId: string): string {
+     try {
+       if (!urlOrId.includes("http")) return urlOrId.trim();
+       const u = new URL(urlOrId);
+       if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "").trim();
+       if (u.hostname.includes("youtube.com")) return (u.searchParams.get("v") || "").trim();
+       return urlOrId.trim();
+     } catch {
+       return urlOrId.trim();
+     }
+   }
+   
+   function ytModalSrc(id: string) {
+     return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=0&loop=0&controls=1&rel=0&modestbranding=1&playsinline=1`;
+   }
+   
+   function ytBgSrc(id: string) {
+     return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1&loop=1&playlist=${id}&disablekb=1&fs=0&iv_load_policy=3`;
+   }
+   
+   function BackgroundYouTube({ youtubeId }: { youtubeId: string }) {
+     return (
+       <div className="fixed inset-0 -z-10 overflow-hidden">
+         <div className="absolute inset-0">
+           <div className="absolute left-1/2 top-1/2 w-[120vw] h-[67.5vw] min-w-[177.78vh] min-h-[100vh] -translate-x-1/2 -translate-y-1/2">
+             <iframe
+               src={ytBgSrc(youtubeId)}
+               title="Background video"
+               className="w-full h-full pointer-events-none"
+               allow="autoplay; encrypted-media; picture-in-picture"
+               referrerPolicy="strict-origin-when-cross-origin"
+             />
+           </div>
+         </div>
+       </div>
+     );
+   }
+   
+   function YouTubeThumb({
+     youtubeId,
+     fit = "cover",
+     zoom = 1.35,
+     y = 0,
+   }: {
+     youtubeId: string;
+     fit?: "cover" | "contain";
+     zoom?: number;
+     y?: number;
+   }) {
+     const src = `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+   
+     return (
+       <motion.div className="w-full h-full" whileHover={{ scale: 1.05 }} transition={{ duration: 0.6 }}>
+         <img
+           src={src}
+           className={`w-full h-full ${fit === "cover" ? "object-cover" : "object-contain bg-black"}`}
+           style={fit === "cover" ? { transform: `scale(${zoom}) translateY(${y}px)` } : undefined}
+           draggable={false}
+           alt=""
+         />
+       </motion.div>
+     );
+   }
+   
+   export function FilmsPage() {
+     useEffect(() => {
+       const html = document.documentElement;
+       const body = document.body;
+   
+       const prevHtmlBg = html.style.backgroundColor;
+       const prevBodyBg = body.style.backgroundColor;
+       const prevBodyMargin = body.style.margin;
+       const prevOverscroll = body.style.overscrollBehaviorY;
+   
+       html.style.backgroundColor = "transparent";
+       body.style.backgroundColor = "transparent";
+       body.style.margin = "0";
+       body.style.overscrollBehaviorY = "none";
+   
+       return () => {
+         html.style.backgroundColor = prevHtmlBg;
+         body.style.backgroundColor = prevBodyBg;
+         body.style.margin = prevBodyMargin;
+         body.style.overscrollBehaviorY = prevOverscroll;
+       };
+     }, []);
+   
+     const narrativeExperimental: Film[] = [
+       {
+         id: "1",
+         title: "An Artistic End",
+         youtubeId: extractYouTubeId("https://youtu.be/a2Vm1LFB_68"),
+         description:
+           "Writer, director, cinematographer, and editor of an experimental short exploring self-objectification, artistic identity, and existential isolation.",
+         awards: ["All American Film Festival", "Jewish Film Festival"],
+         thumbZoom: 1.38,
+       },
+       {
+         id: "2",
+         title: "Before I Wilt",
+         youtubeId: extractYouTubeId("https://youtu.be/vTHlWiKE-Pk"),
+         description:
+           "Director, cinematographer, and editor of a narrative short examining mortality, impermanence, and the acceptance of time.",
+         thumbZoom: 1.35,
+       },
+       {
+         id: "3",
+         title: "Velvet is Her Blood",
+         youtubeId: extractYouTubeId("https://youtu.be/Rp-lu6UEQoY"),
+         description: "Assistant editor on an experimental short following a detective and a seductive serial killer.",
+         thumbZoom: 1.35,
+       },
+       {
+         id: "4",
+         title: "My World",
+         youtubeId: extractYouTubeId("https://youtu.be/MWRcrSRHsbQ"),
+         description:
+           "Writer, director, and editor of a narrative short exploring grief, memory, and enduring love. Dedicated to Leonard Goldenberg.",
+         thumbZoom: 1.35,
+       },
+       {
+         id: "5",
+         title: "Alex",
+         youtubeId: extractYouTubeId("https://youtu.be/mWz0WUNkB-E"),
+         description:
+           "Writer, director, and cinematographer of a narrative short examining sexuality, vulnerability, and fear of rejection.",
+         awards: ["Younger Directors' Film Festival"],
+         thumbZoom: 1.35,
+       },
+     ];
+   
+     const professionalWork: Film[] = [
+       {
+         id: "6",
+         title: "Heck X Gymshark",
+         youtubeId: extractYouTubeId("https://youtu.be/1zFdBhnlXpc"),
+         description:
+           "Videographer and production assistant for The Night Club Global Tour, sponsored by Gymshark and Heck Food.",
+         thumbZoom: 1.35,
+       },
+       {
+         id: "7",
+         title: "Relay for Life",
+         youtubeId: extractYouTubeId("https://youtu.be/jFiozBBbywc"),
+         description: "Director and interviewer for a documentary produced for the American Cancer Society.",
+         thumbFit: "cover",
+         thumbZoom: 1.35,
+       },
+       {
+         id: "8",
+         title: "First Edition",
+         youtubeId: extractYouTubeId("https://youtu.be/W4bSTrXk25A"),
+         description: "Director and editor of a documentary client project on the world’s first solar-electric catamaran.",
+         thumbZoom: 1.35,
+       },
+     ];
+   
+     const [activeFilm, setActiveFilm] = useState<Film | null>(null);
+     const pageTitle = useMemo(() => "Short Films".split(""), []);
+   
+     const FilmGrid = ({ films, sectionLabel }: { films: Film[]; sectionLabel: string }) => (
+       <section className="pt-8 pb-12">
+         <div className="max-w-[1180px] mx-auto px-10 md:px-14">
+           <div className="max-w-[980px] mx-auto">
+             <div className="flex items-center gap-5 mb-6 group">
+               <div className="h-[1px] w-14 bg-white/70" />
+               <div className="text-[13px] tracking-[0.55em] uppercase text-white/85 group-hover:text-red-600 hover:text-red-600 transition-colors duration-500">
+                 {sectionLabel}
+               </div>
+             </div>
+   
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14">
+               {films.map((film) => (
+                 <motion.article
+                   key={film.id}
+                   initial={{ opacity: 0, y: 18 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true, amount: 0.2 }}
+                   transition={{ duration: 0.55 }}
+                   className="rounded-2xl border border-white/14 bg-white/5 overflow-hidden"
+                 >
+                   <button onClick={() => setActiveFilm(film)} className="group block w-full text-left">
+                     <div className={`aspect-[${THUMB_ASPECT}] overflow-hidden bg-transparent`}>
+                       <YouTubeThumb
+                         youtubeId={film.youtubeId}
+                         fit={film.thumbFit ?? "cover"}
+                         zoom={film.thumbZoom ?? 1.35}
+                         y={film.thumbY ?? 0}
+                       />
+                     </div>
+   
+                     <div className="px-6 pt-5 pb-6">
+                       <h3 className="editorial-heading text-xl mb-2 text-white group-hover:text-red-600 hover:text-red-600 transition-colors duration-500">
+                         {film.title}
+                       </h3>
+   
+                       <p className="text-sm text-white/75 leading-relaxed group-hover:text-red-600 hover:text-red-600 transition-colors duration-500">
+                         {film.description}
+                       </p>
+   
+                       {film.awards && (
+                         <p className="mt-3 text-[11px] font-bold text-white/80 group-hover:text-red-600 hover:text-red-600 transition-colors duration-500">
+                           {film.awards.map((a) => `•${a}`).join(" ")}
+                         </p>
+                       )}
+                     </div>
+                   </button>
+                 </motion.article>
+               ))}
+             </div>
+           </div>
+         </div>
+       </section>
+     );
+   
+     return (
+       <div className="min-h-[100dvh] text-white relative bg-transparent">
+         <BackgroundYouTube youtubeId={BG_YT_ID} />
+   
+         <section className="pt-12 pb-4">
+           <div className="max-w-[1180px] mx-auto px-10 md:px-14">
+             <div className="max-w-[980px] mx-auto">
+               <div className="mb-5">
+                 <div className="text-[12px] tracking-[0.5em] uppercase text-white/80 hover:text-red-600 transition-colors duration-500">
+                   Harlie Katz
+                 </div>
+               </div>
+   
+               <h1 className="editorial-heading text-[clamp(44px,5vw,64px)] leading-none hover:text-red-600 transition-colors duration-500">
+               {pageTitle.map((letter, i) => (
+  <motion.span key={i} className="inline-block">
+    {letter === " " ? "\u00A0" : letter}
+  </motion.span>
+))}
 
-type Film = {
-  id: string;
-  title: string;
-  youtubeId: string;
-  description?: string;
-  awards?: string[];
-};
-
-const HERO_YT_ID = "30uO6rqCjIw";
-
-function extractYouTubeId(urlOrId: string): string {
-  try {
-    if (!urlOrId.includes("http")) return urlOrId.trim();
-    const u = new URL(urlOrId);
-    if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "").trim();
-    if (u.hostname.includes("youtube.com")) return (u.searchParams.get("v") || "").trim();
-    return urlOrId.trim();
-  } catch {
-    return urlOrId.trim();
-  }
-}
-
-function ytThumb(id: string) {
-  return `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
-}
-
-function ytEmbedSrc(id: string) {
-  return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&rel=0&modestbranding=1&playsinline=1`;
-}
-
-export function FilmsPage() {
-  const films: Film[] = useMemo(
-    () => [
-      {
-        id: "film-1",
-        title: "An Artistic End",
-        youtubeId: extractYouTubeId("https://youtu.be/a2Vm1LFB_68"),
-        description:
-          "An experimental short reflecting on memory, time, and artistic becoming through contemplative imagery.",
-        awards: ["All American Film Festival", "Jewish Film Festival"],
-      },
-      {
-        id: "film-2",
-        title: "Before I Wilt",
-        youtubeId: extractYouTubeId("https://youtu.be/vTHlWiKE-Pk"),
-        description:
-          "A meditation on mortality and impermanence, learning to live within transience rather than resist it.",
-      },
-      {
-        id: "film-3",
-        title: "Velvet is Her Blood",
-        youtubeId: extractYouTubeId("https://youtu.be/Rp-lu6UEQoY"),
-        description:
-          "A female detective and a femme fatale serial killer begin an unconventional flirtation as a trail of bodies unfolds.",
-      },
-    ],
-    []
-  );
-
-  const [activeFilm, setActiveFilm] = useState<Film | null>(null);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setActiveFilm(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  const pageTitle = "FILM".split("");
-
-  return (
-    <div className="relative min-h-screen text-white">
-      {/* HERO */}
-      <section className="relative h-screen w-full overflow-hidden">
-        <div className="absolute inset-0 scale-[1.2]">
-          <iframe
-            src={ytEmbedSrc(HERO_YT_ID)}
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowFullScreen={false}
-            title="Films Hero"
-          />
-        </div>
-
-        {/* CINEMATIC TITLE — NO OVERLAY */}
-        <div className="absolute left-[8%] top-[38%] -translate-y-1/2 z-10 max-w-[720px]">
-          <div className="flex items-center gap-5 mb-6">
-            <div className="h-[1px] w-14 bg-white/70" />
-            <div className="text-[12px] tracking-[0.5em] uppercase text-white/85">
-              Selected Work
-            </div>
-          </div>
-
-          <h1 className="editorial-heading leading-[0.9] text-[clamp(96px,12vw,160px)]">
-            {pageTitle.map((letter, i) => (
-              <motion.span
-                key={i}
-                className="inline-block mr-[0.04em]"
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{
-                  delay: i * 0.08,
-                  duration: 0.8,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                whileHover={{ y: -8 }}
-              >
-                {letter}
-              </motion.span>
-            ))}
-          </h1>
-
-          <p className="mt-8 max-w-[420px] text-white/85 text-sm leading-relaxed">
-            Narrative and experimental films exploring memory, identity, time, and impermanence.
-          </p>
-        </div>
-      </section>
-
-      {/* FILM GRID */}
-      <section className="relative bg-black">
-        <div className="max-w-[1180px] mx-auto px-10 md:px-14 py-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-14 max-w-[980px] mx-auto">
-            {films.map((film, index) => (
-              <motion.article
-                key={film.id}
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08, duration: 0.7 }}
-                className="rounded-2xl border border-white/15 bg-white/5 overflow-hidden shadow-[0_18px_60px_rgba(0,0,0,0.45)]"
-              >
-                <button
-                  type="button"
-                  onClick={() => setActiveFilm(film)}
-                  className="relative block w-full text-left group"
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <motion.img
-                      src={ytThumb(film.youtubeId)}
-                      alt={film.title}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      initial={{ scale: 1 }}
-                      whileHover={{ scale: 1.12 }}
-                      transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-                      draggable={false}
-                    />
-
-                    <div className="absolute bottom-0 left-0 right-0 p-5">
-                      <div className="editorial-heading text-xl">{film.title}</div>
-                    </div>
-                  </div>
-
-                  <div className="p-5">
-                    {film.description && (
-                      <p className="text-sm text-white/75 leading-relaxed">
-                        {film.description}
-                      </p>
-                    )}
-
-                    {film.awards && film.awards.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {film.awards.map((award, i) => (
-                          <span
-                            key={i}
-                            className="text-[11px] uppercase tracking-wide px-3 py-1 rounded-full border border-white/25 text-white/85"
-                          >
-                            {award}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </button>
-              </motion.article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* MODAL */}
-      <AnimatePresence>
-        {activeFilm && (
-          <motion.div
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center px-5"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setActiveFilm(null)}
-          >
-            <motion.div
-              className="w-full max-w-[1100px]"
-              initial={{ scale: 0.96, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.96, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="rounded-2xl overflow-hidden bg-black">
-                <iframe
-                  src={ytEmbedSrc(activeFilm.youtubeId)}
-                  title={activeFilm.title}
-                  className="w-full aspect-video"
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+               </h1>
+             </div>
+           </div>
+         </section>
+   
+         <FilmGrid films={narrativeExperimental} sectionLabel="Narrative & Experimental" />
+         <FilmGrid films={professionalWork} sectionLabel="Professional Work" />
+   
+         <AnimatePresence>
+           {activeFilm && (
+             <motion.div
+               className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center px-5"
+               onClick={() => setActiveFilm(null)}
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+             >
+               <motion.div
+                 className="w-full max-w-[1100px]"
+                 onClick={(e) => e.stopPropagation()}
+                 initial={{ y: 16, scale: 0.985 }}
+                 animate={{ y: 0, scale: 1 }}
+                 exit={{ y: 16, scale: 0.985 }}
+                 transition={{ duration: 0.18 }}
+               >
+                 <iframe
+                   src={ytModalSrc(activeFilm.youtubeId)}
+                   title={activeFilm.title}
+                   className="w-full aspect-video"
+                   allow="autoplay; encrypted-media; picture-in-picture"
+                   allowFullScreen
+                 />
+                 <div className="mt-3 text-center editorial-heading text-sm text-white/90 hover:text-red-600 transition-colors duration-500">
+                   {activeFilm.title}
+                 </div>
+               </motion.div>
+             </motion.div>
+           )}
+         </AnimatePresence>
+       </div>
+     );
+   }
+   

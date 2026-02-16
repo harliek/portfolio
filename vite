@@ -1,0 +1,12 @@
+
+
+  VITE v6.3.5  ready in 210 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+8:11:42 PM [vite] (client) hmr update /src/app/compone
+8:11:42 PM [vite] (client) hmr update /src/app/components/FilmsPage.tsx, /src/styles/index.css
+8:15:35 PM [vite] (client) hmr update /src/app/compone
+8:15:35 PM [vite] (client) hmr update /src/app/components/FilmsPage.tsx, /src/styles/index.css (x2)
+^Cnpm run dev

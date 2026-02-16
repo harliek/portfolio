@@ -1,42 +1,60 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+/* -------------------------------------------------------
+   Shared helpers
+-------------------------------------------------------- */
+
+function extractYouTubeId(urlOrId: string): string {
+  try {
+    if (!urlOrId.includes("http")) return urlOrId.trim();
+    const u = new URL(urlOrId);
+    if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "").trim();
+    if (u.hostname.includes("youtube.com")) return (u.searchParams.get("v") || "").trim();
+    return urlOrId.trim();
+  } catch {
+    return urlOrId.trim();
+  }
+}
+
+function ytHeroSrc(id: string) {
+  return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&rel=0&modestbranding=1&playsinline=1`;
+}
+
+function ytModalSrc(id: string) {
+  return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=0&loop=0&controls=1&rel=0&modestbranding=1&playsinline=1`;
+}
+
+/* -------------------------------------------------------
+   HOME PAGE
+-------------------------------------------------------- */
 
 type NavTile = {
   id: string;
   label: string;
-  path: string;
-  youtubeId?: string; // YouTube video ID (not full URL)
-  fallbackImg: string; // used when there is NO video (ex: Design for now)
+  path?: string;
+  youtubeId?: string;
+  isComingSoon?: boolean;
 };
 
 function NavMediaTile({
   label,
   youtubeId,
-  fallbackImg,
+  isComingSoon,
 }: {
   label: string;
   youtubeId?: string;
-  fallbackImg: string;
+  isComingSoon?: boolean;
 }) {
   const [ready, setReady] = useState(false);
 
-  // If no YouTube video provided, show the actual image (Design tile for now).
-  if (!youtubeId) {
-    return (
-      <img
-        src={fallbackImg}
-        alt={label}
-        className="absolute inset-0 w-full h-full object-cover"
-        draggable={false}
-      />
-    );
+  if (isComingSoon) {
+    return <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]" />;
   }
 
-  // Autoplay + muted + loop + minimal UI.
-  // Loop requires playlist=<videoId>
   const embedSrc =
-    `https://www.youtube.com/embed/${youtubeId}` +
+    `https://www.youtube-nocookie.com/embed/${youtubeId}` +
     `?autoplay=1` +
     `&mute=1` +
     `&loop=1` +
@@ -49,23 +67,18 @@ function NavMediaTile({
     `&disablekb=1` +
     `&iv_load_policy=3`;
 
-  // If load event is delayed, we still fade in after a short moment.
   useEffect(() => {
-    const t = window.setTimeout(() => setReady(true), 1200);
+    const t = window.setTimeout(() => setReady(true), 900);
     return () => window.clearTimeout(t);
   }, []);
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* No fallback image while loading to prevent “flash”.
-          Use a neutral dark poster so it feels intentional. */}
       <div
         className={`absolute inset-0 tile-poster transition-opacity duration-500 ${
           ready ? "opacity-0" : "opacity-100"
         }`}
-        aria-hidden="true"
       />
-
       <iframe
         src={embedSrc}
         title={label}
@@ -75,163 +88,449 @@ function NavMediaTile({
         frameBorder="0"
         allow="autoplay; encrypted-media"
         allowFullScreen={false}
-        referrerPolicy="strict-origin-when-cross-origin"
         onLoad={() => setReady(true)}
       />
     </div>
   );
 }
 
+/**
+ * UPDATED HOME BACKGROUND:
+ * https://youtu.be/zjcxYAodBFs
+ */
+const HOME_BG_YT_ID = extractYouTubeId("https://youtu.be/zjcxYAodBFs");
+
+/**
+ * Hover behavior (medium-big, slightly slow)
+ * Applies to ALL tiles including "Design"
+ */
+const tileHover = {
+  whileHover: { scale: 1.14, y: -8 },
+  transition: {
+    type: "spring" as const,
+    stiffness: 120,
+    damping: 18,
+    mass: 1.15,
+  },
+};
+
+const tileTitleHover = {
+  whileHover: { scale: 1.45, y: -5 },
+  transition: {
+    type: "spring" as const,
+    stiffness: 150,
+    damping: 18,
+    mass: 1.05,
+  },
+};
+
 export function HomePage() {
   const navigate = useNavigate();
 
   const navigationTiles: NavTile[] = [
+    { id: "film", label: "Film", youtubeId: "4R6ptmrdATk", path: "/films" },
+    { id: "art", label: "Art", youtubeId: "F6OdhvQRKAc", path: "/art" },
+    { id: "design", label: "Design", isComingSoon: true },
+  ];
+
+  const titleLetters = useMemo(() => "PORTFOLIO".split(""), []);
+
+  return (
+    <div className="relative min-h-screen text-white">
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 scale-[1.2]">
+          <iframe
+            src={ytHeroSrc(HOME_BG_YT_ID)}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            title="Home Background"
+          />
+        </div>
+      </div>
+
+      <div className="relative z-10">
+        <section className="relative h-[92vh] w-full">
+          <div className="absolute left-[8%] top-[40%] -translate-y-1/2 max-w-[820px]">
+            <div className="flex items-center gap-5 mb-6">
+              <div className="h-[1px] w-14 bg-white/70" />
+              <div className="text-[12px] tracking-[0.5em] uppercase text-white/85">
+                HARLIE KATZ
+              </div>
+            </div>
+
+            <h1 className="editorial-heading text-[clamp(64px,8.8vw,126px)] leading-none">
+              {titleLetters.map((letter, i) => (
+                <motion.span
+                  key={i}
+                  whileHover={{ y: -6, scale: 1.06 }}
+                  transition={{ duration: 0.18 }}
+                  className="inline-block"
+                >
+                  {letter}
+                </motion.span>
+              ))}
+            </h1>
+          </div>
+        </section>
+
+        <section className="relative pb-24">
+          <div className="h-10" />
+
+          <div className="max-w-[1180px] mx-auto px-10 md:px-14">
+            <div className="max-w-[980px] mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {navigationTiles.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 18 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ delay: 0.08 + index * 0.06, duration: 0.55 }}
+                    className="relative"
+                    style={{ zIndex: 0 }}
+                    whileHover={{ zIndex: 50 }}
+                  >
+                    <motion.div
+                      onClick={() => item.path && navigate(item.path)}
+                      className={[
+                        "relative aspect-[4/5] rounded-2xl",
+                        "border border-white/20 bg-white/6 shadow-2xl",
+                        item.isComingSoon ? "cursor-default" : "cursor-pointer",
+                      ].join(" ")}
+                      {...tileHover}
+                      style={{ transformOrigin: "center" }}
+                      role="button"
+                      tabIndex={item.isComingSoon ? -1 : 0}
+                      aria-label={`Go to ${item.label}`}
+                      onKeyDown={(e) => {
+                        if (!item.isComingSoon && item.path && (e.key === "Enter" || e.key === " ")) {
+                          navigate(item.path);
+                        }
+                      }}
+                    >
+                      <div className="absolute inset-0 overflow-hidden rounded-2xl">
+                        <NavMediaTile
+                          label={item.label}
+                          youtubeId={item.youtubeId}
+                          isComingSoon={item.isComingSoon}
+                        />
+                        <div className="absolute inset-0 tile-edge pointer-events-none" />
+                      </div>
+
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                        <motion.div
+                          className="font-semibold tracking-[0.28em] text-[clamp(16px,1.8vw,26px)] text-white origin-center will-change-transform"
+                          initial={false}
+                          {...tileTitleHover}
+                        >
+                          {item.label.toUpperCase()}
+                        </motion.div>
+
+                        {item.isComingSoon && (
+                          <div className="mt-2 text-[11px] tracking-[0.35em] text-white/80">
+                            COMING SOON
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <style>{`
+            .tile-poster {
+              background:
+                radial-gradient(circle at 35% 30%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 28%, rgba(0,0,0,0) 60%),
+                linear-gradient(180deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.80) 45%, rgba(0,0,0,0.96) 100%);
+            }
+
+            .yt-cover {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              width: 230%;
+              height: 230%;
+              transform: translate(-50%, -50%);
+              border: 0;
+            }
+
+            .tile-edge {
+              background:
+                radial-gradient(ellipse at center, rgba(255,255,255,0.00) 0%, rgba(0,0,0,0.14) 92%);
+              opacity: 0.9;
+            }
+          `}</style>
+        </section>
+
+        <div className="h-24" />
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------
+   FILMS PAGE (unchanged)
+-------------------------------------------------------- */
+
+type Film = {
+  id: string;
+  title: string;
+  youtubeId: string;
+  description?: string;
+  awards?: string[];
+  thumbFit?: "cover" | "contain";
+  thumbZoom?: number;
+  thumbY?: number;
+};
+
+const FILMS_HERO_YT_ID = "8rEWAHXr_6I";
+const THUMB_ASPECT = "5/4";
+
+function YouTubeThumb({
+  youtubeId,
+  fit = "cover",
+  zoom = 1.16,
+  y = 0,
+}: {
+  youtubeId: string;
+  fit?: "cover" | "contain";
+  zoom?: number;
+  y?: number;
+}) {
+  const src = `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+
+  return (
+    <motion.div
+      className="w-full h-full"
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: "spring", stiffness: 140, damping: 20, mass: 1.0 }}
+    >
+      <img
+        src={src}
+        className={`w-full h-full ${fit === "cover" ? "object-cover" : "object-contain bg-black"}`}
+        style={fit === "cover" ? { transform: `scale(${zoom}) translateY(${y}px)` } : undefined}
+        draggable={false}
+        alt=""
+      />
+    </motion.div>
+  );
+}
+
+export function FilmsPage() {
+  const narrativeExperimental: Film[] = [
     {
-      id: "film",
-      label: "Film",
-      youtubeId: "4R6ptmrdATk",
-      fallbackImg: "/back.png", // not used while video exists
-      path: "/films",
+      id: "1",
+      title: "An Artistic End",
+      youtubeId: extractYouTubeId("https://youtu.be/a2Vm1LFB_68"),
+      description:
+        "Writer, director, cinematographer, and editor of an experimental short exploring self-objectification, artistic identity, and existential isolation.",
+      awards: ["All American Film Festival", "Jewish Film Festival"],
+      thumbZoom: 1.18,
     },
     {
-      id: "art",
-      label: "Art",
-      youtubeId: "F6OdhvQRKAc",
-      fallbackImg: "/back1.png", // not used while video exists
-      path: "/art",
+      id: "2",
+      title: "Before I Wilt",
+      youtubeId: extractYouTubeId("https://youtu.be/vTHlWiKE-Pk"),
+      description:
+        "Director, cinematographer, and editor of a narrative short examining mortality, impermanence, and the acceptance of time.",
+      thumbZoom: 1.16,
     },
     {
-      id: "design",
-      label: "Design",
-      // no youtubeId yet
-      fallbackImg: "/top.png",
-      path: "/designs",
+      id: "3",
+      title: "Velvet is Her Blood",
+      youtubeId: extractYouTubeId("https://youtu.be/Rp-lu6UEQoY"),
+      description: "Assistant editor on an experimental short following a detective and a seductive serial killer.",
+      thumbZoom: 1.16,
+    },
+    {
+      id: "4",
+      title: "My World",
+      youtubeId: extractYouTubeId("https://youtu.be/MWRcrSRHsbQ"),
+      description:
+        "Writer, director, and editor of a narrative short exploring grief, memory, and enduring love. Dedicated to Leonard Goldenberg.",
+      thumbZoom: 1.16,
+    },
+    {
+      id: "5",
+      title: "Alex",
+      youtubeId: extractYouTubeId("https://youtu.be/mWz0WUNkB-E"),
+      description:
+        "Writer, director, and cinematographer of a narrative short examining sexuality, vulnerability, and fear of rejection.",
+      awards: ["Younger Directors' Film Festival"],
+      thumbZoom: 1.16,
     },
   ];
 
-  const portfolioLetters = "PORTFOLIO".split("");
+  const professionalWork: Film[] = [
+    {
+      id: "6",
+      title: "Heck X Gymshark",
+      youtubeId: extractYouTubeId("https://youtu.be/1zFdBhnlXpc"),
+      description:
+        "Videographer and production assistant for The Night Club Global Tour, sponsored by Gymshark and Heck Food.",
+      thumbZoom: 1.16,
+    },
+    {
+      id: "7",
+      title: "Relay for Life",
+      youtubeId: extractYouTubeId("https://youtu.be/jFiozBBbywc"),
+      description: "Director and interviewer for a documentary produced for the American Cancer Society.",
+      thumbFit: "cover",
+      thumbZoom: 1.16,
+    },
+    {
+      id: "8",
+      title: "First Edition",
+      youtubeId: extractYouTubeId("https://youtu.be/W4bSTrXk25A"),
+      description: "Director and editor of a documentary client project on the world’s first solar-electric catamaran.",
+      thumbZoom: 1.16,
+    },
+  ];
 
-  return (
-    <div className="min-h-screen pt-8 pb-16 px-12 relative z-10">
-      <div className="max-w-[1600px] mx-auto">
-        <div className="w-full flex justify-start">
-          <div className="w-[860px] max-w-full ml-6">
-            {/* TITLE */}
-            <div className="text-center relative mt-6 mb-8">
-              <div className="flex items-center justify-center gap-5 mb-2">
-                <div className="w-14 h-[2px] bg-red-600" />
-                <div className="text-[15px] tracking-[0.45em] uppercase text-gray-800">
-                  Creative
-                </div>
-                <div className="w-14 h-[2px] bg-red-600" />
-              </div>
+  const [activeFilm, setActiveFilm] = useState<Film | null>(null);
+  const pageTitle = useMemo(() => "FILM".split(""), []);
 
-              <h1 className="editorial-heading text-[clamp(64px,6vw,104px)] inline-flex justify-center gap-1 leading-none">
-                {portfolioLetters.map((letter, i) => (
-                  <motion.span
-                    key={i}
-                    whileHover={{ scale: 1.1, y: -4 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                  >
-                    {letter}
-                  </motion.span>
-                ))}
-              </h1>
+  const cardHover = {
+    whileHover: { scale: 1.08, y: -10 },
+    transition: { type: "spring" as const, stiffness: 120, damping: 18, mass: 1.15 },
+  };
 
-              <div className="signature-script text-[clamp(52px,4.2vw,84px)] text-red-600 -mt-7 italic">
-                Harlie Katz
-              </div>
+  const FilmGrid = ({
+    films,
+    sectionLabel,
+    overlap = false,
+  }: {
+    films: Film[];
+    sectionLabel: string;
+    overlap?: boolean;
+  }) => (
+    <section className={`relative bg-black ${overlap ? "-mt-28 pt-6" : "pt-6"} pb-20`}>
+      <div className="max-w-[1180px] mx-auto px-10 md:px-14">
+        <div className="max-w-[980px] mx-auto">
+          <div className="flex items-center gap-5 mb-8">
+            <div className="h-[1px] w-14 bg-white/70" />
+            <div className="text-[14px] tracking-[0.55em] uppercase text-white/90">
+              {sectionLabel}
             </div>
+          </div>
 
-            {/* NAV TILES */}
-            <div className="grid grid-cols-3 gap-[8px] mb-10">
-              {navigationTiles.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + index * 0.08, duration: 0.6 }}
-                  className="group"
-                >
-                  <motion.div
-                    onClick={() => navigate(item.path)}
-                    className="nav-tile cursor-pointer relative overflow-hidden aspect-[4/5] shadow-xl bg-black"
-                    whileHover={{ scale: 1.025 }}
-                    transition={{ duration: 0.12 }}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Go to ${item.label}`}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") navigate(item.path);
-                    }}
-                  >
-                    <NavMediaTile
-                      label={item.label}
-                      youtubeId={item.youtubeId}
-                      fallbackImg={item.fallbackImg}
-                    />
-
-                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/15 transition-colors duration-500 pointer-events-none" />
-
-                    <div className="absolute inset-0 flex items-center justify-center text-white pointer-events-none">
-                      <div className="font-semibold tracking-[0.28em] text-[clamp(15px,1.8vw,28px)] drop-shadow">
-                        {item.label.toUpperCase()}
-                      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-14">
+            {films.map((film) => (
+              <motion.article
+                key={film.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.6 }}
+                className="relative"
+                style={{ zIndex: 0 }}
+                whileHover={{ zIndex: 50 }}
+              >
+                <motion.div className="rounded-2xl border border-white/15 bg-white/5 overflow-hidden" {...cardHover}>
+                  <button onClick={() => setActiveFilm(film)} className="block w-full text-left">
+                    <div className={`aspect-[${THUMB_ASPECT}] overflow-hidden bg-black`}>
+                      <YouTubeThumb
+                        youtubeId={film.youtubeId}
+                        fit={film.thumbFit ?? "cover"}
+                        zoom={film.thumbZoom ?? 1.16}
+                        y={film.thumbY ?? 0}
+                      />
                     </div>
-                  </motion.div>
+
+                    <div className="px-6 pt-5 pb-6">
+                      <motion.h3
+                        className="editorial-heading text-xl mb-2 inline-block origin-left will-change-transform"
+                        whileHover={{ scale: 1.35, y: -4 }}
+                        transition={{ type: "spring", stiffness: 150, damping: 18, mass: 1.05 }}
+                      >
+                        {film.title}
+                      </motion.h3>
+
+                      <p className="text-sm text-white/75 leading-relaxed">{film.description}</p>
+
+                      {film.awards && (
+                        <p className="mt-3 text-[11px] font-bold text-white/85">
+                          {film.awards.map((a) => `•${a}`).join(" ")}
+                        </p>
+                      )}
+                    </div>
+                  </button>
                 </motion.div>
-              ))}
-            </div>
-
-            {/* CONTACT */}
-            <div className="text-center">
-              <div className="w-20 h-[2px] bg-red-600 mx-auto mb-5" />
-              <div className="text-sm tracking-widest text-red-600 mb-4">
-                CONTACT
-              </div>
-
-              <div className="flex flex-col gap-2 text-[14.5px] tracking-wide text-gray-800">
-                <a
-                  href="mailto:harliekatz@berkeley.edu"
-                  className="hover:text-red-600 transition"
-                >
-                  harliekatz@berkeley.edu
-                </a>
-                <a
-                  href="tel:+18137652936"
-                  className="hover:text-red-600 transition"
-                >
-                  +1 (813) 765-2936
-                </a>
-              </div>
-            </div>
-
-            <style>{`
-              .nav-tile {
-                transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
-                will-change: transform;
-              }
-
-              .tile-poster {
-                background:
-                  radial-gradient(circle at 35% 30%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 28%, rgba(0,0,0,0) 60%),
-                  linear-gradient(180deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.96) 100%);
-                filter: saturate(110%);
-              }
-
-              .yt-cover {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 230%;
-                height: 230%;
-                transform: translate(-50%, -50%);
-                border: 0;
-              }
-            `}</style>
+              </motion.article>
+            ))}
           </div>
         </div>
       </div>
+    </section>
+  );
+
+  return (
+    <div className="relative min-h-screen text-white">
+      <section className="relative h-screen w-full overflow-hidden">
+        <div className="absolute inset-0 scale-[1.2]">
+          <iframe
+            src={ytHeroSrc(FILMS_HERO_YT_ID)}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            title="Films Hero"
+          />
+        </div>
+
+        <div className="absolute left-[8%] top-[38%] -translate-y-1/2 z-10 max-w-[720px]">
+          <div className="flex items-center gap-5 mb-6">
+            <div className="h-[1px] w-14 bg-white/70" />
+            <div className="text-[12px] tracking-[0.5em] uppercase text-white/85">
+              Harlie Katz
+            </div>
+          </div>
+
+          <motion.h1
+            className="editorial-heading text-[clamp(96px,12vw,160px)] leading-none"
+            whileHover={{ scale: 1.12 }}
+            transition={{ type: "spring", stiffness: 160, damping: 18, mass: 1.0 }}
+          >
+            {pageTitle.map((letter, i) => (
+              <motion.span key={i} className="inline-block">
+                {letter}
+              </motion.span>
+            ))}
+          </motion.h1>
+        </div>
+      </section>
+
+      <FilmGrid films={narrativeExperimental} sectionLabel="Narrative & Experimental" overlap />
+      <FilmGrid films={professionalWork} sectionLabel="Professional Work" />
+
+      <AnimatePresence>
+        {activeFilm && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center px-5"
+            onClick={() => setActiveFilm(null)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="w-full max-w-[1100px]"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ y: 18, scale: 0.98 }}
+              animate={{ y: 0, scale: 1 }}
+              exit={{ y: 18, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20, mass: 1.0 }}
+            >
+              <iframe
+                src={ytModalSrc(activeFilm.youtubeId)}
+                title={activeFilm.title}
+                className="w-full aspect-video"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

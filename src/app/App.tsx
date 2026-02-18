@@ -8,24 +8,11 @@ import { DesignsPage } from "./components/DesignsPage";
 
 /* ---------- Background Controller ---------- */
 function Background() {
-  const location = useLocation();
-
-  const isHomeOrAbout =
-    location.pathname === "/" || location.pathname === "/about";
-
-  const backgroundImage = isHomeOrAbout ? "/back.png" : "/back2.png";
-
   return (
-    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-      {/* background image */}
-      <div
-        className="absolute inset-0 bg-center bg-cover"
-        style={{
-          backgroundImage: `url(${backgroundImage})`,
-          transform: "translate3d(0,0,0)",
-        }}
-      />
-
+    <div
+      className="fixed inset-0 pointer-events-none bg-black"
+      style={{ zIndex: 0 }}
+    >
       {/* grain */}
       <div className="grain-layer absolute inset-0 opacity-[0.06]" />
 

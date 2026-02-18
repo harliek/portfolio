@@ -39,22 +39,26 @@
    }
    
    function BackgroundYouTube({ youtubeId }: { youtubeId: string }) {
-     return (
-       <div className="fixed inset-0 -z-10 overflow-hidden">
-         <div className="absolute inset-0">
-           <div className="absolute left-1/2 top-1/2 w-[120vw] h-[67.5vw] min-w-[177.78vh] min-h-[100vh] -translate-x-1/2 -translate-y-1/2">
-             <iframe
-               src={ytBgSrc(youtubeId)}
-               title="Background video"
-               className="w-full h-full pointer-events-none"
-               allow="autoplay; encrypted-media; picture-in-picture"
-               referrerPolicy="strict-origin-when-cross-origin"
-             />
-           </div>
-         </div>
-       </div>
-     );
-   }
+    return (
+      <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
+        {/* extra safety layer */}
+        <div className="absolute inset-0 bg-black" />
+  
+        <div className="absolute inset-0">
+          <div className="absolute left-1/2 top-1/2 w-[120vw] h-[67.5vw] min-w-[177.78vh] min-h-[100vh] -translate-x-1/2 -translate-y-1/2">
+            <iframe
+              src={ytBgSrc(youtubeId)}
+              title="Background video"
+              className="w-full h-full pointer-events-none"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
    
    function YouTubeThumb({
      youtubeId,

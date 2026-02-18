@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -47,8 +47,6 @@ function NavMediaTile({
   youtubeId?: string;
   isComingSoon?: boolean;
 }) {
-  const [ready, setReady] = useState(false);
-
   if (isComingSoon) {
     return <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]" />;
   }
@@ -67,28 +65,16 @@ function NavMediaTile({
     `&disablekb=1` +
     `&iv_load_policy=3`;
 
-  useEffect(() => {
-    const t = window.setTimeout(() => setReady(true), 900);
-    return () => window.clearTimeout(t);
-  }, []);
-
   return (
     <div className="absolute inset-0 overflow-hidden">
-      <div
-        className={`absolute inset-0 tile-poster transition-opacity duration-500 ${
-          ready ? "opacity-0" : "opacity-100"
-        }`}
-      />
+      {/* Removed poster/backdrop layer behind the video */}
       <iframe
         src={embedSrc}
         title={label}
-        className={`yt-cover pointer-events-none transition-opacity duration-700 ${
-          ready ? "opacity-100" : "opacity-0"
-        }`}
+        className="yt-cover pointer-events-none"
         frameBorder="0"
         allow="autoplay; encrypted-media"
         allowFullScreen={false}
-        onLoad={() => setReady(true)}
       />
     </div>
   );
@@ -149,7 +135,7 @@ export function HomePage() {
       </div>
 
       <div className="relative z-10">
-        {/* CHANGED: hero height reduced so tiles sit higher */}
+        {/* hero height reduced so tiles sit higher */}
         <section className="relative h-[84vh] w-full">
           <div className="absolute left-[8%] top-[40%] -translate-y-1/2 max-w-[820px]">
             <div className="flex items-center gap-5 mb-6">
@@ -175,19 +161,14 @@ export function HomePage() {
         </section>
 
         <section className="relative pb-24">
-          {/* CHANGED: spacer reduced so grid starts higher */}
           <div className="h-4" />
 
           <div className="max-w-[1180px] mx-auto px-10 md:px-14">
             <div className="max-w-[980px] mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {navigationTiles.map((item, index) => (
+                {navigationTiles.map((item) => (
                   <motion.div
                     key={item.id}
-                    initial={{ opacity: 0, y: 18 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.3 }}
-                    transition={{ delay: 0.08 + index * 0.06, duration: 0.55 }}
                     className="relative"
                     style={{ zIndex: 0 }}
                     whileHover={{ zIndex: 50 }}
@@ -246,12 +227,6 @@ export function HomePage() {
           </div>
 
           <style>{`
-            .tile-poster {
-              background:
-                radial-gradient(circle at 35% 30%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 28%, rgba(0,0,0,0) 60%),
-                linear-gradient(180deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.80) 45%, rgba(0,0,0,0.96) 100%);
-            }
-
             .yt-cover {
               position: absolute;
               top: 50%;
@@ -277,7 +252,7 @@ export function HomePage() {
 }
 
 /* -------------------------------------------------------
-   FILMS PAGE (unchanged)
+   FILMS PAGE
 -------------------------------------------------------- */
 
 type Film = {
@@ -315,9 +290,7 @@ function YouTubeThumb({
     >
       <img
         src={src}
-        className={`w-full h-full ${
-          fit === "cover" ? "object-cover" : "object-contain bg-black"
-        }`}
+        className={`w-full h-full ${fit === "cover" ? "object-cover" : "object-contain bg-black"}`}
         style={fit === "cover" ? { transform: `scale(${zoom}) translateY(${y}px)` } : undefined}
         draggable={false}
         alt=""
@@ -349,8 +322,7 @@ export function FilmsPage() {
       id: "3",
       title: "Velvet is Her Blood",
       youtubeId: extractYouTubeId("https://youtu.be/Rp-lu6UEQoY"),
-      description:
-        "Assistant editor on an experimental short following a detective and a seductive serial killer.",
+      description: "Assistant editor on an experimental short following a detective and a seductive serial killer.",
       thumbZoom: 1.16,
     },
     {
@@ -385,8 +357,7 @@ export function FilmsPage() {
       id: "7",
       title: "Relay for Life",
       youtubeId: extractYouTubeId("https://youtu.be/jFiozBBbywc"),
-      description:
-        "Director and interviewer for a documentary produced for the American Cancer Society.",
+      description: "Director and interviewer for a documentary produced for the American Cancer Society.",
       thumbFit: "cover",
       thumbZoom: 1.16,
     },
@@ -422,19 +393,13 @@ export function FilmsPage() {
         <div className="max-w-[980px] mx-auto">
           <div className="flex items-center gap-5 mb-8">
             <div className="h-[1px] w-14 bg-white/70" />
-            <div className="text-[14px] tracking-[0.55em] uppercase text-white/90">
-              {sectionLabel}
-            </div>
+            <div className="text-[14px] tracking-[0.55em] uppercase text-white/90">{sectionLabel}</div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-14">
             {films.map((film) => (
               <motion.article
                 key={film.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.6 }}
                 className="relative"
                 style={{ zIndex: 0 }}
                 whileHover={{ zIndex: 50 }}
@@ -495,9 +460,7 @@ export function FilmsPage() {
         <div className="absolute left-[8%] top-[38%] -translate-y-1/2 z-10 max-w-[720px]">
           <div className="flex items-center gap-5 mb-6">
             <div className="h-[1px] w-14 bg-white/70" />
-            <div className="text-[12px] tracking-[0.5em] uppercase text-white/85">
-              Harlie Katz
-            </div>
+            <div className="text-[12px] tracking-[0.5em] uppercase text-white/85">Harlie Katz</div>
           </div>
 
           <motion.h1

@@ -42,7 +42,7 @@ export function AboutPage() {
                   I’m currently based in London, working with a film marketing and media 
                   production company. Outside of work, I’ve been experimenting with prototyping 
                   and coding websites, including this one. Design and interactive projects are 
-                  coming soon.
+                  coming soon!
                 </p>
               </div>
 

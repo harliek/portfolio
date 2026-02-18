@@ -38,27 +38,33 @@
      return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1&loop=1&playlist=${id}&disablekb=1&fs=0&iv_load_policy=3`;
    }
    
+   /* -------------------------
+      Background (no spinner flash)
+   -------------------------- */
    function BackgroundYouTube({ youtubeId }: { youtubeId: string }) {
-    return (
-      <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
-        {/* extra safety layer */}
-        <div className="absolute inset-0 bg-black" />
-  
-        <div className="absolute inset-0">
-          <div className="absolute left-1/2 top-1/2 w-[120vw] h-[67.5vw] min-w-[177.78vh] min-h-[100vh] -translate-x-1/2 -translate-y-1/2">
-            <iframe
-              src={ytBgSrc(youtubeId)}
-              title="Background video"
-              className="w-full h-full pointer-events-none"
-              allow="autoplay; encrypted-media; picture-in-picture"
-              referrerPolicy="strict-origin-when-cross-origin"
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
+     const [loaded, setLoaded] = useState(false);
+   
+     return (
+       <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
+         {!loaded && <div className="absolute inset-0 bg-black z-10" />}
+   
+         <div className="absolute inset-0">
+           <div className="absolute left-1/2 top-1/2 w-[120vw] h-[67.5vw] min-w-[177.78vh] min-h-[100vh] -translate-x-1/2 -translate-y-1/2">
+             <iframe
+               src={ytBgSrc(youtubeId)}
+               title="Background video"
+               className={`w-full h-full pointer-events-none transition-opacity duration-500 ${
+                 loaded ? "opacity-100" : "opacity-0"
+               }`}
+               allow="autoplay; encrypted-media; picture-in-picture"
+               referrerPolicy="strict-origin-when-cross-origin"
+               onLoad={() => setLoaded(true)}
+             />
+           </div>
+         </div>
+       </div>
+     );
+   }
    
    function YouTubeThumb({
      youtubeId,
@@ -131,7 +137,8 @@
          id: "3",
          title: "Velvet is Her Blood",
          youtubeId: extractYouTubeId("https://youtu.be/Rp-lu6UEQoY"),
-         description: "Assistant editor on an experimental short following a detective and a seductive serial killer.",
+         description:
+           "Assistant editor on an experimental short following a detective and a seductive serial killer.",
          thumbZoom: 1.35,
        },
        {
@@ -141,6 +148,7 @@
          description:
            "Writer, director, and editor of a narrative short exploring grief, memory, and enduring love. Dedicated to Leonard Goldenberg.",
          thumbZoom: 1.35,
+         thumbY: 16, // ↓ move image DOWN so title at top is visible
        },
        {
          id: "5",
@@ -150,6 +158,7 @@
            "Writer, director, and cinematographer of a narrative short examining sexuality, vulnerability, and fear of rejection.",
          awards: ["Younger Directors' Film Festival"],
          thumbZoom: 1.35,
+         thumbY: 16, // ↓ move image DOWN so title at top is visible
        },
      ];
    
@@ -174,7 +183,8 @@
          id: "8",
          title: "First Edition",
          youtubeId: extractYouTubeId("https://youtu.be/W4bSTrXk25A"),
-         description: "Director and editor of a documentary client project on the world’s first solar-electric catamaran.",
+         description:
+           "Director and editor of a documentary client project on the world’s first solar-electric catamaran.",
          thumbZoom: 1.35,
        },
      ];
@@ -251,12 +261,11 @@
                </div>
    
                <h1 className="editorial-heading text-[clamp(44px,5vw,64px)] leading-none hover:text-red-600 transition-colors duration-500">
-               {pageTitle.map((letter, i) => (
-  <motion.span key={i} className="inline-block">
-    {letter === " " ? "\u00A0" : letter}
-  </motion.span>
-))}
-
+                 {pageTitle.map((letter, i) => (
+                   <motion.span key={i} className="inline-block">
+                     {letter === " " ? "\u00A0" : letter}
+                   </motion.span>
+                 ))}
                </h1>
              </div>
            </div>

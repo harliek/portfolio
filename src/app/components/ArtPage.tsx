@@ -194,7 +194,6 @@
                    <div className="mt-7 flex items-center justify-center gap-3">
                      <div className="h-[1px] w-10 bg-white/35" />
                      <div className="text-[11px] tracking-[0.35em] uppercase text-white/55 group-hover:text-red-600 hover:text-red-600 transition-colors duration-500">
-                       Statement
                      </div>
                      <div className="h-[1px] w-10 bg-white/35" />
                    </div>

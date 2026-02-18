@@ -8,11 +8,26 @@ import { DesignsPage } from "./components/DesignsPage";
 
 /* ---------- Background Controller ---------- */
 function Background() {
+  const location = useLocation();
+
+  const isHomeOrAbout = location.pathname === "/about";
+  const backgroundImage = "/back.png"; // the photo you want for About (and Home)
+
   return (
-    <div
-      className="fixed inset-0 pointer-events-none bg-black"
-      style={{ zIndex: 0 }}
-    >
+    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+      {/* base layer: photo on Home/About, black elsewhere */}
+      {isHomeOrAbout ? (
+        <div
+          className="absolute inset-0 bg-center bg-cover"
+          style={{
+            backgroundImage: `url(${backgroundImage})`,
+            transform: "translate3d(0,0,0)",
+          }}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-black" />
+      )}
+
       {/* grain */}
       <div className="grain-layer absolute inset-0 opacity-[0.06]" />
 

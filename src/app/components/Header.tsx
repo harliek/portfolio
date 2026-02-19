@@ -63,6 +63,15 @@ export function Header() {
           </Link>
 
           <Link
+            to="/designs"
+            className={`${navLinkBase} ${
+              isActive("/designs") ? "text-[var(--accent-red)]" : "text-white"
+            }`}
+          >
+            Design
+          </Link>
+
+          <Link
             to="/about"
             className={`${navLinkBase} ${
               isActive("/about") ? "text-[var(--accent-red)]" : "text-white"

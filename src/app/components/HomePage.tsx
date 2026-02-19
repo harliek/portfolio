@@ -45,8 +45,14 @@ function NavMediaTile({
 }) {
   const [loaded, setLoaded] = useState(false);
 
+  // If you ever want a "coming soon" overlay again:
   if (isComingSoon) {
     return <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]" />;
+  }
+
+  // If no youtubeId is provided, just show a tasteful glass layer (no video)
+  if (!youtubeId) {
+    return <div className="absolute inset-0 bg-white/8 backdrop-blur-[1px]" />;
   }
 
   const embedSrc =
@@ -119,7 +125,7 @@ export function HomePage() {
   const navigationTiles: NavTile[] = [
     { id: "film", label: "Film", youtubeId: "4R6ptmrdATk", path: "/films" },
     { id: "art", label: "Art", youtubeId: "F6OdhvQRKAc", path: "/art" },
-    { id: "design", label: "Design", isComingSoon: true },
+    { id: "design", label: "Design", path: "/designs" }, // ✅ now navigates
   ];
 
   const titleLetters = useMemo(() => "PORTFOLIO".split(""), []);
@@ -186,22 +192,15 @@ export function HomePage() {
                       onClick={() => item.path && navigate(item.path)}
                       className={[
                         "relative aspect-[4/5] rounded-2xl",
-                        "border border-white/20 bg-white/6 shadow-2xl",
-                        item.isComingSoon ? "cursor-default" : "cursor-pointer",
+                        "border border-white/20 bg-white/6 shadow-2xl cursor-pointer",
                       ].join(" ")}
                       {...tileHover}
                       style={{ transformOrigin: "center" }}
                       role="button"
-                      tabIndex={item.isComingSoon ? -1 : 0}
+                      tabIndex={0}
                       aria-label={`Go to ${item.label}`}
                       onKeyDown={(e) => {
-                        if (
-                          !item.isComingSoon &&
-                          item.path &&
-                          (e.key === "Enter" || e.key === " ")
-                        ) {
-                          navigate(item.path);
-                        }
+                        if (item.path && (e.key === "Enter" || e.key === " ")) navigate(item.path);
                       }}
                     >
                       <div className="absolute inset-0 overflow-hidden rounded-2xl">

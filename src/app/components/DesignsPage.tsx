@@ -1,162 +1,135 @@
-import { motion } from 'motion/react';
-import { useState } from 'react';
+/* =========================
+   DesignsPage.tsx
+   ========================= */
+   import { useMemo, useState } from "react";
+   import { motion } from "framer-motion";
+   
+   function extractYouTubeId(urlOrId: string): string {
+     try {
+       if (!urlOrId.includes("http")) return urlOrId.trim();
+       const u = new URL(urlOrId);
+       if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "").trim();
+       if (u.hostname.includes("youtube.com")) return (u.searchParams.get("v") || "").trim();
+       return urlOrId.trim();
+     } catch {
+       return urlOrId.trim();
+     }
+   }
+   
+   function ytLoopSrc(id: string) {
+     return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&rel=0&modestbranding=1&playsinline=1&disablekb=1&fs=0&iv_load_policy=3`;
+   }
+   
+   function ytBgSrc(id: string) {
+     return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1&loop=1&playlist=${id}&disablekb=1&fs=0&iv_load_policy=3`;
+   }
+   
+   /* -------------------------
+      Background (matches Art/Film)
+   -------------------------- */
+   function BackgroundYouTube({ youtubeId }: { youtubeId: string }) {
+     const [loaded, setLoaded] = useState(false);
+   
+     return (
+       <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
+         {!loaded && <div className="absolute inset-0 bg-black z-10" />}
+   
+         <div className="absolute inset-0">
+           <div className="absolute left-1/2 top-1/2 w-[120vw] h-[67.5vw] min-w-[177.78vh] min-h-[100vh] -translate-x-1/2 -translate-y-1/2">
+             <iframe
+               src={ytBgSrc(youtubeId)}
+               title="Background video"
+               className={`w-full h-full pointer-events-none transition-opacity duration-500 ${
+                 loaded ? "opacity-100" : "opacity-0"
+               }`}
+               allow="autoplay; encrypted-media; picture-in-picture"
+               referrerPolicy="strict-origin-when-cross-origin"
+               onLoad={() => setLoaded(true)}
+             />
+           </div>
+         </div>
+       </div>
+     );
+   }
+   
+   const BG_YT_ID = extractYouTubeId("29XFRArgneA");
+   const SHIFT_VIDEO_ID = extractYouTubeId("https://youtu.be/u2pAlfdXQUY");
+   
+   export function DesignsPage() {
+     const pageTitle = useMemo(() => "DESIGN".split(""), []);
+   
+     return (
+       <div className="min-h-[100dvh] text-white relative bg-transparent">
+         <BackgroundYouTube youtubeId={BG_YT_ID} />
+   
+         {/* Header */}
+         <section className="pt-12 pb-6">
+           <div className="max-w-[1180px] mx-auto px-10 md:px-14">
+             <div className="max-w-[980px] mx-auto">
+               <div className="mb-5">
+                 <div className="text-[12px] tracking-[0.5em] uppercase text-white/80 hover:text-red-600 transition-colors duration-500">
+                   Harlie Katz
+                 </div>
+               </div>
+   
+               <h1 className="editorial-heading text-[clamp(44px,5vw,64px)] leading-none hover:text-red-600 transition-colors duration-500">
+                 {pageTitle.map((letter, i) => (
+                   <motion.span key={i} className="inline-block">
+                     {letter}
+                   </motion.span>
+                 ))}
+               </h1>
+             </div>
+           </div>
+         </section>
+   
+         <section className="pt-10 pb-20">
+  <div className="max-w-[1400px] mx-auto px-10 md:px-14">
+    <div className="max-w-[820px] mx-auto"> {/* narrower container */}
 
-export function DesignsPage() {
-  const [selectedDesign, setSelectedDesign] = useState<string | null>(null);
+      <a
+        href="https://www.shiftcontent.co.uk"
+        target="_blank"
+        rel="noreferrer"
+        className="group block rounded-2xl border border-white/14 bg-white/5 overflow-hidden"
+      >
+        <div className="relative aspect-[1.15/1] overflow-hidden"> {/* more square */}
 
-  const designs = [
-    {
-      id: 'design-1',
-      title: 'Editorial Layout System',
-      description: 'A modular typographic system for contemporary art publications, exploring the relationship between text and image through structured grid layouts and expressive typography.',
-      category: 'Print Design',
-      preview: 'https://images.unsplash.com/photo-1620483474144-23931ab57ecd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxibGFjayUyMHdoaXRlJTIwZGVzaWduJTIwYXJjaGl0ZWN0dXJlfGVufDF8fHx8MTc2NjcyMjkwNnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-    },
-    {
-      id: 'design-2',
-      title: 'Visual Identity',
-      description: 'Brand identity for an experimental gallery space, combining minimal geometric forms with handwritten accents to bridge institutional and intimate.',
-      category: 'Branding',
-      preview: 'https://images.unsplash.com/photo-1643926502904-3ef4554bf53b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxibGFjayUyMHdoaXRlJTIwZWRpdG9yaWFsJTIwZmFzaGlvbiUyMGZpbG18ZW58MXx8fHwxNzY2NzIyOTA2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-    },
-    {
-      id: 'design-3',
-      title: 'Typographic Posters',
-      description: 'A series of experimental posters exploring the materiality of type, layering, and negative space through both digital and analog processes.',
-      category: 'Typography',
-      preview: 'https://images.unsplash.com/photo-1765029582791-7daa2b796431?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxibGFjayUyMHdoaXRlJTIwZmluZSUyMGFydCUyMGNoYXJjb2FsfGVufDF8fHx8MTc2NjcyMjkwNXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-    },
-    {
-      id: 'design-4',
-      title: 'Book Design',
-      description: 'A tactile exploration of narrative through physical form, binding, and paper selection. Each page designed to create a rhythmic reading experience.',
-      category: 'Publication',
-      preview: 'https://images.unsplash.com/photo-1667904700051-200f9e91264a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxibGFjayUyMHdoaXRlJTIwYWJzdHJhY3QlMjBhcnR8ZW58MXx8fHwxNzY2NzIyOTA2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-    }
-  ];
+          <iframe
+            src={ytLoopSrc(SHIFT_VIDEO_ID)}
+            title="Shift Content Website Preview"
+            className="absolute inset-0 w-full h-full pointer-events-none transition-transform duration-[1200ms] ease-out group-hover:scale-[1.05]"
+            allow="autoplay; encrypted-media; picture-in-picture"
+          />
 
-  // Split "Design" into individual letters for animation
-  const designLetters = "Design".split("");
-
-  return (
-    <div className="min-h-screen py-20 px-8">
-      <div className="max-w-[1600px] mx-auto">
-        {/* Page Title */}
-        <motion.div 
-          className="mb-20 relative"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <h1 className="editorial-heading text-7xl inline-flex">
-            {designLetters.map((letter, index) => (
-              <motion.span
-                key={index}
-                className="inline-block"
-                whileHover={{ 
-                  scale: 1.15,
-                  y: -8
-                }}
-                transition={{ 
-                  duration: 0.6,
-                  ease: [0.16, 1, 0.3, 1]
-                }}
-              >
-                {letter}
-              </motion.span>
-            ))}
-          </h1>
-          <p className="text-gray-600 text-sm mt-3 tracking-wide">
-            Typography, editorial systems, and visual identity across print and digital media
-          </p>
-          {/* Small red mark accent */}
-          <div className="absolute -bottom-2 left-0 red-mark red-mark-horizontal opacity-60"></div>
-        </motion.div>
-
-        {/* Designs Grid - Offset for depth */}
-        <div className="grid grid-cols-2 gap-16">
-          {designs.map((design, index) => (
-            <motion.div
-              key={design.id}
-              className="group cursor-pointer relative"
-              onClick={() => setSelectedDesign(selectedDesign === design.id ? null : design.id)}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 + index * 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              style={{ 
-                transform: `translateY(${(index % 2) * 30}px)` 
-              }}
-            >
-              {/* Preview Image */}
-              <div className="mounted-image aspect-[4/3] mb-6 overflow-hidden relative">
-                <motion.img
-                  src={design.preview}
-                  alt={design.title}
-                  className="w-full h-full object-cover grayscale"
-                  initial={{ scale: 1 }}
-                  whileHover={{ scale: 1.12 }}
-                  transition={{ duration: 2.0, ease: [0.16, 1, 0.3, 1] }}
-                />
-                
-                {/* Bohemian red mark accent on first design */}
-                {index === 0 && (
-                  <div className="absolute bottom-4 left-4 red-mark red-mark-horizontal opacity-60"></div>
-                )}
-                {index === 2 && (
-                  <div className="absolute top-4 right-4 red-mark red-mark-vertical opacity-50"></div>
-                )}
-              </div>
-
-              {/* Design Info */}
-              <div className="space-y-3">
-                <div className="flex items-baseline justify-between">
-                  <h3 className="editorial-heading text-3xl group-hover:text-[var(--accent-red)] transition-colors duration-500">{design.title}</h3>
-                </div>
-
-                <div className="small-caps text-xs text-[var(--accent-red)] tracking-[0.2em] mb-3">
-                  {design.category}
-                </div>
-
-                <motion.div
-                  initial={false}
-                  animate={{ 
-                    height: selectedDesign === design.id ? 'auto' : 0,
-                    opacity: selectedDesign === design.id ? 1 : 0 
-                  }}
-                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="overflow-hidden"
-                >
-                  <div className="text-mounted mt-4 relative">
-                    {/* Small red mark on expanded description */}
-                    <div className="absolute -top-2 -left-2 red-mark red-mark-horizontal opacity-50"></div>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {design.description}
-                    </p>
-                  </div>
-                </motion.div>
-
-                {selectedDesign !== design.id && (
-                  <motion.p
-                    initial={{ opacity: 1 }}
-                    animate={{ opacity: 1 }}
-                    className="text-sm text-gray-600 leading-relaxed line-clamp-2"
-                  >
-                    {design.description}
-                  </motion.p>
-                )}
-
-                <motion.button
-                  className="small-caps text-xs text-gray-600 hover:text-[var(--accent-red)] tracking-wider transition-colors mt-4"
-                  whileHover={{ x: 4 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {selectedDesign === design.id ? 'Close' : 'View Details'} →
-                </motion.button>
-              </div>
-            </motion.div>
-          ))}
+          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-700" />
         </div>
-      </div>
+
+        <div className="px-8 pt-7 pb-8">
+  <div className="max-w-[520px] mx-auto text-center">  {/* narrower text */}
+
+    <h3 className="editorial-heading text-3xl text-white group-hover:text-red-600 transition-colors duration-500">
+      Shift Content
+    </h3>
+
+    <p className="mt-4 text-sm text-white/75 leading-relaxed group-hover:text-red-600 transition-colors duration-500">
+      Refined and elevated the Shift Content website through high-impact layout, hierarchy, and visual design enhancements.
+    </p>
+
+    <div className="mt-6 text-[11px] tracking-[0.35em] uppercase text-white/80 group-hover:text-red-600 transition-colors duration-500">
+      Visit site →
     </div>
-  );
-}
+
+  </div>
+</div>
+
+      </a>
+
+    </div>
+  </div>
+</section>
+
+       </div>
+     );
+   }
+   

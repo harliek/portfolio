@@ -125,8 +125,8 @@ export function HomePage() {
   const navigationTiles: NavTile[] = [
     { id: "film", label: "Film", youtubeId: "4R6ptmrdATk", path: "/films" },
     { id: "art", label: "Art", youtubeId: "F6OdhvQRKAc", path: "/art" },
-    { id: "design", label: "Design", path: "/designs" }, // ✅ now navigates
-  ];
+    { id: "design", label: "Design", path: "/designs", isComingSoon: true }, // 👈 both
+  ];  
 
   const titleLetters = useMemo(() => "PORTFOLIO".split(""), []);
 

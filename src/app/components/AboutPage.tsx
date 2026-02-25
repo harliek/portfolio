@@ -31,17 +31,11 @@ export function AboutPage() {
                 </h2>
 
                 <p className="text-gray-800 leading-relaxed text-lg">
-                  I’m a filmmaker and visual artist studying Cognitive Science at UC Berkeley, 
-                  with a background in Data Science and Entrepreneurship. In film, I work across 
-                  roles including director, cinematographer, editor, and writer. My work explores 
-                  perception, identity, and psychological and existential tension, and I aim to 
-                  create emotionally resonant experiences that leave a lasting impact. Through 
-                  both film and charcoal, I’m drawn to realism infused with abstraction, using 
-                  distortion and composition to translate underlying emotion.
+                  I’m a filmmaker and visual artist studying Cognitive Science at UC Berkeley, with a minor in Data Science and a background in Entrepreneurship. My academic work centers on cognitive computational modeling and human-centered technology, integrating behavioral science, data analysis, systems design, and foundational programming to understand how AI-driven systems are designed, deployed, and scaled and how they shape perception, behavior, decision-making, and user experience.
                   <br /><br />
-                  I’m currently based in London, working with a film marketing and media 
-                  production company. Outside of work, I’ve been experimenting with prototyping 
-                  and coding websites, including this one. Design and interactive projects are 
+                  In film, I work across roles including director, cinematographer, editor, and writer. My creative work explores perception, identity, and psychological and existential tension. I am drawn to realism infused with abstraction, using distortion, composition, and visual structure to translate underlying emotion. Whether through film or charcoal, I aim to create experiences that feel intimate, immersive, and psychologically resonant.
+                  <br /><br />
+                  Currently based in London, I work with a film marketing and media production company, contributing to content strategy, production, and digital campaigns. Alongside this, I experiment with prototyping and coding interactive projects, including this site. Design and interactive projects are 
                   coming soon!
                 </p>
               </div>

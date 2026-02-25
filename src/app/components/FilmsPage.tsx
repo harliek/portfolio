@@ -10,6 +10,7 @@
      youtubeId: string;
      description?: string;
      awards?: string[];
+     customThumbSrc?: string;
      thumbFit?: "cover" | "contain";
      thumbZoom?: number;
      thumbY?: number;
@@ -38,9 +39,6 @@
      return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1&loop=1&playlist=${id}&disablekb=1&fs=0&iv_load_policy=3`;
    }
    
-   /* -------------------------
-      Background (no spinner flash)
-   -------------------------- */
    function BackgroundYouTube({ youtubeId }: { youtubeId: string }) {
      const [loaded, setLoaded] = useState(false);
    
@@ -66,18 +64,20 @@
      );
    }
    
-   function YouTubeThumb({
+   function FilmThumb({
      youtubeId,
+     customSrc,
      fit = "cover",
      zoom = 1.35,
      y = 0,
    }: {
      youtubeId: string;
+     customSrc?: string;
      fit?: "cover" | "contain";
      zoom?: number;
      y?: number;
    }) {
-     const src = `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+     const src = customSrc ?? `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
    
      return (
        <motion.div className="w-full h-full" whileHover={{ scale: 1.05 }} transition={{ duration: 0.6 }}>
@@ -123,7 +123,8 @@
          description:
            "Writer, director, cinematographer, and editor of an experimental short exploring self-objectification, artistic identity, and existential isolation.",
          awards: ["All American Film Festival", "Jewish Film Festival"],
-         thumbZoom: 1.38,
+         customThumbSrc: "art.jpg",
+         thumbZoom: 1,
        },
        {
          id: "2",
@@ -131,7 +132,8 @@
          youtubeId: extractYouTubeId("https://youtu.be/vTHlWiKE-Pk"),
          description:
            "Director, cinematographer, and editor of a narrative short examining mortality, impermanence, and the acceptance of time.",
-         thumbZoom: 1.35,
+         customThumbSrc: "wilt.jpg",
+         thumbZoom: 1,
        },
        {
          id: "3",
@@ -139,7 +141,8 @@
          youtubeId: extractYouTubeId("https://youtu.be/Rp-lu6UEQoY"),
          description:
            "Assistant editor on an experimental short following a detective and a seductive serial killer.",
-         thumbZoom: 1.35,
+         customThumbSrc: "blood.png",
+         thumbZoom: 1,
        },
        {
          id: "4",
@@ -147,8 +150,9 @@
          youtubeId: extractYouTubeId("https://youtu.be/MWRcrSRHsbQ"),
          description:
            "Writer, director, and editor of a narrative short exploring grief, memory, and enduring love. Dedicated to Leonard Goldenberg.",
-         thumbZoom: 1.35,
-         thumbY: 16, // ↓ move image DOWN so title at top is visible
+         customThumbSrc: "world.png",
+         thumbZoom: 1.2,
+         thumbY: 16,
        },
        {
          id: "5",
@@ -157,8 +161,9 @@
          description:
            "Writer, director, and cinematographer of a narrative short examining sexuality, vulnerability, and fear of rejection.",
          awards: ["Younger Directors' Film Festival"],
-         thumbZoom: 1.35,
-         thumbY: 16, // ↓ move image DOWN so title at top is visible
+         customThumbSrc: "shana.png",
+         thumbZoom: 1.2,
+         thumbY: 16,
        },
      ];
    
@@ -169,15 +174,17 @@
          youtubeId: extractYouTubeId("https://youtu.be/1zFdBhnlXpc"),
          description:
            "Videographer and production assistant for The Night Club Global Tour, sponsored by Gymshark and Heck Food.",
-         thumbZoom: 1.35,
+         customThumbSrc: "heck.png",
+         thumbZoom: 1,
        },
        {
          id: "7",
          title: "Relay for Life",
          youtubeId: extractYouTubeId("https://youtu.be/jFiozBBbywc"),
-         description: "Director and interviewer for a documentary produced for the American Cancer Society.",
-         thumbFit: "cover",
-         thumbZoom: 1.35,
+         description:
+           "Interviewed cancer survivors and produced an insirational video to promote Relay for Life, raising funds for the American Cancer Society.",
+         customThumbSrc: "hope.png",
+         thumbZoom: 1,
        },
        {
          id: "8",
@@ -185,7 +192,8 @@
          youtubeId: extractYouTubeId("https://youtu.be/W4bSTrXk25A"),
          description:
            "Director and editor of a documentary client project on the world’s first solar-electric catamaran.",
-         thumbZoom: 1.35,
+         customThumbSrc: "peter.png",
+         thumbZoom: 1.1,
        },
      ];
    
@@ -198,7 +206,7 @@
            <div className="max-w-[980px] mx-auto">
              <div className="flex items-center gap-5 mb-6 group">
                <div className="h-[1px] w-14 bg-white/70" />
-               <div className="text-[13px] tracking-[0.55em] uppercase text-white/85 group-hover:text-red-600 hover:text-red-600 transition-colors duration-500">
+               <div className="text-[13px] tracking-[0.55em] uppercase text-white/85 group-hover:text-red-600 transition-colors duration-500">
                  {sectionLabel}
                </div>
              </div>
@@ -214,9 +222,10 @@
                    className="rounded-2xl border border-white/14 bg-white/5 overflow-hidden"
                  >
                    <button onClick={() => setActiveFilm(film)} className="group block w-full text-left">
-                     <div className={`aspect-[${THUMB_ASPECT}] overflow-hidden bg-transparent`}>
-                       <YouTubeThumb
+                      <div className="aspect-[16/11] w-full overflow-hidden bg-black">
+                       <FilmThumb
                          youtubeId={film.youtubeId}
+                         customSrc={film.customThumbSrc}
                          fit={film.thumbFit ?? "cover"}
                          zoom={film.thumbZoom ?? 1.35}
                          y={film.thumbY ?? 0}
@@ -224,16 +233,16 @@
                      </div>
    
                      <div className="px-6 pt-5 pb-6">
-                       <h3 className="editorial-heading text-xl mb-2 text-white group-hover:text-red-600 hover:text-red-600 transition-colors duration-500">
+                       <h3 className="editorial-heading text-xl mb-2 text-white group-hover:text-red-600 transition-colors duration-500">
                          {film.title}
                        </h3>
    
-                       <p className="text-sm text-white/75 leading-relaxed group-hover:text-red-600 hover:text-red-600 transition-colors duration-500">
+                       <p className="text-sm text-white/75 leading-relaxed group-hover:text-red-600 transition-colors duration-500">
                          {film.description}
                        </p>
    
                        {film.awards && (
-                         <p className="mt-3 text-[11px] font-bold text-white/80 group-hover:text-red-600 hover:text-red-600 transition-colors duration-500">
+                         <p className="mt-3 text-[11px] font-bold text-white/80 group-hover:text-red-600 transition-colors duration-500">
                            {film.awards.map((a) => `•${a}`).join(" ")}
                          </p>
                        )}
@@ -308,4 +317,3 @@
        </div>
      );
    }
-   

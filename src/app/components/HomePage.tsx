@@ -2,10 +2,6 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
-/* -------------------------------------------------------
-   Shared helpers
--------------------------------------------------------- */
-
 function extractYouTubeId(urlOrId: string): string {
   try {
     if (!urlOrId.includes("http")) return urlOrId.trim();
@@ -19,12 +15,8 @@ function extractYouTubeId(urlOrId: string): string {
 }
 
 function ytHeroSrc(id: string) {
-  return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&rel=0&modestbranding=1&playsinline=1`;
+  return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&rel=0&modestbranding=1&playsinline=1&fs=0&disablekb=1&iv_load_policy=3`;
 }
-
-/* -------------------------------------------------------
-   HOME PAGE
--------------------------------------------------------- */
 
 type NavTile = {
   id: string;
@@ -45,12 +37,10 @@ function NavMediaTile({
 }) {
   const [loaded, setLoaded] = useState(false);
 
-  // If you ever want a "coming soon" overlay again:
   if (isComingSoon) {
     return <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]" />;
   }
 
-  // If no youtubeId is provided, just show a tasteful glass layer (no video)
   if (!youtubeId) {
     return <div className="absolute inset-0 bg-white/8 backdrop-blur-[1px]" />;
   }
@@ -71,12 +61,12 @@ function NavMediaTile({
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-black">
-      {!loaded && <div className="absolute inset-0 bg-black z-10" />}
+      {!loaded && <div className="absolute inset-0 bg-black z-20" />}
 
       <iframe
         src={embedSrc}
         title={label}
-        className={`yt-cover pointer-events-none transition-opacity duration-500 ${
+        className={`yt-cover transition-opacity duration-500 ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
         frameBorder="0"
@@ -84,20 +74,14 @@ function NavMediaTile({
         allowFullScreen={false}
         onLoad={() => setLoaded(true)}
       />
+
+      <div className="absolute inset-0 z-10 bg-transparent pointer-events-auto" />
     </div>
   );
 }
 
-/**
- * UPDATED HOME BACKGROUND:
- * https://youtu.be/zjcxYAodBFs
- */
 const HOME_BG_YT_ID = extractYouTubeId("https://youtu.be/zjcxYAodBFs");
 
-/**
- * Hover behavior (medium-big, slightly slow)
- * Applies to ALL tiles including "Design"
- */
 const tileHover = {
   whileHover: { scale: 1.14, y: -8 },
   transition: {
@@ -125,32 +109,28 @@ export function HomePage() {
   const navigationTiles: NavTile[] = [
     { id: "film", label: "Film", youtubeId: "4R6ptmrdATk", path: "/films" },
     { id: "art", label: "Art", youtubeId: "F6OdhvQRKAc", path: "/art" },
-    { id: "design", label: "Design", path: "/designs", isComingSoon: true }, // 👈 both
-  ];  
+    { id: "design", label: "Design", path: "/designs", isComingSoon: true },
+  ];
 
   const titleLetters = useMemo(() => "PORTFOLIO".split(""), []);
 
   return (
     <div className="relative min-h-screen text-white">
-      {/* HERO BACKGROUND (no spinner flash) */}
       <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
-        {!bgLoaded && <div className="absolute inset-0 bg-black z-10" />}
+  <video
+    className="absolute inset-0 w-full h-full object-cover scale-[1.2]"
+    src="/home-bg.mp4"
+    autoPlay
+    muted
+    loop
+    playsInline
+    preload="auto"
+  />
 
-        <div className="absolute inset-0 scale-[1.2]">
-          <iframe
-            src={ytHeroSrc(HOME_BG_YT_ID)}
-            className={`absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-500 ${
-              bgLoaded ? "opacity-100" : "opacity-0"
-            }`}
-            allow="autoplay; encrypted-media; picture-in-picture"
-            title="Home Background"
-            onLoad={() => setBgLoaded(true)}
-          />
-        </div>
-      </div>
+  <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+</div>
 
       <div className="relative z-10">
-        {/* hero height reduced so tiles sit higher */}
         <section className="relative h-[84vh] w-full">
           <div className="absolute left-[8%] top-[40%] -translate-y-1/2 max-w-[820px]">
             <div className="flex items-center gap-5 mb-6">
@@ -200,7 +180,12 @@ export function HomePage() {
                       tabIndex={0}
                       aria-label={`Go to ${item.label}`}
                       onKeyDown={(e) => {
-                        if (item.path && (e.key === "Enter" || e.key === " ")) navigate(item.path);
+                        if (
+                          item.path &&
+                          (e.key === "Enter" || e.key === " ")
+                        ) {
+                          navigate(item.path);
+                        }
                       }}
                     >
                       <div className="absolute inset-0 overflow-hidden rounded-2xl">

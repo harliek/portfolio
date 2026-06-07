@@ -14,10 +14,6 @@ function extractYouTubeId(urlOrId: string): string {
   }
 }
 
-function ytHeroSrc(id: string) {
-  return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&rel=0&modestbranding=1&playsinline=1&fs=0&disablekb=1&iv_load_policy=3`;
-}
-
 type NavTile = {
   id: string;
   label: string;
@@ -80,7 +76,58 @@ function NavMediaTile({
   );
 }
 
-const HOME_BG_YT_ID = extractYouTubeId("https://youtu.be/zjcxYAodBFs");
+function HomeBackground() {
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+
+  const fallbackYoutubeId = extractYouTubeId("https://youtu.be/zjcxYAodBFs");
+
+  const fallbackSrc =
+    `https://www.youtube-nocookie.com/embed/${fallbackYoutubeId}` +
+    `?autoplay=1` +
+    `&mute=1` +
+    `&loop=1` +
+    `&playlist=${fallbackYoutubeId}` +
+    `&controls=0` +
+    `&modestbranding=1` +
+    `&rel=0` +
+    `&playsinline=1` +
+    `&fs=0` +
+    `&disablekb=1` +
+    `&iv_load_policy=3`;
+
+  return (
+    <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
+      {videoFailed && (
+        <iframe
+          src={fallbackSrc}
+          title="Portfolio background"
+          className="yt-bg-cover"
+          frameBorder="0"
+          allow="autoplay; encrypted-media"
+          allowFullScreen={false}
+        />
+      )}
+
+      <video
+        className={`absolute inset-0 w-full h-full object-cover scale-[1.2] transition-opacity duration-700 ${
+          videoLoaded && !videoFailed ? "opacity-100" : "opacity-0"
+        }`}
+        src="/home-bg.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        onLoadedData={() => setVideoLoaded(true)}
+        onCanPlay={() => setVideoLoaded(true)}
+        onError={() => setVideoFailed(true)}
+      />
+
+      <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+    </div>
+  );
+}
 
 const tileHover = {
   whileHover: { scale: 1.14, y: -8 },
@@ -104,7 +151,6 @@ const tileTitleHover = {
 
 export function HomePage() {
   const navigate = useNavigate();
-  const [bgLoaded, setBgLoaded] = useState(false);
 
   const navigationTiles: NavTile[] = [
     { id: "film", label: "Film", youtubeId: "4R6ptmrdATk", path: "/films" },
@@ -116,19 +162,7 @@ export function HomePage() {
 
   return (
     <div className="relative min-h-screen text-white">
-      <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
-  <video
-    className="absolute inset-0 w-full h-full object-cover scale-[1.2]"
-    src="/home-bg.mp4"
-    autoPlay
-    muted
-    loop
-    playsInline
-    preload="auto"
-  />
-
-  <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-</div>
+      <HomeBackground />
 
       <div className="relative z-10">
         <section className="relative h-[84vh] w-full">
@@ -170,20 +204,14 @@ export function HomePage() {
                   >
                     <motion.div
                       onClick={() => item.path && navigate(item.path)}
-                      className={[
-                        "relative aspect-[4/5] rounded-2xl",
-                        "border border-white/20 bg-white/6 shadow-2xl cursor-pointer",
-                      ].join(" ")}
+                      className="relative aspect-[4/5] rounded-2xl border border-white/20 bg-white/6 shadow-2xl cursor-pointer"
                       {...tileHover}
                       style={{ transformOrigin: "center" }}
                       role="button"
                       tabIndex={0}
                       aria-label={`Go to ${item.label}`}
                       onKeyDown={(e) => {
-                        if (
-                          item.path &&
-                          (e.key === "Enter" || e.key === " ")
-                        ) {
+                        if (item.path && (e.key === "Enter" || e.key === " ")) {
                           navigate(item.path);
                         }
                       }}
@@ -226,6 +254,16 @@ export function HomePage() {
               left: 50%;
               width: 230%;
               height: 230%;
+              transform: translate(-50%, -50%);
+              border: 0;
+            }
+
+            .yt-bg-cover {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              width: 220%;
+              height: 220%;
               transform: translate(-50%, -50%);
               border: 0;
             }

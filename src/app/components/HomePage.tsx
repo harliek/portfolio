@@ -1,77 +1,62 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-
-function extractYouTubeId(urlOrId: string): string {
-  try {
-    if (!urlOrId.includes("http")) return urlOrId.trim();
-    const u = new URL(urlOrId);
-    if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "").trim();
-    if (u.hostname.includes("youtube.com")) return (u.searchParams.get("v") || "").trim();
-    return urlOrId.trim();
-  } catch {
-    return urlOrId.trim();
-  }
-}
 
 type NavTile = {
   id: string;
   label: string;
-  path?: string;
-  youtubeId?: string;
-  isComingSoon?: boolean;
+  path: string;
+  videoSrc?: string;
+  imageSrc?: string;
 };
 
 function NavMediaTile({
-  label,
-  youtubeId,
-  isComingSoon,
+  videoSrc,
+  imageSrc,
 }: {
-  label: string;
-  youtubeId?: string;
-  isComingSoon?: boolean;
+  videoSrc?: string;
+  imageSrc?: string;
 }) {
-  const [loaded, setLoaded] = useState(false);
+  if (videoSrc) {
+    return (
+      <div className="absolute inset-0 overflow-hidden bg-black">
+        <video
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          src={videoSrc}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+        />
 
-  if (isComingSoon) {
-    return <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]" />;
+        <div className="pointer-events-none absolute inset-0 bg-black/10" />
+      </div>
+    );
   }
 
-  if (!youtubeId) {
-    return <div className="absolute inset-0 bg-white/8 backdrop-blur-[1px]" />;
+  if (imageSrc) {
+    return (
+      <div className="absolute inset-0 overflow-hidden bg-black">
+        <img
+          src={imageSrc}
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        />
+
+        <div className="pointer-events-none absolute inset-0 bg-black/20" />
+      </div>
+    );
   }
 
-  const embedSrc =
-    `https://www.youtube-nocookie.com/embed/${youtubeId}` +
-    `?autoplay=1&mute=1&loop=1&playlist=${youtubeId}` +
-    `&controls=0&modestbranding=1&rel=0&playsinline=1&fs=0&disablekb=1&iv_load_policy=3`;
-
-  return (
-    <div className="absolute inset-0 overflow-hidden bg-black">
-      {!loaded && <div className="absolute inset-0 bg-black z-20" />}
-
-      <iframe
-        src={embedSrc}
-        title={label}
-        className={`yt-cover transition-opacity duration-500 ${
-          loaded ? "opacity-100" : "opacity-0"
-        }`}
-        frameBorder="0"
-        allow="autoplay; encrypted-media"
-        allowFullScreen={false}
-        onLoad={() => setLoaded(true)}
-      />
-
-      <div className="absolute inset-0 z-10 bg-transparent pointer-events-auto" />
-    </div>
-  );
+  return <div className="absolute inset-0 bg-white/8" />;
 }
 
 function HomeBackground() {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
       <video
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover"
         src={`${import.meta.env.BASE_URL}home-bg.mp4`}
         autoPlay
         muted
@@ -79,13 +64,17 @@ function HomeBackground() {
         playsInline
         preload="auto"
       />
-      <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+
+      <div className="pointer-events-none absolute inset-0 bg-black/10" />
     </div>
   );
 }
 
 const tileHover = {
-  whileHover: { scale: 1.14, y: -8 },
+  whileHover: {
+    scale: 1.14,
+    y: -8,
+  },
   transition: {
     type: "spring" as const,
     stiffness: 120,
@@ -95,7 +84,10 @@ const tileHover = {
 };
 
 const tileTitleHover = {
-  whileHover: { scale: 1.45, y: -5 },
+  whileHover: {
+    scale: 1.45,
+    y: -5,
+  },
   transition: {
     type: "spring" as const,
     stiffness: 150,
@@ -108,9 +100,24 @@ export function HomePage() {
   const navigate = useNavigate();
 
   const navigationTiles: NavTile[] = [
-    { id: "film", label: "Film", youtubeId: "4R6ptmrdATk", path: "/films" },
-    { id: "art", label: "Art", youtubeId: "F6OdhvQRKAc", path: "/art" },
-    { id: "design", label: "Design", path: "/designs", isComingSoon: true },
+    {
+      id: "film",
+      label: "Film",
+      videoSrc: `${import.meta.env.BASE_URL}film-tile.mp4`,
+      path: "/films",
+    },
+    {
+      id: "about",
+      label: "About Me",
+      imageSrc: `${import.meta.env.BASE_URL}about-me.jpg`,
+      path: "/designs",
+    },
+    {
+      id: "art",
+      label: "Art",
+      videoSrc: `${import.meta.env.BASE_URL}art-tile.mp4`,
+      path: "/art",
+    },
   ];
 
   const titleLetters = useMemo(() => "PORTFOLIO".split(""), []);
@@ -121,20 +128,26 @@ export function HomePage() {
 
       <div className="relative z-10">
         <section className="relative h-[84vh] w-full">
-          <div className="absolute left-[8%] top-[40%] -translate-y-1/2 max-w-[820px]">
-            <div className="flex items-center gap-5 mb-6">
+          <div className="absolute left-[8%] top-[40%] max-w-[820px] -translate-y-1/2">
+            <div className="mb-6 flex items-center gap-5">
               <div className="h-[1px] w-14 bg-white/70" />
+
               <div className="text-[12px] tracking-[0.5em] uppercase text-white/85">
                 HARLIE KATZ
               </div>
             </div>
 
             <h1 className="editorial-heading text-[clamp(64px,8.8vw,126px)] leading-none">
-              {titleLetters.map((letter, i) => (
+              {titleLetters.map((letter, index) => (
                 <motion.span
-                  key={i}
-                  whileHover={{ y: -6, scale: 1.06 }}
-                  transition={{ duration: 0.18 }}
+                  key={index}
+                  whileHover={{
+                    y: -6,
+                    scale: 1.06,
+                  }}
+                  transition={{
+                    duration: 0.18,
+                  }}
                   className="inline-block"
                 >
                   {letter}
@@ -147,9 +160,9 @@ export function HomePage() {
         <section className="relative pb-24">
           <div className="h-4" />
 
-          <div className="max-w-[1180px] mx-auto px-10 md:px-14">
-            <div className="max-w-[980px] mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="mx-auto max-w-[1180px] px-10 md:px-14">
+            <div className="mx-auto max-w-[980px]">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 {navigationTiles.map((item) => (
                   <motion.div
                     key={item.id}
@@ -158,42 +171,36 @@ export function HomePage() {
                     whileHover={{ zIndex: 50 }}
                   >
                     <motion.div
-                      onClick={() => item.path && navigate(item.path)}
-                      className="relative aspect-[4/5] rounded-2xl border border-white/20 bg-white/6 shadow-2xl cursor-pointer"
+                      onClick={() => navigate(item.path)}
+                      className="relative aspect-[4/5] cursor-pointer rounded-2xl border border-white/20 bg-white/6 shadow-2xl"
                       {...tileHover}
                       style={{ transformOrigin: "center" }}
                       role="button"
                       tabIndex={0}
                       aria-label={`Go to ${item.label}`}
-                      onKeyDown={(e) => {
-                        if (item.path && (e.key === "Enter" || e.key === " ")) {
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
                           navigate(item.path);
                         }
                       }}
                     >
                       <div className="absolute inset-0 overflow-hidden rounded-2xl">
                         <NavMediaTile
-                          label={item.label}
-                          youtubeId={item.youtubeId}
-                          isComingSoon={item.isComingSoon}
+                          videoSrc={item.videoSrc}
+                          imageSrc={item.imageSrc}
                         />
-                        <div className="absolute inset-0 tile-edge pointer-events-none" />
+
+                        <div className="tile-edge pointer-events-none absolute inset-0" />
                       </div>
 
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                      <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-center">
                         <motion.div
-                          className="font-semibold tracking-[0.28em] text-[clamp(16px,1.8vw,26px)] text-white origin-center will-change-transform"
+                          className="origin-center text-center text-[clamp(15px,1.7vw,24px)] font-semibold tracking-[0.25em] text-white will-change-transform"
                           initial={false}
                           {...tileTitleHover}
                         >
                           {item.label.toUpperCase()}
                         </motion.div>
-
-                        {item.isComingSoon && (
-                          <div className="mt-2 text-[11px] tracking-[0.35em] text-white/80">
-                            COMING SOON
-                          </div>
-                        )}
                       </div>
                     </motion.div>
                   </motion.div>
@@ -203,19 +210,12 @@ export function HomePage() {
           </div>
 
           <style>{`
-            .yt-cover {
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              width: 230%;
-              height: 230%;
-              transform: translate(-50%, -50%);
-              border: 0;
-            }
-
             .tile-edge {
-              background:
-                radial-gradient(ellipse at center, rgba(255,255,255,0.00) 0%, rgba(0,0,0,0.14) 92%);
+              background: radial-gradient(
+                ellipse at center,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(0, 0, 0, 0.14) 92%
+              );
               opacity: 0.9;
             }
           `}</style>

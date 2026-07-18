@@ -48,10 +48,10 @@ export function ArtPage() {
   const sheIsHer = useMemo<Artwork[]>(
     () => [
       { id: "her-5", title: "She Is Art", image: "/art/nyu.jpg" },
-      { id: "her-2", title: "The Body’s Burden", image: "/art/body.jpg" },
       { id: "her-1", title: "Soaked in Silence", image: "/art/close.jpg" },
-      { id: "her-0", title: "Two Truths and 100 Lies", image: "/art/two.jpg" },
+      { id: "her-2", title: "The Body’s Burden", image: "/art/body.jpg" },
       { id: "her-3", title: "In Her Arms", image: "/art/baby.jpg" },
+      { id: "her-0", title: "Two Truths and 100 Lies", image: "/art/two.jpg" },
       { id: "her-4", title: "Lingering Ache", image: "/art/long.jpg" },
     ],
     []

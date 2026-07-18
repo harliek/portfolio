@@ -400,7 +400,7 @@ export function DesignsPage() {
     },
     {
       period: "JUN 2024 – JUL 2024",
-      title: "Founder and Team Lead",
+      title: "Student Founder",
       company: "Jumpstart Finance",
       location: "Porto, Portugal",
       bullets: [

@@ -482,12 +482,12 @@ export function DesignsPage() {
             >
               <p>
                 <SwayText>
-                  Artificial intelligence began with a question the human mind
-                  had already answered. At UC Berkeley, I studied cognition,
-                  artificial intelligence, and quantitative methods to
-                  understand intelligence from human and computational
-                  perspectives. Now I apply that foundation to products,
-                  strategy, and systems built around how people think.
+                As artificial intelligence reshapes how we work, learn, and create, I have spent my academic career studying the system that inspired it: the human brain.
+I completed my UC Berkeley education in three years, earning a B.A. in Cognitive Science and a minor in Data Science, where I studied machine learning, business analytics, cognitive psychology, computational modeling, and human-centered design. Across my professional experiences, I move between
+                  quantitative evidence, human behavior, technical systems, and
+                  business context to understand the larger system behind strategic
+                  decisions.
+
                 </SwayText>
               </p>
             </motion.div>
@@ -591,7 +591,7 @@ export function DesignsPage() {
                 status="Admitted"
                 school="NYU Tandon School of Engineering"
                 degree="M.S. Integrated Design and Media"
-                description="Admitted to study emerging technology and human-centered design. Currently prioritizing a full-time role applying cognition, AI, quantitative analysis, and product strategy."
+                description="Currently prioritizing a full-time industry experience."
               />
             </Reveal>
           </div>

@@ -11,8 +11,8 @@ function BackgroundVideo() {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
       <video
-        className="absolute inset-0 w-full h-full object-cover scale-[1.2]"
-        src="/blackback2.mp4"
+        className="absolute inset-0 w-full h-full object-cover"
+        src={`${import.meta.env.BASE_URL}blackback2.mp4`}
         autoPlay
         muted
         loop
@@ -47,12 +47,12 @@ export function ArtPage() {
 
   const sheIsHer = useMemo<Artwork[]>(
     () => [
-      { id: "her-0", title: "Two Truths and 100 Lies", image: "/art/two.jpg" },
-      { id: "her-1", title: "Soaked in Silence", image: "/art/close.jpg" },
+      { id: "her-5", title: "She Is Art", image: "/art/nyu.jpg" },
       { id: "her-2", title: "The Body’s Burden", image: "/art/body.jpg" },
+      { id: "her-1", title: "Soaked in Silence", image: "/art/close.jpg" },
+      { id: "her-0", title: "Two Truths and 100 Lies", image: "/art/two.jpg" },
       { id: "her-3", title: "In Her Arms", image: "/art/baby.jpg" },
       { id: "her-4", title: "Lingering Ache", image: "/art/long.jpg" },
-      { id: "her-5", title: "Solitary She", image: "/art/turn.jpg" },
     ],
     []
   );

@@ -43,17 +43,8 @@ function NavMediaTile({
 
   const embedSrc =
     `https://www.youtube-nocookie.com/embed/${youtubeId}` +
-    `?autoplay=1` +
-    `&mute=1` +
-    `&loop=1` +
-    `&playlist=${youtubeId}` +
-    `&controls=0` +
-    `&modestbranding=1` +
-    `&rel=0` +
-    `&playsinline=1` +
-    `&fs=0` +
-    `&disablekb=1` +
-    `&iv_load_policy=3`;
+    `?autoplay=1&mute=1&loop=1&playlist=${youtubeId}` +
+    `&controls=0&modestbranding=1&rel=0&playsinline=1&fs=0&disablekb=1&iv_load_policy=3`;
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-black">
@@ -77,53 +68,17 @@ function NavMediaTile({
 }
 
 function HomeBackground() {
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [videoFailed, setVideoFailed] = useState(false);
-
-  const fallbackYoutubeId = extractYouTubeId("https://youtu.be/zjcxYAodBFs");
-
-  const fallbackSrc =
-    `https://www.youtube-nocookie.com/embed/${fallbackYoutubeId}` +
-    `?autoplay=1` +
-    `&mute=1` +
-    `&loop=1` +
-    `&playlist=${fallbackYoutubeId}` +
-    `&controls=0` +
-    `&modestbranding=1` +
-    `&rel=0` +
-    `&playsinline=1` +
-    `&fs=0` +
-    `&disablekb=1` +
-    `&iv_load_policy=3`;
-
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
-      {videoFailed && (
-        <iframe
-          src={fallbackSrc}
-          title="Portfolio background"
-          className="yt-bg-cover"
-          frameBorder="0"
-          allow="autoplay; encrypted-media"
-          allowFullScreen={false}
-        />
-      )}
-
       <video
-        className={`absolute inset-0 w-full h-full object-cover scale-[1.2] transition-opacity duration-700 ${
-          videoLoaded && !videoFailed ? "opacity-100" : "opacity-0"
-        }`}
-        src="/home-bg.mp4"
+        className="absolute inset-0 w-full h-full object-cover"
+        src={`${import.meta.env.BASE_URL}home-bg.mp4`}
         autoPlay
         muted
         loop
         playsInline
         preload="auto"
-        onLoadedData={() => setVideoLoaded(true)}
-        onCanPlay={() => setVideoLoaded(true)}
-        onError={() => setVideoFailed(true)}
       />
-
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
     </div>
   );
@@ -254,16 +209,6 @@ export function HomePage() {
               left: 50%;
               width: 230%;
               height: 230%;
-              transform: translate(-50%, -50%);
-              border: 0;
-            }
-
-            .yt-bg-cover {
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              width: 220%;
-              height: 220%;
               transform: translate(-50%, -50%);
               border: 0;
             }

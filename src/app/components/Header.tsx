@@ -32,7 +32,7 @@ export function Header() {
             Art
           </Link>
 
-          <Link to="/designs" className={linkClass("/designs")}>
+          <Link to="/about" className={linkClass("/about")}>
             About Me
           </Link>
         </nav>

@@ -110,7 +110,7 @@ export function HomePage() {
       id: "about",
       label: "About Me",
       imageSrc: `${import.meta.env.BASE_URL}about-me.jpg`,
-      path: "/designs",
+      path: "/about",
     },
     {
       id: "art",

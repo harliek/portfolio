@@ -170,7 +170,7 @@ function Background() {
 
 export default function App() {
   return (
-    <Router basename={import.meta.env.BASE_URL}>
+    <Router>
       <Background />
 
       <div className="relative z-10 min-h-screen">

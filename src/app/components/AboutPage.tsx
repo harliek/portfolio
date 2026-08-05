@@ -31,12 +31,6 @@ function AboutBackground() {
       className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-black"
       aria-hidden="true"
     >
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${import.meta.env.BASE_URL}back.png)`,
-        }}
-      />
 
       <video
         className="absolute inset-0 h-full w-full object-cover"

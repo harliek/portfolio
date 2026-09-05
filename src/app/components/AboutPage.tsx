@@ -515,24 +515,47 @@ export function AboutPage() {
                 }}
                 className="mt-6 text-[10px] font-medium uppercase tracking-[0.25em] text-red-400 md:text-[11px]"
               >
-                AI Strategy & Implementation | Product Data & Operations
+                AI Product Strategy | Deployment & Implementation
               </motion.div>
 
               <motion.div
-  initial={{ opacity: 0, y: 18 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.8, delay: 0.3 }}
-  className="mt-8 max-w-2xl text-[16px] leading-8 text-white/70 md:text-[18px] md:leading-9"
->
-  <p>
-  Companies gain the greatest advantage from technology when they stop optimizing old systems and design new systems around what the technology now makes possible.
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="mt-8 max-w-2xl space-y-5 text-[16px] leading-7 text-white/70 md:text-[17px] md:leading-8"
+              >
+                <p className="text-xl font-medium leading-8 text-white/95 md:text-2xl md:leading-9">
+                  I am deeply invested in the future of applied AI.
+                </p>
 
+                <p>
+                  I graduated from UC Berkeley in three years with a degree in
+                  Cognitive Science and a minor in Data Science, studying
+                  intelligence as a human process and a computational system.
+                  That perspective shapes how I approach product development,
+                  from understanding how people think to identifying where AI
+                  can serve them.
+                </p>
 
-    I studied intelligence as both a human process and a computational
-    system at UC Berkeley. Since then, I have applied that perspective
-    to product data, AI agents, workflow design, and implementation.
-  </p>
-</motion.div>
+                <p>
+                  I have consistently expanded my roles toward AI product
+                  development. At PlanetArt, I joined as a merchandising intern,
+                  recognized that fragmented product data was creating friction,
+                  and independently prototyped a centralized platform that I
+                  brought to engineering for development. At Valiance Capital,
+                  I joined as a leasing agent, proposed an AI leasing assistant,
+                  and translated frontline workflows into product requirements
+                  for a system later adopted across 18 properties.
+                </p>
+
+                <p>
+                  I am pursuing early-career opportunities in AI product
+                  management, deployment, and implementation strategy. My focus
+                  is on translating what people need into clear requirements,
+                  building useful tools, and evaluating how well they work in
+                  practice.
+                </p>
+              </motion.div>
 
               <motion.div
                 initial={{
@@ -679,7 +702,7 @@ export function AboutPage() {
                 }}
               >
                 <div className="text-[10px] uppercase tracking-[0.3em] text-white/40">
-                  AI Strategy & Implementation · Product Data & Operations
+                  AI Product Strategy · Deployment & Implementation
                 </div>
 
                 <h2 className="editorial-heading mt-5 text-[clamp(34px,5vw,54px)]">

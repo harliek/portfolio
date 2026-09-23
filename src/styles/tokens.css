@@ -1,0 +1,157 @@
+/*
+ * Design tokens. Every tunable visual value lives here.
+ * Dark is the primary (and only) theme; it does not depend on the OS setting.
+ * Hex fallbacks come first; OKLCH values replace them where supported.
+ */
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/InterVariable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Metric-adjusted local fallback to limit layout shift while Inter loads. */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('Helvetica');
+  ascent-override: 96.9%;
+  descent-override: 24.1%;
+  line-gap-override: 0%;
+  size-adjust: 107.1%;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Color */
+  --color-bg: #090a0f;
+  --color-surface: #11131b;
+  --color-raised: #191c28;
+  --color-text: #f4f5fa;
+  --color-muted: #b0b4c3;
+  --color-subtle: #858c9f;
+  --color-accent: #8a8fff;
+  --color-focus: #aab4ff;
+  --color-light-blue: #5267ff;
+  --color-light-violet: #7860e8;
+  --color-line: #303545;
+  --color-header: rgb(9 10 15 / 0.94);
+  --color-media-edge: rgb(255 255 255 / 0.08);
+  --color-scrim: rgb(5 6 10 / 0.9);
+
+  /* Typography */
+  --font-sans: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Fluid between 360px and 1200px viewports. */
+  --text-display: clamp(2.5rem, 1.857rem + 2.857vw, 4rem);
+  --text-section: clamp(1.75rem, 1.536rem + 0.952vw, 2.25rem);
+  --text-sub: clamp(1.375rem, 1.321rem + 0.238vw, 1.5rem);
+  --text-body: clamp(1rem, 0.946rem + 0.238vw, 1.125rem);
+  --text-small: 0.875rem;
+  --leading-display: 1.08;
+  --leading-section: 1.18;
+  --leading-sub: 1.28;
+  --leading-body: 1.55;
+  --leading-small: 1.5;
+  --tracking-display: -0.045em;
+  --tracking-section: -0.025em;
+  --tracking-sub: -0.015em;
+  --tracking-label: 0.06em;
+  --weight-body: 400;
+  --weight-label: 500;
+  --weight-heading: 560;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  /* Layout */
+  --shell-max: 1280px;
+  --media-max: 1120px;
+  --prose-max: 660px;
+  --gutter: 20px;
+  --grid-columns: 4;
+  --grid-gap: 16px;
+  --header-height: 64px;
+  --chapter-gap: var(--space-8);
+  --copy-to-media: var(--space-5);
+
+  /* Surfaces */
+  --radius-inner: 12px;
+  --pad-frame: 8px;
+  --radius-outer: calc(var(--radius-inner) + var(--pad-frame));
+  --radius-button: 8px;
+  --shadow-media: 0 0 0 1px var(--color-media-edge), 0 18px 40px -24px rgb(0 0 0 / 0.7);
+  --shadow-media-hover: 0 0 0 1px rgb(255 255 255 / 0.14), 0 22px 48px -22px rgb(0 0 0 / 0.75);
+
+  /* Light (decorative only; never used for small text) */
+  --light-field: radial-gradient(
+    60% 70% at 50% 45%,
+    rgb(82 103 255 / 0.2) 0%,
+    rgb(120 96 232 / 0.1) 40%,
+    rgb(9 10 15 / 0) 72%
+  );
+
+  /* Motion (CSS side; GSAP values live in src/config/motion.ts) */
+  --dur-feedback: 150ms;
+  --dur-label: 160ms;
+  --dur-route: 180ms;
+  --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --press-scale: 0.98;
+
+  /* Focus */
+  --focus-ring: 2px solid var(--color-focus);
+  --focus-offset: 3px;
+}
+
+@supports (color: oklch(0 0 0)) {
+  :root {
+    --color-bg: oklch(0.1461 0.011 275.82);
+    --color-surface: oklch(0.1885 0.0166 273.77);
+    --color-raised: oklch(0.2291 0.0238 273.52);
+    --color-text: oklch(0.9708 0.0067 277.16);
+    --color-muted: oklch(0.7714 0.0218 273.95);
+    --color-subtle: oklch(0.6408 0.0296 269.49);
+    --color-accent: oklch(0.6961 0.1621 279.37);
+    --color-focus: oklch(0.7902 0.1072 277.8);
+    --color-light-blue: oklch(0.5878 0.2248 271.57);
+    --color-light-violet: oklch(0.5846 0.197 286.73);
+    --color-line: oklch(0.3311 0.0292 271.22);
+  }
+}
+
+@media (min-width: 600px) {
+  :root {
+    --gutter: 32px;
+    --grid-columns: 8;
+    --grid-gap: 24px;
+  }
+}
+
+@media (min-width: 900px) {
+  :root {
+    --gutter: 40px;
+    --grid-columns: 12;
+    --header-height: 72px;
+    --chapter-gap: var(--space-9);
+    --copy-to-media: var(--space-6);
+    --leading-display: 1.04;
+    --leading-section: 1.15;
+    --leading-sub: 1.25;
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --gutter: 64px;
+  }
+}

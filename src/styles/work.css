@@ -1,0 +1,14 @@
+/* Homepage: intro, work rail / carousel, work index, contact. */
+
+.not-found {
+  display: grid;
+  gap: var(--space-5);
+  padding-top: var(--space-8);
+}
+
+.not-found__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  list-style: none;
+}

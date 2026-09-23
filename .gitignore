@@ -1,0 +1,30 @@
+# Dependencies and build output
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# Test output
+test-results/
+playwright-report/
+tests/screenshots/
+blob-report/
+
+# OS / editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Original source materials — preserved in place, never committed.
+# Only optimized derivatives under public/ are committed.
+/PlanetArt/
+/Valiance Capital/
+/JumpStart Finance/
+/Shift Content/
+/personal assets/
+/inspiration/
+/design:portfolio rules/*.pdf
+
+# Local media working files
+/.media-cache/

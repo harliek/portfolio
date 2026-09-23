@@ -1,5 +1,406 @@
 /* Homepage: intro, work rail / carousel, work index, contact. */
 
+.home {
+  padding-top: var(--space-5);
+}
+
+/* Identity */
+.home-intro {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.home-intro__descriptor {
+  color: var(--color-muted);
+  font-weight: var(--weight-body);
+}
+
+/* Selected work */
+.home-work {
+  position: relative;
+  isolation: isolate;
+  margin-top: var(--space-6);
+}
+
+/* A broad, static field of light behind the work. Never follows the pointer. */
+.home-work::before {
+  content: '';
+  position: absolute;
+  inset: -18% 0 -6%;
+  z-index: -1;
+  background: var(--light-field);
+  opacity: 0.85;
+  pointer-events: none;
+  /* Soften the top edge where the field meets the introduction. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 35%);
+  mask-image: linear-gradient(to bottom, transparent, black 35%);
+}
+
+.work-carousel__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.work-carousel__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.work-carousel__counter {
+  margin-right: var(--space-2);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-label);
+  white-space: nowrap;
+}
+
+.work-carousel__current {
+  color: var(--color-text);
+}
+
+/* aria-disabled (not disabled) keeps focus on the control at either end. */
+.work-carousel__arrow[aria-disabled='true'] {
+  cursor: default;
+  color: var(--color-subtle);
+  opacity: 0.55;
+}
+
+.work-carousel__arrow[aria-disabled='true']:hover {
+  background: var(--color-raised);
+  box-shadow: inset 0 0 0 1px var(--color-line);
+}
+
+.work-carousel__arrow[aria-disabled='true']:active {
+  transform: none;
+}
+
+.work-carousel__hint {
+  margin-top: calc(-1 * var(--space-2));
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}
+
+/*
+ * Native scroll-snap rail. Full-bleed so cards travel to the viewport edge,
+ * with an inset that lines the first card up with the page shell.
+ */
+.snap-rail {
+  --rail-inset: max(var(--gutter), calc((100% - var(--shell-max)) / 2 + var(--gutter)));
+  --rail-gap: var(--space-4);
+  position: relative;
+  display: flex;
+  gap: var(--rail-gap);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--rail-inset) var(--space-6);
+  list-style: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--rail-inset);
+  scrollbar-width: none;
+}
+
+.snap-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.snap-rail__item {
+  display: flex;
+  flex: 0 0 86%;
+  min-width: 0;
+  scroll-snap-align: center;
+}
+
+@media (min-width: 600px) {
+  .snap-rail__item {
+    flex-basis: 62%;
+  }
+}
+
+@media (min-width: 900px) {
+  .snap-rail {
+    --rail-gap: var(--space-5);
+  }
+
+  .snap-rail__item {
+    flex-basis: max(340px, 40%);
+  }
+}
+
+/* Project card: one link, cover in a padded frame, text below. */
+.project-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: var(--pad-frame);
+  border-radius: var(--radius-outer);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-media);
+  color: var(--color-text);
+  text-decoration: none;
+  transition:
+    box-shadow var(--dur-feedback) var(--ease-out),
+    background-color var(--dur-feedback) var(--ease-out);
+}
+
+.project-card:focus-visible {
+  outline-offset: 3px;
+  border-radius: var(--radius-outer);
+}
+
+.project-card__media {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-inner);
+  overflow: hidden;
+  background: var(--color-raised);
+}
+
+/* Inner media edge. */
+.project-card__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--color-media-edge);
+  pointer-events: none;
+}
+
+.project-card__media .picture,
+.project-card__media img {
+  height: 100%;
+}
+
+.project-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--space-4) var(--space-3) var(--space-3);
+}
+
+.project-card__meta {
+  margin-top: var(--space-1);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-label);
+}
+
+.project-card__sep {
+  margin-inline: var(--space-1);
+  color: var(--color-subtle);
+}
+
+.project-card__summary {
+  margin-top: var(--space-3);
+  max-width: 48ch;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  text-wrap: pretty;
+}
+
+.project-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: var(--space-4);
+  color: var(--color-text);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-label);
+  transition: color var(--dur-feedback) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .project-card:hover {
+    background: var(--color-raised);
+    box-shadow: var(--shadow-media-hover);
+  }
+
+  .project-card:hover .project-card__cta {
+    color: var(--color-focus);
+  }
+}
+
+/* All projects */
+.home-index {
+  margin-top: var(--space-6);
+}
+
+.work-index {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.work-index__list {
+  list-style: none;
+  border-top: 1px solid var(--color-line);
+}
+
+.work-index__list > li {
+  border-bottom: 1px solid var(--color-line);
+}
+
+.work-index__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'title arrow'
+    'meta arrow';
+  align-items: center;
+  column-gap: var(--space-4);
+  row-gap: 2px;
+  min-height: 44px;
+  padding-block: var(--space-4);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.work-index__row:focus-visible {
+  outline-offset: 2px;
+  border-radius: var(--radius-button);
+}
+
+.work-index__title {
+  grid-area: title;
+  font-weight: var(--weight-label);
+  transition: color var(--dur-feedback) var(--ease-out);
+}
+
+.work-index__meta {
+  grid-area: meta;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}
+
+.work-index__sep {
+  margin-inline: var(--space-1);
+  color: var(--color-subtle);
+}
+
+.work-index__arrow {
+  grid-area: arrow;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  transition: color var(--dur-feedback) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .work-index__row:hover .work-index__title,
+  .work-index__row:hover .work-index__arrow {
+    color: var(--color-accent);
+  }
+}
+
+@media (min-width: 600px) {
+  .work-index__row {
+    grid-template-columns: minmax(0, 1fr) auto 1rem;
+    grid-template-areas: 'title meta arrow';
+    align-items: baseline;
+    column-gap: var(--space-5);
+    padding-block: var(--space-4);
+  }
+
+  /* Org and year in fixed columns so they align row to row. */
+  .work-index__meta {
+    display: grid;
+    grid-template-columns: 12rem 5.5rem;
+    column-gap: var(--space-4);
+  }
+
+  .work-index__sep {
+    display: none;
+  }
+
+  .work-index__year {
+    text-align: right;
+  }
+
+  .work-index__arrow {
+    justify-self: end;
+  }
+}
+
+@media (min-width: 900px) {
+  .work-index__meta {
+    grid-template-columns: 14rem 6rem;
+  }
+}
+
+/* Contact (homepage and About) */
+.home-contact {
+  margin-top: var(--chapter-gap);
+}
+
+.contact-block {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  padding-top: var(--space-7);
+  border-top: 1px solid var(--color-line);
+}
+
+.contact-block__intro {
+  max-width: var(--prose-max);
+  color: var(--color-muted);
+}
+
+.contact-block__links {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+  list-style: none;
+}
+
+.contact-block__email {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+
+.contact-block__secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  text-decoration: none;
+  transition: color var(--dur-feedback) var(--ease-out);
+}
+
+.contact-block__secondary:hover {
+  color: var(--color-text);
+}
+
+@media (min-width: 900px) {
+  .home {
+    padding-top: var(--space-7);
+  }
+
+  .home-work {
+    margin-top: var(--space-8);
+  }
+
+  .home-index {
+    margin-top: var(--space-8);
+  }
+}
+
+/* Not found */
 .not-found {
   display: grid;
   gap: var(--space-5);

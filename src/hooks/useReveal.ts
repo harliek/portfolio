@@ -13,6 +13,11 @@ gsap.registerPlugin(ScrollTrigger)
  * Never applied to the H1 or hero. Nothing replays on upward scroll. Under
  * reduced motion nothing is animated. If GSAP fails, content stays visible
  * because no hidden state exists in CSS.
+ *
+ * Only opacity is animated (never visibility), so content that has not yet
+ * scrolled into view stays focusable and exposed to assistive technology.
+ * If keyboard focus lands inside a section before it is revealed, the
+ * section is shown immediately.
  */
 export function useReveal(scope: RefObject<HTMLElement | null>) {
   useLayoutEffect(() => {
@@ -20,20 +25,25 @@ export function useReveal(scope: RefObject<HTMLElement | null>) {
     if (!root) return
     const mm = gsap.matchMedia()
     mm.add('(prefers-reduced-motion: no-preference)', () => {
+      const cleanups: Array<() => void> = []
       root.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => {
         const stagger = el.dataset.reveal === 'stagger'
         const targets = stagger ? Array.from(el.children) : [el]
         const cfg = stagger ? MOTION.enterSmall : MOTION.enterSection
-        gsap.from(targets, {
-          autoAlpha: 0,
+        const tween = gsap.from(targets, {
+          opacity: 0,
           y: cfg.y,
           duration: cfg.duration,
           ease: cfg.ease,
           stagger: stagger ? staggerFor(targets.length) : 0,
-          clearProps: 'transform,opacity,visibility',
+          clearProps: 'transform,opacity',
           scrollTrigger: { trigger: el, start: MOTION.enterStart, once: true },
         })
+        const onFocusIn = () => tween.progress(1)
+        el.addEventListener('focusin', onFocusIn, { once: true })
+        cleanups.push(() => el.removeEventListener('focusin', onFocusIn))
       })
+      return () => cleanups.forEach((fn) => fn())
     })
     // Media and fonts can change layout after mount; refresh once when ready.
     let cancelled = false

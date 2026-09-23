@@ -36,6 +36,9 @@ export const router = createBrowserRouter([
   {
     path: '/',
     Component: PageShell,
+    // Rendered only while a directly loaded lazy route resolves (a few ms for
+    // these small local chunks); avoids a flash of unrelated content.
+    HydrateFallback: () => null,
     children: [
       { index: true, Component: Home },
       { path: 'about', lazy: lazyPage('/about') },

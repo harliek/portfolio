@@ -4,9 +4,14 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    // Media working files (frames, renders, transcript work) are large and
+    // irrelevant to the app; keep the dev watcher away from them.
+    watch: { ignored: ['**/.media-cache/**', '**/tests/screenshots/**'] },
+  },
+  optimizeDeps: { entries: ['index.html'] },
   build: {
     target: 'es2022',
-    // Case-study routes are split; keep GSAP out of the entry chunk where possible.
     chunkSizeWarningLimit: 400,
   },
   preview: {

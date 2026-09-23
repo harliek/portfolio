@@ -9,7 +9,9 @@ import { CaptionText } from '../media/Figure'
  * decisions, each with its Yes/No outcomes as a nested list. Below 900px it
  * reads as a numbered vertical sequence; from 900px CSS (subgrid) lays the
  * same elements out as a branching tree. All connectors are CSS pseudo-elements
- * (not read aloud). Styles live in src/styles/pages/valiance.css (.vb).
+ * (not read aloud). Explicit role="list" keeps the list semantics in WebKit,
+ * which drops them for unstyled lists. Styles live in
+ * src/styles/pages/valiance.css (.vb).
  */
 export function ValianceBoundaries({ className }: { className?: string }) {
   return (
@@ -19,13 +21,13 @@ export function ValianceBoundaries({ className }: { className?: string }) {
         <div className="vb__chart">
           <p className="vb__start diagram-node diagram-node--focus">Leasing question</p>
 
-          <ol className="vb__steps">
+          <ol className="vb__steps" role="list">
             <li className="vb__step vb__step--1">
               <p className="vb__question diagram-node">
                 <span className="vb__num tabular" aria-hidden="true">1</span>
                 <span>Does it require a human decision or exception?</span>
               </p>
-              <ul className="vb__outcomes">
+              <ul className="vb__outcomes" role="list">
                 <li className="vb__outcome vb__outcome--yes">
                   <span className="vb__label">Yes</span>
                   <p className="vb__node diagram-node diagram-node--human">Escalate to the leasing team</p>
@@ -42,7 +44,7 @@ export function ValianceBoundaries({ className }: { className?: string }) {
                 <span className="vb__num tabular" aria-hidden="true">2</span>
                 <span>Does it depend on current property information?</span>
               </p>
-              <ul className="vb__outcomes">
+              <ul className="vb__outcomes" role="list">
                 <li className="vb__outcome vb__outcome--yes">
                   <span className="vb__label">Yes</span>
                   <p className="vb__node diagram-node">Use a verified current source</p>

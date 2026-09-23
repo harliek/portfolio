@@ -63,7 +63,8 @@ export function PlanetArtWorkflow() {
       </div>
       <figcaption className="figure__caption">
         <CaptionText provenance="retrospective-diagram">
-          Retrospective explanation of the concept. This is not a deployed-system architecture.
+          Retrospective explanation of the concept. This is not a{' '}
+          <span className="pa-nowrap">deployed-system</span> architecture.
         </CaptionText>
       </figcaption>
     </figure>

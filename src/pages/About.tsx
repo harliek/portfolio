@@ -29,11 +29,15 @@ const EXPERIENCE: ExperienceRow[] = [
 const PORTRAIT_SIZES = '(min-width: 1248px) 210px, (min-width: 900px) 17vw, (min-width: 600px) 25vw, calc(50vw - 28px)'
 const LANDSCAPE_SIZES = '(min-width: 1248px) 320px, (min-width: 900px) 26vw, (min-width: 600px) 38vw, calc(100vw - 40px)'
 
+/*
+ * The spaces between the spans keep the parts separate in link names and
+ * copied text in every browser; a grid container does not render them.
+ */
 function ExperienceContent({ row, linked }: { row: ExperienceRow; linked: boolean }) {
   return (
     <>
-      <span className="about-exp__org">{row.org}</span>
-      <span className="about-exp__role">{row.role}</span>
+      <span className="about-exp__org">{row.org}</span>{' '}
+      <span className="about-exp__role">{row.role}</span>{' '}
       <span className="about-exp__dates tabular">{row.dates}</span>
       <span className="about-exp__arrow" aria-hidden="true">
         {linked ? '↗' : ''}

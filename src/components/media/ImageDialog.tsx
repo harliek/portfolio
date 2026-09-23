@@ -147,7 +147,12 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
               </picture>
             </div>
             <p id="image-dialog-caption" className="image-dialog__caption t-small">
-              {label && <span className="provenance">{label}</span>}
+              {label && (
+                <>
+                  <span className="provenance">{label}</span>
+                  <span className="provenance-sep"> · </span>
+                </>
+              )}
               {current.caption ?? current.alt}
             </p>
           </div>

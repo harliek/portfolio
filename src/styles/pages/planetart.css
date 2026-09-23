@@ -141,6 +141,11 @@
   display: none;
 }
 
+/* Keep "deployed-system" from breaking at its hyphen in the caption. */
+.cs-planetart .pa-nowrap {
+  white-space: nowrap;
+}
+
 /* Wide layout: five labels → converging curves → central view → output. */
 @media (min-width: 900px) {
   .cs-planetart .pa-flow__panel {
@@ -304,18 +309,23 @@
   margin-top: calc(var(--copy-to-media) - var(--space-4));
 }
 
+/*
+ * align-items: start keeps each still at its own height. Stretched grid items
+ * padded the frames of short-caption stills below the image and pushed their
+ * captions out of line with the others.
+ */
 .cs-planetart .pa-stills {
+  align-items: start;
   margin-top: var(--space-5);
 }
 
 /* Narrow captions: provenance on its own line, caption text beneath. */
 .cs-planetart .pa-stills .provenance {
   display: block;
-  margin-right: 0;
 }
 
-.cs-planetart .pa-stills .provenance::after {
-  content: none;
+.cs-planetart .pa-stills .provenance-sep {
+  display: none;
 }
 
 @media (max-width: 899px) {

@@ -4,6 +4,27 @@
  * demonstrated or proposed for future work.
  */
 
+/* ---------- Keyboard focus on the recording media ----------
+ * The shared ring is drawn inset (the frame clips overflow), where it sits on
+ * the prototype's near-white UI at under 2:1. Here it moves onto the dark
+ * canvas around the frame instead. Browsers without :has() keep the shared
+ * inset ring. */
+
+@supports selector(:has(*)) {
+  .cs-spreadsheet .media-frame:has(> .zoom-trigger:focus-visible),
+  .cs-spreadsheet .media-frame:has(> .video-facade:focus-visible),
+  .cs-spreadsheet .media-frame:has(> .video-el:focus-visible) {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .cs-spreadsheet .media-frame > .zoom-trigger:focus-visible,
+  .cs-spreadsheet .media-frame > .video-facade:focus-visible,
+  .cs-spreadsheet .media-frame > .video-el:focus-visible {
+    outline: none;
+  }
+}
+
 /* ---------- Chapter 2: the three recorded steps ---------- */
 
 .cs-spreadsheet .sheet-steps {

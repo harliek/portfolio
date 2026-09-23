@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import type { ImageId } from '../../content/media'
 import type { Project } from '../../content/projects'
 import { Figure } from '../media/Figure'
+import { useSharedHeroLanding } from '../work/ProjectTransition'
 import { BoundaryNote } from './BoundaryNote'
 import { MetadataList, type MetaItem } from './MetadataList'
 
@@ -26,6 +27,10 @@ interface CaseHeaderProps {
  * land on it; it is always visible immediately (no entrance animation).
  */
 export function CaseHeader({ project, eyebrow, title, summary, meta, ownership, hero, heroCaption, chapters }: CaseHeaderProps) {
+  const heroRef = useRef<HTMLDivElement>(null)
+  // Arriving from the homepage carousel: keep the hero frame hidden until the
+  // shared cover poster lands on it.
+  useSharedHeroLanding(project.id, heroRef)
   return (
     <header className="case-header">
       <div className="shell">
@@ -40,7 +45,7 @@ export function CaseHeader({ project, eyebrow, title, summary, meta, ownership, 
         <MetadataList items={meta} />
         {ownership && <BoundaryNote>{ownership}</BoundaryNote>}
       </div>
-      <div className="shell case-hero" data-shared-hero={project.id}>
+      <div ref={heroRef} className="shell case-hero" data-shared-hero={project.id}>
         <Figure image={hero} sizes="(min-width: 1248px) 1120px, (min-width: 1200px) calc(100vw - 128px), (min-width: 900px) calc(100vw - 80px), (min-width: 600px) calc(100vw - 64px), calc(100vw - 40px)" priority caption={heroCaption} className="case-hero__figure" />
       </div>
       {chapters && chapters.length > 0 && (

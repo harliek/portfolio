@@ -232,6 +232,279 @@
   }
 }
 
+/*
+ * Spatial work carousel (≥900px, fine pointer, motion allowed): five cards on
+ * a shallow arc. Geometry comes from src/config/carousel.ts via custom
+ * properties on .spatial-rail; per-card transforms are written by SpatialRail.
+ */
+.work-carousel__instruction {
+  margin-right: var(--space-4);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  white-space: nowrap;
+}
+
+.spatial-rail {
+  --spatial-card-h: calc(
+    (var(--spatial-card-w) - 2 * var(--pad-frame)) / var(--spatial-card-ratio) + 2 * var(--pad-frame)
+  );
+  --spatial-edge-fade: clamp(48px, 7%, 120px);
+  position: relative;
+  /* Beyond this the arc stops growing, so the far cards still dissolve into the
+     edge fade on very wide screens instead of floating whole in open space. */
+  max-width: 1440px;
+  height: calc(var(--spatial-card-h) + 2 * var(--spatial-pad-block));
+  margin: var(--space-2) auto 0;
+  /* Clip only sideways so focus rings and shadows keep their vertical room. */
+  overflow-x: clip;
+  overflow-y: visible;
+  /* Vertical page scrolling stays native; horizontal drags belong to the arc. */
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+/* Quiet blue-violet light behind the active card. Static: only opacity changes.
+   Kept close to the card so the empty side at either end reads as calm canvas. */
+.spatial-rail::before {
+  content: '';
+  position: absolute;
+  top: -12%;
+  bottom: -18%;
+  left: 50%;
+  width: calc(var(--spatial-card-w) * 1.8);
+  translate: -50% 0;
+  background: var(--light-field);
+  opacity: 0.85;
+  pointer-events: none;
+  transition: opacity 400ms var(--ease-out);
+}
+
+.spatial-rail[data-moving]::before {
+  opacity: 0.6;
+}
+
+@media (hover: hover) {
+  .spatial-rail:not([data-moving]):has([data-depth='active'] .spatial-card:hover)::before {
+    opacity: 1;
+  }
+}
+
+.spatial-rail[data-dragging] {
+  cursor: grabbing;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.spatial-rail[data-dragging] * {
+  cursor: grabbing;
+}
+
+.spatial-rail__list {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  list-style: none;
+  perspective: var(--spatial-perspective);
+  perspective-origin: 50% 50%;
+  /* Cards dissolve into the edges of the stage instead of being cut. */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--spatial-edge-fade), #000 calc(100% - var(--spatial-edge-fade)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--spatial-edge-fade), #000 calc(100% - var(--spatial-edge-fade)), transparent);
+}
+
+.spatial-rail__item {
+  grid-area: 1 / 1;
+  width: var(--spatial-card-w);
+  opacity: var(--card-opacity, 1);
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+}
+
+.spatial-rail:not([data-moving]) .spatial-rail__item {
+  transition: opacity var(--dur-feedback) var(--ease-out);
+}
+
+.spatial-card {
+  display: block;
+  border-radius: var(--radius-outer);
+  color: inherit;
+  text-decoration: none;
+  -webkit-user-drag: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.spatial-card:focus-visible {
+  outline-offset: 4px;
+  border-radius: var(--radius-outer);
+}
+
+.spatial-card__frame {
+  display: block;
+  padding: var(--pad-frame);
+  border-radius: var(--radius-outer);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-media);
+  transition:
+    transform var(--dur-feedback) var(--ease-out),
+    box-shadow var(--dur-feedback) var(--ease-out),
+    background-color var(--dur-feedback) var(--ease-out);
+}
+
+.spatial-rail__item[data-depth='active'] .spatial-card__frame {
+  background: var(--color-raised);
+}
+
+.spatial-card__media {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-inner);
+  overflow: hidden;
+  background: var(--color-raised);
+}
+
+.spatial-card__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--color-media-edge);
+  pointer-events: none;
+}
+
+.spatial-card__media .picture,
+.spatial-card__media img {
+  height: 100%;
+  -webkit-user-drag: none;
+}
+
+/* Far neighbours only: a trace of softness. Never the active or focused card. */
+.spatial-rail__item[data-depth='far'] .spatial-card:not(:focus-visible) .spatial-card__media img {
+  filter: blur(var(--spatial-far-blur));
+}
+
+@media (hover: hover) {
+  .spatial-rail:not([data-moving]) .spatial-rail__item[data-depth='active'] .spatial-card:hover .spatial-card__frame {
+    transform: translateY(calc(-1 * var(--spatial-hover-lift)));
+    box-shadow: var(--shadow-media-hover);
+  }
+
+  .spatial-rail:not([data-moving]) .spatial-rail__item:not([data-depth='active']):hover {
+    opacity: calc(var(--card-opacity, 1) + 0.14);
+  }
+}
+
+/* Selected project: a stable text region below the stage. */
+.work-selected {
+  margin-top: var(--space-1);
+}
+
+.work-selected__stack {
+  display: grid;
+}
+
+/*
+ * 160ms label change, staggered so two different titles never sit on top of
+ * each other at similar strength: the outgoing entry is gone by 80ms, the
+ * incoming one fades in from 40ms to 160ms.
+ */
+.work-selected__item {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity calc(var(--dur-label) / 2) var(--ease-out),
+    visibility 0s linear calc(var(--dur-label) / 2);
+}
+
+.work-selected__item[data-active='true'] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity calc(var(--dur-label) * 0.75) var(--ease-out) calc(var(--dur-label) / 4),
+    visibility 0s;
+}
+
+.work-selected__title a {
+  /* 44px hit area without moving the text. */
+  display: inline-block;
+  padding: 7px var(--space-2);
+  margin: -7px calc(-1 * var(--space-2));
+  border-radius: var(--radius-button);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: color var(--dur-feedback) var(--ease-out);
+}
+
+/* Ring inside the 44px hit area so it clears the org · year line below. */
+.work-selected__title a:focus-visible {
+  outline-offset: -2px;
+}
+
+.work-selected__meta {
+  margin-top: var(--space-2);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-label);
+}
+
+.work-selected__sep {
+  margin-inline: var(--space-1);
+  color: var(--color-subtle);
+}
+
+.work-selected__summary {
+  max-width: 52ch;
+  margin-top: var(--space-2);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}
+
+.work-selected__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  /* Leaves room for the focus ring above. */
+  margin-top: var(--space-2);
+  padding-inline: var(--space-2);
+  color: var(--color-text);
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  text-decoration: none;
+  transition: color var(--dur-feedback) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .work-selected__title a:hover,
+  .work-selected__cta:hover {
+    color: var(--color-focus);
+  }
+}
+
+/* The shared cover poster travelling into a case-study hero (ProjectTransition). */
+.transition-poster {
+  position: fixed;
+  z-index: 45;
+  display: block;
+  max-width: none;
+  margin: 0;
+  object-fit: cover;
+  border-radius: var(--radius-inner);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-media);
+  pointer-events: none;
+  transform-origin: 0 0;
+}
+
 /* All projects */
 .home-index {
   margin-top: var(--space-6);
@@ -397,6 +670,18 @@
 
   .home-index {
     margin-top: var(--space-8);
+  }
+}
+
+/* Short desktop windows (e.g. 1440×800, 1280×800, 1024×768): tighten the space
+   above the work so the selected project's "View case study" stays in view. */
+@media (min-width: 900px) and (max-height: 820px) {
+  .home {
+    padding-top: var(--space-5);
+  }
+
+  .home-work {
+    margin-top: var(--space-6);
   }
 }
 

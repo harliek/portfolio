@@ -39,7 +39,7 @@
   --color-line: #303545;
   --color-header: rgb(9 10 15 / 0.94);
   --color-media-edge: rgb(255 255 255 / 0.08);
-  --color-scrim: rgb(5 6 10 / 0.9);
+  --color-scrim: rgb(5 6 10 / 0.97);
 
   /* Typography */
   --font-sans: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', sans-serif;

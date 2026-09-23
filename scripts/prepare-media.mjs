@@ -10,6 +10,7 @@
  *   node scripts/prepare-media.mjs            # everything
  *   node scripts/prepare-media.mjs video      # video derivatives only
  *   node scripts/prepare-media.mjs images     # frames, PDF excerpts, images, covers
+ *   node scripts/prepare-media.mjs stage      # Working Model background stage + fragments
  *
  * Requires: ffmpeg/ffprobe, poppler (pdftoppm, pdfimages), sharp, and
  * Playwright's Chromium (for the typographic cover and social image).
@@ -96,6 +97,7 @@ function copyNickleby() {
 const FRAMES = [
   // [cache name, source, seconds]
   ['merch-catalog', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 8.5],
+  ['merch-overview', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 0.3],
   ['merch-vendors', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 28.7],
   ['merch-drawer', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 53.9],
   ['sheet-request', 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov', 12.9],
@@ -327,7 +329,8 @@ async function images() {
   await renderHtml(coverValianceHtml(), C('valiance'), 1600, 1000)
   await renderHtml(coverJumpstartHtml(), C('jumpstart'), 1600, 1000)
   // Spreadsheet: returned-sheet frame (2940×1486); crop sheet + assistant to 16:10.
-  await sharp(F('sheet-returned')).extract({ left: 435, top: 0, width: 2378, height: 1486 }).resize(1600, 1000).png().toFile(C('spreadsheet'))
+  // x 520–2898 clears the sidebar's green button and keeps the assistant text.
+  await sharp(F('sheet-returned')).extract({ left: 520, top: 0, width: 2378, height: 1486 }).resize(1600, 1000).png().toFile(C('spreadsheet'))
   // Shift: Aristocracy frame (4000×3000); 16:10 crop above the burned-in subtitle.
   await sharp(F('aristocracy-cover')).extract({ left: 0, top: 120, width: 4000, height: 2500 }).resize(1600, 1000).png().toFile(C('shift'))
   for (const id of ['planetart', 'valiance', 'spreadsheet', 'jumpstart', 'shift']) {
@@ -354,7 +357,7 @@ async function images() {
   for (const n of ['merch-catalog', 'merch-vendors', 'merch-drawer']) {
     dims[n] = await variants(n, F(n), [800, 1200, 1600], { quality: 'ui' })
   }
-  dims['merch-console-poster'] = await variants('merch-console-poster', F('merch-catalog'), [960, 1600], { quality: 'ui' })
+  dims['merch-console-poster'] = await variants('merch-console-poster', F('merch-overview'), [960, 1600], { quality: 'ui' })
 
   // Spreadsheet Agent
   for (const n of ['sheet-request', 'sheet-returned', 'sheet-list']) {
@@ -395,6 +398,72 @@ async function images() {
   writeFileSync(join(CACHE, 'dimensions.json'), JSON.stringify(dims, null, 2))
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Working Model stage (homepage atmosphere + moving fragments)          */
+/* ------------------------------------------------------------------ */
+
+const STAGE_SRC = 'inspiration/working-model-assets/background video.mp4'
+
+/**
+ * Background stage: a decorative 6s architectural loop (1112×834, 24fps).
+ * Audio is stripped. Desktop keeps the full 4:3 frame (CSS covers it at
+ * object-position 50% 55%); mobile gets a portrait crop so phones never
+ * download the wide file. Posters are frame 0 of each, so the page never
+ * flashes black before playback.
+ */
+async function workingModel() {
+  ensure(VID); ensure(IMG); ensure(join(CACHE, 'frames'))
+  const enc = (out, vf, crf) => {
+    run('ffmpeg', ['-y', '-v', 'error', '-i', src(STAGE_SRC), '-an', '-vf', vf,
+      '-c:v', 'libx264', '-preset', 'slow', '-crf', String(crf), '-profile:v', 'high', '-pix_fmt', 'yuv420p',
+      '-tune', 'grain', '-movflags', '+faststart', join(VID, out)])
+    report.push(`${out} ${(statSync(join(VID, out)).size / 1e6).toFixed(2)}MB`)
+  }
+  // Mobile: 9:16 crop centred at 50% (the floor reflection stays in the lower third).
+  enc('stage-desktop.mp4', 'scale=1112:834', 22)
+  enc('stage-mobile.mp4', 'crop=470:834:(iw-470)/2:0', 22)
+  const frame = (name, vf) => {
+    const out = join(CACHE, 'frames', `${name}.png`)
+    run('ffmpeg', ['-y', '-v', 'error', '-i', src(STAGE_SRC), '-frames:v', '1', '-vf', vf, out])
+    return out
+  }
+  await variants('stage-poster-desktop', frame('stage-poster-desktop', 'scale=1112:834'), [1112], { quality: 'photo' })
+  await variants('stage-poster-mobile', frame('stage-poster-mobile', 'crop=470:834:(iw-470)/2:0'), [470], { quality: 'photo' })
+
+  // Shift preview: a short, muted, subtitle-free 16:9 crop of the Aristocracy
+  // film for the homepage stage. The published film is never cropped.
+  const shiftPrev = join(VID, 'shift-preview.mp4')
+  run('ffmpeg', ['-y', '-v', 'error', '-ss', '41.0', '-t', '6.0', '-i', src('Shift Content/Aristocracy.mp4'), '-an',
+    '-vf', 'crop=4000:2250:0:150,scale=1280:720:flags=lanczos,fps=25',
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-maxrate', '1800k', '-bufsize', '3600k',
+    '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', shiftPrev])
+  report.push(`shift-preview.mp4 ${(statSync(shiftPrev).size / 1e6).toFixed(2)}MB`)
+  const prevPoster = join(CACHE, 'frames', 'shift-preview-poster.png')
+  run('ffmpeg', ['-y', '-v', 'error', '-ss', '41.0', '-i', src('Shift Content/Aristocracy.mp4'), '-frames:v', '1',
+    '-vf', 'crop=4000:2250:0:150,scale=1280:720:flags=lanczos', prevPoster])
+  await variants('shift-preview-poster', prevPoster, [640, 1280])
+
+  // Film-strip stills (real frames from the three published films).
+  const STILLS = [
+    ['film-aristocracy-a', 'Shift Content/Aristocracy.mp4', 10, 'crop=4000:2250:0:150'],
+    ['film-aristocracy-b', 'Shift Content/Aristocracy.mp4', 55, 'crop=4000:2250:0:150'],
+    ['film-nickleby-a', 'Shift Content/Nickleby Capital Video 1.mp4', 25, 'null'],
+    ['film-nickleby-b', 'Shift Content/Nickleby Capital Video 1.mp4', 70, 'null'],
+    ['film-heck-a', 'Shift Content/Heck Video.mp4', 10, 'null'],
+    ['film-heck-b', 'Shift Content/Heck Video.mp4', 20, 'null'],
+  ]
+  for (const [name, file, t, vf] of STILLS) {
+    const out = join(CACHE, 'frames', `${name}.png`)
+    run('ffmpeg', ['-y', '-v', 'error', '-ss', String(t), '-i', src(file), '-frames:v', '1', '-vf', vf, out])
+    await variants(name, out, [320, 640])
+  }
+
+  // Spreadsheet Agent intermediate state: "Interpreting request" (18.9s).
+  const interp = join(CACHE, 'frames', 'sheet-interpreting.png')
+  run('ffmpeg', ['-y', '-v', 'error', '-ss', '18.9', '-i', src('PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov'), '-frames:v', '1', interp])
+  await variants('sheet-interpreting', interp, [800, 1200, 1600], { quality: 'ui' })
+}
 /* ------------------------------------------------------------------ */
 
 const task = process.argv[2] ?? 'all'
@@ -404,5 +473,6 @@ if (task === 'video' || task === 'all') {
   copyNickleby()
 }
 if (task === 'images' || task === 'all') await images()
+if (task === 'stage' || task === 'all') await workingModel()
 console.log(report.join('\n'))
 if (existsSync(join(CACHE, 'dimensions.json'))) console.log('dimensions → .media-cache/dimensions.json')

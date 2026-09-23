@@ -60,12 +60,24 @@
 
 /* ─── Chapter 3: boundary rows under the illustrative scenario ──────────── */
 
+/* The image's own "Reconstruction · Invented data" footer sits bottom right;
+   move the enlarge hint to the decorative bottom-left corner so it stays legible. */
+.cs-valiance .cs-valiance__scenario .zoom-trigger__hint {
+  right: auto;
+  left: var(--space-3);
+}
+
 .cs-valiance__boundaries {
   max-width: var(--vb-narrow);
   margin-top: var(--space-4);
 }
 
 /* ─── Ending ───────────────────────────────────────────────────────────── */
+
+/* Keep the em dash from starting a line on narrow screens. */
+.cs-valiance__nowrap {
+  white-space: nowrap;
+}
 
 @media (min-width: 900px) {
   .cs-valiance__ending {

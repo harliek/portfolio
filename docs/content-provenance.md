@@ -257,6 +257,22 @@ The only Valiance files are two logos and one synthetic illustration. No documen
 
 ---
 
+<a id="editorial"></a>
+
+## Build-time editorial decisions
+
+| Decision | Reason |
+|---|---|
+| Shift hero caption is “Still from the Aristocracy campaign film.” rather than the manifest caption | The automatic “Agency work” provenance label already carries the agency context. Repeating “Agency” in the caption read awkwardly. |
+| Valiance diagram adds structural labels (“How a leasing question is routed”, Yes/No/Then, “Continue to question 2”, “All answer routes end with”) and the list label “Recurring request types” | The brief requires every diagram to have a visible title. The labels make no factual claims. |
+| The Spreadsheet Agent step text keeps the brief's exact copy (“make changes”, “Edit the sheet”, “visible edits”) | The brief is the highest authority and describes the 31.4s frame as the “edited sheet”. The frames show scrolling, row hover and starring but no visible cell edit (see Findings 1 and Q4). |
+| About drawings hide the “Personal work” provenance label on the page. The enlargement dialog still shows it. | The section intro already says the drawings are personal work. |
+| Transcripts follow the burned-in subtitles wherever subtitles and speech recognition disagree. Points where they disagree: Nickleby “in/at Cardiff”; Aristocracy “will/wind”; the Seat Unique title “CEO & Co-founder” (on-screen caption) vs “CEO and founder” (spoken); one inaudible HECK word. | See `docs/transcripts.md`. No one has listened to the soundtracks; a single listening pass by Harlie is recommended. |
+| Screen recordings end at 56.3s and 36.4s | The macOS screen-capture toolbar appears in the final ~1s of both recordings. |
+| Posters do not repeat hero frames. Spreadsheet Agent uses its 1.5s opening sheet list; Aristocracy uses 30.5s. | The hero, poster and step still previously showed the same frame. |
+
+---
+
 <a id="clearance"></a>
 
 ## Publication clearance

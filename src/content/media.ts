@@ -116,7 +116,7 @@ export const IMAGES = {
     caption: 'A recorded prototype state using demo data.',
     provenance: 'prototype-recording', synthetic: true,
     source: 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov', role: 'Home card cover and Spreadsheet Agent hero',
-    timestamp: 25.3, crop: 'x 435–2813 of 2940 (sheet and assistant panel; sidebar removed), full height, scaled to 1600×1000.',
+    timestamp: 25.3, crop: 'x 520–2898 of 2940 (sheet and assistant panel; sidebar and its green button removed), full height, scaled to 1600×1000.',
   }),
   'cover-jumpstart': img({
     id: 'cover-jumpstart', file: 'cover-jumpstart', width: 1600, height: 1000, widths: COVER_WIDTHS, fallback: 'jpg',
@@ -198,8 +198,8 @@ export const IMAGES = {
   'merch-console-poster': img({
     id: 'merch-console-poster', file: 'merch-console-poster', width: 2940, height: 1486, widths: [960, 1600], fallback: 'jpg',
     alt: '', provenance: 'independent-reconstruction', synthetic: true,
-    source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Video poster', timestamp: 8.5,
-    notes: '8.5s chosen over 10.3s so the cursor sits in empty space rather than over row text.',
+    source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Video poster', timestamp: 0.3,
+    notes: 'Opening Overview screen (0.3s), so the poster does not repeat the 8.5s catalog still; the cursor sits in empty space.',
   }),
 
   /* Spreadsheet Agent */
@@ -302,16 +302,19 @@ export const IMAGES = {
   'aristocracy-photo-234': img({
     id: 'aristocracy-photo-234', file: 'aristocracy-photo-234', width: 4252, height: 5665, widths: [480, 800, 1200], fallback: 'jpg',
     alt: 'Aristocracy campaign photograph: three men in navy, burgundy, and black patterned suits against a pale studio backdrop.',
+    caption: 'Aristocracy campaign photograph from the supplied project materials.',
     provenance: 'agency-work', synthetic: false, source: 'Shift Content/Aristocracy-234.jpg', role: 'Campaign imagery group',
   }),
   'aristocracy-photo-103': img({
     id: 'aristocracy-photo-103', file: 'aristocracy-photo-103', width: 4243, height: 5653, widths: [480, 800, 1200], fallback: 'jpg',
     alt: 'Aristocracy campaign photograph: two men in pale teal and dusty pink pinstripe suits against a pale studio backdrop.',
+    caption: 'Aristocracy campaign photograph from the supplied project materials.',
     provenance: 'agency-work', synthetic: false, source: 'Shift Content/Aristocracy-103.jpg', role: 'Campaign imagery group',
   }),
   'aristocracy-photo-077': img({
     id: 'aristocracy-photo-077', file: 'aristocracy-photo-077', width: 3775, height: 5030, widths: [480, 800, 1200], fallback: 'jpg',
     alt: 'Aristocracy campaign photograph: three men in a grey check suit, a white dinner jacket, and a black jacket with check trousers.',
+    caption: 'Aristocracy campaign photograph from the supplied project materials.',
     provenance: 'agency-work', synthetic: false, source: 'Shift Content/Aristocracy-077.jpg', role: 'Campaign imagery group',
   }),
 
@@ -351,7 +354,7 @@ export const VIDEOS = {
       { src: '/media/video/merch-console-960.mp4', width: 960, height: 486, maxViewport: 899, bytes: 1_894_643 },
       { src: '/media/video/merch-console-1600.mp4', width: 1600, height: 808, bytes: 4_806_528 },
     ],
-    poster: 'merch-console-poster', posterTimestamp: 8.5, hasAudio: false,
+    poster: 'merch-console-poster', posterTimestamp: 0.3, hasAudio: false,
     caption: 'Recorded walkthrough of the independent Merch Console prototype.',
     provenance: 'independent-reconstruction', synthetic: true,
     source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov (2940×1486, 60fps timebase, 57.3s)',

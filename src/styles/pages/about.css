@@ -98,10 +98,13 @@
   border-top: 1px solid var(--color-line);
 }
 
-/* Selected experience: an ordinary dated list. */
+/* Selected experience: an ordinary dated list. Row layout follows the list's
+   own width (container query), since the list is narrow both on tablets and
+   in the 8-column content track at 900–1200px. */
 .page-about .about-exp {
   list-style: none;
   border-top: 1px solid var(--color-line);
+  container: about-exp / inline-size;
 }
 
 .page-about .about-exp > li {
@@ -159,16 +162,26 @@
   }
 }
 
-@media (min-width: 600px) {
+/* Medium list: organization and dates on one line, role below. */
+@container about-exp (min-width: 480px) {
   .page-about .about-exp__row {
-    grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr) auto 1rem;
-    grid-template-areas: 'org role dates arrow';
+    grid-template-columns: minmax(0, 1fr) auto 1rem;
+    grid-template-areas:
+      'org dates arrow'
+      'role role .';
     align-items: baseline;
-    column-gap: var(--space-4);
   }
 
   .page-about .about-exp__dates {
     text-align: right;
+  }
+}
+
+/* Wide list: one line per role. 11rem keeps "Jumpstart Finance" on one line. */
+@container about-exp (min-width: 700px) {
+  .page-about .about-exp__row {
+    grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) auto 1rem;
+    grid-template-areas: 'org role dates arrow';
   }
 }
 
@@ -248,9 +261,5 @@
 
   .page-about .about-section__content {
     grid-column: 5 / span 8;
-  }
-
-  .page-about .about-exp__row {
-    grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) auto 1rem;
   }
 }

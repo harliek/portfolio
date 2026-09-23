@@ -11,13 +11,14 @@ import { useLocation, useNavigationType } from 'react-router-dom'
 export function RouteFocus() {
   const { pathname } = useLocation()
   const navType = useNavigationType()
-  const first = useRef(true)
+  // The pathname focus was last handled for. Comparing values (not a
+  // boolean "first run" flag) keeps StrictMode's double effect in dev from
+  // focusing the H1 on a direct load.
+  const handled = useRef(pathname)
 
   useEffect(() => {
-    if (first.current) {
-      first.current = false
-      return
-    }
+    if (handled.current === pathname) return
+    handled.current = pathname
     const main = document.getElementById('main')
     if (!main) return
     if (main.dataset.focusManaged === 'true') {

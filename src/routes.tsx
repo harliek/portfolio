@@ -2,6 +2,7 @@ import { createBrowserRouter, type RouteObject } from 'react-router-dom'
 import { PageShell } from './components/layout/PageShell'
 import { Home } from './pages/Home'
 import { NotFound } from './pages/NotFound'
+import { RouteError } from './pages/RouteError'
 
 /**
  * Case-study and About chunks are loaded lazily. Loaders for each chunk are
@@ -40,14 +41,21 @@ export const router = createBrowserRouter([
     // these small local chunks); avoids a flash of unrelated content.
     HydrateFallback: () => null,
     children: [
-      { index: true, Component: Home },
-      { path: 'about', lazy: lazyPage('/about') },
-      { path: 'work/planetart', lazy: lazyPage('/work/planetart') },
-      { path: 'work/valiance', lazy: lazyPage('/work/valiance') },
-      { path: 'work/spreadsheet-agent', lazy: lazyPage('/work/spreadsheet-agent') },
-      { path: 'work/jumpstart', lazy: lazyPage('/work/jumpstart') },
-      { path: 'work/shift', lazy: lazyPage('/work/shift') },
-      { path: '*', Component: NotFound },
+      {
+        // Pathless layout: a failed page or chunk renders RouteError inside
+        // the normal header/footer shell instead of the router's default.
+        ErrorBoundary: RouteError,
+        children: [
+          { index: true, Component: Home },
+          { path: 'about', lazy: lazyPage('/about') },
+          { path: 'work/planetart', lazy: lazyPage('/work/planetart') },
+          { path: 'work/valiance', lazy: lazyPage('/work/valiance') },
+          { path: 'work/spreadsheet-agent', lazy: lazyPage('/work/spreadsheet-agent') },
+          { path: 'work/jumpstart', lazy: lazyPage('/work/jumpstart') },
+          { path: 'work/shift', lazy: lazyPage('/work/shift') },
+          { path: '*', Component: NotFound },
+        ],
+      },
     ],
   },
 ])

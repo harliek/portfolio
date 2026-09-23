@@ -158,6 +158,7 @@
 .figure-group__items {
   display: grid;
   gap: var(--space-4);
+  align-items: start;
 }
 
 @media (min-width: 900px) {

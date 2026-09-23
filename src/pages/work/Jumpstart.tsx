@@ -109,7 +109,7 @@ export default function Jumpstart() {
                   <div className="media-frame media-frame--bare js-phone__media">
                     <ZoomableImage image={id} sizes={lead ? SIZES.phoneLead : SIZES.phoneSupport} />
                   </div>
-                  <figcaption className="figure__caption js-phone__caption">
+                  <figcaption className="figure__caption figure__caption--stacked js-phone__caption">
                     <CaptionText provenance={asset.provenance}>{asset.caption}</CaptionText>
                   </figcaption>
                 </figure>

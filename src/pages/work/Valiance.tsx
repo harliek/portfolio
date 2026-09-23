@@ -105,7 +105,7 @@ export default function Valiance() {
               <p className="t-label" id="request-types-label">
                 Recurring request types
               </p>
-              <ul className="editorial-rows" aria-labelledby="request-types-label">
+              <ul className="editorial-rows" role="list" aria-labelledby="request-types-label">
                 {REQUEST_TYPES.map((type) => (
                   <li key={type}>
                     <span className="editorial-rows__title">{type}</span>
@@ -133,8 +133,8 @@ export default function Valiance() {
               response distinguishable from an unsupported promise or a decision that belonged to staff.
             </p>
           </Prose>
-          <Figure image="valiance-messages" sizes={FULL_MEDIA_SIZES} zoom framed className="media-block" />
-          <ul className="editorial-rows editorial-rows--split cs-valiance__boundaries">
+          <Figure image="valiance-messages" sizes={FULL_MEDIA_SIZES} zoom framed className="media-block cs-valiance__scenario" />
+          <ul className="editorial-rows editorial-rows--split cs-valiance__boundaries" role="list">
             {BOUNDARIES.map(([title, text]) => (
               <li key={title}>
                 <span className="editorial-rows__title">{title}</span>
@@ -159,7 +159,7 @@ export default function Valiance() {
           <Prose>
             <p>
               The assistant was later adopted across 18 properties. My contribution was the opportunity proposal, workflow translation,
-              requirements, and testing—not engineering the third-party production platform.
+              requirements, and <span className="cs-valiance__nowrap">testing—not</span> engineering the third-party production platform.
             </p>
           </Prose>
           <BoundaryNote>The available materials do not establish a separately verified response-time or conversion improvement.</BoundaryNote>

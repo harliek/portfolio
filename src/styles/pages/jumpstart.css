@@ -16,6 +16,30 @@
   gap: var(--copy-to-media);
 }
 
+/*
+ * The two pitch slides (competitors, business model) carry data right up to
+ * their lower-right corner: at narrower widths the shared enlarge hint
+ * covered Acorn's "Real-time market data" cell and the "TIER 4" label. The
+ * hint moves into the padded frame's corner, clear of slide content, and is
+ * smaller on compact screens where the slides are smallest.
+ */
+.cs-jumpstart .media-frame--padded .zoom-trigger__hint {
+  right: calc(-1 * var(--space-1));
+  bottom: calc(-1 * var(--space-1));
+}
+
+@media (max-width: 599px) {
+  .cs-jumpstart .media-frame--padded .zoom-trigger__hint {
+    width: var(--space-5);
+    height: var(--space-5);
+  }
+
+  .cs-jumpstart .media-frame--padded .zoom-trigger__hint svg {
+    width: var(--space-3);
+    height: var(--space-3);
+  }
+}
+
 @media (min-width: 900px) {
   .cs-jumpstart .js-positioning {
     grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);

@@ -8,7 +8,12 @@ export function CaptionText({ provenance, children }: { provenance?: Provenance;
   const label = provenance ? PROVENANCE_LABEL[provenance] : null
   return (
     <>
-      {label && <span className="provenance">{label}</span>}
+      {label && (
+        <>
+          <span className="provenance">{label}</span>
+          <span className="provenance-sep"> · </span>
+        </>
+      )}
       {children}
     </>
   )

@@ -177,6 +177,16 @@
   color: var(--color-subtle);
 }
 
+/* For narrow, multi-column captions: label on its own line, no separator. */
+.figure__caption--stacked .provenance {
+  display: block;
+  margin-right: 0;
+}
+
+.figure__caption--stacked .provenance::after {
+  content: none;
+}
+
 /* Zoom trigger: the whole image is a real button. */
 .zoom-trigger {
   position: relative;
@@ -283,14 +293,22 @@
 
 .image-dialog__stage {
   display: grid;
-  place-items: center;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
   pointer-events: none;
 }
 
+/* Fit mode: the picture fills the stage so the image's max-height resolves
+   against a definite height and tall images (phones, portraits) fit. */
 .image-dialog__stage picture {
-  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
 .image-dialog__stage img {
@@ -301,6 +319,12 @@
   object-fit: contain;
   border-radius: var(--radius-inner);
   box-shadow: 0 0 0 1px var(--color-media-edge);
+  pointer-events: auto;
+}
+
+.image-dialog__stage img[data-transparent='true'] {
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .image-dialog__stage[data-detail='true'] {
@@ -311,11 +335,17 @@
   box-shadow: inset 0 0 0 1px var(--color-line);
 }
 
+.image-dialog__stage[data-detail='true'] picture {
+  display: block;
+  width: max-content;
+  height: auto;
+  margin: auto;
+}
+
 .image-dialog__stage[data-detail='true'] img {
   max-width: none;
   max-height: none;
   width: auto;
-  margin: auto;
   border-radius: 0;
 }
 

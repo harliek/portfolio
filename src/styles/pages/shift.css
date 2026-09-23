@@ -1,0 +1,90 @@
+/*
+ * Shift Content case study (.cs-shift).
+ * More cinematic and quieter than the product cases: three films at native
+ * ratios on the dark canvas, one group of campaign stills, a compact closing.
+ * Shared layout (case-body, case-section, figure, video facade) lives in
+ * case-studies.css and components.css; only page-specific composition here.
+ */
+
+/* Film chapters --------------------------------------------------------- */
+
+.cs-shift__film {
+  max-width: var(--media-max);
+}
+
+/* Subheading sits tight under the chapter title, quieter than it. */
+.cs-shift__subhead {
+  margin-top: calc(-1 * var(--space-2));
+  color: var(--color-muted);
+  font-weight: var(--weight-body);
+}
+
+/*
+ * The 4:3 Aristocracy film is never cropped. On wide screens it is capped so
+ * the whole frame (plus its caption) fits below the header, and its stills
+ * share that same column so the chapter keeps one set of edges.
+ * First declaration is the fallback where min()/max()/svh are unsupported.
+ */
+.cs-shift__film--4x3 .cs-shift__player,
+.cs-shift__film--4x3 .cs-shift__stills {
+  max-width: 960px;
+  max-width: min(960px, max(400px, calc((100svh - var(--header-height) - 120px) * 4 / 3)));
+}
+
+/* Campaign stills ------------------------------------------------------- */
+
+.cs-shift .case-section > .cs-shift__stills {
+  width: 100%;
+  margin-top: var(--space-5);
+}
+
+.cs-shift .cs-shift__stills-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  align-items: start;
+  list-style: none;
+}
+
+/* Compact: the lead photograph spans the row, the other two pair below. */
+.cs-shift__stills-list > li:first-child {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 600px) {
+  .cs-shift .cs-shift__stills-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  .cs-shift__stills-list > li:first-child {
+    grid-column: auto;
+  }
+}
+
+@media (min-width: 900px) {
+  .cs-shift .case-section > .cs-shift__stills {
+    margin-top: var(--space-6);
+  }
+
+  .cs-shift .cs-shift__stills-list {
+    gap: var(--space-5);
+  }
+}
+
+/* Closing: two short notes read as one compact band ---------------------- */
+
+.cs-shift__closing {
+  gap: var(--space-7);
+}
+
+.cs-shift__closing .case-section__heading {
+  max-width: none;
+}
+
+@media (min-width: 900px) {
+  .cs-shift__closing {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-8);
+    align-items: start;
+  }
+}

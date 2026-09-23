@@ -108,12 +108,16 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
                 {count > 1 ? `${index + 1} / ${count}` : ''}
               </p>
               <div className="image-dialog__controls">
-                <button type="button" className="button button--quiet" onClick={() => go(-1)} disabled={index === 0}>
-                  <span aria-hidden="true">←</span> Previous image
-                </button>
-                <button type="button" className="button button--quiet" onClick={() => go(1)} disabled={index >= count - 1}>
-                  Next image <span aria-hidden="true">→</span>
-                </button>
+                {count > 1 && (
+                  <>
+                    <button type="button" className="button button--quiet" onClick={() => go(-1)} disabled={index === 0}>
+                      <span aria-hidden="true">←</span> Previous image
+                    </button>
+                    <button type="button" className="button button--quiet" onClick={() => go(1)} disabled={index >= count - 1}>
+                      Next image <span aria-hidden="true">→</span>
+                    </button>
+                  </>
+                )}
                 <button type="button" className="button button--quiet" onClick={() => setDetail((d) => !d)}>
                   {detail ? 'Fit to screen' : 'Actual size'}
                 </button>
@@ -133,6 +137,7 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
                 <source type="image/avif" srcSet={largestSrc(current, 'avif')} />
                 <source type="image/webp" srcSet={largestSrc(current, 'webp')} />
                 <img
+                  data-transparent={current.transparent ? 'true' : undefined}
                   src={largestSrc(current, current.fallback)}
                   width={current.width}
                   height={current.height}

@@ -37,12 +37,14 @@ const report = []
 /* ------------------------------------------------------------------ */
 
 const VIDEOS = [
-  // Screen recordings: 60fps → 30fps, no audio stream in the source, no cropping.
-  { id: 'merch-console', src: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', variants: [
+  // Screen recordings: 60fps timebase → 30fps, no audio stream, no cropping.
+  // `trim` ends each recording before the macOS capture toolbar appears
+  // (first visible at 56.45s and 36.55s respectively).
+  { id: 'merch-console', src: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', trim: 56.3, variants: [
     { suffix: '1600', scale: '1600:-2', crf: 23, fps: 30 },
     { suffix: '960', scale: '960:-2', crf: 24, fps: 30 },
   ], audio: false },
-  { id: 'spreadsheet-agent', src: 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov', variants: [
+  { id: 'spreadsheet-agent', src: 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov', trim: 36.4, variants: [
     { suffix: '1600', scale: '1600:-2', crf: 23, fps: 30 },
     { suffix: '960', scale: '960:-2', crf: 24, fps: 30 },
   ], audio: false },
@@ -63,7 +65,7 @@ function encodeVideo(v) {
     if (existsSync(out) && !process.env.FORCE) { report.push(`skip ${out}`); continue }
     const vf = [`scale=${variant.scale}:flags=lanczos`]
     if (variant.fps) vf.push(`fps=${variant.fps}`)
-    const args = ['-y', '-v', 'error', '-i', src(v.src),
+    const args = ['-y', '-v', 'error', '-i', src(v.src), ...(v.trim ? ['-t', String(v.trim)] : []),
       '-map', '0:v:0', ...(v.audio ? ['-map', '0:a:0?'] : []),
       '-vf', vf.join(','),
       '-c:v', 'libx264', '-preset', 'slow', '-crf', String(variant.crf),
@@ -99,7 +101,8 @@ const FRAMES = [
   ['sheet-request', 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov', 12.9],
   ['sheet-returned', 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov', 25.3],
   ['sheet-list', 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov', 35.5],
-  ['aristocracy-poster', 'Shift Content/Aristocracy.mp4', 43.8],
+  ['sheet-start', 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov', 1.5],
+  ['aristocracy-poster', 'Shift Content/Aristocracy.mp4', 30.5],
   ['aristocracy-cover', 'Shift Content/Aristocracy.mp4', 43.8],
   ['nickleby-poster', 'Shift Content/Nickleby Capital Video 1.mp4', 12.0],
   ['heck-poster', 'Shift Content/Heck Video.mp4', 30.0],
@@ -120,7 +123,8 @@ function extractPdf() {
   const deck = src('PlanetArt/planetart presentation.pdf')
   // Slides 4 (competitors) and 5 (curated UK assortment) at 200dpi → 2000×1125.
   run('pdftoppm', ['-r', '200', '-f', '4', '-l', '5', '-png', deck, join(dir, 'slide')])
-  // Slide 12 embeds the original concept images at native resolution.
+  // PDF pages 11 and 12 embed the original concept images at native resolution
+  // (808×514 dashboard on page 11, 620×414 concept map on page 12).
   run('pdfimages', ['-f', '11', '-l', '12', '-png', deck, join(dir, 'embedded')])
 }
 
@@ -174,6 +178,26 @@ async function removeMatte(input, out) {
     if (x > 0) seed(x - 1, y); if (x < w - 1) seed(x + 1, y)
     if (y > 0) seed(x, y - 1); if (y < h - 1) seed(x, y + 1)
   }
+  // Keep only the largest remaining component (the phone); drop stray specks
+  // of the matte that the border fill could not reach (e.g. a dark corner).
+  const label = new Int32Array(w * h).fill(-1)
+  const sizes = []
+  for (let start = 0; start < w * h; start++) {
+    if (removed[start] || label[start] !== -1) continue
+    const id = sizes.length
+    let size = 0
+    const q = [start]
+    label[start] = id
+    while (q.length) {
+      const k = q.pop(); size++
+      const x = k % w; const y = (k - x) / w
+      const nb = [x > 0 ? k - 1 : -1, x < w - 1 ? k + 1 : -1, y > 0 ? k - w : -1, y < h - 1 ? k + w : -1]
+      for (const n of nb) if (n >= 0 && !removed[n] && label[n] === -1) { label[n] = id; q.push(n) }
+    }
+    sizes.push(size)
+  }
+  const keep = sizes.indexOf(Math.max(...sizes))
+  for (let k = 0; k < w * h; k++) if (!removed[k] && label[k] !== keep) removed[k] = 1
   for (let k = 0; k < w * h; k++) {
     const i = k * 4
     if (removed[k]) { data[i + 3] = 0; continue }
@@ -336,7 +360,7 @@ async function images() {
   for (const n of ['sheet-request', 'sheet-returned', 'sheet-list']) {
     dims[n] = await variants(n, F(n), [800, 1200, 1600], { quality: 'ui' })
   }
-  dims['spreadsheet-agent-poster'] = await variants('spreadsheet-agent-poster', F('sheet-returned'), [960, 1600], { quality: 'ui' })
+  dims['spreadsheet-agent-poster'] = await variants('spreadsheet-agent-poster', F('sheet-start'), [960, 1600], { quality: 'ui' })
 
   // Valiance
   dims['valiance-messages'] = await variants('valiance-messages', src('Valiance Capital/messages.png'), [800, 1200, 1672], { quality: 'ui' })

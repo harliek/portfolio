@@ -101,10 +101,10 @@
   margin-top: var(--chapter-gap);
 }
 
+/* Anchor offsets come from html { scroll-padding-top } alone (no double offset). */
 .case-section {
   display: grid;
   gap: var(--space-4);
-  scroll-margin-top: calc(var(--header-height) + var(--space-5));
 }
 
 .case-section__label {
@@ -112,7 +112,7 @@
 }
 
 .case-section__heading {
-  max-width: 22ch;
+  max-width: 28ch;
 }
 
 .case-section > .figure,
@@ -186,10 +186,14 @@
   }
 
   .case-split > .case-split__copy {
-    position: sticky;
-    top: calc(var(--header-height) + var(--space-6));
     display: grid;
     gap: var(--space-4);
+  }
+
+  /* Opt-in only: keep the copy in view beside a tall visual. */
+  .case-split--sticky > .case-split__copy {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-6));
   }
 }
 

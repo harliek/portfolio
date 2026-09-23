@@ -45,6 +45,8 @@ export interface ImageAsset {
   /** Generated widths (never larger than the source). */
   widths: number[]
   fallback: 'jpg' | 'png'
+  /** Has meaningful transparency (e.g. phone screenshots); no edge ring or box. */
+  transparent?: boolean
   alt: string
   caption?: string
   provenance: Provenance
@@ -225,7 +227,8 @@ export const IMAGES = {
   'spreadsheet-agent-poster': img({
     id: 'spreadsheet-agent-poster', file: 'spreadsheet-agent-poster', width: 2940, height: 1486, widths: [960, 1600], fallback: 'jpg',
     alt: '', provenance: 'prototype-recording', synthetic: true,
-    source: 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov', role: 'Video poster', timestamp: 25.3,
+    source: 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov', role: 'Video poster', timestamp: 1.5,
+    notes: 'Opening sheet-list frame, so the poster does not repeat the 25.3s hero and step-2 still.',
   }),
 
   /* Valiance */
@@ -240,28 +243,28 @@ export const IMAGES = {
 
   /* Jumpstart */
   'jumpstart-proto-1': img({
-    id: 'jumpstart-proto-1', file: 'jumpstart-proto-1', width: 638, height: 1216, widths: [320, 638], fallback: 'png',
+    id: 'jumpstart-proto-1', file: 'jumpstart-proto-1', transparent: true, width: 638, height: 1216, widths: [320, 638], fallback: 'png',
     alt: 'Jumpstart prototype home screen: a sample balance, learning topics such as portfolio, budget, banks, stocks, taxes, and spending, and a list of simulated events.',
     caption: 'Overview of the financial-learning prototype.',
     provenance: 'original-artifact', synthetic: false, source: 'JumpStart Finance/proto 1.png', role: 'Prototype chapter',
     crop: 'Opaque matte outside the phone frame removed; screen untouched.',
   }),
   'jumpstart-proto-2': img({
-    id: 'jumpstart-proto-2', file: 'jumpstart-proto-2', width: 616, height: 1242, widths: [320, 616], fallback: 'png',
+    id: 'jumpstart-proto-2', file: 'jumpstart-proto-2', transparent: true, width: 616, height: 1242, widths: [320, 616], fallback: 'png',
     alt: 'Jumpstart prototype profile screen with a winding path of numbered learning levels.',
     caption: 'A visible path through learning levels.',
     provenance: 'original-artifact', synthetic: false, source: 'JumpStart Finance/proto 2.png', role: 'Prototype chapter',
     crop: 'Opaque matte outside the phone frame removed; screen untouched.',
   }),
   'jumpstart-proto-3': img({
-    id: 'jumpstart-proto-3', file: 'jumpstart-proto-3', width: 624, height: 1228, widths: [320, 624], fallback: 'png',
+    id: 'jumpstart-proto-3', file: 'jumpstart-proto-3', transparent: true, width: 624, height: 1228, widths: [320, 624], fallback: 'png',
     alt: 'Jumpstart prototype lessons screen: a lesson search field and lesson cards, starting with an introduction to personal finance.',
     caption: 'Short lessons organized into a learning sequence.',
     provenance: 'original-artifact', synthetic: false, source: 'JumpStart Finance/proto 3.png', role: 'Prototype chapter',
     crop: 'Opaque matte outside the phone frame removed; screen untouched.',
   }),
   'jumpstart-proto-4': img({
-    id: 'jumpstart-proto-4', file: 'jumpstart-proto-4', width: 628, height: 1232, widths: [320, 628], fallback: 'png',
+    id: 'jumpstart-proto-4', file: 'jumpstart-proto-4', transparent: true, width: 628, height: 1232, widths: [320, 628], fallback: 'png',
     alt: 'Jumpstart prototype community screen: member questions and replies about investing, each labeled with the member’s level.',
     caption: 'A proposed community space alongside individual learning.',
     provenance: 'original-artifact', synthetic: false, source: 'JumpStart Finance/proto 4.png', role: 'Prototype chapter',
@@ -285,7 +288,7 @@ export const IMAGES = {
   'aristocracy-poster': img({
     id: 'aristocracy-poster', file: 'aristocracy-poster', width: 4000, height: 3000, widths: [960, 1440], fallback: 'jpg',
     alt: '', provenance: 'agency-work', synthetic: false, source: 'Shift Content/Aristocracy.mp4', role: 'Video poster (4:3, uncropped)',
-    timestamp: 43.8, notes: 'Every frame in 29.8–43.8s carries a burned-in subtitle; the uncropped poster keeps it.',
+    timestamp: 30.5, notes: 'Every frame in 29.8–43.8s carries a burned-in subtitle; the uncropped poster keeps it. 30.5s differs from the 43.8s hero crop so the poster does not repeat it.',
   }),
   'nickleby-poster': img({
     id: 'nickleby-poster', file: 'nickleby-poster', width: 1138, height: 640, widths: [1138], fallback: 'jpg',
@@ -343,43 +346,43 @@ const v = (a: Omit<VideoAsset, 'type'>): VideoAsset => ({ type: 'video', ...a })
 
 export const VIDEOS = {
   'merch-console': v({
-    id: 'merch-console', title: 'Merch Console walkthrough', width: 1600, height: 808, duration: 57.3,
+    id: 'merch-console', title: 'Merch Console walkthrough', width: 1600, height: 808, duration: 56.3,
     variants: [
-      { src: '/media/video/merch-console-960.mp4', width: 960, height: 486, maxViewport: 899, bytes: 1_900_000 },
-      { src: '/media/video/merch-console-1600.mp4', width: 1600, height: 808, bytes: 4_800_000 },
+      { src: '/media/video/merch-console-960.mp4', width: 960, height: 486, maxViewport: 899, bytes: 1_894_643 },
+      { src: '/media/video/merch-console-1600.mp4', width: 1600, height: 808, bytes: 4_806_528 },
     ],
     poster: 'merch-console-poster', posterTimestamp: 8.5, hasAudio: false,
     caption: 'Recorded walkthrough of the independent Merch Console prototype.',
     provenance: 'independent-reconstruction', synthetic: true,
-    source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov (2940×1486, 60fps, 57.3s)',
-    notes: 'Silent screen recording; reduced to 30fps. The assistant-style panel is not evidence of a live model connection.',
+    source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov (2940×1486, 60fps timebase, 57.3s)',
+    notes: 'Silent screen recording (variable frame rate, 60fps timebase) encoded at 30fps and trimmed at 56.3s, before the macOS capture toolbar appears. The assistant-style panel is not evidence of a live model connection.',
   }),
   'spreadsheet-agent': v({
-    id: 'spreadsheet-agent', title: 'Spreadsheet Agent walkthrough', width: 1600, height: 808, duration: 37.8,
+    id: 'spreadsheet-agent', title: 'Spreadsheet Agent walkthrough', width: 1600, height: 808, duration: 36.4,
     variants: [
-      { src: '/media/video/spreadsheet-agent-960.mp4', width: 960, height: 486, maxViewport: 899, bytes: 1_000_000 },
-      { src: '/media/video/spreadsheet-agent-1600.mp4', width: 1600, height: 808, bytes: 2_100_000 },
+      { src: '/media/video/spreadsheet-agent-960.mp4', width: 960, height: 486, maxViewport: 899, bytes: 992_352 },
+      { src: '/media/video/spreadsheet-agent-1600.mp4', width: 1600, height: 808, bytes: 2_108_339 },
     ],
-    poster: 'spreadsheet-agent-poster', posterTimestamp: 25.3, hasAudio: false,
+    poster: 'spreadsheet-agent-poster', posterTimestamp: 1.5, hasAudio: false,
     caption: 'Recorded walkthrough. The AI response is simulated; this is not a demonstration of live model execution.',
     provenance: 'prototype-recording', synthetic: true,
-    source: 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov (2940×1486, 60fps, 37.8s)',
-    notes: 'Silent screen recording; reduced to 30fps.',
+    source: 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov (2940×1486, 60fps timebase, 37.8s)',
+    notes: 'Silent screen recording (variable frame rate, 60fps timebase) encoded at 30fps and trimmed at 36.4s, before the macOS capture toolbar appears.',
   }),
   aristocracy: v({
     id: 'aristocracy', title: 'Aristocracy', width: 1440, height: 1080, duration: 87.6,
     variants: [
-      { src: '/media/video/aristocracy-960.mp4', width: 960, height: 720, maxViewport: 899, bytes: 9_800_000 },
-      { src: '/media/video/aristocracy-1440.mp4', width: 1440, height: 1080, bytes: 20_200_000 },
+      { src: '/media/video/aristocracy-960.mp4', width: 960, height: 720, maxViewport: 899, bytes: 9_841_702 },
+      { src: '/media/video/aristocracy-1440.mp4', width: 1440, height: 1080, bytes: 20_235_447 },
     ],
-    poster: 'aristocracy-poster', posterTimestamp: 43.8, hasAudio: true,
+    poster: 'aristocracy-poster', posterTimestamp: 30.5, hasAudio: true,
     caption: 'Agency campaign film. Shown here as part of the production work I supported.',
     provenance: 'agency-work', synthetic: false,
     source: 'Shift Content/Aristocracy.mp4 (4000×3000, 87.6s, 544MB; never served)',
   }),
   nickleby: v({
     id: 'nickleby', title: 'Nickleby Capital', width: 1138, height: 640, duration: 100.3,
-    variants: [{ src: '/media/video/nickleby-640.mp4', width: 1138, height: 640, bytes: 7_400_000 }],
+    variants: [{ src: '/media/video/nickleby-640.mp4', width: 1138, height: 640, bytes: 7_407_595 }],
     poster: 'nickleby-poster', posterTimestamp: 12, hasAudio: true,
     caption: 'One film from the supplied Nickleby Capital project materials.',
     provenance: 'agency-work', synthetic: false,
@@ -389,8 +392,8 @@ export const VIDEOS = {
   heck: v({
     id: 'heck', title: 'The Night Club / HECK', width: 1920, height: 1080, duration: 37.2,
     variants: [
-      { src: '/media/video/heck-720.mp4', width: 1280, height: 720, maxViewport: 899, bytes: 7_700_000 },
-      { src: '/media/video/heck-1080.mp4', width: 1920, height: 1080, bytes: 12_900_000 },
+      { src: '/media/video/heck-720.mp4', width: 1280, height: 720, maxViewport: 899, bytes: 7_729_175 },
+      { src: '/media/video/heck-1080.mp4', width: 1920, height: 1080, bytes: 12_927_297 },
     ],
     poster: 'heck-poster', posterTimestamp: 30, hasAudio: true,
     caption: 'Agency event film. The title follows the project context and branding visible in the supplied materials.',

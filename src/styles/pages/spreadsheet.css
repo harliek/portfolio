@@ -1,0 +1,193 @@
+/*
+ * Spreadsheet Agent case study. Every selector is scoped under .cs-spreadsheet.
+ * Visual language: solid = demonstrated in the recording; dashed = not
+ * demonstrated or proposed for future work.
+ */
+
+/* ---------- Chapter 2: the three recorded steps ---------- */
+
+.cs-spreadsheet .sheet-steps {
+  display: grid;
+  gap: var(--space-7);
+  max-width: var(--media-max);
+  margin-top: calc(var(--copy-to-media) - var(--space-4));
+  list-style: none;
+}
+
+.cs-spreadsheet .sheet-step {
+  display: grid;
+  gap: var(--copy-to-media);
+  min-width: 0;
+}
+
+.cs-spreadsheet .sheet-step__copy {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-line);
+}
+
+.cs-spreadsheet .sheet-step__title,
+.cs-spreadsheet .sheet-step__text {
+  max-width: var(--prose-max);
+}
+
+.cs-spreadsheet .sheet-step__number {
+  margin-right: 0.15em;
+  color: var(--color-accent);
+}
+
+.cs-spreadsheet .sheet-step__text {
+  color: var(--color-muted);
+}
+
+@media (min-width: 900px) {
+  .cs-spreadsheet .sheet-steps {
+    gap: var(--space-8);
+  }
+
+  .cs-spreadsheet .sheet-step {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    column-gap: var(--grid-gap);
+    align-items: start;
+  }
+
+  .cs-spreadsheet .sheet-step__copy {
+    padding-right: var(--space-5);
+  }
+}
+
+/* ---------- Chapter 3: demonstrated / not demonstrated ---------- */
+
+.cs-spreadsheet .sheet-scope {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 880px;
+  margin-top: calc(var(--copy-to-media) - var(--space-4));
+}
+
+.cs-spreadsheet .sheet-scope__column {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-line);
+}
+
+.cs-spreadsheet .sheet-scope__column--not-shown {
+  border-top-style: dashed;
+}
+
+.cs-spreadsheet .sheet-scope__list {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+}
+
+.cs-spreadsheet .sheet-scope__list li {
+  position: relative;
+  padding-left: var(--space-5);
+  color: var(--color-text);
+}
+
+.cs-spreadsheet .nowrap {
+  white-space: nowrap;
+}
+
+/* Decorative markers: the column headings carry the meaning. */
+.cs-spreadsheet .sheet-scope__list li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: calc(var(--leading-body) * 0.5em - 4px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.cs-spreadsheet .sheet-scope__column--shown li::before {
+  background: var(--color-accent);
+}
+
+.cs-spreadsheet .sheet-scope__column--not-shown li::before {
+  border: 1.5px solid var(--color-muted);
+}
+
+@media (min-width: 600px) {
+  .cs-spreadsheet .sheet-scope {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--grid-gap);
+  }
+}
+
+@media (min-width: 900px) {
+  .cs-spreadsheet .sheet-scope {
+    column-gap: var(--space-7);
+  }
+}
+
+/* ---------- Chapter 4: proposed future outline (deliberately quiet) ---------- */
+
+.cs-spreadsheet .sheet-outline {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 880px;
+  margin-top: calc(var(--copy-to-media) - var(--space-4));
+}
+
+.cs-spreadsheet .sheet-outline__flow {
+  display: grid;
+  gap: var(--space-5);
+  max-width: 360px;
+  list-style: none;
+}
+
+.cs-spreadsheet .sheet-outline__node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius-button);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  line-height: 1.35;
+}
+
+/* Connector between steps: points down when stacked, right when in a row. */
+.cs-spreadsheet .sheet-outline__arrow {
+  position: absolute;
+  top: 100%;
+  left: var(--space-4);
+  width: 24px;
+  height: 12px;
+  color: var(--color-subtle);
+  /* Rotated about its centre so it spans the 24px gap below the node. */
+  transform: translate(-11px, 7px) rotate(90deg);
+  transform-origin: 12px 6px;
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  .cs-spreadsheet .sheet-outline__flow {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: var(--space-7);
+    max-width: none;
+  }
+
+  .cs-spreadsheet .sheet-outline__node {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .cs-spreadsheet .sheet-outline__arrow {
+    top: 50%;
+    left: 100%;
+    transform: translate(12px, -6px);
+  }
+}

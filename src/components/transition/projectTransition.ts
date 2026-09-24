@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react'
-import { TRANSITION } from '../../config/carousel'
+import { TRANSITION } from '../../config/transition'
 import { fallbackSrc, getImage, srcSet, type ImageId } from '../../content/media'
 import { projectForPath } from '../../content/projects'
 import { prefersReducedMotion } from '../../hooks/useReducedMotion'

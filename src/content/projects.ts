@@ -36,8 +36,16 @@ export interface Project {
   /** Route segment under /work/. */
   slug: string
   order: number
-  /** Short project name (always visible under a carousel tile; the case H1). */
+  /** Case study name (the case H1 and document title; accurate project naming). */
   name: string
+  /**
+   * Display title matching the embedded title of the project's cover PNG
+   * (Harlie's label table, brief v8 section 4): the homepage's foremost
+   * label, the Work shelf, the mobile menu and next-project links.
+   */
+  displayName: string
+  /** Display subtitle matching the cover PNG's embedded subtitle (homepage foremost label only). */
+  displaySubtitle: string
   /** Supporting label (carousel caption, case subtitle when none is given). */
   label: string
   /** Very short context for the Work shelf and menu, as on the case page (employer or internship, or independent work). */
@@ -75,6 +83,8 @@ export const PROJECTS: Project[] = [
     slug: 'merchandising-platform',
     order: 1,
     name: 'Merchandising Platform',
+    displayName: 'Merchandising Platform',
+    displaySubtitle: 'Prototype: a centralized internal tool connecting product data, inventory, and workflows for merchandising team',
     label: 'Independent merchandising application prototype',
     category: 'Independent prototype',
     summary: 'An independent application prototype for reviewing product, pricing, inventory, and vendor information with synthetic data.',
@@ -99,6 +109,8 @@ export const PROJECTS: Project[] = [
     slug: 'cafepress-uk',
     order: 2,
     name: 'CafePress UK',
+    displayName: 'CafePress UK Launch',
+    displaySubtitle: 'UK market research and storefront prototyping',
     label: 'UK market research and storefront prototype',
     category: 'PlanetArt internship',
     summary: 'UK market research and a localized storefront prototype during a PlanetArt internship.',
@@ -123,6 +135,8 @@ export const PROJECTS: Project[] = [
     slug: 'spreadsheet-agent',
     order: 3,
     name: 'Spreadsheet Agent',
+    displayName: 'Spreadsheet Agent',
+    displaySubtitle: 'Built an agent that retrieves data and generates spreadsheets',
     label: 'Spreadsheet interaction prototype with simulated AI responses',
     category: 'Independent prototype',
     summary: 'An independent prototype that takes a typed request to a reviewed plan and an editable sheet, with simulated AI responses.',
@@ -147,6 +161,8 @@ export const PROJECTS: Project[] = [
     slug: 'valiance',
     order: 4,
     name: 'AI Leasing Agent',
+    displayName: 'AI Leasing Agent',
+    displaySubtitle: 'Defined workflow and development requirements for an AI agent',
     label: 'Workflow requirements and testing at Valiance Capital',
     category: 'Valiance Capital',
     summary: 'Workflow requirements and testing for a third-party leasing assistant adopted across 18 properties.',
@@ -171,6 +187,8 @@ export const PROJECTS: Project[] = [
     slug: 'creative-production',
     order: 5,
     name: 'Creative Production',
+    displayName: 'Film and Campaign Work',
+    displaySubtitle: 'Creative strategy, production, and client support at Shift Content',
     label: 'Client film production at Shift Content',
     category: 'Shift Content internship',
     summary: 'Production support on client films and related agency work during an internship at Shift Content in London.',
@@ -195,6 +213,8 @@ export const PROJECTS: Project[] = [
     slug: 'jumpstart',
     order: 6,
     name: 'Jumpstart Finance',
+    displayName: 'Student Founder of Fintech Venture',
+    displaySubtitle: 'CEO of gamified financial education platform concept and prototype',
     label: 'Financial education startup developed during a student venture program',
     category: 'Student venture',
     summary: 'A financial education concept and mobile prototype developed at the European Innovation Academy in Porto.',

@@ -39,9 +39,9 @@ export interface CarouselItem {
   id: AccentId
   /** Case study id (absent for About Me). */
   project?: ProjectId
-  /** Visible live name beneath the object (never with "case study" appended). */
+  /** Display title (matches the PNG's embedded title; Harlie's label table). Shown live only for the foremost object. */
   name: string
-  /** Short subtitle directly beneath the name: revealed on hover or focus, shown by default for the featured object and on touch. */
+  /** Display subtitle (matches the PNG's embedded subtitle; About Me has none). Shown only for the foremost object. */
   subtitle: string
   /** Accessible link name. */
   label: string
@@ -50,25 +50,26 @@ export interface CarouselItem {
   kind: ObjectKind
 }
 
-const project = (id: ProjectId, accent: AccentId, image: ImageId, kind: ObjectKind, subtitle: string): CarouselItem => {
+const project = (id: ProjectId, accent: AccentId, image: ImageId, kind: ObjectKind): CarouselItem => {
   const p = projectById(id)
-  return { id: accent, project: id, name: p.name, subtitle, label: p.name, path: projectPath(p), image, kind }
+  return { id: accent, project: id, name: p.displayName, subtitle: p.displaySubtitle, label: p.displayName, path: projectPath(p), image, kind }
 }
 
 export const CAROUSEL_ITEMS: CarouselItem[] = [
   {
     id: 'about',
     name: 'About Me',
-    subtitle: 'Background, experience, and creative work',
+    // Harlie's label table: About Me has no subtitle.
+    subtitle: '',
     label: 'About Me',
     path: '/about',
     image: 'obj-about',
     kind: 'headshot',
   },
-  project('merchandising-platform', 'merchandising-platform', 'obj-merchandising-platform', 'monitor', 'Catalog and replenishment prototype'),
-  project('cafepress-uk', 'cafepress-uk', 'obj-cafepress-uk', 'mug', 'UK market research and storefront prototyping'),
-  project('spreadsheet-agent', 'spreadsheet-agent', 'obj-spreadsheet-agent', 'laptop', 'A reviewable plan before sheet creation'),
-  project('ai-leasing-agent', 'ai-leasing-agent', 'obj-ai-leasing-agent', 'tablet', 'Workflow requirements and assistant testing'),
-  project('client-work', 'creative-production', 'obj-creative-production', 'camera', 'Film and campaign production at Shift Content'),
-  project('jumpstart-finance', 'jumpstart-finance', 'obj-jumpstart-finance', 'phone', 'Financial education venture and mobile prototype'),
+  project('merchandising-platform', 'merchandising-platform', 'obj-merchandising-platform', 'monitor'),
+  project('cafepress-uk', 'cafepress-uk', 'obj-cafepress-uk', 'mug'),
+  project('spreadsheet-agent', 'spreadsheet-agent', 'obj-spreadsheet-agent', 'laptop'),
+  project('ai-leasing-agent', 'ai-leasing-agent', 'obj-ai-leasing-agent', 'tablet'),
+  project('client-work', 'creative-production', 'obj-creative-production', 'camera'),
+  project('jumpstart-finance', 'jumpstart-finance', 'obj-jumpstart-finance', 'phone'),
 ]

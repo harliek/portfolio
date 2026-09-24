@@ -1,0 +1,402 @@
+import { useId, useLayoutEffect, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react'
+import { getImage } from '../../content/media'
+import { prefersReducedMotion, useReducedMotion } from '../../hooks/useReducedMotion'
+import { ExpandIcon } from '../media/Figure'
+import { useImageDialog } from '../media/ImageDialog'
+import { ResponsiveImage } from '../media/ResponsiveImage'
+import type { Rect, Visual } from './CaseScroll'
+
+/*
+ * The `states` media of CaseScroll: one stable stage whose image follows the
+ * active section (StatesStage, desktop), and the stacked figures below 960px
+ * (InlineVisual). Every image opens the shared ImageDialog directly: a click
+ * or Enter on the image itself (a real button with the image's exact bounds),
+ * never a detached "Enlarge image" button.
+ */
+
+/** Frame change timings (ms): highlight out, layer in, settle, same-image pause, highlight in. */
+const T = { hlOut: 60, layerIn: 120, settle: 30, sameLayer: 60, hlIn: 150 }
+
+/** '944 / 1744', '16/10' or '1.6' → a number. */
+export function ratioNumber(ratio: string): number {
+  const [a, b] = ratio.split('/').map((s) => Number.parseFloat(s))
+  const n = b ? a / b : a
+  return Number.isFinite(n) && n > 0 ? n : 16 / 10
+}
+
+const layerKey = (v: Visual) => `img:${v.image}`
+const imageRatio = (v: Visual) => getImage(v.image).width / getImage(v.image).height
+const isTransparent = (v: Visual) => Boolean(getImage(v.image).transparent)
+const expandTarget = (v: Visual) => v.expandTo ?? v.image
+/** The sequencer's layer keys and highlight flags from their string signatures (stable effect dependencies). */
+const parseSignatures = (keysSig: string, highlightsSig: string) => ({ keys: keysSig.split('|'), highlights: highlightsSig.split('|').map((v) => v === 'true') })
+const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms))
+
+/** Resolves when the layer's image has decoded (or failed). */
+function whenDecoded(layer: Element | null): Promise<void> {
+  const img = layer?.querySelector('img')
+  if (!img) return Promise.resolve()
+  if (img.complete) return img.naturalWidth ? img.decode().catch(() => {}) : Promise.resolve()
+  return new Promise((resolve) => {
+    const done = () => resolve()
+    img.addEventListener('load', () => void img.decode().catch(() => {}).then(done), { once: true })
+    img.addEventListener('error', done, { once: true })
+  })
+}
+
+/* ----------------------------------------------------------------------- */
+/* Sequencer: decode first, one highlight, only the latest target           */
+/* ----------------------------------------------------------------------- */
+
+/** What React renders from the sequencer: the shown state (caption, alt, zoom target) and whose highlight is mounted. */
+interface View {
+  front: number
+  hl: number
+}
+
+interface SequencerConfig {
+  target: number
+  reduced: boolean
+  keys: string[]
+  highlights: boolean[]
+}
+
+/**
+ * Drives the stage. Layer visibility (`data-state`) and the highlight
+ * (`data-on`) are set here directly on the DOM, and every fade is an awaited
+ * Web Animation, so the old layer is hidden only after the new one has fully
+ * appeared (CSS transitions can start late or end early during fast
+ * scrolling). React renders the layers once and re-renders only the caption,
+ * alt text and zoom target from `view`.
+ *
+ * A change: wait until the target image has decoded (the current one stays
+ * fully visible, so the stage is never empty), remove the old highlight
+ * (60ms), fade the new layer in over the old one (120ms), then show the new
+ * highlight (150ms). Only the latest target is kept, so fast or backward
+ * scrolling never plays a queue of missed changes, and there is never more
+ * than one highlight. Reduced motion: every step is instant.
+ */
+class FrameSequencer {
+  view: View = { front: 0, hl: 0 }
+  private cfg: SequencerConfig = { target: 0, reduced: false, keys: [], highlights: [] }
+  private root: HTMLElement | null = null
+  private running = false
+  private alive = true
+  private wake: (() => void) | null = null
+  private listeners = new Set<() => void>()
+  private anims = new Set<Animation>()
+
+  subscribe = (listener: () => void) => {
+    this.listeners.add(listener)
+    return () => this.listeners.delete(listener)
+  }
+
+  getSnapshot = () => this.view
+
+  /** Before the first paint: the current state's layer is shown, every other one hidden. */
+  attach(root: HTMLElement | null, cfg: SequencerConfig) {
+    this.root = root
+    this.cfg = cfg
+    this.alive = true
+    this.showOnly(this.view.front)
+  }
+
+  destroy() {
+    this.alive = false
+    this.wake?.()
+    this.anims.forEach((a) => a.cancel())
+    this.anims.clear()
+  }
+
+  configure(cfg: SequencerConfig) {
+    this.cfg = cfg
+    this.wake?.()
+    if (this.alive) void this.run()
+  }
+
+  private set(patch: Partial<View>) {
+    this.view = { ...this.view, ...patch }
+    this.listeners.forEach((l) => l())
+  }
+
+  private layer(state: number) {
+    return this.root?.querySelector<HTMLElement>(`[data-layer="${CSS.escape(this.cfg.keys[state] ?? '')}"]`) ?? null
+  }
+
+  private hlEl(state: number) {
+    return this.layer(state)?.querySelector<HTMLElement>('.cs-hl') ?? null
+  }
+
+  private showOnly(state: number) {
+    const front = this.layer(state)
+    this.root?.querySelectorAll<HTMLElement>('[data-layer]').forEach((el) => {
+      el.dataset.state = el === front ? 'shown' : 'hidden'
+    })
+  }
+
+  /** Animates opacity and resolves when it has really finished; the end value holds until release() (instant with reduced motion). */
+  private async fade(el: HTMLElement | null, from: number, to: number, ms: number, easing = 'linear'): Promise<() => void> {
+    if (!el || this.cfg.reduced || ms <= 0) return () => {}
+    const anim = el.animate([{ opacity: from }, { opacity: to }], { duration: ms, easing, fill: 'both' })
+    this.anims.add(anim)
+    await anim.finished.catch(() => {})
+    return () => {
+      anim.cancel()
+      this.anims.delete(anim)
+    }
+  }
+
+  private async highlight(state: number, on: boolean) {
+    const el = this.hlEl(state)
+    if (!el || el.hasAttribute('data-on') === on) return
+    if (on) el.dataset.on = ''
+    else delete el.dataset.on
+    const release = await this.fade(el, on ? 0 : 1, on ? 1 : 0, on ? T.hlIn : T.hlOut, on ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'linear')
+    release()
+  }
+
+  /** Waits for the state's image, or returns early when the target changes. */
+  private ready(state: number): Promise<void> {
+    return new Promise<void>((resolve) => {
+      this.wake = () => resolve()
+      void whenDecoded(this.layer(state)).then(() => resolve())
+    }).then(() => {
+      this.wake = null
+    })
+  }
+
+  private stale(next: number) {
+    return !this.alive || this.cfg.target !== next
+  }
+
+  private pause(ms: number) {
+    return wait(this.cfg.reduced ? 0 : ms)
+  }
+
+  private async run() {
+    if (this.running) return
+    this.running = true
+    try {
+      // Bounded: each pass either settles or follows a newer target (never a queue of old ones).
+      for (let pass = 0; pass < 64 && this.alive; pass++) {
+        const next = this.cfg.target
+        const current = this.view.front
+        if (next === current) {
+          // Settled: make sure the current state's highlight is showing (never over an image still loading).
+          if (this.cfg.highlights[current]) {
+            await this.ready(current)
+            if (this.stale(next)) continue
+            if (this.view.hl !== current) {
+              this.set({ hl: current })
+              await this.pause(T.settle)
+              if (this.stale(next)) continue
+            }
+            await this.highlight(current, true)
+            if (this.stale(next)) continue
+          }
+          return
+        }
+        await this.ready(next)
+        if (this.stale(next)) continue
+        // 1. The old highlight goes first.
+        await this.highlight(this.view.hl, false)
+        if (this.stale(next)) continue
+        const oldLayer = this.layer(this.view.front)
+        const newLayer = this.layer(next)
+        if (oldLayer === newLayer) {
+          // 2a. Same image: only the highlight moves.
+          this.set({ front: next, hl: next })
+          await this.pause(T.sameLayer)
+        } else if (this.cfg.reduced || !oldLayer || !newLayer) {
+          this.showOnly(next)
+          this.set({ front: next, hl: next })
+          await this.pause(T.settle)
+        } else {
+          // 2b. The new layer fades in on top while the old one stays fully visible underneath
+          // (transparent artwork: the old one fades out at the same time, so the two never add up).
+          const crossfade = oldLayer.hasAttribute('data-transparent') || newLayer.hasAttribute('data-transparent')
+          oldLayer.dataset.state = 'under'
+          newLayer.dataset.state = 'shown'
+          this.set({ front: next, hl: next })
+          const releases = await Promise.all([this.fade(newLayer, 0, 1, T.layerIn), crossfade ? this.fade(oldLayer, 1, 0, T.layerIn) : () => {}])
+          oldLayer.dataset.state = 'hidden'
+          releases.forEach((release) => release())
+          await this.pause(T.settle)
+        }
+        if (this.stale(next)) continue
+        // 3. The new highlight, once the image has settled.
+        if (this.cfg.highlights[next]) await this.highlight(next, true)
+      }
+    } finally {
+      this.running = false
+    }
+  }
+}
+
+/* ----------------------------------------------------------------------- */
+/* Pieces                                                                   */
+/* ----------------------------------------------------------------------- */
+
+/** One meaningful region, in percent of the image. `data-on` is set by the sequencer (or statically in stacked figures). */
+function HighlightBox({ rect, dim, on }: { rect: Rect; dim: boolean; on?: boolean }) {
+  const style = { left: `${rect.x}%`, top: `${rect.y}%`, width: `${rect.w}%`, height: `${rect.h}%` } as CSSProperties
+  return <span className="cs-hl" data-dim={dim || undefined} data-on={on ? '' : undefined} style={style} aria-hidden="true" />
+}
+
+/** The caption line: an optional label (e.g. "Illustrative conversation"), then the caption. */
+function Caption({ visual }: { visual: Visual }) {
+  return (
+    <>
+      {visual.label && <span className="cs-label">{visual.label}</span>}
+      {visual.caption}
+    </>
+  )
+}
+
+/**
+ * The image's own zoom control: a real button laid exactly over the shown
+ * image (same box as its canvas), labelled "Enlarge image" and described by
+ * the caption. Hover and focus scale the image 1.5% and give it an accent
+ * edge (case.css); a small expand icon appears in its corner (always on touch).
+ */
+function ZoomButton({ visual, captionId }: { visual: Visual; captionId?: string }) {
+  const dialog = useImageDialog()
+  const target = expandTarget(visual)
+  return (
+    <span className="cs-zoomlayer">
+      <button
+        type="button"
+        className="cs-zoom"
+        style={{ '--r': imageRatio(visual) } as CSSProperties}
+        data-zoom-id={target}
+        aria-label="Enlarge image"
+        aria-describedby={captionId}
+        onClick={(e) => dialog.open(target, e.currentTarget, { gallery: [target], caption: visual.caption ? <Caption visual={visual} /> : undefined })}
+      >
+        <span className="cs-zoom__icon" aria-hidden="true">
+          <ExpandIcon />
+        </span>
+      </button>
+    </span>
+  )
+}
+
+/* ----------------------------------------------------------------------- */
+/* StatesStage (desktop, sticky)                                            */
+/* ----------------------------------------------------------------------- */
+
+interface StatesStageProps {
+  /** The opening visual, then every section visual in order. */
+  states: Visual[]
+  /** The state to show (from the active section). */
+  target: number
+  /** The stage's stable ratio (CaseMedia frameRatio). */
+  ratio: string
+  sizes: string
+}
+
+/**
+ * The stable stage: every distinct image is mounted as a layer (they preload
+ * at low priority, the opening at high priority), the sequencer decides which
+ * is shown, at most one highlight exists, and the caption below has a
+ * reserved height, so neither the stage nor anything under it moves.
+ */
+export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) {
+  const reduced = useReducedMotion()
+  const stageRef = useRef<HTMLDivElement>(null)
+  const captionId = useId()
+  const [sequencer] = useState(() => new FrameSequencer())
+  const view = useSyncExternalStore(sequencer.subscribe, sequencer.getSnapshot, sequencer.getSnapshot)
+
+  const keys = states.map(layerKey)
+  const keysSig = keys.join('|')
+  const highlightsSig = states.map((v) => Boolean(v.highlight)).join('|')
+
+  // Before the first paint: the current layer is visible (the stage is never empty).
+  useLayoutEffect(() => {
+    sequencer.attach(stageRef.current, { target: sequencer.view.front, reduced: prefersReducedMotion(), ...parseSignatures(keysSig, highlightsSig) })
+    return () => sequencer.destroy()
+  }, [sequencer, keysSig, highlightsSig])
+  useEffect(() => {
+    sequencer.configure({ target, reduced, ...parseSignatures(keysSig, highlightsSig) })
+  }, [sequencer, target, reduced, keysSig, highlightsSig])
+
+  const stageR = ratioNumber(ratio)
+  const front = states[view.front] ?? states[0]
+  const frontKey = keys[view.front]
+  const hlVisual = states[view.hl]
+  const hlKey = keys[view.hl]
+
+  // Unique layers, in order of first appearance (the opening first).
+  const layers: Array<{ key: string; visual: Visual; index: number }> = []
+  states.forEach((visual, index) => {
+    if (!layers.some((l) => l.key === keys[index])) layers.push({ key: keys[index], visual, index })
+  })
+
+  return (
+    <figure className="cs-figure" data-variant="sticky" data-portrait={stageR < 0.9 || undefined}>
+      <div ref={stageRef} className="cs-stage" data-kind="states" style={{ '--stage-r': stageR } as CSSProperties} data-state={view.front} data-target={target}>
+        {layers.map(({ key, visual, index }) => {
+          const isFront = key === frontKey
+          const transparent = isTransparent(visual)
+          const hl = key === hlKey && hlVisual?.highlight ? hlVisual.highlight : null
+          return (
+            // data-state (shown / under / hidden) is set by the sequencer, never by React.
+            <div key={key} className="cs-layer" data-layer={key} data-transparent={transparent || undefined} aria-hidden={!isFront || undefined}>
+              <div className="cs-canvas" style={{ '--r': imageRatio(visual) } as CSSProperties}>
+                <ResponsiveImage
+                  image={visual.image}
+                  sizes={sizes}
+                  fit="contain"
+                  priority={index === 0}
+                  loading={index === 0 ? undefined : 'eager'}
+                  fetchPriority={index === 0 ? undefined : 'low'}
+                  alt={isFront ? front.alt : visual.alt}
+                />
+                {hl && <HighlightBox rect={hl} dim={!transparent} />}
+              </div>
+            </div>
+          )
+        })}
+        <ZoomButton visual={front} captionId={captionId} />
+      </div>
+      <figcaption id={captionId} className="cs-caption" aria-live="polite">
+        <Caption visual={front} />
+      </figcaption>
+    </figure>
+  )
+}
+
+/* ----------------------------------------------------------------------- */
+/* InlineVisual (stacked, below 960px)                                      */
+/* ----------------------------------------------------------------------- */
+
+/**
+ * A stacked figure in reading order: the image at its own ratio (bounded by
+ * the viewport height, so phones never fill the screen), its highlight shown
+ * at once, the caption below, and the same direct zoom.
+ */
+export function InlineVisual({ visual, sizes, priority = false }: { visual: Visual; sizes: string; priority?: boolean }) {
+  const captionId = useId()
+  const transparent = isTransparent(visual)
+  const r = imageRatio(visual)
+  const hasCaption = Boolean(visual.caption || visual.label)
+  return (
+    <figure className="cs-figure" data-variant="inline">
+      <div className="cs-stage" data-kind="inline" style={{ '--stage-r': r } as CSSProperties}>
+        <div className="cs-layer" data-state="shown" data-transparent={transparent || undefined}>
+          <div className="cs-canvas" style={{ '--r': r } as CSSProperties}>
+            <ResponsiveImage image={visual.image} sizes={sizes} fit="contain" priority={priority} alt={visual.alt} />
+            {visual.highlight && <HighlightBox rect={visual.highlight} dim={!transparent} on />}
+          </div>
+        </div>
+        <ZoomButton visual={visual} captionId={hasCaption ? captionId : undefined} />
+      </div>
+      {hasCaption && (
+        <figcaption id={captionId} className="cs-caption">
+          <Caption visual={visual} />
+        </figcaption>
+      )}
+    </figure>
+  )
+}

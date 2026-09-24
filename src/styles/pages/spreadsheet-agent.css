@@ -1,10 +1,6 @@
-/* Spreadsheet Agent page (src/pages/work/SpreadsheetAgent.tsx). Scope every selector under .page-spreadsheet-agent. */
-
-.page-spreadsheet-agent {
-  /* The prototype's own page colour behind its screenshots, so a layer change never dips to dark. */
-  --sa-paper: #fff;
-}
-
-.page-spreadsheet-agent .cs-layer:not([data-transparent]) .cs-canvas {
-  background: var(--sa-paper);
-}
+/*
+ * Spreadsheet Agent page (src/pages/work/SpreadsheetAgent.tsx). Scope every
+ * selector under .page-spreadsheet-agent. The layout, the recording's player
+ * and the ending come from the shared case styles (case.css); nothing
+ * page-specific is needed.
+ */

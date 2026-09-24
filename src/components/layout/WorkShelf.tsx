@@ -1,44 +1,57 @@
 import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type MouseEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { MOTION } from '../../config/motion'
+import { accentVars } from '../../content/accents'
 import { PROJECTS, projectPath, type Project, type ProjectId } from '../../content/projects'
-import { prefetchRoute } from '../../routes'
 import { ResponsiveImage } from '../media/ResponsiveImage'
+import { isPlainClick, openProject, warmProject } from '../transition/projectTransition'
 
-/** Rendered width of a shelf thumbnail (CSS px): the project's 3:4 tile artwork, 60px tall. */
-const THUMB_SIZES = '45px'
+/** Rendered size of a shelf thumbnail (CSS px): the project's PNG object, contained in a 48px square. */
+const THUMB_SIZES = '48px'
+
+/** The small arrow after "Creative Portfolio": it leaves the professional site for another one. */
+export function ExternalMark() {
+  return (
+    <svg className="site-nav__mark" viewBox="0 0 12 12" width="11" height="11" aria-hidden="true" focusable="false">
+      <path d="M3.5 8.5 8.5 3.5M4.5 3.5h4v4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
 
 /**
- * One project entry: a small thumbnail of the project's tile artwork (the
- * same image as its carousel tile), the project name and a persistent
- * "View case study ↗" line, so every entry reads as a link before hover.
- * The current project says so instead.
+ * One project entry: one ordinary link with a small thumbnail of the
+ * project's PNG object (whole, never cropped), the project name and its
+ * short category (shown where it fits on one line, layout.css). The current
+ * project says "Current page" instead. Hover and focus use the project's
+ * own accent and prepare the destination (code, cover, opening image).
+ * A plain click opens the page with the transition module's short plain
+ * reveal (no image travels from a 48px thumbnail); modified clicks stay
+ * native (new tab, new window).
  */
 function ProjectLink({ project, current, thumbs, className, onNavigate }: { project: Project; current: boolean; thumbs: boolean; className: string; onNavigate: () => void }) {
+  const navigate = useNavigate()
   const path = projectPath(project)
   return (
     <Link
       to={path}
       className={className}
+      style={accentVars(project.accent)}
       aria-current={current ? 'page' : undefined}
-      onClick={onNavigate}
-      onPointerEnter={() => prefetchRoute(path)}
-      onFocus={() => prefetchRoute(path)}
+      onClick={(e) => {
+        onNavigate()
+        if (!isPlainClick(e)) return
+        e.preventDefault()
+        openProject({ path, source: null, navigate })
+      }}
+      onPointerEnter={() => warmProject(path)}
+      onFocus={() => warmProject(path)}
     >
       <span className="shelf-item__thumb" aria-hidden="true">
-        {thumbs && <ResponsiveImage image={project.cover} sizes={THUMB_SIZES} decorative fit="cover" />}
+        {thumbs && <ResponsiveImage image={project.cover} sizes={THUMB_SIZES} decorative fit="contain" />}
       </span>
       <span className="shelf-item__text">
         <span className="shelf-item__name">{project.name}</span>
-        <span className="shelf-item__action">
-          {current ? (
-            'Current case study'
-          ) : (
-            <>
-              View case study <span className="link-arrow" aria-hidden="true">↗</span>
-            </>
-          )}
-        </span>
+        <span className="shelf-item__meta">{current ? 'Current page' : project.category}</span>
       </span>
     </Link>
   )
@@ -60,14 +73,17 @@ interface WorkShelfProps {
 }
 
 /**
- * The Work shelf (desktop, 900px and wider): a compact horizontal shelf of
- * all six projects under the header, in project order. Each entry is one
- * ordinary link (phone thumbnail, name, "View case study ↗").
+ * The Work shelf (desktop, 900px and wider): a compact row of the six
+ * projects on a solid dark surface under the header, in project order (one
+ * row from 1180px, two rows of three below). The page behind is dimmed so
+ * the shelf reads as separate from it. Not a carousel: nothing moves.
  *
  * Opening and closing live in Header.tsx (click toggles; Escape, a click
- * outside or focus leaving closes). Here: Arrow Left/Right move between
- * entries (Home/End jump to the ends), Tab works as usual, and opening from
- * the keyboard focuses the first entry.
+ * outside or focus leaving closes; following a link closes). Here: Arrow
+ * Left/Right move between entries (Home/End jump to the ends), Arrow
+ * Up/Down move between rows (two rows below 1180px), Arrow Up from the
+ * first row closes the shelf and returns to Work, Tab works as usual, and
+ * opening from the keyboard focuses the first entry.
  */
 export function WorkShelf({ id, open, focusFirst, thumbs, activeId, onNavigate, onClose }: WorkShelfProps) {
   const listRef = useRef<HTMLUListElement>(null)
@@ -78,19 +94,23 @@ export function WorkShelf({ id, open, focusFirst, thumbs, activeId, onNavigate, 
   }, [open, focusFirst])
 
   const onKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
-    const items = [...(listRef.current?.querySelectorAll<HTMLAnchorElement>('a') ?? [])]
+    const list = listRef.current
+    if (!list) return
+    const items = [...list.querySelectorAll<HTMLAnchorElement>('a')]
     const i = items.indexOf(document.activeElement as HTMLAnchorElement)
     if (i < 0) return
     const last = items.length - 1
-    const next =
-      e.key === 'ArrowRight' ? (i === last ? 0 : i + 1)
-      : e.key === 'ArrowLeft' ? (i === 0 ? last : i - 1)
-      : e.key === 'Home' ? 0
-      : e.key === 'End' ? last
-      : -1
-    if (e.key === 'ArrowUp') {
+    const columns = getComputedStyle(list).gridTemplateColumns.split(' ').filter(Boolean).length || items.length
+    let next = -1
+    if (e.key === 'ArrowRight') next = i === last ? 0 : i + 1
+    else if (e.key === 'ArrowLeft') next = i === 0 ? last : i - 1
+    else if (e.key === 'Home') next = 0
+    else if (e.key === 'End') next = last
+    else if (e.key === 'ArrowDown') next = i + columns <= last ? i + columns : i
+    else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      onClose()
+      if (i - columns >= 0) items[i - columns].focus()
+      else onClose()
       return
     }
     if (next < 0) return
@@ -124,17 +144,18 @@ interface MobileMenuProps {
   open: boolean
   activeId?: ProjectId
   aboutCurrent: boolean
+  /** The restored creative homepage (a plain link, full page load). */
+  creativeHref: string
   onNavigate: () => void
   onAbout: (e: MouseEvent<HTMLAnchorElement>) => void
-  onContact: (e: MouseEvent<HTMLAnchorElement>) => void
 }
 
 /**
- * The small-screen menu (below 900px): the six projects in two columns,
- * then About and Contact. Focus containment, Escape and the scroll lock
- * live in Header.tsx.
+ * The small-screen menu (below 900px) on a solid surface: the six projects
+ * (one column on phones, two from 600px), then About and Creative Portfolio.
+ * Focus containment, Escape and the scroll lock live in Header.tsx.
  */
-export function MobileMenu({ id, open, activeId, aboutCurrent, onNavigate, onAbout, onContact }: MobileMenuProps) {
+export function MobileMenu({ id, open, activeId, aboutCurrent, creativeHref, onNavigate, onAbout }: MobileMenuProps) {
   return (
     <div id={id} className="site-menu" data-open={open || undefined} inert={!open}>
       <nav className="shell site-menu__inner" aria-label="Primary">
@@ -155,8 +176,9 @@ export function MobileMenu({ id, open, activeId, aboutCurrent, onNavigate, onAbo
             </Link>
           </li>
           <li>
-            <a href="#contact" className="site-menu__link" onClick={onContact}>
-              Contact
+            <a href={creativeHref} className="site-menu__link">
+              Creative Portfolio
+              <ExternalMark />
             </a>
           </li>
         </ul>

@@ -13,6 +13,10 @@ interface ResultsProps {
 const SIZES = '(min-width: 960px) 460px, calc(100vw - 32px)'
 
 /**
+ * @deprecated CaseScroll pages carry the outcome inside the story (`outcome`).
+ * Kept only for the Creative Production page's "Other agency work" until it
+ * moves to the new layout.
+ *
  * Compact results after the scroll section (56–72px later): the heading and
  * text in the text column, an optional small evidence figure beside them.
  * The next-project row follows directly; there is no separate large region.

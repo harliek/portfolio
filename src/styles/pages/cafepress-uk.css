@@ -1,5 +1,14 @@
 /*
  * CafePress UK page (src/pages/work/CafePressUK.tsx). Scope every selector
- * under .page-cafepress-uk. The layout, frame, highlights and ending come
- * from the shared case styles (case.css); nothing page-specific is needed yet.
+ * under .page-cafepress-uk. The layout, stage, highlights and ending come from
+ * the shared case styles (case.css).
  */
+
+.page-cafepress-uk {
+  /* The storefront's own page colour behind its images, so a loading layer never shows a dark box. */
+  --store-paper: #fafbf8;
+}
+
+.page-cafepress-uk .cs-layer:not([data-transparent]) .cs-canvas {
+  background: var(--store-paper);
+}

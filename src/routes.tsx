@@ -1,23 +1,22 @@
+import { useEffect } from 'react'
 import { createBrowserRouter, Navigate, useLocation, type RouteObject } from 'react-router-dom'
 import { PageShell } from './components/layout/PageShell'
 import { Home } from './pages/Home'
 import { NotFound } from './pages/NotFound'
 import { RouteError } from './pages/RouteError'
 
-/** The restored creative portfolio's layout (its own header, contact band and footer). */
-const creativeLayout = () => import('./creative/CreativeLayout')
-
 /**
- * Case-study, About and creative chunks are loaded lazily. Loaders for each
- * chunk are exported so links can prefetch them on hover/focus
- * (prefetchRoute) and the project transition can wait for them. A creative
- * page's loader also fetches the creative layout.
+ * Case-study and About chunks are loaded lazily. Loaders for each chunk are
+ * exported so links can prefetch them on hover/focus (prefetchRoute) and the
+ * project transition can wait for them.
+ *
+ * The restored creative portfolio is not part of this app: it is the original
+ * static build at /creative/ (public/creative, served by vite.config.ts in
+ * development and preview and by netlify.toml / public/_redirects in
+ * production).
  */
 export const routeChunks = {
   '/about': () => import('./pages/About'),
-  '/creative': () => Promise.all([creativeLayout(), import('./creative/pages/CreativeHub')]).then(([, m]) => m),
-  '/creative/art': () => Promise.all([creativeLayout(), import('./creative/pages/ArtPage')]).then(([, m]) => m),
-  '/creative/film': () => Promise.all([creativeLayout(), import('./creative/pages/FilmPage')]).then(([, m]) => m),
   '/work/cafepress-uk': () => import('./pages/work/CafePressUK'),
   '/work/merchandising-platform': () => import('./pages/work/MerchandisingPlatform'),
   '/work/spreadsheet-agent': () => import('./pages/work/SpreadsheetAgent'),
@@ -60,6 +59,25 @@ function Legacy({ to }: { to: string }) {
   return <Navigate to={{ pathname: to, search, hash }} replace />
 }
 
+/** The path this document was loaded at, i.e. the URL the server answered with this app. */
+const DOCUMENT_PATH = window.location.pathname
+
+/**
+ * A URL that belongs to the separate creative site. A client-side navigation
+ * to it (for example a router Link to /creative) loads that document in place
+ * of the current history entry. If the server answered that very URL with
+ * this app, reloading would loop, so the 404 page is shown instead.
+ */
+function CreativeDocument({ to }: { to?: string }) {
+  const { pathname, search, hash } = useLocation()
+  const target = to ?? pathname
+  const servedHere = target === DOCUMENT_PATH
+  useEffect(() => {
+    if (!servedHere) window.location.replace(target + search + hash)
+  }, [servedHere, target, search, hash])
+  return servedHere ? <NotFound /> : null
+}
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -86,30 +104,17 @@ export const router = createBrowserRouter([
           // previous portfolio's Merch Console URL.
           { path: 'work/planetart', element: <Legacy to="/work/cafepress-uk" /> },
           { path: 'work/planetart/console', element: <Legacy to="/work/merchandising-platform" /> },
+          // The restored creative portfolio (a separate document) and its
+          // earlier URLs. The server redirects these too; the routes only
+          // cover client-side navigation.
+          { path: 'creative/*', element: <CreativeDocument /> },
+          { path: 'creative/film', element: <CreativeDocument to="/creative/films" /> },
+          { path: 'films', element: <CreativeDocument to="/creative/films" /> },
+          { path: 'film', element: <CreativeDocument to="/creative/films" /> },
+          { path: 'art', element: <CreativeDocument to="/creative/art" /> },
           { path: '*', Component: NotFound },
         ],
       },
     ],
   },
-  {
-    // The restored creative portfolio, at its original URLs, outside the
-    // professional shell (no background video, header, footer or pointer
-    // trail). A failed page or chunk renders RouteError on its own.
-    path: '/creative',
-    HydrateFallback: () => null,
-    ErrorBoundary: RouteError,
-    lazy: async () => {
-      const mod = await creativeLayout()
-      clearChunkReload()
-      return { Component: mod.default }
-    },
-    children: [
-      { index: true, lazy: lazyPage('/creative') },
-      { path: 'art', lazy: lazyPage('/creative/art') },
-      { path: 'film', lazy: lazyPage('/creative/film') },
-    ],
-  },
-  // The interim professional /art and /film pages: now the creative ones.
-  { path: '/art', element: <Legacy to="/creative/art" /> },
-  { path: '/film', element: <Legacy to="/creative/film" /> },
 ])

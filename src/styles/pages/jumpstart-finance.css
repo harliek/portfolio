@@ -1,117 +1,44 @@
 /*
- * Jumpstart Finance page (src/pages/work/JumpstartFinance.tsx). Every selector
- * is scoped under .page-jumpstart-finance. Green is the local accent
- * (--case-accent comes from projects.ts).
+ * Jumpstart Finance page (src/pages/work/JumpstartFinance.tsx). Every
+ * selector is scoped under .page-jumpstart-finance; green is the page accent
+ * (--accent from CaseLayout).
  *
- * The case frame holds the original prototype screens (transparent phone
- * frames, one 600×1210 canvas each), so the phone keeps one size while the
- * screens change. The screens get no box, outline or tint: only a soft shadow
- * that follows the phone's silhouette and a faint pool of green light below.
+ * The stage holds the original prototype screens (transparent phone frames,
+ * one 600×1210 canvas each), so the phone keeps one size while the screens
+ * change. They get no box, outline or tint: only a soft shadow that follows
+ * the phone's silhouette and a faint pool of green light below it.
  */
 
 .page-jumpstart-finance {
-  --jf-pool: color-mix(in oklch, var(--stage-green) 22%, transparent);
+  --jf-pool: color-mix(in oklch, var(--case-accent) 20%, transparent);
   --jf-phone-shadow: drop-shadow(0 18px 26px rgb(0 0 0 / 0.55));
 }
-
-/* ----------------------------------------------------------------------- */
-/* The phone frame                                                          */
-/* ----------------------------------------------------------------------- */
 
 .page-jumpstart-finance .cs-layer[data-transparent] img {
   filter: var(--jf-phone-shadow);
 }
 
-.page-jumpstart-finance .cs-frame {
+.page-jumpstart-finance .cs-stage {
   isolation: isolate;
 }
 
 /* A faint pool of light beneath the phone (never behind its screen). */
-.page-jumpstart-finance .cs-frame::after {
+.page-jumpstart-finance .cs-stage::after {
   content: '';
   position: absolute;
   z-index: -1;
-  left: -18%;
-  right: -18%;
-  bottom: -26px;
-  height: 84px;
+  left: 50%;
+  bottom: -22px;
+  width: min(100%, 420px);
+  height: 72px;
   background: radial-gradient(closest-side in oklch, var(--jf-pool), transparent);
+  transform: translateX(-50%);
   pointer-events: none;
 }
 
-/* Stacked: the phone can fill most of a narrow screen, so the pool stays within its width. */
-.page-jumpstart-finance .cs-mf[data-variant='inline'] .cs-frame::after {
-  left: 0;
-  right: 0;
-  bottom: -18px;
-  height: 64px;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Results: the pitch excerpt stays small beside the text                   */
-/* ----------------------------------------------------------------------- */
-
-.page-jumpstart-finance .case-results__figure {
-  max-width: 440px;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Supplementary material: the proposed business model (a disclosure)       */
-/* ----------------------------------------------------------------------- */
-
-.page-jumpstart-finance .jf-supplement {
-  width: 100%;
-  max-width: calc(var(--case-max) + 2 * var(--gutter));
-  margin: var(--space-7) auto 0;
-  padding-inline: var(--gutter);
-}
-
-.page-jumpstart-finance .jf-supplement__label {
-  margin-bottom: var(--space-3);
-  color: var(--color-muted);
-  font-size: 0.875rem;
-  font-weight: var(--weight-label);
-  line-height: 1.4;
-  letter-spacing: 0.01em;
-}
-
-.page-jumpstart-finance .jf-supplement__details {
-  max-width: 620px;
-}
-
-.page-jumpstart-finance .jf-supplement__summary {
-  list-style: none;
-}
-
-.page-jumpstart-finance .jf-supplement__summary::-webkit-details-marker {
-  display: none;
-}
-
-.page-jumpstart-finance .jf-supplement__chevron {
-  transition: transform var(--dur-feedback) var(--ease-out);
-}
-
-.page-jumpstart-finance .jf-supplement__details[open] .jf-supplement__chevron {
-  transform: rotate(90deg);
-}
-
-.page-jumpstart-finance .jf-supplement__hide,
-.page-jumpstart-finance .jf-supplement__details[open] .jf-supplement__show {
-  display: none;
-}
-
-.page-jumpstart-finance .jf-supplement__details[open] .jf-supplement__hide {
-  display: inline;
-}
-
-.page-jumpstart-finance .jf-supplement__body {
-  display: grid;
-  gap: var(--space-5);
-  margin-top: var(--space-5);
-}
-
-html[data-motion='reduce'] .page-jumpstart-finance .jf-supplement__chevron {
-  transition: none;
+/* The caption sits centred under the phone (the portrait stage centres it). */
+.page-jumpstart-finance .cs-figure[data-portrait] .cs-caption {
+  max-width: 46ch;
 }
 
 @media (max-width: 599.98px) {
@@ -119,9 +46,13 @@ html[data-motion='reduce'] .page-jumpstart-finance .jf-supplement__chevron {
     --jf-phone-shadow: drop-shadow(0 12px 18px rgb(0 0 0 / 0.5));
   }
 
-  /* The label can wrap on a narrow phone instead of overflowing. */
-  .page-jumpstart-finance .jf-supplement__summary {
-    white-space: normal;
-    text-align: left;
+  .page-jumpstart-finance .cs-stage::after {
+    bottom: -16px;
+    height: 56px;
   }
+}
+
+/* Stacked: the phone stays a comfortable size on tablets (the stage keeps its ratio). */
+.page-jumpstart-finance .cs-stage[data-kind='inline'] {
+  max-height: min(72svh, 640px);
 }

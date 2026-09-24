@@ -1,19 +1,14 @@
-/* AI Leasing Agent page (src/pages/work/AILeasingAgent.tsx). Scope every selector under .page-ai-leasing-agent. */
+/*
+ * AI Leasing Agent page (src/pages/work/AILeasingAgent.tsx). Scope every
+ * selector under .page-ai-leasing-agent. The layout, stage, highlights and
+ * label come from the shared case styles (case.css).
+ */
 
 .page-ai-leasing-agent {
-  /* The illustration's own page colour behind its images, so a layer change never dips to dark. */
-  --conv-paper: #fcfcfa;
+  /* The illustration's own page colour behind its images, so a loading layer never shows a dark box. */
+  --conv-paper: #fbfbf9;
 }
 
 .page-ai-leasing-agent .cs-layer:not([data-transparent]) .cs-canvas {
   background: var(--conv-paper);
-}
-
-/*
- * The whole illustration (16:9) is slightly narrower than the frame (the
- * crops' 1.85:1). Keep it on the frame's left edge, in line with the caption
- * and the Enlarge button, instead of floating in the middle.
- */
-.page-ai-leasing-agent .cs-mf[data-variant='sticky'] .cs-layer {
-  justify-items: start;
 }

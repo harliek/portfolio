@@ -1,161 +1,120 @@
-import type { Section, Visual } from '../../components/case/CaseScroll'
-import type { ImageId } from '../media'
+import type { CaseMedia, Rect, StorySection } from '../../components/case/CaseScroll'
 
 /**
- * CafePress UK (CaseScroll). Copy follows the latest brief (section 18) and is
- * checked against the internship presentation (PlanetArt/planetart
- * presentation.pdf, dated 08/20/2026), the storefront prototype
- * (PlanetArt/cafepress uk/uk web.png) and the résumé. See
- * docs/content-provenance.md.
+ * CafePress UK (route /work/cafepress-uk, CaseScroll states media).
  *
- * Sources per claim (PDF page numbers):
- * - Five comparable businesses and the four "Key patterns observed": p. 4
- *   (Competitor Findings). "Comparable businesses" is the deck's own term
- *   (p. 3); not all of them are UK-only, so the page does not call them UK
- *   competitors.
- * - Vendors PF Concept and Ralawise, eco-friendly and UK-relevant focus: p. 5.
- *   "Adapt an existing B2B model with targeted localization": p. 5 takeaway.
- * - UK spellings and terms (colour, personalised, trousers, jumper): p. 7.
- * - The prototype: p. 8 and uk web.png. Three recommendations: p. 9.
- * - The prototype shows no prices, so the page never claims GBP pricing on it;
- *   "Basket" and the 020 phone number are read from the prototype itself (the
- *   number may be a placeholder, so it is called a UK-format number).
- * - No launch, conversion or revenue result exists; the status line in the
- *   metadata says so once, and nothing else repeats it.
+ * Copy is brief-v5 section 23 under the copy rules and lead decision 3 (H1
+ * “CafePress UK”; the launch framing stays in the metadata and the copy, and
+ * nothing says the store launched). Edits to the brief's text, each for
+ * accuracy or repetition only:
+ * - “UK competitors” → “Competitors in the UK market”. The deck's competitor
+ *   slide (p. 5) reviews Printful, Prodigi, Printify, Vistaprint and 4imprint
+ *   as comparable businesses for the UK market; not all are UK companies.
+ * - “a coded storefront prototype” → “the coded storefront”, so “prototype”
+ *   is not repeated from the opening.
  *
- * Highlights are percentages of each crop (src/content/crops/cafepress-uk.ts).
+ * Sources (PlanetArt/planetart presentation.pdf, dated 08/20/2026, PDF pages):
+ * - Opening: résumé (“Led UK pricing, competitor, and vendor research to shape
+ *   CafePress’s launch strategy and prototype e-commerce site”); deck p. 1
+ *   (“CafePress UK B2B Launch”), p. 2 (“a potential UK launch”), p. 8 (the
+ *   same storefront). “Coded” is Harlie's statement; the folder holds only the
+ *   screenshot.
+ * - The question: deck p. 4 (feasibility of a UK B2B launch), p. 6 takeaway
+ *   (“adapt an existing B2B model with targeted localization”).
+ * - What I found: deck p. 5, the four “Key patterns observed” (category-led,
+ *   recognizable brands, eco-friendly products, UK offerings mirroring
+ *   US-style merchandising); p. 6 takeaway.
+ * - What I made: uk web.png (Basket, Fast UK Delivery, UK-Based Support, a
+ *   pound sign, a 020 number with Mon–Fri hours, eight categories); deck p. 8
+ *   and p. 9 (recommendations). The prototype shows no prices, so the page
+ *   never claims GBP pricing.
+ * - The result: Harlie's statement; consistent with deck p. 9.
+ *
+ * No slide appears on the page (brief-v5 section 24). The stage shows the
+ * storefront, then focused crops of its navigation and UK details
+ * (src/content/crops/cafepress-uk.ts). Highlights are percentages of each crop.
  */
 
+/** Eco-Friendly in the category row, in cp-header-nav. */
+const ECO_CATEGORY: Rect = { x: 17.8, y: 42.9, w: 18.7, h: 10 }
+/** The UK phone number and hours, Sign in and Basket, in cp-header-nav. */
+const UK_CONTACT: Rect = { x: 24.7, y: 19.5, w: 67.4, h: 15.5 }
+/** The headline “Branded Promotional Products for UK Businesses”, in cp-header-brand. */
+const UK_HEADLINE: Rect = { x: 9, y: 69.6, w: 90.6, h: 27.9 }
+
+const FULL = 'cp-storefront' as const
+
 export const CAFEPRESS_UK = {
-  situation: (
+  meta: ['UK launch research · PlanetArt internship', 'June to August 2026'],
+  summary: (
     <p>
-      During my PlanetArt internship, I researched the UK promotional-products market and developed a <strong>localized CafePress storefront prototype</strong>.
-      The work set out how CafePress could present its business offer to UK customers.
+      During my PlanetArt internship, I researched the UK B2B promotional-products market and coded a <strong>localized CafePress storefront prototype</strong>{' '}
+      for a potential UK launch.
     </p>
   ),
-  opening: {
-    kind: 'image',
-    image: 'cafepress-monitor',
-    caption: 'The localized storefront prototype, shown on a desktop display.',
-    enlarge: 'cp-storefront',
-  } satisfies Visual,
+  media: {
+    kind: 'states',
+    // The storefront and both header crops are 16:9.
+    frameRatio: '16 / 9',
+    opening: { image: FULL, caption: 'The CafePress Business UK storefront prototype.' },
+  } satisfies CaseMedia,
   sections: [
     {
-      id: 'problem',
-      title: 'Problem',
-      blocks: [
-        {
-          id: 'problem-text',
-          body: (
-            <p>
-              CafePress already had a business-to-business offer in the US. To judge whether it could serve UK businesses, I needed to find out{' '}
-              <strong>how comparable companies presented promotional products to UK buyers</strong> and which parts of the US offer would have to change.
-            </p>
-          ),
-        },
-      ],
+      id: 'question',
+      title: 'The question',
+      body: (
+        <p>
+          I examined how CafePress could bring its US business offer to the UK while adapting the parts of the experience that mattered to local customers.
+        </p>
+      ),
     },
     {
-      id: 'contribution',
-      title: 'My contribution',
-      blocks: [
-        {
-          id: 'competitors',
-          title: 'Competitor review',
-          body: (
-            <>
-              <p>
-                I reviewed five comparable businesses, Printful, Prodigi, Printify, Vistaprint, and 4imprint. The main finding was that{' '}
-                <strong>UK offerings often mirrored US-style merchandising</strong> rather than introducing a different model. The sites were organized by
-                category, featured recognizable brands, and showed eco-friendly products as a recurring theme.
-              </p>
-              <p>I also reviewed UK vendors, including PF Concept and Ralawise, and curated potential products with a focus on eco-friendly ranges and UK-relevant brands.</p>
-            </>
-          ),
-          visual: {
-            kind: 'image',
-            image: 'cp-competitors',
-            caption: 'Competitor Findings slide from my internship presentation.',
-            highlight: { x: 1, y: 66.4, w: 90, h: 6 },
-          },
-        },
-        {
-          id: 'positioning',
-          title: 'UK positioning',
-          body: (
-            <p>
-              The research suggested that CafePress could adapt its existing model with <strong>targeted localization</strong> instead of building a separate
-              one. The prototype presents the offer as CafePress Business UK, with a headline addressed to UK businesses and a fast UK delivery notice at the top
-              of the page.
-            </p>
-          ),
-          visual: {
-            kind: 'image',
-            image: 'cp-header-brand',
-            caption: 'The CafePress Business UK name and headline in the storefront prototype.',
-            highlight: { x: 8.1, y: 15.5, w: 42.4, h: 22.9 },
-          },
-        },
-        {
-          id: 'categories',
-          title: 'Category navigation',
-          body: (
-            <p>
-              Like the competitor sites, the prototype is organized by product category. <strong>Eco-Friendly has its own place in the category row</strong>,
-              in line with my recommendation to prioritize eco-friendly products and UK-relevant brands.
-            </p>
-          ),
-          visual: {
-            kind: 'image',
-            image: 'cp-header-nav',
-            caption: 'Detail of the prototype’s category row, with Eco-Friendly beside Tech and Events & Gifts.',
-            highlight: { x: 18, y: 41.9, w: 18.5, h: 11.5 },
-          },
-        },
-        {
-          id: 'wording',
-          title: 'UK wording and contact details',
-          body: (
-            <p>
-              My localization research listed UK spellings and terms such as colour, personalised, trousers, and jumper. The prototype follows the same
-              conventions, with a <strong>Basket</strong> instead of a cart and a UK-format phone number with office hours.
-            </p>
-          ),
-          visual: {
-            kind: 'image',
-            image: 'cp-header-nav',
-            caption: 'The phone number, Sign in, and Basket in the prototype’s header.',
-            highlight: { x: 24.7, y: 19.5, w: 67.7, h: 15 },
-          },
-        },
-        {
-          id: 'prototype',
-          title: 'Storefront prototype',
-          body: (
-            <p>
-              The completed prototype brings these decisions together on one homepage. It gave the recommendations a{' '}
-              <strong>concrete customer-facing example</strong>, and I included it in my internship presentation alongside the research.
-            </p>
-          ),
-          visual: {
-            kind: 'image',
-            image: 'cp-storefront',
-            caption: 'The complete storefront prototype.',
-          },
-        },
-      ],
+      id: 'found',
+      title: 'What I found',
+      body: (
+        <p>
+          Competitors in the UK market used familiar category-led merchandising, prominently featured recognizable brands, and consistently offered eco-friendly
+          products. <strong>The overlap with the US market</strong> gave CafePress a clear starting point for the launch.
+        </p>
+      ),
+      visual: {
+        image: 'cp-header-nav',
+        caption: 'The storefront’s category row, with Eco-Friendly as its own category.',
+        highlight: ECO_CATEGORY,
+        expandTo: FULL,
+      },
     },
-  ] satisfies Section[],
-  results: (
-    <p>
-      The internship produced a competitor and vendor review, the storefront prototype, and <strong>three recommendations</strong>, to adapt the existing US
-      B2B model, localize the assortment selectively, and have product data, vendor coordination, and merchandising workflows ready before any launch.
-    </p>
-  ),
-  resultsFigure: {
-    image: 'cp-recommendations',
-    caption: 'Recommendations slide from my internship presentation, dated 20 August 2026.',
-  } satisfies { image: ImageId; caption: string },
-  /** The next-project row carries the relationship, so there is exactly one related link. */
-  next: 'A separate project I built independently after the internship, using synthetic data.',
+    {
+      id: 'made',
+      title: 'What I made',
+      body: (
+        <p>
+          I turned the research into the coded storefront, with <strong>UK wording, local contact details</strong>, and a category structure for the B2B offer. I
+          presented it with my market research and recommendations for the launch.
+        </p>
+      ),
+      visual: {
+        image: 'cp-header-nav',
+        caption: 'A UK phone number with office hours, Sign in, and Basket in the header.',
+        highlight: UK_CONTACT,
+        expandTo: FULL,
+      },
+    },
+  ] satisfies StorySection[],
+  outcome: {
+    id: 'result',
+    title: 'The result',
+    body: (
+      <p>
+        I gave the team <strong>a concrete UK storefront concept</strong> and a researched approach to assortment and localization that they could use to plan the
+        launch.
+      </p>
+    ),
+    visual: {
+      image: 'cp-header-brand',
+      caption: 'The storefront’s name and headline for UK businesses.',
+      highlight: UK_HEADLINE,
+      expandTo: FULL,
+    },
+  } satisfies StorySection,
 }

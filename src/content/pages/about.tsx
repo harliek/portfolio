@@ -1,66 +1,147 @@
-import type { ReactNode } from 'react'
+import type { ImageId } from '../media'
 import type { ProjectId } from '../projects'
 
 /**
- * About content, shared by the homepage section below the carousel (#about)
- * and the /about page (src/components/about/AboutContent.tsx).
+ * Copy of the /about page (src/components/about/AboutContent.tsx).
  *
- * The greeting and the two biography paragraphs are the client's wording,
- * verbatim (latest brief, "Put About directly below the carousel"); only the
- * bold emphasis is added. Organizations, role titles and dates are exactly as
- * on the résumé (public/resume/harlie-katz-resume.pdf), written out in full
- * ("June to August 2026"). Jumpstart Finance is listed on the résumé under
- * Projects with the same title and dates. The education lines are the
- * résumé's (GPA and coursework are left out on purpose).
+ * Sources (see docs/content-provenance.md):
+ * - Greeting and the two opening paragraphs: Harlie's wording, verbatim
+ *   (brief v5, section 25).
+ * - Education: the résumé (public/resume/harlie-katz-resume.pdf). School,
+ *   degree, minor, certificate and Sutardja Center, "Aug 2023 - May 2026",
+ *   "Completed in 3 years", and the coursework list exactly as the résumé
+ *   names it (topic labels, not official course titles). GPA is left out on
+ *   purpose. The paragraph is the brief's suggested wording (section 26).
+ * - Experience: organizations, titles and dates exactly as on the résumé
+ *   ("&" written as "and"; Jumpstart is "Founder and Product Lead" per the
+ *   brief). One contribution sentence each, drawn from the résumé and the
+ *   brief's own case-study copy, with no metrics:
+ *   PlanetArt: résumé "Led UK pricing, competitor, and vendor research to
+ *   shape CafePress's launch strategy and prototype e-commerce site" and
+ *   brief section 23 ("coded a localized CafePress storefront prototype").
+ *   Shift Content: brief section 22 (lighting, interview audio, camera,
+ *   B-roll, editing, working directly with the founder).
+ *   The Artesian Network: the brief's sentence (section 27); the résumé's
+ *   "Produced 4 executive white papers" supports "wrote" (no number used).
+ *   Valiance Capital: brief section 20 (proposed the agent, wrote its
+ *   requirements, developed test cases for its rollout).
+ *   Jumpstart Finance: résumé "Led a 5-person international team from
+ *   customer discovery to prototype and pitch" (the sign-up figure is left
+ *   out here; it is on the case study with its qualification).
+ *   PlanetArt links only to its internship work (CafePress UK); the
+ *   Merchandising Platform is an independent project.
+ * - Creative work: the original creative portfolio has Film and Art (charcoal
+ *   drawings) sections; An Artistic End's poster, YouTube id, description and
+ *   upload month come from the original portfolio and YouTube (the same data
+ *   as src/content/creative.ts, kept here so About does not depend on it).
+ *   Role credits are not shown (unverified).
+ *
+ * Authored copy uses no colons and no em dashes.
  */
 
 export interface Role {
   org: string
   role: string
   dates: string
-  /** The related case study, where there is one. PlanetArt links only to the internship work (CafePress UK). */
+  /** One concise contribution sentence. */
+  contribution: string
+  /** The related case study, where there is one. */
   project?: ProjectId
 }
 
+/** The film's authentic poster (the original portfolio's thumbnail, pinks untouched). */
+const FILM_POSTER: ImageId = 'film-artistic-end'
+
 export const ABOUT = {
-  label: 'About',
-  greeting: 'Hi, welcome to my portfolio.',
+  greeting: 'Hi, I’m Harlie.',
   bio: [
-    <>
-      My background is in <strong>cognitive science and data science</strong>, and my work focuses on{' '}
-      <strong>applied AI and product development</strong>. I am interested in how people interpret information, make
-      decisions, and use software in their work.
-    </>,
-    <>
-      I believe understanding human cognition is essential to developing useful AI. Across my projects, I have explored
-      that connection through <strong>research, workflow requirements, and interactive prototypes</strong>.
-    </>,
-  ] satisfies ReactNode[],
-  resumeLabel: 'View résumé',
-  experienceTitle: 'Experience',
-  experience: [
-    { org: 'PlanetArt', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', project: 'cafepress-uk' },
-    { org: 'Shift Content', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', project: 'client-work' },
-    { org: 'The Artesian Network', role: 'Enterprise AI Research Associate', dates: 'June 2025 to January 2026' },
-    { org: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'October 2024 to June 2025', project: 'ai-leasing-agent' },
-    { org: 'Jumpstart Finance', role: 'Founder & Product Lead', dates: 'June to July 2024', project: 'jumpstart-finance' },
-  ] satisfies Role[],
+    'I studied cognitive science and data science at UC Berkeley. My work connects research, product development, and applied AI. I’m interested in how people make decisions and how software can support them.',
+    'I have worked across product operations, enterprise AI research, leasing, and creative production. Those experiences shape how I approach problems and test ideas.',
+  ],
+  portraitLabel: 'Portrait of Harlie Katz',
+
   educationTitle: 'Education',
   education: {
     school: 'University of California, Berkeley',
-    degree: 'B.A. in Cognitive Science, Minor in Data Science',
-    certificate: 'Certificate in Entrepreneurship & Technology, Sutardja Center',
+    credentials: ['B.A. in Cognitive Science', 'Minor in Data Science'],
+    certificate: 'Certificate in Entrepreneurship and Technology',
+    certificateSource: 'Sutardja Center',
     dates: 'August 2023 to May 2026',
+    pace: 'Completed in three years',
+    text: 'Cognitive science informs how I think about attention, learning, and decision-making. Data science gives me methods for examining evidence and testing ideas.',
+    courseworkTitle: 'Relevant coursework',
+    coursework: [
+      'Artificial Intelligence',
+      'Large Language Models',
+      'Machine Learning',
+      'Computational Cognitive Modeling',
+      'Data Analytics',
+      'AI Governance',
+      'Human Behavior',
+      'Computer Science',
+      'User Experience',
+      'Economic Systems',
+    ],
   },
-  art: {
-    title: 'My art portfolio',
-    text: 'Drawings and short films, shown in my original creative portfolio.',
-    cta: 'Open art portfolio',
-    href: '/creative',
+
+  experienceTitle: 'Experience',
+  experience: [
+    {
+      org: 'PlanetArt',
+      role: 'Product Operations and Merchandising Intern',
+      dates: 'June to August 2026',
+      contribution: 'Led UK pricing, competitor, and vendor research for CafePress and coded a localized storefront prototype.',
+      project: 'cafepress-uk',
+    },
+    {
+      org: 'Shift Content',
+      role: 'Creative Strategy and Client Solutions Intern',
+      dates: 'January to May 2026',
+      contribution: 'Produced client films with the founder, from lighting and interview audio to camera work and editing.',
+      project: 'client-work',
+    },
+    {
+      org: 'The Artesian Network',
+      role: 'Enterprise AI Research Associate',
+      dates: 'June 2025 to January 2026',
+      contribution: 'Researched enterprise AI applications and wrote white papers on adoption and implementation.',
+    },
+    {
+      org: 'Valiance Capital',
+      role: 'Leasing and Operations Associate',
+      dates: 'October 2024 to June 2025',
+      contribution: 'Proposed an AI leasing agent, wrote its requirements, and developed test cases for its rollout.',
+      project: 'ai-leasing-agent',
+    },
+    {
+      org: 'Jumpstart Finance',
+      role: 'Founder and Product Lead',
+      dates: 'June to July 2024',
+      contribution: 'Led a five-person team at the European Innovation Academy in Porto from customer discovery to prototype and pitch.',
+      project: 'jumpstart-finance',
+    },
+  ] satisfies Role[],
+  caseLink: (name: string) => `${name} case study`,
+
+  creativeTitle: 'Creative work',
+  portfolio: {
+    /** The restored original creative homepage (a separate static build, outside the router). */
+    href: '/creative/',
+    cta: 'Open creative portfolio',
+    text: 'Short films and charcoal drawings in my original creative portfolio.',
   },
   film: {
-    label: 'Short film',
-    cta: 'Watch An Artistic End',
-    youtube: 'Open on YouTube',
+    title: 'An Artistic End',
+    note: 'An experimental short film about self-objectification, artistic identity, and existential isolation.',
+    meta: 'Short film · Published on YouTube, January 2026',
+    youtubeId: 'a2Vm1LFB_68',
+    poster: FILM_POSTER,
+    play: 'Play film',
+    youtube: 'Watch on YouTube',
+  },
+
+  links: {
+    label: 'Email and LinkedIn',
+    linkedin: 'LinkedIn',
   },
 }

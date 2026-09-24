@@ -26,49 +26,55 @@ export type ObjectKind = 'headshot' | 'monitor' | 'mug' | 'laptop' | 'tablet' | 
  * The carousel scales these with the viewport.
  */
 export const OBJECT_SIZE: Record<ObjectKind, { width?: number; height?: number }> = {
-  headshot: { height: 285 },
-  monitor: { width: 370 },
-  mug: { height: 250 },
-  laptop: { width: 370 },
-  tablet: { height: 272 },
+  headshot: { height: 292 },
+  monitor: { width: 380 },
+  mug: { height: 244 },
+  laptop: { width: 384 },
+  tablet: { height: 280 },
   camera: { width: 330 },
-  phone: { height: 272 },
+  phone: { height: 282 },
 }
 
 export interface CarouselItem {
   id: AccentId
   /** Case study id (absent for About Me). */
   project?: ProjectId
-  /** Accessible link name (the visible title is inside the artwork). */
+  /** Visible live name beneath the object (the gallery shows it for every object). */
+  name: string
+  /** Short subtitle directly beneath the name: revealed on hover or focus, shown by default for the featured object and on touch. */
+  subtitle: string
+  /** Accessible link name. */
   label: string
   /** Visible live label, only where the artwork has no title (About me). */
   visibleLabel?: string
-  /** One short contribution sentence, shown in the reserved caption region on hover or focus. */
+  /** Superseded by `subtitle` (the gallery no longer shows a separate sentence); kept until the gallery drops it. */
   sentence: string
   path: string
   image: ImageId
   kind: ObjectKind
 }
 
-const project = (id: ProjectId, accent: AccentId, image: ImageId, kind: ObjectKind, sentence: string): CarouselItem => {
+const project = (id: ProjectId, accent: AccentId, image: ImageId, kind: ObjectKind, subtitle: string, sentence: string): CarouselItem => {
   const p = projectById(id)
-  return { id: accent, project: id, label: `${p.name} case study`, sentence, path: projectPath(p), image, kind }
+  return { id: accent, project: id, name: p.name, subtitle, label: p.name, sentence, path: projectPath(p), image, kind }
 }
 
 export const CAROUSEL_ITEMS: CarouselItem[] = [
   {
     id: 'about',
-    label: 'About me',
+    name: 'About Me',
+    subtitle: 'Background, experience, and creative work',
+    label: 'About Me',
     visibleLabel: 'About me',
     sentence: 'My background, experience, and creative work.',
     path: '/about',
     image: 'obj-about',
     kind: 'headshot',
   },
-  project('merchandising-platform', 'merchandising-platform', 'obj-merchandising-platform', 'monitor', 'I built an independent prototype for catalog and replenishment decisions.'),
-  project('cafepress-uk', 'cafepress-uk', 'obj-cafepress-uk', 'mug', 'I researched the UK market and developed a localized storefront prototype.'),
-  project('spreadsheet-agent', 'spreadsheet-agent', 'obj-spreadsheet-agent', 'laptop', 'I designed a review step before a request becomes a spreadsheet.'),
-  project('ai-leasing-agent', 'ai-leasing-agent', 'obj-ai-leasing-agent', 'tablet', 'I defined requirements and tested how the assistant handled leasing questions.'),
-  project('client-work', 'creative-production', 'obj-creative-production', 'camera', 'I supported client shoots and campaign work at Shift Content.'),
-  project('jumpstart-finance', 'jumpstart-finance', 'obj-jumpstart-finance', 'phone', 'I led a five-person team developing a financial education concept.'),
+  project('merchandising-platform', 'merchandising-platform', 'obj-merchandising-platform', 'monitor', 'Catalog and replenishment prototype', 'I built an independent prototype for catalog and replenishment decisions.'),
+  project('cafepress-uk', 'cafepress-uk', 'obj-cafepress-uk', 'mug', 'UK market research and storefront prototyping', 'I researched the UK market and developed a localized storefront prototype.'),
+  project('spreadsheet-agent', 'spreadsheet-agent', 'obj-spreadsheet-agent', 'laptop', 'A reviewable plan before sheet creation', 'I designed a review step before a request becomes a spreadsheet.'),
+  project('ai-leasing-agent', 'ai-leasing-agent', 'obj-ai-leasing-agent', 'tablet', 'Workflow requirements and assistant testing', 'I defined requirements and tested how the assistant handled leasing questions.'),
+  project('client-work', 'creative-production', 'obj-creative-production', 'camera', 'Film and campaign production at Shift Content', 'I supported client shoots and campaign work at Shift Content.'),
+  project('jumpstart-finance', 'jumpstart-finance', 'obj-jumpstart-finance', 'phone', 'Financial education venture and mobile prototype', 'I led a five-person team developing a financial education concept.'),
 ]

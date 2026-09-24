@@ -1,1 +1,9 @@
-/*    /index.html   200
+# Mirrors netlify.toml (Netlify reads this file first). The restored creative
+# portfolio lives at /creative/; its earlier URLs point there.
+/art            /creative/art          301
+/film           /creative/films        301
+/films          /creative/films        301
+/creative/film  /creative/films        301
+/creative       /creative/index.html   200
+/creative/*     /creative/index.html   200
+/*              /index.html            200

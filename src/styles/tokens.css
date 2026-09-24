@@ -33,7 +33,8 @@
   --color-muted: #b0b4c3;
   --color-subtle: #858c9f;
   --color-accent: #8a8fff;
-  --color-focus: #aab4ff;
+  /* Lavender (the About accent): focus rings and the default interactive accent. */
+  --color-focus: #c9b8ff;
   --color-line: #303545;
   /* Nearly opaque: text scrolling under the header is not readable through it. */
   --color-header: rgb(9 10 15 / 0.985);
@@ -41,10 +42,9 @@
   /* Opaque: nothing from the page shows around an enlarged image. */
   --color-scrim: rgb(5 6 10);
 
-  /* The dark architectural setting. Glow appears in three places only: the
-     carousel tile edges, the highlighted region of an image, and a small pool
-     of light beneath a featured artifact. Violet is the ambient colour; green
-     belongs to Jumpstart, warm amber to client imagery. */
+  /* The dark architectural setting. Violet is the ambient colour of the
+     room; each project has its own accent (src/content/accents.ts), used for
+     glow and interactive states only, never for whole paragraphs. */
   --stage-violet: #a58cf0;
   --stage-green: #5cc98a;
   --stage-coral: #ef8d74;
@@ -57,6 +57,25 @@
   --trail-glow: rgb(214 202 255);
   --trail-halo: rgb(160 132 255);
   --glow-soft: 0 0 24px rgb(165 140 240 / 0.28);
+
+  /*
+   * Interactive accent. Case studies set --accent / --accent-rgb (their
+   * project accent, src/content/accents.ts) on the article, header and
+   * footer; everywhere else hover and focus states fall back to lavender:
+   * var(--accent, var(--accent-default)). Rules resolve these on the element
+   * itself (never through another :root token), so they follow the page.
+   */
+  --accent-default: #c9b8ff;
+  --accent-default-rgb: 201 184 255;
+
+  /*
+   * The name "Harlie Katz": a crisp pale core with a subtle lavender to ice
+   * blue tint and a soft lavender glow (no blur on the letters, no pulse).
+   * The header's home link uses it at 26 to 30px on interior pages.
+   */
+  --brand-core: #f7f5ff;
+  --brand-tint: linear-gradient(100deg, #fdfcff 0%, #f1ecff 38%, #e6efff 78%, #dcecff 100%);
+  --brand-glow-rgb: 201 184 255;
 
   /* Typography */
   --font-sans: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -161,7 +180,6 @@
     --color-muted: oklch(0.7714 0.0218 273.95);
     --color-subtle: oklch(0.6408 0.0296 269.49);
     --color-accent: oklch(0.6961 0.1621 279.37);
-    --color-focus: oklch(0.7902 0.1072 277.8);
     --color-line: oklch(0.3311 0.0292 271.22);
     --stage-violet: oklch(0.72 0.16 295);
     --stage-green: oklch(0.72 0.16 150);

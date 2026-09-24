@@ -1,152 +1,176 @@
 import '../../styles/pages/about.css'
-import { useEffect, useRef } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { accentVars } from '../../content/accents'
 import { ABOUT } from '../../content/pages/about'
 import { projectById, projectPath } from '../../content/projects'
 import { SITE } from '../../content/site'
 import { prefetchRoute } from '../../routes'
-import { ResponsiveImage } from '../media/ResponsiveImage'
-import { isTransitionPending } from '../transition/projectTransition'
+import { CoverSlot } from '../transition/CoverSlot'
 import { ArtPreview } from './ArtPreview'
 import { FeaturedFilm } from './FeaturedFilm'
-
-/** Id of the small "About" label. */
-export const ABOUT_LABEL_ID = 'about-label'
-/** Id of the greeting heading. */
-export const ABOUT_TITLE_ID = 'about-title'
 
 const prefetch = (path: string) => ({
   onPointerEnter: () => prefetchRoute(path),
   onFocus: () => prefetchRoute(path),
 })
 
-interface AboutContentProps {
-  /** 1 on the /about page (2 if the content is ever nested under another page's H1). */
-  headingLevel: 1 | 2
-}
+/**
+ * Scale of the About object's carousel size (OBJECT_SIZE.headshot) for the
+ * portrait: about 340px wide at desktop. CSS narrows the slot on smaller
+ * screens (about.css), keeping its aspect ratio.
+ */
+const PORTRAIT_SCALE = 1.45
+const PORTRAIT_SIZES = '(min-width: 720px) 340px, 232px'
 
 /**
- * The About composition of the /about page (opened from the carousel's
- * About Me tile and the header's About link).
+ * The /about page, reached from the carousel's About Me object and the
+ * header's About link. One 40/60 grid on wide screens, stacked in reading
+ * order on narrow ones:
  *
- * 1. Portrait beside the greeting, the two-paragraph biography and
- *    "View résumé ↗" (the PDF in a new tab).
- * 2. Experience (verified roles and dates, with a text link to the related
- *    case study) and Education in its own compact block.
- * 3. "My art portfolio": the silent art-portfolio loop beside a sentence and
- *    an "Open art portfolio ↗" button to /creative.
- * 4. "An Artistic End": the authentic poster and a "Watch An Artistic End"
- *    button that loads the player only after the click.
+ * 1. Opening. The same headshot PNG as the carousel object, in its
+ *    CoverSlot (the route transition moves the carousel image into it),
+ *    beside the greeting (the page H1) and the two opening paragraphs.
+ * 2. Education (about 40%) beside Experience (about 60%). Each role has one
+ *    contribution sentence and, where there is one, a quiet text link to
+ *    its case study.
+ * 3. Creative work. A compact preview that opens the original creative
+ *    homepage (/creative/, a separate build, so a plain link), and An
+ *    Artistic End with its poster and a play button (the YouTube player is
+ *    requested only after that click).
+ * 4. Email and LinkedIn as quiet links, with no heading.
  *
- * It ends there: the site footer that follows is the single contact area,
- * so there is no second email or LinkedIn row here.
- *
- * Every block shares one two-column grid on wide screens (a narrow column
- * for the portrait, labels and feature text; a wide one for the biography,
- * lists and media) and stacks in reading order on narrow ones.
+ * The opening text and everything below it carry `data-cover-reveal`: the
+ * route transition keeps them hidden while the portrait travels into place,
+ * then fades them in. Direct loads show everything at once.
  */
-export function AboutContent({ headingLevel }: AboutContentProps) {
-  const { pathname } = useLocation()
-  const pending = isTransitionPending(pathname)
-  const portraitRef = useRef<HTMLDivElement>(null)
-  // Safety net: if the route transition never reveals the portrait, show it anyway.
-  useEffect(() => {
-    if (!pending) return
-    const id = window.setTimeout(() => portraitRef.current?.removeAttribute('data-transition-pending'), 2500)
-    return () => window.clearTimeout(id)
-  }, [pending])
-  const Heading = `h${headingLevel}` as const
-  const Sub = headingLevel === 1 ? 'h2' : 'h3'
-
+export function AboutContent() {
+  const { education: edu } = ABOUT
   return (
-    <div className="about-content" data-level={headingLevel}>
-      <div className="about-block about-intro">
-        <div className="about-intro__head">
-          <p id={ABOUT_LABEL_ID} className="about-label">
-            {ABOUT.label}
-          </p>
-          <Heading id={ABOUT_TITLE_ID} className="about-heading" tabIndex={-1}>
-            {ABOUT.greeting}
-          </Heading>
+    <div className="about-content">
+      <div className="about-intro">
+        <div className="about-intro__portrait" role="img" aria-label={ABOUT.portraitLabel}>
+          <CoverSlot id="about" scale={PORTRAIT_SCALE} sizes={PORTRAIT_SIZES} className="about-portrait" />
         </div>
-        {/* The opening image for the carousel's About Me tile: revealed in place once decoded (projectTransition.ts). */}
-        <div ref={portraitRef} className="about-intro__portrait" data-case-hero="" data-transition-pending={pending ? 'true' : undefined}>
-          {/* The page's largest image loads eagerly. projectTransition.ts (PAGE_HEROES) warms it with the same `sizes`. */}
-          <ResponsiveImage image="headshot" sizes="(min-width: 960px) 344px, 240px" priority={headingLevel === 1} />
-        </div>
-        <div className="about-intro__body">
-          {ABOUT.bio.map((p, i) => (
-            <p key={i} className="about-intro__para">
+        <div className="about-intro__text" data-cover-reveal="">
+          <h1 className="about-heading">{ABOUT.greeting}</h1>
+          {ABOUT.bio.map((p) => (
+            <p key={p} className="about-intro__para">
               {p}
             </p>
           ))}
-          <p className="about-intro__actions">
-            <a href={SITE.resume} className="button about-resume" target="_blank" rel="noopener">
-              {ABOUT.resumeLabel}
-              <span aria-hidden="true">↗</span>
-              <span className="visually-hidden"> (PDF, opens in a new tab)</span>
-            </a>
-          </p>
         </div>
       </div>
 
-      <div className="about-block about-record">
-        <section className="about-record__experience" aria-labelledby="about-experience-title">
-          <Sub id="about-experience-title" className="about-subheading about-record__title">
-            {ABOUT.experienceTitle}
-          </Sub>
-          <ol className="about-roles" role="list">
-            {ABOUT.experience.map((r) => {
-              const project = 'project' in r && r.project ? projectById(r.project) : null
-              const path = project ? projectPath(project) : null
-              return (
-                <li key={r.org} className="about-role">
-                  <span className="about-role__org">{r.org}</span>
-                  <span className="about-role__title">{r.role}</span>
-                  <span className="about-role__dates tabular">{r.dates}</span>
-                  {project && path && (
-                    <Link to={path} className="text-link about-role__link" {...prefetch(path)}>
-                      {project.name} case study
-                    </Link>
-                  )}
+      <div className="about-rest" data-cover-reveal="">
+        <div className="about-record">
+          <section className="about-education" aria-labelledby="about-education-title">
+            <h2 id="about-education-title" className="about-subheading">
+              {ABOUT.educationTitle}
+            </h2>
+            <div className="about-school">
+              <p className="about-school__name">{edu.school}</p>
+              <ul className="about-school__credentials" role="list">
+                {edu.credentials.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+                <li>
+                  {edu.certificate}
+                  <span className="visually-hidden">, </span>
+                  <span className="about-school__source">{edu.certificateSource}</span>
                 </li>
-              )
-            })}
-          </ol>
-        </section>
+              </ul>
+              <p className="about-school__dates tabular">
+                {edu.dates}
+                <span aria-hidden="true"> · </span>
+                <span className="visually-hidden">, </span>
+                {edu.pace}
+              </p>
+            </div>
+            <p className="about-school__text">{edu.text}</p>
+            <div className="about-coursework">
+              <h3 className="about-label" id="about-coursework-title">
+                {edu.courseworkTitle}
+              </h3>
+              <ul className="about-coursework__list" role="list" aria-labelledby="about-coursework-title">
+                {edu.coursework.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+            </div>
+          </section>
 
-        <section className="about-record__education" aria-labelledby="about-education-title">
-          <Sub id="about-education-title" className="about-subheading about-record__title">
-            {ABOUT.educationTitle}
-          </Sub>
-          <div className="about-school">
-            <p className="about-school__name">{ABOUT.education.school}</p>
-            <p className="about-school__degree">{ABOUT.education.degree}</p>
-            <p className="about-school__extra">{ABOUT.education.certificate}</p>
-            <p className="about-school__dates tabular">{ABOUT.education.dates}</p>
+          <section className="about-experience" aria-labelledby="about-experience-title">
+            <h2 id="about-experience-title" className="about-subheading">
+              {ABOUT.experienceTitle}
+            </h2>
+            <ol className="about-roles" role="list">
+              {ABOUT.experience.map((r) => {
+                const project = 'project' in r && r.project ? projectById(r.project) : null
+                const path = project ? projectPath(project) : null
+                return (
+                  <li key={r.org} className="about-role">
+                    <h3 className="about-role__org">{r.org}</h3>
+                    <p className="about-role__dates tabular">{r.dates}</p>
+                    <p className="about-role__title">{r.role}</p>
+                    <p className="about-role__text">{r.contribution}</p>
+                    {project && path && (
+                      <p className="about-role__more">
+                        <Link to={path} className="about-role__link" style={accentVars(project.accent)} {...prefetch(path)}>
+                          {ABOUT.caseLink(project.name)}
+                          <span className="about-role__arrow" aria-hidden="true">
+                            →
+                          </span>
+                        </Link>
+                      </p>
+                    )}
+                  </li>
+                )
+              })}
+            </ol>
+          </section>
+        </div>
+
+        <section className="about-creative" aria-labelledby="about-creative-title">
+          <h2 id="about-creative-title" className="about-subheading about-creative__title">
+            {ABOUT.creativeTitle}
+          </h2>
+          <div className="about-creative__grid">
+            <div className="about-portfolio">
+              {/* A separate static build outside the router: a plain link and a full page load. */}
+              <a href={ABOUT.portfolio.href} className="about-portfolio__link" aria-describedby="about-portfolio-text">
+                <ArtPreview />
+                <span className="about-portfolio__cta">
+                  {ABOUT.portfolio.cta}
+                  <span className="about-portfolio__arrow" aria-hidden="true">
+                    ↗
+                  </span>
+                </span>
+              </a>
+              <p id="about-portfolio-text" className="about-portfolio__text">
+                {ABOUT.portfolio.text}
+              </p>
+            </div>
+            <FeaturedFilm />
           </div>
         </section>
+
+        <ul className="about-links" role="list" aria-label={ABOUT.links.label}>
+          <li>
+            <a href={SITE.emailHref} className="about-links__link">
+              {SITE.email}
+            </a>
+          </li>
+          <li>
+            <a href={SITE.linkedin} className="about-links__link" target="_blank" rel="noopener noreferrer">
+              {ABOUT.links.linkedin}
+              <span className="about-links__arrow" aria-hidden="true">
+                ↗
+              </span>
+              <span className="visually-hidden"> (opens in a new tab)</span>
+            </a>
+          </li>
+        </ul>
       </div>
-
-      <section className="about-block about-feature about-art" aria-labelledby="about-art-title">
-        <div className="about-feature__head">
-          <Sub id="about-art-title" className="about-subheading">
-            {ABOUT.art.title}
-          </Sub>
-        </div>
-        <ArtPreview />
-        <div className="about-feature__body">
-          <p className="about-feature__text">{ABOUT.art.text}</p>
-          <p className="about-feature__actions">
-            <Link to={ABOUT.art.href} className="button about-art__open" {...prefetch(ABOUT.art.href)}>
-              {ABOUT.art.cta}
-              <span aria-hidden="true">↗</span>
-            </Link>
-          </p>
-        </div>
-      </section>
-
-      <FeaturedFilm level={Sub === 'h2' ? 2 : 3} />
     </div>
   )
 }

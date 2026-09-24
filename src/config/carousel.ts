@@ -1,101 +1,112 @@
 /**
- * The homepage's image-tile carousel (src/components/home/ConcaveCarousel.tsx)
- * and the project route transition (src/components/transition/projectTransition.ts).
+ * The homepage object carousel (src/components/home/ObjectArc.tsx and
+ * ObjectRow.tsx; the order, labels and sentences are in
+ * src/content/carousel.ts, the display sizes in its OBJECT_SIZE).
  *
- * Geometry: seven upright 3:4 tiles (six projects and About Me) stand
- * on the inside of a shallow curved wall around the viewer. The centre tile
- * is the farthest and faces the viewer; tiles towards the edges turn inward
- * and come a little closer (so they read slightly larger). One continuous
- * phase (arc length in px) moves at a constant speed and every tile's
- * transform is derived from it each frame. A tile is recycled from one end
- * of the wall to the other only where it is fully outside the visible
- * (masked) stage.
+ * Geometry (moving arc). The seven transparent PNG objects stand on one
+ * continuous track in their fixed order. Each object takes its own width
+ * on the track plus one constant gap, so the visible spacing follows the
+ * object widths instead of a fixed pitch. The track is a shallow concave
+ * arc around the viewer: at the centre the objects are slightly farther
+ * away (smaller), towards the sides they come closer and turn inward, and
+ * in the last stretch before they leave the stage they shrink and dim
+ * again. One phase (px along the track) moves at a constant, time-based
+ * speed; every object's transform is derived from it each frame. An object
+ * is moved from one end of the loop to the other only where it is fully
+ * outside the stage and invisible.
  *
- * Tile sizes come from CSS (home.css: --body-h, the tile height). The
- * spacing and curve are derived here from the measured stage width, so the
- * same composition holds from laptop to large desktop screens.
+ * All px values are at the 1440×900 reference and scale with the size
+ * factor `u` (see `size`), except where noted.
  */
 export const CAROUSEL = {
+  /** Idle speed along the track (px per second at u = 1). */
+  speed: 30,
   /**
-   * Travel speed along the arc for a 400px tall tile (px per second); it
-   * scales with the tile size so the pace looks the same on every screen.
-   * The first card carousel moved at 18px/s; this is ≈1.5× that.
+   * On a fresh visit the motion eases in from rest over this long (ms), so
+   * the About-first opening reads before the objects start to travel.
+   * After that the speed is constant.
    */
-  speed: 27,
-  referenceBodyHeight: 400,
+  startRampMs: 1600,
 
-  /** The moving arc. */
+  /**
+   * Scrolling (wheel or trackpad) over the carousel adds up to `max` times
+   * the idle speed (1 = twice as fast), then eases back over `easeMs`
+   * after the last wheel event. Each event adds |delta| / `perPx` of the
+   * extra speed, never beyond `max`. The listener is passive: the page
+   * still scrolls normally and nothing navigates.
+   */
+  wheel: { max: 1, perPx: 160, easeMs: 700, smoothMs: 90 },
+
+  /** Size factor u = clamp(min, min(width / 1440, (height − heightOffset) / heightSpan), max). */
+  size: { min: 0.62, max: 1.35, heightOffset: 240, heightSpan: 660 },
+
+  /** Gap between neighbouring objects on the track: `ratio` × stage width, clamped (px, not scaled). */
+  gap: { ratio: 0.044, min: 40, max: 90 },
+
   arc: {
-    /** Angle between neighbouring tiles on the wall (radians): the depth of the curve. */
-    step: 0.24,
-    /** Perspective distance as a multiple of the wall radius (1 = the viewer stands at the wall's centre). */
-    perspective: 1,
-    /**
-     * Spacing between neighbouring tiles along the wall, as a share of the
-     * stage width. At 0.2, four tiles are fully in view half a step off
-     * centre (±0.5 and ±1.5 spacings), with portions of the next ones.
-     */
-    spacing: 0.2,
-    /** Neighbouring tiles are never closer than this multiple of the tile width (a clear gap between tiles). */
-    minSpacing: 1.13,
+    /** Depth scale at the centre (slightly farther away). */
+    centre: 0.94,
+    /** Depth scale at `peakAt` (closer). */
+    peak: 1.045,
+    /** Where the objects are closest, as a share of the stage half-width. */
+    peakAt: 0.8,
+    /** Beyond `peakAt`, objects shrink by `shrink` × (t − peakAt)² as they leave (t = share of the half-width). */
+    shrink: 0.7,
+    /** Smallest depth scale at the far ends. */
+    minScale: 0.8,
+    /** Inward turn at the stage edge (radians; ≈14°), proportional to the distance from the centre. */
+    turn: 0.24,
+    /** Largest turn (radians). */
+    maxTurn: 0.3,
+    /** Perspective of each object's turn (px at u = 1). */
+    perspective: 1100,
+    /** Closer objects stand a little lower (the floor comes towards the viewer): px per unit of depth scale. */
+    floorDrop: 150,
+    /** Objects dim from this share of the half-width (object centre)… */
+    dimFrom: 0.8,
+    /** …to this share… */
+    dimTo: 1.18,
+    /** …down to this opacity. */
+    dimOpacity: 0.42,
   },
 
-  /** The static arrangement (reduced motion on wide screens): all seven tiles in view, a gentler curve. */
-  still: {
-    step: 0.13,
-    perspective: 1,
-    /**
-     * Caption width limit (px). Each caption is also at most the spacing
-     * less `captionGap` wide (a long name wraps), so captions never overlap
-     * their neighbours.
-     */
-    maxCaption: 240,
-  },
-
-  /** Caption width (px) in the moving arc (home.css --cap-w); the description wraps to two lines at most. */
-  captionWidth: 264,
-  /** Names and labels of neighbouring tiles keep at least this gap (px). */
-  captionGap: 20,
-  /** Captions fade out completely this far (px) before the stage edge… */
-  captionFadeEnd: 12,
-  /** …over this distance (px), so a project name is never cut in half. */
-  captionFadeLength: 96,
-  /** Width of each edge fade of the stage (share of its width; matches the mask-image in home.css). */
-  edgeMask: 0.045,
-  /** Tiles fade over the last share of a spacing before the recycling point (a safety on unusual screens). */
-  recycleFade: 0.3,
   /**
-   * A tile stays a working link (hover, click) while at least this share of
-   * its width is inside the stage (measured to the middle of the edge
-   * fades). Hovering such an edge tile brings back its faded caption, moved
-   * inward to stay whole. Tiles mostly outside take no pointer events.
+   * Hover or keyboard focus: the object comes forward (`lift` px at u = 1)
+   * and grows by `scale` (+6%); the whole carousel pauses. Applied through
+   * the --hover-scale and --hover-lift custom properties (home.css).
    */
-  minVisible: 0.5,
+  hover: { scale: 1.06, lift: 6 },
 
-  /** Where the motion starts, in spacings past the first tile (1.5 puts tiles 1–4 in reading order). */
-  startOffset: 1.5,
+  /**
+   * Room above the tallest object at its closest (px at u = 1). A hovered
+   * object may rise a little above the stage (it is not clipped vertically).
+   */
+  topRoom: 12,
+  /**
+   * At the opening, About's left edge lines up with the identity block,
+   * unless the object before it would then be more than this share visible
+   * (very wide screens): About is always the leftmost fully visible object.
+   */
+  openingPrevShare: 0.45,
+  /** Room below the baseline for the floor drop and the grounding shadow (px at u = 1). */
+  bottomRoom: 30,
+
+  /** An object is a pointer target while at least this share of its width is inside the stage. */
+  minVisible: 0.5,
+  /** After the pointer leaves an object (or the caption region), motion resumes this much later unless it returns (ms). */
+  hoverGraceMs: 160,
+  /** While moving, the object under a still pointer is re-checked this often (ms), so an arriving object pauses the carousel. */
+  recheckMs: 90,
+  /** Keyboard focus on an object outside the readable area glides it in over this long (ms). */
+  focusGlideMs: 420,
   /** Largest frame time used for one step (s), so a stalled frame never produces a jump. */
   maxStep: 0.05,
-  /**
-   * Whether pointer hover pauses the carousel. Off: Harlie asked for the
-   * tiles to keep moving on hover (the hovered tile still lifts, glows and
-   * shows its description as it passes). Keyboard focus always pauses.
-   */
-  pauseOnHover: false,
-  /** After the pointer leaves a tile or its caption, its lift drops this long later unless it returns (ms). */
-  hoverGraceMs: 180,
-  /** Keyboard focus on a tile outside the readable area glides it into view over this long (ms). */
-  focusGlideMs: 420,
 
-  /**
-   * The static arc needs at least this width for all seven tiles: its
-   * spacing must hold a one-line "View case study ↗" / "View About page ↗"
-   * (≈146px) plus `captionGap`. Narrower reduced-motion windows use the
-   * swipe row (bigger tiles, every caption fully visible).
-   */
-  staticArcMinWidth: 1340,
-  /** Narrower windows (even with a mouse) get the swipe row: the arc would show only two readable tiles. */
+  /** Hover-capable fine pointers at least this wide get the moving arc; everything else gets the swipe row. */
   arcMinWidth: 960,
   /** Touch and coarse pointers get the swipe row (tap opens a project directly). */
   touchQuery: '(hover: none), (pointer: coarse)',
+
+  /** Swipe row (touch, narrow windows, reduced motion): object size factor limits and the narrowest item (px, room for its sentence). */
+  row: { minU: 0.66, maxU: 1, minItemWidth: 232 },
 } as const

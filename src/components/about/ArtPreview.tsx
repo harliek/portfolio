@@ -4,15 +4,15 @@ import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { ResponsiveImage } from '../media/ResponsiveImage'
 
 const VIDEO = getVideo('art-portfolio')
-/** The wide column of About's grid: at most 810px (1440px and wider), narrower below. */
-const SIZES = '(min-width: 960px) 810px, calc(100vw - 40px)'
+/** The narrow (40%) column of About's grid at desktop, the full width below 960px. */
+const SIZES = '(min-width: 1200px) 460px, (min-width: 960px) 38vw, calc(100vw - 40px)'
 
 /**
- * The silent art-portfolio loop beside "My art portfolio".
+ * The silent loop of the original creative homepage's Art tile, inside the
+ * About page's "Open creative portfolio" link (AboutContent.tsx).
  *
- * Decorative (the heading, sentence and "Open art portfolio" button carry
- * the meaning and the navigation), so it is hidden from assistive
- * technology and is not a control. The poster is painted first. The video
+ * Decorative (the link's text and the sentence after it carry the meaning),
+ * so it is hidden from assistive technology. The poster is painted first. The video
  * element is added only when the frame is about to enter the viewport and
  * then loads only its metadata; the file itself streams once the frame is at
  * least a third on screen (and the page is visible), when it plays. A
@@ -77,12 +77,12 @@ export function ArtPreview() {
   }, [reduced, near])
 
   return (
-    <div ref={frameRef} className="about-art__frame" aria-hidden="true" data-playing={(playing && !reduced) || undefined}>
-      <ResponsiveImage image={VIDEO.poster} sizes={SIZES} decorative fit="cover" className="about-art__poster" />
+    <div ref={frameRef} className="about-portfolio__frame" aria-hidden="true" data-playing={(playing && !reduced) || undefined}>
+      <ResponsiveImage image={VIDEO.poster} sizes={SIZES} decorative fit="cover" className="about-portfolio__poster" />
       {!reduced && near && (
         <video
           ref={videoRef}
-          className="about-art__video"
+          className="about-portfolio__video"
           src={VIDEO.variants[0].src}
           width={VIDEO.width}
           height={VIDEO.height}

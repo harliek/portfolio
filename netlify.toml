@@ -5,7 +5,43 @@
 [build.environment]
   NODE_VERSION = "22.12.0"
 
-# Single-page app fallback: every unknown path serves index.html and the
+# The restored creative portfolio is the original static build, relocated to
+# /creative/ (public/creative). Its earlier URLs point there permanently.
+# These rules are mirrored in public/_redirects (read first by Netlify) and in
+# the dev/preview server (vite.config.ts).
+[[redirects]]
+  from = "/art"
+  to = "/creative/art"
+  status = 301
+
+[[redirects]]
+  from = "/film"
+  to = "/creative/films"
+  status = 301
+
+[[redirects]]
+  from = "/films"
+  to = "/creative/films"
+  status = 301
+
+[[redirects]]
+  from = "/creative/film"
+  to = "/creative/films"
+  status = 301
+
+# Its own client-side routes (/creative/films, /creative/art, /creative/about)
+# serve its own index.html. Existing files under /creative/ are served as is.
+[[redirects]]
+  from = "/creative"
+  to = "/creative/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/creative/*"
+  to = "/creative/index.html"
+  status = 200
+
+# Single-page app fallback: every other unknown path serves index.html and the
 # client router renders the matching page (or the custom 404).
 [[redirects]]
   from = "/*"
@@ -15,6 +51,11 @@
 # Fingerprinted build assets can be cached forever.
 [[headers]]
   for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/creative/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 

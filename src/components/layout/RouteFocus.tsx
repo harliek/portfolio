@@ -53,7 +53,7 @@ let mountedBefore = false
 /**
  * After client-side navigation, move focus to the new page's H1 so screen
  * reader and keyboard users start at the top of the new content, or, when
- * the URL has a hash (e.g. "About" → `/#about`, "Contact" → `#contact`), to
+ * the URL has a hash (e.g. a Creative Production film, `#nickleby`), to
  * that section, scrolled into place below the header. Focus never scrolls
  * by itself; Back and Forward keep the restored scroll position.
  *
@@ -62,7 +62,8 @@ let mountedBefore = false
  * shift the target after the router's first scroll). Switching between the
  * professional and creative layouts (each renders its own RouteFocus)
  * mounts this component afresh; that is a navigation too (a link, Back or
- * Forward), so focus moves as usual.
+ * Forward), so focus moves as usual (only the professional shell renders
+ * it now; the creative portfolio is a separate build).
  * Pages that manage focus themselves (e.g. the project transition) set
  * data-focus-managed on <main> for one navigation.
  */

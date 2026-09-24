@@ -1,6 +1,6 @@
 /*
  * Merchandising Platform page (src/pages/work/MerchandisingPlatform.tsx).
- * Scope every selector under .page-merchandising-platform. The layout, frame,
- * highlights, demo player and ending come from the shared case styles
- * (case.css); nothing page-specific is needed yet.
+ * Scope every selector under .page-merchandising-platform. The layout, the
+ * recording's player and the ending come from the shared case styles
+ * (case.css); nothing page-specific is needed.
  */

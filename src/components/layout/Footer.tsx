@@ -1,44 +1,29 @@
+import { useLocation } from 'react-router-dom'
+import { accentVars } from '../../content/accents'
+import { projectForPath } from '../../content/projects'
 import { SITE } from '../../content/site'
 import { useMotionPreference } from '../../hooks/useMotionPreference'
 
 /**
- * The single contact area, at the end of every professional page
- * (`id="contact"`, the header's Contact target): email, LinkedIn and
- * "View résumé ↗" (opens the PDF in a new tab). Below it, the quiet,
- * persistent "Reduce motion" setting: a labelled switch that stops the
- * carousel, the background video, the pointer trail and transitions. Its
- * default follows the operating system setting.
+ * The compact footer at the end of every professional page: the copyright
+ * line and the quiet, persistent "Reduce motion" setting (a labelled switch
+ * that stops the carousel, the background video, the pointer trail and
+ * transitions; its default follows the operating system setting). No
+ * contact block and no résumé link: email and LinkedIn live quietly at the
+ * end of About. On a case study it carries the project's accent.
  */
 export function Footer() {
+  const { pathname } = useLocation()
   const { reduced, setReduced } = useMotionPreference()
+  const project = projectForPath(pathname)
   const year = new Date().getFullYear()
   return (
-    <footer id="contact" className="site-footer" aria-labelledby="contact-title">
-      <div className="shell site-footer__inner">
-        <div className="site-footer__contact">
-          <h2 id="contact-title" className="site-footer__title">
-            Contact
-          </h2>
-          <ul className="site-footer__links" role="list">
-            <li>
-              <a href={SITE.emailHref} className="text-link text-link--standalone site-footer__link">
-                {SITE.email}
-              </a>
-            </li>
-            <li>
-              <a href={SITE.linkedin} className="text-link text-link--standalone site-footer__link" target="_blank" rel="noopener noreferrer">
-                LinkedIn <span className="link-arrow" aria-hidden="true">↗</span>
-                <span className="visually-hidden"> (opens in a new tab)</span>
-              </a>
-            </li>
-          </ul>
-          <a href={SITE.resume} className="button button--secondary site-footer__resume" target="_blank" rel="noopener">
-            View résumé <span className="button__arrow" aria-hidden="true">↗</span>
-            <span className="visually-hidden"> (PDF, opens in a new tab)</span>
-          </a>
-        </div>
-        <div className="site-footer__base">
-          <p className="site-footer__copy tabular">© {year} Harlie Katz</p>
+    <footer className="site-footer" style={project ? accentVars(project.accent) : undefined}>
+      <div className="shell">
+        <div className="site-footer__inner">
+          <p className="site-footer__copy tabular">
+            © {year} {SITE.name}
+          </p>
           <button type="button" className="motion-toggle" aria-pressed={reduced} onClick={() => setReduced(!reduced)}>
             <span className="motion-toggle__track" aria-hidden="true">
               <span className="motion-toggle__knob" />

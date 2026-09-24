@@ -1,70 +1,59 @@
-import type { ReactNode } from 'react'
+import { useRef, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ACCENTS } from '../../content/accents'
 import { projectById, projectPath, type ProjectId } from '../../content/projects'
-import { prefetchRoute } from '../../routes'
+import { ResponsiveImage } from '../media/ResponsiveImage'
 import { isPlainClick, openProject, warmProject } from '../transition/projectTransition'
 
-interface NextProjectProps {
-  current: ProjectId
-  /**
-   * Replaces the next project's one-sentence description, e.g. to say that
-   * the next project is a separate, later piece of work.
-   */
-  description?: ReactNode
-}
+/** Thumbnail box (CSS px): the object is contained in it, so a monitor is about 104px across and a phone about 84px tall. */
+const THUMB = { width: 104, height: 84 }
 
 /**
- * The one next-project row after Results: a single, clearly actionable link
- * labelled "Next project · <Name> ↗" with the project's one-sentence
- * description. A plain click (or Enter) opens the project through
- * openProject, which gives the destination's opening frame a short reveal
- * (nothing travels across text); modifier and middle clicks stay native.
+ * The one next-project link after the story (brief-v5 section 30): a small
+ * version of the next project's PNG object beside the live text "Next
+ * project" and the project's name, all one link. The next projects follow
+ * the homepage order (projects.ts `next`; About is not part of it).
+ *
+ * Hover and focus: the thumbnail grows 4% with a restrained alpha-aware glow
+ * and the name takes the NEXT project's accent (case.css). A plain click or
+ * Enter opens it through openProject with the thumbnail as the source
+ * (`data-cover-source`), so the same PNG can move into the destination's
+ * cover slot; modifier and middle clicks stay native.
  */
-export function NextProject({ current, description }: NextProjectProps) {
+export function NextProject({ current }: { current: ProjectId }) {
   const navigate = useNavigate()
+  const thumbRef = useRef<HTMLSpanElement>(null)
   const next = projectById(projectById(current).next)
   const path = projectPath(next)
+  const accent = ACCENTS[next.accent]
+  const style = { '--next-accent': accent.hex, '--next-accent-rgb': accent.rgb, '--thumb-w': `${THUMB.width}px`, '--thumb-h': `${THUMB.height}px` } as CSSProperties
   return (
     <nav className="next-project" aria-label="Next project">
       <Link
         to={path}
         className="next-project__link"
+        style={style}
         onClick={(e) => {
           if (!isPlainClick(e)) return
           e.preventDefault()
-          openProject({ path, source: null, navigate })
+          openProject({ path, source: thumbRef.current, navigate })
         }}
         onPointerEnter={() => warmProject(path)}
         onFocus={() => warmProject(path)}
       >
-        <span className="next-project__label">
-          Next project · {next.name}{' '}
-          <span className="next-project__arrow" aria-hidden="true">
-            ↗
+        <span ref={thumbRef} className="next-project__thumb" data-cover-source={next.accent}>
+          <ResponsiveImage image={next.cover} sizes={`${THUMB.width}px`} fit="contain" decorative />
+        </span>
+        <span className="next-project__text">
+          <span className="next-project__label">Next project</span>{' '}
+          <span className="next-project__name">
+            {next.name}
+            <svg className="next-project__arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+              <path d="M3 8h9.5M8.5 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </span>
         </span>
-        <span className="next-project__desc">{description ?? next.description}</span>
       </Link>
     </nav>
-  )
-}
-
-/**
- * A small inline link to a related project (legacy pages). New pages carry
- * the relationship in NextProject's `description` instead, so there is
- * exactly one related link.
- */
-export function RelatedProject({ id, children }: { id: ProjectId; children?: ReactNode }) {
-  const p = projectById(id)
-  const path = projectPath(p)
-  return (
-    // A div, not a p, so it keeps its own small style inside .case-prose.
-    <div className="related-project">
-      <span className="related-project__label">Related project</span>
-      <Link to={path} className="related-project__link" onPointerEnter={() => prefetchRoute(path)} onFocus={() => prefetchRoute(path)}>
-        {p.name}
-      </Link>
-      {children && <span className="related-project__note">{children}</span>}
-    </div>
   )
 }

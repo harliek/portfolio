@@ -1,16 +1,17 @@
 import { AboutContent } from '../components/about/AboutContent'
+import { accentVars } from '../content/accents'
 import { usePageMeta } from '../hooks/usePageMeta'
 
 /**
- * /about: the dedicated About page (reached from the carousel's About Me
- * tile and the header): biography, résumé, experience, education, the art
- * portfolio and the featured film, with the greeting as the page's H1.
+ * /about: the dedicated About page, opened from the carousel's About Me
+ * object and the header's About link. Its accent is About's lavender
+ * (link and focus states, the portrait's halo).
  */
 export default function About() {
-  usePageMeta('About', 'About Harlie Katz, with background, experience, education, an art portfolio, and a short film.')
+  usePageMeta('About', 'About Harlie Katz, with education, experience, creative work, and a short film.')
   return (
-    <article className="page-about">
-      <AboutContent headingLevel={1} />
+    <article className="page-about" style={accentVars('about')}>
+      <AboutContent />
     </article>
   )
 }

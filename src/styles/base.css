@@ -97,7 +97,7 @@ a {
 }
 
 ::selection {
-  background: rgb(138 143 255 / 0.35);
+  background: rgb(var(--accent-rgb, var(--accent-default-rgb)) / 0.34);
   color: var(--color-text);
 }
 
@@ -105,9 +105,12 @@ a {
   outline: none;
 }
 
-/* The ring follows each element's own radius (never reshapes it on focus). */
+/*
+ * The ring follows each element's own radius (never reshapes it on focus).
+ * It takes the page's accent where one is set (a case study), else lavender.
+ */
 :focus-visible {
-  outline: var(--focus-ring);
+  outline: 2px solid var(--accent, var(--color-focus));
   outline-offset: var(--focus-offset);
 }
 

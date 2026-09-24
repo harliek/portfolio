@@ -1,4 +1,4 @@
-/* Shared components: buttons, figures, media frames, dialog, video, notes. */
+/* Shared components: buttons and links (with the site-wide interaction states), figures, media frames, dialog, video, notes. */
 
 /*
  * Controls. One coherent set, legible on the moving video before any hover:
@@ -6,20 +6,32 @@
  *   .button                 primary action: solid near-white surface, dark text
  *   .button--secondary      visible dark fill + clear light outline
  *   .button--quiet          alias of --secondary (older markup)
- *   .button--small          40px, for frame controls ("Enlarge image")
+ *   .button--small          40px, for frame controls
  *   .text-link              link in prose: persistent underline
  *   .nav-chip               in-page jump navigation; [aria-current] = selected
  *
- * States: hover (brighter + 1px lift), pressed (no lift, darker), keyboard
- * focus (2px ring, 3px offset), selected (aria-pressed / aria-current =
- * solid fill), disabled (45% opacity, not-allowed). None relies on glow or
- * colour alone. Pair icons with words; "↗" follows labels that open a new
- * page or context ("View résumé ↗").
+ * Interaction states (section 31 of the brief), the same everywhere:
+ * hover and keyboard focus give a slight colour change and a restrained
+ * glow in the accent (plus a 1px lift on buttons); pressed settles back and
+ * darkens; keyboard focus adds a 2px ring. Nothing changes size in the
+ * layout, so nothing shifts. None relies on glow or colour alone.
+ *
+ * The accent is the page's --accent (a case study sets its project accent
+ * on the article; src/content/accents.ts), else lavender. Each rule resolves
+ * it on the element itself (--_acc, --_acc-rgb), so it follows the page.
  */
+.button,
+.text-link,
+.nav-chip {
+  --_acc: var(--accent, var(--accent-default));
+  --_acc-rgb: var(--accent-rgb, var(--accent-default-rgb));
+}
+
 .button {
   --btn-bg: var(--btn-primary-bg);
   --btn-fg: var(--btn-primary-fg);
   --btn-border: var(--btn-primary-bg);
+  --btn-glow: 0 0 0 1px rgb(var(--_acc-rgb) / 0.55), 0 0 22px -4px rgb(var(--_acc-rgb) / 0.6);
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -51,14 +63,17 @@
 }
 
 .button:focus-visible {
-  outline: var(--focus-ring);
+  outline: 2px solid var(--_acc);
   outline-offset: var(--focus-offset);
 }
 
-.button:hover:not(:disabled, [aria-disabled='true']) {
+.button:is(:hover, :focus-visible):not(:disabled, [aria-disabled='true']) {
   --btn-bg: var(--btn-primary-bg-hover);
   --btn-border: var(--btn-primary-bg-hover);
-  box-shadow: var(--shadow-control-hover);
+  box-shadow: var(--shadow-control-hover), var(--btn-glow);
+}
+
+.button:hover:not(:disabled, [aria-disabled='true']) {
   transform: translateY(-1px);
 }
 
@@ -97,7 +112,7 @@ a:hover > .link-arrow {
   transform: translate(1px, -1px);
 }
 
-/* Secondary: a visible dark surface with a clear light outline. */
+/* Secondary: a visible dark surface with a clear light outline; the outline takes the accent on hover and focus. */
 .button--secondary,
 .button--quiet {
   --btn-bg: var(--btn-secondary-bg);
@@ -105,10 +120,10 @@ a:hover > .link-arrow {
   --btn-border: var(--btn-secondary-border);
 }
 
-.button--secondary:hover:not(:disabled, [aria-disabled='true']),
-.button--quiet:hover:not(:disabled, [aria-disabled='true']) {
-  --btn-bg: var(--btn-secondary-bg-hover);
-  --btn-border: var(--btn-secondary-border-hover);
+.button--secondary:is(:hover, :focus-visible):not(:disabled, [aria-disabled='true']),
+.button--quiet:is(:hover, :focus-visible):not(:disabled, [aria-disabled='true']) {
+  --btn-bg: color-mix(in oklch, var(--_acc) 12%, var(--btn-secondary-bg-hover));
+  --btn-border: var(--_acc);
 }
 
 .button--secondary:active:not(:disabled, [aria-disabled='true']),
@@ -143,7 +158,11 @@ a:hover > .link-arrow {
   width: 100%;
 }
 
-/* Links in prose: a persistent underline, stronger on hover. */
+/*
+ * Links in prose: a persistent underline. Hover and focus tint the words
+ * slightly towards the accent and turn the underline into the accent (the
+ * thicker line does not move the text).
+ */
 .text-link {
   color: inherit;
   font-weight: var(--weight-label);
@@ -153,12 +172,15 @@ a:hover > .link-arrow {
   text-decoration-color: var(--link-underline);
   transition:
     text-decoration-color var(--dur-feedback) var(--ease-out),
-    color var(--dur-feedback) var(--ease-out);
+    color var(--dur-feedback) var(--ease-out),
+    text-shadow var(--dur-feedback) var(--ease-out);
 }
 
-.text-link:hover {
-  color: var(--color-text);
-  text-decoration-color: currentColor;
+.text-link:is(:hover, :focus-visible) {
+  color: color-mix(in oklch, var(--_acc) 32%, var(--color-text));
+  text-decoration-color: var(--_acc);
+  text-decoration-thickness: 2px;
+  text-shadow: 0 0 12px rgb(var(--_acc-rgb) / 0.45);
 }
 
 .text-link:active {
@@ -166,6 +188,7 @@ a:hover > .link-arrow {
 }
 
 .text-link:focus-visible {
+  outline: 2px solid var(--_acc);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -178,7 +201,7 @@ a:hover > .link-arrow {
   min-height: 44px;
 }
 
-/* In-page jump navigation (e.g. the Client Work project row). */
+/* In-page jump navigation (e.g. the Creative Production project row). */
 .nav-chip {
   display: inline-flex;
   align-items: center;
@@ -200,12 +223,17 @@ a:hover > .link-arrow {
     background-color var(--dur-feedback) var(--ease-out),
     border-color var(--dur-feedback) var(--ease-out),
     color var(--dur-feedback) var(--ease-out),
+    box-shadow var(--dur-feedback) var(--ease-out),
     transform var(--dur-feedback) var(--ease-out);
 }
 
+.nav-chip:is(:hover, :focus-visible) {
+  background: color-mix(in oklch, var(--_acc) 12%, var(--btn-secondary-bg-hover));
+  border-color: var(--_acc);
+  box-shadow: 0 0 18px -4px rgb(var(--_acc-rgb) / 0.6);
+}
+
 .nav-chip:hover {
-  background: var(--btn-secondary-bg-hover);
-  border-color: var(--btn-secondary-border-hover);
   transform: translateY(-1px);
 }
 
@@ -215,7 +243,7 @@ a:hover > .link-arrow {
 }
 
 .nav-chip:focus-visible {
-  outline: var(--focus-ring);
+  outline: 2px solid var(--_acc);
   outline-offset: var(--focus-offset);
 }
 
@@ -224,6 +252,10 @@ a:hover > .link-arrow {
   background: var(--btn-primary-bg);
   border-color: var(--btn-primary-bg);
   color: var(--btn-primary-fg);
+}
+
+.nav-chip:is([aria-current='true'], [aria-current='location'], [aria-current='page'], [aria-current='step']):is(:hover, :focus-visible) {
+  box-shadow: 0 0 0 1px rgb(var(--_acc-rgb) / 0.55), 0 0 18px -4px rgb(var(--_acc-rgb) / 0.6);
 }
 
 /* Figures and media */

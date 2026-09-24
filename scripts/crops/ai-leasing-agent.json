@@ -1,4 +1,5 @@
 [
-  { "id": "ala-conversation-request", "source": "Valiance Capital/messages.png", "rect": { "x": 258, "y": 196, "width": 836, "height": 452 }, "widths": [640, 836], "fallback": "jpg" },
-  { "id": "ala-conversation-handoff", "source": "Valiance Capital/messages.png", "rect": { "x": 258, "y": 401, "width": 836, "height": 452 }, "widths": [640, 836], "fallback": "jpg" }
+  { "id": "ala-chat-request", "source": "Valiance Capital/messages.png", "rect": { "x": 264, "y": 102, "width": 856, "height": 535 }, "widths": [640, 856], "fallback": "jpg" },
+  { "id": "ala-live-check", "source": "Valiance Capital/messages.png", "rect": { "x": 1078, "y": 364, "width": 594, "height": 371 }, "widths": [594], "fallback": "jpg" },
+  { "id": "ala-chat-handoff", "source": "Valiance Capital/messages.png", "rect": { "x": 268, "y": 406, "width": 856, "height": 535 }, "widths": [640, 856], "fallback": "jpg" }
 ]

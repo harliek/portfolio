@@ -1,4 +1,4 @@
-/* Page shell: skip link, header with the Work shelf and the small-screen menu, main, footer, route reveal. */
+/* Page shell: skip link, header with the Work shelf and the small-screen menu, main, route reveal, compact footer. */
 
 .shell {
   width: 100%;
@@ -37,10 +37,10 @@
 /*
  * No bar with hard edges: two soft gradients behind the header. The light
  * one is always there; the deeper one appears once the page scrolls (or the
- * shelf or menu opens). It is near-opaque behind the name and navigation,
- * so text scrolled underneath is not legible behind them (no two lines of
- * text on top of each other), and runs on 40px past the header, so that
- * text fades out instead of meeting an edge.
+ * shelf or menu opens). It is opaque behind the name and navigation, so
+ * text scrolled underneath never shows through them (no two lines of text
+ * on top of each other), and runs on 40px past the header, so that text
+ * fades out instead of meeting an edge.
  */
 .site-header {
   position: sticky;
@@ -68,8 +68,8 @@
   height: calc(100% + 40px);
   background: linear-gradient(
     to bottom in oklch,
-    rgb(6 7 11 / 0.98),
-    rgb(6 7 11 / 0.96) calc(100% - 40px),
+    rgb(6 7 11),
+    rgb(6 7 11) calc(100% - 40px),
     rgb(6 7 11 / 0.72) calc(100% - 28px),
     rgb(6 7 11 / 0.3) calc(100% - 14px),
     rgb(6 7 11 / 0)
@@ -92,48 +92,89 @@
   gap: var(--space-4);
 }
 
-/* One home link: the name over a quiet descriptor. */
+/*
+ * Interior pages only (the homepage has its own identity block and no
+ * brand here): "Harlie Katz" at 28px, the homepage title's crisp pale core
+ * with a subtle lavender to ice blue tint and a soft lavender glow, over a
+ * compact "Professional portfolio" descriptor. The glow is a drop-shadow of
+ * the letters (they stay sharp) and strengthens slightly on hover.
+ */
 .site-brand {
   display: inline-grid;
   align-content: center;
-  gap: 3px;
+  gap: 2px;
   min-height: 44px;
-  margin-inline: -6px;
-  padding: 2px 6px;
-  border-radius: 8px;
-  color: var(--stage-ivory);
+  margin-inline: -8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: var(--brand-core);
   text-decoration: none;
   white-space: nowrap;
+  transition: background-color var(--dur-feedback) var(--ease-out);
+  animation: brand-in 240ms var(--ease-out) both;
+}
+
+.site-brand:hover,
+.site-brand:focus-visible {
+  background: rgb(var(--brand-glow-rgb) / 0.07);
+}
+
+@keyframes brand-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .site-brand__name {
-  font-size: 1.1875rem;
+  color: var(--brand-core);
+  font-size: 1.5rem;
   font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  line-height: 1.08;
+  letter-spacing: -0.022em;
+  background: var(--brand-tint);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 1px rgb(236 228 255 / 0.45)) drop-shadow(0 0 6px rgb(var(--brand-glow-rgb) / 0.4)) drop-shadow(0 0 16px rgb(150 128 250 / 0.2));
+  transition: filter var(--dur-feedback) var(--ease-out);
 }
 
 .site-brand__role {
-  color: var(--color-muted);
-  font-size: 0.75rem;
+  color: #cdc8e6;
+  font-size: 0.8125rem;
   font-weight: var(--weight-label);
   line-height: 1.2;
   letter-spacing: 0.01em;
   transition: color var(--dur-feedback) var(--ease-out);
 }
 
-.site-brand:hover .site-brand__role {
+.site-brand:hover .site-brand__name,
+.site-brand:focus-visible .site-brand__name {
+  filter: drop-shadow(0 0 1px rgb(236 228 255 / 0.55)) drop-shadow(0 0 8px rgb(var(--brand-glow-rgb) / 0.58)) drop-shadow(0 0 20px rgb(150 128 250 / 0.3));
+}
+
+.site-brand:hover .site-brand__role,
+.site-brand:focus-visible .site-brand__role {
   color: var(--color-text);
 }
 
 @media (min-width: 900px) {
   .site-brand__name {
-    font-size: 1.3125rem;
+    font-size: 1.75rem;
   }
 
   .site-brand__role {
-    font-size: 0.8125rem;
+    font-size: 0.84375rem;
   }
+}
+
+/* With no brand (the homepage), the navigation keeps to the right. */
+.site-nav,
+.menu-button {
+  margin-left: auto;
 }
 
 .site-nav__list {
@@ -145,21 +186,25 @@
 }
 
 /*
- * Primary navigation: bright text with a pill on hover; the current page
- * keeps a violet underline (not colour alone), and Work's open state is a
- * filled, outlined pill with its chevron turned up.
+ * Primary navigation. Hover and keyboard focus: a faint accent pill, a soft
+ * accent glow on the words and a thin accent edge (no size change, so
+ * nothing shifts). The current page keeps an accent underline (not colour
+ * alone); Work's open state is a filled, outlined pill with its chevron
+ * turned up. The accent is the case study's on its pages, else lavender.
  */
 .site-nav__item {
+  --_acc: var(--accent, var(--accent-default));
+  --_acc-rgb: var(--accent-rgb, var(--accent-default-rgb));
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-height: 44px;
   padding: 0 12px;
-  border: 1.5px solid transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-control);
   background: transparent;
-  color: #e9e9f1;
+  color: #ebebf3;
   font-size: 0.9375rem;
   font-weight: var(--weight-label);
   text-decoration: none;
@@ -168,20 +213,24 @@
   transition:
     background-color var(--dur-feedback) var(--ease-out),
     border-color var(--dur-feedback) var(--ease-out),
-    color var(--dur-feedback) var(--ease-out);
+    color var(--dur-feedback) var(--ease-out),
+    text-shadow var(--dur-feedback) var(--ease-out);
 }
 
-.site-nav__item:hover {
-  background: rgb(255 255 255 / 0.08);
+.site-nav__item:hover,
+.site-nav__item:focus-visible {
+  border-color: rgb(var(--_acc-rgb) / 0.32);
+  background: rgb(var(--_acc-rgb) / 0.1);
   color: #fff;
+  text-shadow: 0 0 14px rgb(var(--_acc-rgb) / 0.7);
 }
 
 .site-nav__item:active {
-  background: rgb(255 255 255 / 0.04);
+  background: rgb(var(--_acc-rgb) / 0.05);
 }
 
 .site-nav__item:focus-visible {
-  outline: var(--focus-ring);
+  outline: 2px solid var(--_acc);
   outline-offset: 2px;
 }
 
@@ -193,7 +242,8 @@
   bottom: 7px;
   height: 2px;
   border-radius: 1px;
-  background: var(--stage-violet);
+  background: var(--_acc);
+  box-shadow: 0 0 8px rgb(var(--_acc-rgb) / 0.6);
 }
 
 .site-nav__work[data-active='true']::after {
@@ -201,8 +251,8 @@
 }
 
 .site-nav__work[aria-expanded='true'] {
-  background: rgb(255 255 255 / 0.12);
-  border-color: rgb(255 255 255 / 0.5);
+  border-color: rgb(var(--_acc-rgb) / 0.62);
+  background: rgb(var(--_acc-rgb) / 0.14);
   color: #fff;
 }
 
@@ -210,7 +260,8 @@
   display: none;
 }
 
-.site-nav__chevron {
+.site-nav__chevron,
+.site-nav__mark {
   flex: none;
   transition: transform var(--dur-feedback) var(--ease-out);
 }
@@ -219,8 +270,21 @@
   transform: rotate(180deg);
 }
 
+/* "Creative Portfolio" leaves for another site: a small arrow, nudged on hover. */
+.site-nav__mark {
+  opacity: 0.8;
+}
+
+a:hover > .site-nav__mark,
+a:focus-visible > .site-nav__mark {
+  opacity: 1;
+  transform: translate(1px, -1px);
+}
+
 /* Small screens: one outlined Menu button (three bars turn into a cross). */
 .menu-button {
+  --_acc: var(--accent, var(--accent-default));
+  --_acc-rgb: var(--accent-rgb, var(--accent-default-rgb));
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -235,12 +299,20 @@
   font-weight: var(--control-weight);
   transition:
     background-color var(--dur-feedback) var(--ease-out),
-    border-color var(--dur-feedback) var(--ease-out);
+    border-color var(--dur-feedback) var(--ease-out),
+    box-shadow var(--dur-feedback) var(--ease-out);
 }
 
-.menu-button:hover {
-  background: var(--btn-secondary-bg-hover);
-  border-color: var(--btn-secondary-border-hover);
+.menu-button:hover,
+.menu-button:focus-visible {
+  border-color: var(--_acc);
+  background: color-mix(in oklch, var(--_acc) 12%, var(--btn-secondary-bg));
+  box-shadow: 0 0 18px -4px rgb(var(--_acc-rgb) / 0.55);
+}
+
+.menu-button:focus-visible {
+  outline: 2px solid var(--_acc);
+  outline-offset: 2px;
 }
 
 .menu-button:active {
@@ -248,8 +320,8 @@
 }
 
 .menu-button[aria-expanded='true'] {
-  background: rgb(255 255 255 / 0.12);
-  border-color: var(--btn-secondary-border-hover);
+  border-color: rgb(var(--_acc-rgb) / 0.7);
+  background: rgb(var(--_acc-rgb) / 0.14);
 }
 
 .menu-button__icon {
@@ -287,128 +359,150 @@
 /* ----------------------------------------------------------------------- */
 
 /*
- * Each entry is one link with a visible outline and surface, the phone
- * mockup (transparent, no box around it), the name, and a persistent
- * underlined "View case study ↗": clickable before any hover.
+ * Each entry is one link on a visible outlined surface: the project's PNG
+ * object whole (contained in a 48px square, never cropped), the name, and
+ * a muted category line. Hover and focus light the entry in the project's
+ * own accent (edge, faint fill, soft glow; the object grows 6%); nothing
+ * changes size or position, so nothing shifts.
  */
 .shelf-item {
-  position: relative;
+  --_acc: var(--accent, var(--accent-default));
+  --_acc-rgb: var(--accent-rgb, var(--accent-default-rgb));
   display: grid;
-  justify-items: center;
-  align-content: start;
-  gap: 8px;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
   height: 100%;
-  padding: 12px 10px 14px;
-  border: 1px solid rgb(255 255 255 / 0.18);
+  min-height: 72px;
+  padding: 10px 14px 10px 10px;
+  border: 1px solid rgb(255 255 255 / 0.13);
   border-radius: 12px;
   background: rgb(255 255 255 / 0.035);
   color: var(--color-text);
-  text-align: center;
   text-decoration: none;
   transition:
     background-color var(--dur-feedback) var(--ease-out),
     border-color var(--dur-feedback) var(--ease-out),
-    transform var(--dur-feedback) var(--ease-out);
+    box-shadow var(--dur-feedback) var(--ease-out);
 }
 
-.shelf-item:hover {
-  border-color: rgb(255 255 255 / 0.55);
-  background: rgb(255 255 255 / 0.08);
-  transform: translateY(-2px);
-}
-
-.shelf-item:active {
-  background: rgb(255 255 255 / 0.05);
-  transform: none;
+.shelf-item:hover,
+.shelf-item:focus-visible {
+  border-color: rgb(var(--_acc-rgb) / 0.62);
+  background: rgb(var(--_acc-rgb) / 0.08);
+  box-shadow: 0 0 22px -8px rgb(var(--_acc-rgb) / 0.7);
 }
 
 .shelf-item:focus-visible {
-  outline: var(--focus-ring);
+  outline: 2px solid var(--_acc);
   outline-offset: 2px;
+}
+
+.shelf-item:active {
+  background: rgb(var(--_acc-rgb) / 0.05);
 }
 
 .shelf-item__thumb {
   display: block;
-  flex: none;
-  width: 45px;
-  height: 60px;
-  overflow: hidden;
-  border-radius: 6px;
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14), 0 6px 12px -6px rgb(0 0 0 / 0.6);
+  width: 48px;
+  height: 48px;
 }
 
 .shelf-item__thumb .picture,
-.shelf-item__thumb img {
+.shelf-item__thumb .picture img {
   width: 100%;
   height: 100%;
 }
 
-.shelf-item__thumb img {
-  object-fit: cover;
+.shelf-item__thumb .picture img {
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.5));
+  transition:
+    transform var(--dur-feedback) var(--ease-out),
+    filter var(--dur-feedback) var(--ease-out);
+}
+
+.shelf-item:hover .shelf-item__thumb .picture img,
+.shelf-item:focus-visible .shelf-item__thumb .picture img {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 5px rgb(var(--_acc-rgb) / 0.65));
 }
 
 .shelf-item__text {
   display: grid;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
 }
 
-/* Room for two lines, set on the baseline of the action, so every "View case study" lines up. */
+/* Entries are containers: the category line shows only where it fits on one line (not in the six-across shelf). */
+.work-shelf__entry,
+.site-menu__work > li {
+  container-type: inline-size;
+}
+
 .shelf-item__name {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  min-height: 2.5em;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.005em;
+  transition: color var(--dur-feedback) var(--ease-out);
 }
 
-.shelf-item__action {
-  color: #dcdcea;
+.shelf-item:hover .shelf-item__name,
+.shelf-item:focus-visible .shelf-item__name {
+  color: color-mix(in oklch, var(--_acc) 38%, #fff);
+}
+
+.shelf-item__meta {
+  display: none;
+  color: #b3b7c6;
   font-size: 0.8125rem;
   font-weight: var(--weight-label);
   line-height: 1.3;
-  text-decoration: underline;
-  text-decoration-color: var(--link-underline);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
   white-space: nowrap;
-  transition: text-decoration-color var(--dur-feedback) var(--ease-out);
 }
 
-.shelf-item:hover .shelf-item__action {
-  color: #fff;
-  text-decoration-color: currentColor;
+.shelf-item[aria-current='page'] .shelf-item__meta {
+  display: block;
 }
 
-/* The current project: violet outline and a plain "Current case study" (no underline). */
+@container (min-width: 236px) {
+  .shelf-item__meta {
+    display: block;
+  }
+}
+
+/* The current project: its accent edge and a plain "Current page" line (text, not colour alone). */
 .shelf-item[aria-current='page'] {
-  border-color: color-mix(in oklch, var(--stage-violet) 80%, transparent);
-  background: color-mix(in oklch, var(--stage-violet) 12%, transparent);
+  border-color: rgb(var(--_acc-rgb) / 0.7);
+  background: rgb(var(--_acc-rgb) / 0.1);
 }
 
-.shelf-item[aria-current='page'] .shelf-item__action {
-  color: var(--color-muted);
-  text-decoration: none;
+.shelf-item[aria-current='page'] .shelf-item__meta {
+  color: var(--_acc);
 }
 
 /* ----------------------------------------------------------------------- */
 /* Work shelf (desktop, WorkShelf.tsx)                                      */
 /* ----------------------------------------------------------------------- */
 
-/* Positioned against the sticky header (its nearest positioned ancestor), full width under it; the page never moves. */
+/*
+ * Positioned against the sticky header (its nearest positioned ancestor),
+ * full width under it; the page never moves. A solid surface with its own
+ * edges and a deep shadow, and the page below dimmed while it is open, so
+ * the shelf never reads as part of the content behind it.
+ */
 .work-shelf {
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
   z-index: 1;
-  padding-block: var(--space-2) var(--space-5);
-  background: rgb(7 8 12);
-  border-bottom: 1px solid rgb(238 234 226 / 0.12);
-  box-shadow: 0 32px 64px -32px rgb(0 0 0 / 0.95);
+  padding-block: 14px 22px;
+  border-top: 1px solid rgb(255 255 255 / 0.07);
+  border-bottom: 1px solid rgb(255 255 255 / 0.14);
+  background: #0b0c12;
+  box-shadow: 0 30px 60px -20px rgb(0 0 0 / 0.95);
   opacity: 0;
   visibility: hidden;
   transform: translateY(-6px);
@@ -416,6 +510,18 @@
     opacity calc(var(--shelf-dur) * 0.7) var(--ease-out),
     transform calc(var(--shelf-dur) * 0.7) var(--ease-out),
     visibility 0s linear calc(var(--shelf-dur) * 0.7);
+}
+
+/* The dimmed page below the shelf (clicks pass through; a click outside closes the shelf). */
+.work-shelf::after {
+  content: '';
+  position: absolute;
+  top: calc(100% + 1px);
+  left: 0;
+  right: 0;
+  height: 100vh;
+  background: rgb(3 4 7 / 0.5);
+  pointer-events: none;
 }
 
 .work-shelf[data-open] {
@@ -430,9 +536,15 @@
 
 .work-shelf__list {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
   list-style: none;
+}
+
+@media (min-width: 1180px) {
+  .work-shelf__list {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
 }
 
 /* Entries arrive from the Work side with a short stagger. */
@@ -450,24 +562,6 @@
   transition-delay: calc((5 - var(--i)) * var(--shelf-stagger));
 }
 
-@media (max-width: 1099.98px) {
-  .work-shelf__list {
-    gap: var(--space-2);
-  }
-
-  .shelf-item {
-    padding-inline: 6px;
-  }
-
-  .shelf-item__name {
-    font-size: 0.8125rem;
-  }
-
-  .shelf-item__action {
-    font-size: 0.75rem;
-  }
-}
-
 /* ----------------------------------------------------------------------- */
 /* Small-screen menu (below 900px, WorkShelf.tsx MobileMenu)                */
 /* ----------------------------------------------------------------------- */
@@ -481,8 +575,9 @@
   z-index: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding-block: var(--space-2) var(--space-7);
-  background: rgb(7 8 12);
+  padding-block: var(--space-3) var(--space-7);
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+  background: #0b0c12;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-8px);
@@ -508,7 +603,7 @@
 }
 
 .site-menu__label {
-  color: var(--color-muted);
+  color: #b3b7c6;
   font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: var(--tracking-label);
@@ -517,19 +612,19 @@
 
 .site-menu__work {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
   list-style: none;
 }
 
-/* In the menu: the same card as the shelf, two per row. */
-.shelf-item--menu {
-  padding: 10px 8px 12px;
+@media (min-width: 600px) {
+  .site-menu__work {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-.shelf-item--menu .shelf-item__thumb {
-  width: 39px;
-  height: 52px;
+.shelf-item--menu {
+  min-height: 68px;
 }
 
 .site-menu__pages {
@@ -540,38 +635,48 @@
 }
 
 .site-menu__link {
+  --_acc: var(--accent, var(--accent-default));
   display: flex;
   align-items: center;
+  gap: 10px;
   min-height: 56px;
   border-bottom: 1px solid rgb(238 234 226 / 0.12);
   color: var(--color-text);
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  transition:
+    color var(--dur-feedback) var(--ease-out),
+    text-decoration-color var(--dur-feedback) var(--ease-out);
 }
 
-.site-menu__link:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 4px;
+.site-menu__link:hover,
+.site-menu__link:focus-visible {
+  color: color-mix(in oklch, var(--_acc) 38%, #fff);
+  text-decoration-color: color-mix(in oklch, var(--_acc) 70%, transparent);
+}
+
+.site-menu__link:focus-visible {
+  outline: 2px solid var(--_acc);
+  outline-offset: -2px;
+  border-radius: 6px;
 }
 
 .site-menu__link[aria-current='page'] {
-  text-decoration: underline;
-  text-decoration-color: var(--stage-violet);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
+  text-decoration-color: var(--_acc);
+}
+
+.site-menu__link .site-nav__mark {
+  width: 14px;
+  height: 14px;
 }
 
 html.is-menu-open {
   overflow: hidden;
-}
-
-@media (max-width: 359.98px) {
-  .site-menu__work {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 /* ----------------------------------------------------------------------- */
@@ -610,90 +715,52 @@ html.is-menu-open {
   }
 }
 
-html[data-motion='reduce'] .route-reveal {
+/*
+ * No rise while a carousel object travels into the new page (the shared-image
+ * transition measures and fills the page's cover slot; it must not move).
+ */
+html[data-motion='reduce'] .route-reveal,
+html[data-cover-transition] .route-reveal {
   animation: none;
 }
 
 /* ----------------------------------------------------------------------- */
-/* Footer: the single contact area and the Reduce motion setting           */
+/* Footer: compact, the copyright line and the Reduce motion setting        */
 /* ----------------------------------------------------------------------- */
 
 /*
- * About 56px after the page content. The darkening fades in over its first
- * 80px (no edge), so the room blends into a calm base for the links.
+ * About 48px after the page content, one quiet row. The darkening fades in
+ * over its first 48px (no edge), so the room blends into a calm base.
  */
 .site-footer {
-  margin-top: 56px;
-  padding-block: var(--space-7) var(--space-5);
-  background: linear-gradient(to bottom in oklch, rgb(5 6 9 / 0), rgb(5 6 9 / 0.72) 80px, rgb(5 6 9 / 0.9));
+  margin-top: 48px;
+  padding-block: 20px var(--space-3);
+  background: linear-gradient(to bottom in oklch, rgb(5 6 9 / 0), rgb(5 6 9 / 0.66) 48px, rgb(5 6 9 / 0.84));
   font-size: var(--text-small);
 }
 
 .site-footer__inner {
-  display: grid;
-  gap: var(--space-6);
-}
-
-.site-footer__contact {
-  display: grid;
-  gap: var(--space-3) var(--space-6);
-  align-items: center;
-}
-
-.site-footer__title {
-  color: var(--color-text);
-  font-size: 1.375rem;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.015em;
-}
-
-.site-footer__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--space-5);
-  list-style: none;
-}
-
-.site-footer__link {
-  color: var(--color-text);
-  font-size: 1rem;
-}
-
-.site-footer__resume {
-  justify-self: start;
-}
-
-@media (min-width: 760px) {
-  .site-footer__contact {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-  }
-
-  .site-footer__resume {
-    justify-self: end;
-  }
-}
-
-.site-footer__base {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2) var(--space-5);
-  padding-top: var(--space-3);
-  border-top: 1px solid rgb(238 234 226 / 0.1);
+  gap: var(--space-1) var(--space-5);
+  padding-top: var(--space-2);
+  border-top: 1px solid rgb(238 234 226 / 0.08);
 }
 
 .site-footer__copy {
-  color: var(--color-muted);
+  color: #b9bccb;
 }
 
 /*
  * The site-wide motion setting: quiet, but clearly a control. An outlined
  * switch whose knob moves across and fills when on (position and fill, not
- * colour alone), with a visible label, hover surface and focus ring.
+ * colour alone), with a visible label, an accent hover and a focus ring.
  */
 .motion-toggle {
+  --_acc: var(--accent, var(--accent-default));
+  --_acc-rgb: var(--accent-rgb, var(--accent-default-rgb));
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -711,13 +778,14 @@ html[data-motion='reduce'] .route-reveal {
     color var(--dur-feedback) var(--ease-out);
 }
 
-.motion-toggle:hover {
-  background: rgb(255 255 255 / 0.07);
+.motion-toggle:hover,
+.motion-toggle:focus-visible {
+  background: rgb(var(--_acc-rgb) / 0.1);
   color: #fff;
 }
 
 .motion-toggle:focus-visible {
-  outline: var(--focus-ring);
+  outline: 2px solid var(--_acc);
   outline-offset: 2px;
 }
 
@@ -731,7 +799,14 @@ html[data-motion='reduce'] .route-reveal {
   background: rgb(10 11 18 / 0.6);
   transition:
     background-color var(--dur-feedback) var(--ease-out),
-    border-color var(--dur-feedback) var(--ease-out);
+    border-color var(--dur-feedback) var(--ease-out),
+    box-shadow var(--dur-feedback) var(--ease-out);
+}
+
+.motion-toggle:hover .motion-toggle__track,
+.motion-toggle:focus-visible .motion-toggle__track {
+  border-color: var(--_acc);
+  box-shadow: 0 0 10px -2px rgb(var(--_acc-rgb) / 0.6);
 }
 
 .motion-toggle__knob {
@@ -753,8 +828,8 @@ html[data-motion='reduce'] .route-reveal {
 }
 
 .motion-toggle[aria-pressed='true'] .motion-toggle__track {
-  border-color: var(--btn-primary-bg);
-  background: var(--btn-primary-bg);
+  border-color: var(--_acc);
+  background: var(--_acc);
 }
 
 .motion-toggle[aria-pressed='true'] .motion-toggle__knob {

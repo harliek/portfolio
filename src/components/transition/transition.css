@@ -1,0 +1,57 @@
+/* ----------------------------------------------------------------------- */
+/* Shared-image route transition (projectTransition.ts, CoverSlot.tsx)      */
+/* ----------------------------------------------------------------------- */
+
+/*
+ * The moving copy of the clicked PNG object: the same image file, fixed to
+ * the viewport, above the page and the header, below the pointer trail.
+ * Its box always has the image's own proportions; only a uniform scale and
+ * a translation animate (never a stretch or a turn). Never interactive.
+ * No will-change: the running animations are composited anyway, and without
+ * it the landed copy is drawn at its final size, exactly as sharp as the
+ * slot image that replaces it.
+ */
+.cover-clone {
+  position: fixed;
+  z-index: 60;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: 0 0;
+}
+
+.cover-clone img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+}
+
+/*
+ * The clicked object while its copy is in flight (opacity, not visibility,
+ * so its link keeps keyboard focus and the carousel's own styles are untouched).
+ */
+[data-cover-source][data-cover-moving] {
+  opacity: 0 !important;
+}
+
+/*
+ * The destination while the copy travels: its slot image and every element
+ * marked data-cover-reveal (the opening's text and media) are hidden, so the
+ * copy never crosses visible text. Only elements mounted during the
+ * transition are affected: those of the page being left carry
+ * data-cover-old. `!important` wins over the page's own entrance
+ * animations; the reveal removes the attribute and fades them in.
+ * Without a running transition (a direct load, a reload, Back) nothing is
+ * hidden. The script removes the attribute at the latest after
+ * TRANSITION.hardCapMs.
+ */
+html[data-cover-transition] [data-cover-reveal]:not([data-cover-old]),
+html[data-cover-transition] [data-cover-slot]:not([data-cover-old]) > *,
+[data-cover-slot][data-cover-hold] > * {
+  opacity: 0 !important;
+}

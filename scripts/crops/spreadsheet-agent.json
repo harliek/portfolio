@@ -1,9 +1,3 @@
 [
-  { "id": "sa-overview", "source": ".media-cache/frames/sheet-returned.png", "rect": { "x": 465, "y": 0, "width": 2475, "height": 1485 }, "widths": [640, 960, 1280, 1920], "fallback": "jpg" },
-  { "id": "sa-request", "source": ".media-cache/frames/sheet-request-typed.png", "rect": { "x": 1880, "y": 0, "width": 1060, "height": 636 }, "widths": [640, 960, 1060], "fallback": "jpg" },
-  { "id": "sa-plan", "source": ".media-cache/frames/sheet-plan-review.png", "rect": { "x": 1880, "y": 104, "width": 1060, "height": 636 }, "widths": [640, 960, 1060], "fallback": "jpg" },
-  { "id": "sa-plan-unused", "source": ".media-cache/frames/sheet-plan-review.png", "rect": { "x": 1880, "y": 598, "width": 1060, "height": 636 }, "widths": [640, 960, 1060], "fallback": "jpg" },
-  { "id": "sa-plan-panel", "source": ".media-cache/frames/sheet-plan-review.png", "rect": { "x": 2140, "y": 0, "width": 800, "height": 1486 }, "widths": [480, 800], "fallback": "jpg" },
-  { "id": "sa-sheet", "source": ".media-cache/frames/sheet-returned.png", "rect": { "x": 465, "y": 0, "width": 1674, "height": 1004 }, "widths": [640, 960, 1280, 1674], "fallback": "jpg" },
-  { "id": "sa-list", "source": ".media-cache/frames/sheet-list-new.png", "rect": { "x": 490, "y": 0, "width": 1624, "height": 974 }, "widths": [640, 960, 1280, 1624], "fallback": "jpg" }
+  { "id": "sa-overview", "source": ".media-cache/frames/sheet-returned.png", "rect": { "x": 465, "y": 0, "width": 2475, "height": 1485 }, "widths": [640, 960, 1280, 1920], "fallback": "jpg" }
 ]

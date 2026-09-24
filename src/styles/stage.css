@@ -1,13 +1,17 @@
 /*
  * The dark architectural setting behind every professional page: the
- * persistent background set (StageBackground), its readability layers, the
- * route-transition helpers, and the pointer trail canvas.
+ * persistent background set (StageBackground, mounted once so it never
+ * restarts), its readability layers, a route-transition helper, and the
+ * pointer trail canvas.
  *
- * Readability uses broad gradients only (no rectangles with edges):
- *   __shade    a uniform shade per route (lighter on the homepage)
- *   __read     the reading layer: strongest behind the text column on
- *              interior routes; on the homepage it follows the scroll from
- *              the carousel into About (--read, 0 → 1, set by StageBackground)
+ * Readability uses broad, smoothly blended gradients only (no translucent
+ * panels with edges):
+ *   __shade    a uniform shade per route: lightest on the homepage (the
+ *              room frames the carousel), stronger on interior pages
+ *   __read     the reading layer (interior pages): strongest behind the
+ *              case-study text column, easing off towards the media and
+ *              the outer margins; a broad, even layer on About
+ *   ::before   homepage only: a soft pool of shade behind the identity
  *   __band     a soft band that dims the bright floor line, so it never cuts
  *              through paragraphs, rows, captions or controls
  * The room stays visible around media and in the outer margins.
@@ -98,8 +102,9 @@
   --read: 0;
 }
 
+/* Case studies: a lighter uniform shade than before; the reading layer does the work behind the text. */
 .stage-bg[data-route='case'] {
-  --bg-shade: 0.46;
+  --bg-shade: 0.38;
 }
 
 .stage-bg[data-route='about'],
@@ -128,11 +133,30 @@
   transition: opacity 280ms var(--ease-out);
 }
 
-/* The homepage value follows the scroll every frame: keep the easing short. */
-.stage-bg[data-route='home'] .stage-bg__read,
-.stage-bg[data-route='home'] .stage-bg__band,
-.stage-bg[data-route='home'] .stage-bg__reflection {
-  transition-duration: 160ms;
+/*
+ * Homepage: a soft pool of shade behind the identity block in the upper
+ * left (name, "Professional portfolio", the positioning sentence), so the
+ * sentence reads over any frame of the loop. No edge; the carousel below it
+ * keeps the lighter room.
+ */
+.stage-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(48% 36% at 22% 17% in oklch, rgb(5 6 9 / 0.52), rgb(5 6 9 / 0.3) 55%, rgb(5 6 9 / 0));
+  opacity: 0;
+  transition: opacity 280ms var(--ease-out);
+}
+
+.stage-bg[data-route='home']::before {
+  opacity: 1;
+}
+
+@media (max-width: 767.98px) {
+  .stage-bg::before {
+    background: radial-gradient(95% 30% at 30% 14% in oklch, rgb(5 6 9 / 0.5), rgb(5 6 9 / 0.26) 55%, rgb(5 6 9 / 0));
+  }
 }
 
 /*
@@ -141,6 +165,7 @@
  * and is complete before the route changes, so the new page's text never
  * appears over the lighter home room or its bright floor line.
  */
+.stage-bg[data-hurry]::before,
 .stage-bg[data-hurry] .stage-bg__shade,
 .stage-bg[data-hurry] .stage-bg__read,
 .stage-bg[data-hurry] .stage-bg__band,
@@ -167,27 +192,32 @@
 
 @media (min-width: 960px) {
   /*
-   * Case studies: text on the left (about 44% of a centred 1240px grid),
-   * media on the right. Darkest behind the text column, easing out towards
-   * the media, so the room stays visible around it.
+   * Case studies: text on the left (42% of the centred content grid, then a
+   * 6% gap and 52% media; case.css). The stops follow that grid at every
+   * width: darkest behind the text column, easing out across the gap, and
+   * light behind and beside the media, so the room stays visible around it
+   * and in the right margin.
    */
   .stage-bg[data-route='case'] {
+    --grid: min(var(--content-max), 100% - 2 * var(--gutter));
+    --text-end: calc(50% - var(--grid) / 2 + var(--grid) * 0.42);
+    --media-start: calc(50% - var(--grid) / 2 + var(--grid) * 0.48);
     --read-fill: linear-gradient(
       to right in oklch,
-      rgb(5 6 9 / 0.62),
-      rgb(5 6 9 / 0.58) 44%,
-      rgb(5 6 9 / 0.3) 56%,
-      rgb(5 6 9 / 0.16) 70%,
-      rgb(5 6 9 / 0.14)
+      rgb(5 6 9 / 0.7),
+      rgb(5 6 9 / 0.68) calc(var(--text-end) + 16px),
+      rgb(5 6 9 / 0.34) calc(var(--media-start) + 32px),
+      rgb(5 6 9 / 0.12) calc(var(--media-start) + var(--grid) * 0.22),
+      rgb(5 6 9 / 0.06)
     );
   }
 
+  /* The floor-line band is full strength behind the text, lighter behind the media (whose caption it still dims). */
   .stage-bg[data-route='case'] .stage-bg__band {
-    mask-image: linear-gradient(to right, #000 50%, rgb(0 0 0 / 0.7) 66%, rgb(0 0 0 / 0.62));
+    mask-image: linear-gradient(to right, #000 50%, rgb(0 0 0 / 0.72) 64%, rgb(0 0 0 / 0.66));
   }
 
-  /* About (on the homepage and at /about): content on both sides; lighter towards the outer margins. */
-  .stage-bg[data-route='home'],
+  /* About and other pages: content on both sides; lighter towards the outer margins. */
   .stage-bg[data-route='about'],
   .stage-bg[data-route='other'] {
     --read-fill: radial-gradient(
@@ -199,41 +229,26 @@
   }
 }
 
-/* Framing light: darker at the header and at the bottom, soft side vignette. */
+/* Framing light: darker at the header and at the bottom, a light side vignette (the room stays visible in the margins). */
 .stage-bg::after {
   content: '';
   position: absolute;
   inset: 0;
   background:
     linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.66), rgb(5 6 9 / 0) 22%, rgb(5 6 9 / 0) 62%, rgb(5 6 9 / 0.6)),
-    radial-gradient(130% 95% at 50% 48% in oklch, rgb(5 6 9 / 0) 56%, rgb(5 6 9 / 0.58));
+    radial-gradient(130% 95% at 50% 48% in oklch, rgb(5 6 9 / 0) 58%, rgb(5 6 9 / 0.5));
 }
+
+/* ----------------------------------------------------------------------- */
+/* Route transition helper                                                  */
+/* ----------------------------------------------------------------------- */
 
 /*
- * Legacy hook (.reading-scrim): boxes behind text columns are no longer
- * drawn; the full-viewport gradients above do the work without edges.
+ * A page frame that waits for the shared-image transition
+ * (components/transition/projectTransition.ts removes the attribute; the
+ * page also removes it after a timeout). The moving image itself is styled
+ * in components/transition/transition.css.
  */
-.reading-scrim {
-  position: relative;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Image continuity (components/transition/projectTransition.ts)            */
-/* ----------------------------------------------------------------------- */
-
-.transition-image {
-  position: fixed;
-  z-index: 70;
-  margin: 0;
-  max-width: none;
-  object-fit: cover;
-  border-radius: 14px;
-  box-shadow: 0 0 0 1px var(--stage-edge), 0 30px 70px -30px rgb(0 0 0 / 0.9);
-  pointer-events: none;
-  transform-origin: 50% 50%;
-  will-change: transform, opacity;
-}
-
 [data-case-hero][data-transition-pending] {
   opacity: 0;
 }

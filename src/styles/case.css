@@ -1,28 +1,31 @@
 /*
- * Case studies (src/components/case/*). Page-specific styles go in
- * src/styles/pages/<id>.css, scoped under the page class.
+ * Case studies (src/components/case/*, src/components/media/DemoVideo.tsx).
+ * Page-specific styles go in src/styles/pages/<id>.css, scoped under the page
+ * class.
  *
- * CaseScroll (desktop ≥960px): one grid, max 1240px, 44% text / 6% gap /
- * 50% media. Title ≤44px; metadata 14–15px; body 16–18px / 1.55; section
- * headings 22–28px; block headings 19px; captions 14px. 32–48px between
- * related blocks, 56–72px between sections. The media column holds ONE
- * sticky region (frame, caption, controls) from the opening to the end of
- * the last section. Below 960px: stacked in reading order, no sticky.
+ * CaseScroll (desktop ≥960px): one grid, max 1240px, 42% text / 6% gap /
+ * 52% media. Title 38–46px; metadata 15px lines; body 17–18px / 1.55 at
+ * 45–60 characters; section headings 22–26px; captions 14px. The media
+ * column holds ONE sticky stage of stable size from the opening through the
+ * outcome. Below 960px: stacked in reading order, no sticky.
  *
- * Frame changes (CaseScroll.tsx, constant T; Web Animations): old
- * highlight out 60ms, new layer in 120ms over the old one, new highlight in
- * 150ms after it settles.
+ * The accent (--accent / --accent-rgb, set by CaseLayout; --case-accent for
+ * older page CSS) appears only on interactive and active things: the active
+ * section heading and its marker, highlights, media hover and focus edges,
+ * link hover, and the next-project link (in the NEXT project's accent).
  */
 
 .case {
   --case-max: 1240px;
   --case-gap: 6%;
-  --case-body: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
-  --case-accent: var(--stage-violet);
+  /* 17px on phones, 18px on desktop. */
+  --case-body: clamp(1.0625rem, 1.02rem + 0.12vw, 1.125rem);
+  --case-accent: var(--accent, var(--stage-violet));
+  --case-accent-rgb: var(--accent-rgb, 165 140 240);
 }
 
 /* ----------------------------------------------------------------------- */
-/* Shared prose and captions                                                */
+/* Shared prose                                                             */
 /* ----------------------------------------------------------------------- */
 
 .case-prose {
@@ -32,7 +35,7 @@
 
 .case-prose p,
 .case-prose li {
-  max-width: 62ch;
+  max-width: 58ch;
   color: var(--color-text);
   font-size: var(--case-body);
   line-height: 1.55;
@@ -49,35 +52,32 @@
   padding-left: 1.1em;
 }
 
-/* Links in prose are always underlined (visibly links before hover). */
+/* Links in prose are underlined before hover; hover takes the project accent. */
 .case-prose a {
   color: var(--color-text);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-decoration-color: color-mix(in oklch, currentColor 60%, transparent);
   text-underline-offset: 3px;
-  transition: text-decoration-color var(--dur-feedback) var(--ease-out);
+  transition:
+    color var(--dur-feedback) var(--ease-out),
+    text-decoration-color var(--dur-feedback) var(--ease-out);
 }
 
 .case-prose a:hover {
+  color: var(--case-accent);
   text-decoration-color: currentColor;
 }
 
-.case-caption {
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  line-height: 1.5;
-}
-
 /* ----------------------------------------------------------------------- */
-/* CaseScroll: layout                                                       */
+/* CaseScroll: grid                                                         */
 /* ----------------------------------------------------------------------- */
 
 .cs {
   /* Sticky offset: header + 24px. */
   --cs-top: calc(var(--header-height) + var(--space-5));
-  /* Caption and controls under the frame; the frame's height leaves room for them. */
-  --cs-chrome: 150px;
+  /* Room under the stage for its caption (two lines) and some air above the viewport's bottom edge. */
+  --cs-chrome: 96px;
   width: 100%;
   max-width: calc(var(--case-max) + 2 * var(--gutter));
   margin-inline: auto;
@@ -87,7 +87,7 @@
 @media (min-width: 960px) {
   .cs[data-layout='sticky'] {
     display: grid;
-    grid-template-columns: minmax(0, 44fr) minmax(0, 50fr);
+    grid-template-columns: minmax(0, 42fr) minmax(0, 52fr);
     grid-template-rows: auto 1fr;
     grid-template-areas:
       'opening media'
@@ -105,8 +105,10 @@
     grid-area: media;
   }
 
+  /* --cs-tail: set by CaseScroll only when the stage is too tall for the outcome to become active while pinned. */
   .cs[data-layout='sticky'] > .cs-body {
     grid-area: body;
+    padding-bottom: var(--cs-tail, 0px);
   }
 }
 
@@ -117,22 +119,641 @@
 }
 
 /* ----------------------------------------------------------------------- */
-/* Opening: title, compact metadata, note, situation                        */
+/* Opening: title, metadata lines, summary, cover                           */
 /* ----------------------------------------------------------------------- */
 
 .cs-title {
   color: var(--stage-ivory);
-  font-size: clamp(2rem, 1.55rem + 1.5vw, 2.75rem);
-  line-height: 1.08;
+  font-size: clamp(2.125rem, 1.6rem + 1.4vw, 2.875rem);
+  line-height: 1.06;
   letter-spacing: -0.03em;
   font-weight: var(--weight-heading);
+  text-wrap: balance;
+}
+
+.cs-title:focus {
+  outline: none;
 }
 
 .cs-meta {
   display: grid;
-  gap: 6px;
+  gap: 2px;
+  margin-top: var(--space-4);
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.cs-meta__line {
+  display: block;
+}
+
+.cs-meta__line:first-child {
+  color: var(--color-text);
+}
+
+.cs-summary {
   margin-top: var(--space-5);
 }
+
+.cs-cover {
+  display: flex;
+  margin-top: var(--space-6);
+}
+
+/* ----------------------------------------------------------------------- */
+/* Story: sections and the outcome                                          */
+/* ----------------------------------------------------------------------- */
+
+.cs-body {
+  padding-top: clamp(var(--space-7), 5vw, 72px);
+}
+
+.cs-section + .cs-section {
+  margin-top: clamp(44px, 4.4vw, 60px);
+}
+
+.cs-section {
+  /* Added to the root's scroll-padding-top: headings land clear of the header. */
+  scroll-margin-top: var(--space-2);
+}
+
+.cs-heading {
+  position: relative;
+  margin-bottom: var(--space-3);
+  color: var(--stage-ivory);
+  font-size: clamp(1.375rem, 1.22rem + 0.45vw, 1.625rem);
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  font-weight: var(--weight-heading);
+  transition: color 200ms var(--ease-out);
+}
+
+.cs-heading:focus {
+  outline: none;
+}
+
+/* The active section: its heading takes the accent, with a short marker beside it (no long progress line). */
+.cs[data-layout='sticky'] .cs-section > .cs-heading::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 0.2em;
+  width: 3px;
+  height: 0.95em;
+  border-radius: 2px;
+  background: var(--case-accent);
+  box-shadow: 0 0 10px rgb(var(--case-accent-rgb) / 0.55);
+  opacity: 0;
+  transform: scaleY(0.4);
+  transform-origin: 50% 0;
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 200ms var(--ease-out);
+}
+
+.cs[data-layout='sticky'] .cs-section[data-active] > .cs-heading {
+  color: color-mix(in oklch, var(--case-accent) 72%, var(--stage-ivory));
+}
+
+.cs[data-layout='sticky'] .cs-section[data-active] > .cs-heading::before {
+  opacity: 1;
+  transform: none;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Media column and the stage                                               */
+/* ----------------------------------------------------------------------- */
+
+.cs-media {
+  /* The stage's height is derived from this column's width (100cqi). */
+  container-type: inline-size;
+}
+
+@media (min-width: 960px) {
+  .cs[data-layout='sticky'] .cs-sticky {
+    position: sticky;
+    top: var(--cs-top);
+  }
+}
+
+.cs-figure {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+}
+
+.cs-stage {
+  position: relative;
+  width: 100%;
+}
+
+/*
+ * States (desktop): ONE stable box for every state. Full column width, the
+ * page's frame ratio, never taller than the viewport leaves room for. Each
+ * image is contained and centred in it (a portrait phone keeps the column's
+ * width and simply has space beside it), so nothing collapses or jumps.
+ */
+.cs-stage[data-kind='states'] {
+  height: min(calc(100cqi / var(--stage-r)), calc(100svh - var(--cs-top) - var(--cs-chrome)));
+  container-type: size;
+}
+
+/* Stacked figures: the image's own ratio, bounded by the viewport height. */
+.cs-stage[data-kind='inline'] {
+  aspect-ratio: var(--stage-r);
+  max-height: 72svh;
+  container-type: size;
+}
+
+.cs-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  visibility: hidden;
+}
+
+/*
+ * Layer states are set by StatesStage's sequencer. A change: the new layer is
+ * 'shown' on top and fades in (Web Animation, 120ms) while the old one stays
+ * 'under' at full opacity; the old one is hidden only afterwards.
+ */
+.cs-layer[data-state='shown'] {
+  z-index: 2;
+  opacity: 1;
+  visibility: visible;
+}
+
+.cs-layer[data-state='under'] {
+  z-index: 1;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* The image's own box, contained in the stage (highlights are placed in percent of it). */
+.cs-canvas {
+  position: relative;
+  width: min(100cqw, calc(100cqh * var(--r)));
+  aspect-ratio: var(--r);
+  transition:
+    transform 200ms var(--ease-out),
+    box-shadow 200ms var(--ease-out),
+    filter 200ms var(--ease-out);
+}
+
+.cs-canvas .picture,
+.cs-canvas img,
+.cs-canvas .image-fallback {
+  width: 100%;
+  height: 100%;
+}
+
+/* Opaque screenshots: a subtle radius and edge. Transparent artwork keeps its alpha: no panel, no edge. */
+.cs-layer:not([data-transparent]) .cs-canvas {
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 28px 56px -30px rgb(0 0 0 / 0.9);
+}
+
+/* One meaningful region: a thin accent outline, a soft glow and a mild dim outside it (opaque screenshots only). */
+.cs-hl {
+  position: absolute;
+  z-index: 1;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 2px var(--case-accent),
+    0 0 18px 2px rgb(var(--case-accent-rgb) / 0.42);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cs-hl[data-dim] {
+  box-shadow:
+    0 0 0 2px var(--case-accent),
+    0 0 18px 2px rgb(var(--case-accent-rgb) / 0.42),
+    0 0 0 200vmax rgb(5 6 9 / 0.22);
+}
+
+/* Shown by the sequencer (fades are Web Animations: 60ms out, 150ms in); stacked figures show it at once. */
+.cs-hl[data-on] {
+  opacity: 1;
+}
+
+/* --- The image is its own zoom control ---------------------------------- */
+
+.cs-zoomlayer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+/* Exactly the shown image's box (same formula as .cs-canvas). */
+.cs-zoom {
+  position: relative;
+  width: min(100cqw, calc(100cqh * var(--r)));
+  aspect-ratio: var(--r);
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  cursor: zoom-in;
+  pointer-events: auto;
+  transition: transform 200ms var(--ease-out);
+}
+
+.cs-zoom:focus-visible {
+  outline: 2px solid var(--case-accent);
+  outline-offset: 4px;
+}
+
+/* Hover and focus: 1.5% larger with an accent edge (alpha-aware for transparent artwork). */
+.cs-zoom:is(:hover, :focus-visible) {
+  transform: scale(1.015);
+}
+
+.cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .cs-layer[data-state='shown'] .cs-canvas {
+  transform: scale(1.015);
+}
+
+.cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .cs-layer[data-state='shown']:not([data-transparent]) .cs-canvas {
+  box-shadow:
+    0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.75),
+    0 0 26px -4px rgb(var(--case-accent-rgb) / 0.4),
+    0 28px 56px -30px rgb(0 0 0 / 0.9);
+}
+
+.cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .cs-layer[data-state='shown'][data-transparent] .cs-canvas {
+  filter: drop-shadow(0 0 1px rgb(var(--case-accent-rgb) / 0.85)) drop-shadow(0 0 12px rgb(var(--case-accent-rgb) / 0.35));
+}
+
+/* The small expand icon in the image's corner: on hover and focus; always on touch. */
+.cs-zoom__icon {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgb(9 10 15 / 0.8);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.18);
+  color: var(--color-text);
+  opacity: 0;
+  transition: opacity var(--dur-feedback) var(--ease-out);
+}
+
+.cs-zoom:is(:hover, :focus-visible) .cs-zoom__icon {
+  opacity: 1;
+  box-shadow: 0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.8);
+}
+
+@media (hover: none) {
+  .cs-zoom__icon {
+    opacity: 1;
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* --- Caption ------------------------------------------------------------- */
+
+.cs-caption {
+  max-width: 64ch;
+  /* Two lines reserved on the sticky stage, so a shorter caption never moves anything. */
+  min-height: 3em;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.cs-figure[data-variant='inline'] .cs-caption {
+  min-height: 0;
+}
+
+.cs-figure[data-portrait] .cs-caption {
+  margin-inline: auto;
+  text-align: center;
+}
+
+/* A short visible tag before the caption (e.g. Illustrative conversation). */
+.cs-label {
+  display: inline-block;
+  margin-right: var(--space-2);
+  padding: 0 8px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgb(var(--case-accent-rgb) / 0.55);
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Video (DemoVideo)                                                        */
+/* ----------------------------------------------------------------------- */
+
+/* The recording's own ratio; on the sticky stage never taller than the viewport leaves room for. */
+.cs-stage[data-kind='video'] {
+  aspect-ratio: var(--stage-r);
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 28px 56px -30px rgb(0 0 0 / 0.9);
+  transition: box-shadow 200ms var(--ease-out);
+}
+
+.cs-figure[data-variant='sticky'] .cs-stage[data-kind='video'] {
+  width: min(100%, calc((100svh - var(--cs-top) - var(--cs-chrome)) * var(--stage-r)));
+}
+
+/* Hover and keyboard focus inside the player: an accent edge (no scale, so the native controls never move). */
+.cs-stage[data-kind='video']:is(:hover, :focus-within) {
+  box-shadow:
+    0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.7),
+    0 0 26px -4px rgb(var(--case-accent-rgb) / 0.35),
+    0 28px 56px -30px rgb(0 0 0 / 0.9);
+}
+
+.cs-demo__poster,
+.cs-demo__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cs-demo__poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cs-demo__video {
+  display: block;
+  background: transparent;
+  object-fit: contain;
+}
+
+.cs-demo__video:focus-visible {
+  outline: 2px solid var(--case-accent);
+  outline-offset: -2px;
+}
+
+/* Autoplay refused, or reduced motion: one obvious play action over the poster. */
+.cs-demo__playwrap {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(closest-side, rgb(5 6 9 / 0.45), rgb(5 6 9 / 0));
+  pointer-events: none;
+}
+
+.cs-demo__play {
+  pointer-events: auto;
+}
+
+/* Expand: inside the player, top right (never on the native control bar). */
+.cs-demo__expand {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(9 10 15 / 0.78);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.2);
+  color: var(--color-text);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--dur-feedback) var(--ease-out),
+    background-color var(--dur-feedback) var(--ease-out),
+    box-shadow var(--dur-feedback) var(--ease-out),
+    transform var(--dur-feedback) var(--ease-out);
+}
+
+.cs-stage:hover .cs-demo__expand,
+.cs-stage:not([data-status='playing']) .cs-demo__expand,
+.cs-demo__expand:focus-visible {
+  opacity: 1;
+}
+
+.cs-demo__expand:is(:hover, :focus-visible) {
+  background: rgb(22 24 34 / 0.92);
+  box-shadow:
+    0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.9),
+    0 0 16px rgb(var(--case-accent-rgb) / 0.35);
+  transform: scale(1.06);
+}
+
+.cs-demo__expand:focus-visible {
+  outline: 2px solid var(--case-accent);
+  outline-offset: 2px;
+}
+
+@media (hover: none) {
+  .cs-demo__expand {
+    width: 44px;
+    height: 44px;
+    opacity: 1;
+  }
+}
+
+/* The larger view (a native dialog styled like the image dialog, components.css .image-dialog). */
+.cs-video-dialog__stage {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+
+.cs-video-dialog__video {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: var(--radius-inner);
+  background: #000;
+  box-shadow: 0 0 0 1px var(--color-media-edge);
+  opacity: 0;
+}
+
+.cs-video-dialog__video[data-ready] {
+  opacity: 1;
+}
+
+.cs-video-dialog__video:focus-visible {
+  outline: 2px solid var(--case-accent);
+  outline-offset: 2px;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Stacked (below 960px)                                                    */
+/* ----------------------------------------------------------------------- */
+
+.cs[data-layout='stacked'] .cs-cover {
+  margin-top: var(--space-5);
+}
+
+/* A smaller cover on narrow screens (CoverSlot keeps the object's ratio). */
+.cs[data-layout='stacked'] .cs-cover .cover-slot {
+  width: min(calc(var(--cover-w) * 0.8), 72%);
+}
+
+.cs[data-layout='stacked'] > .cs-media {
+  margin-top: var(--space-6);
+}
+
+.cs[data-layout='stacked'] > .cs-body {
+  padding-top: var(--space-7);
+}
+
+.cs[data-layout='stacked'] .cs-section + .cs-section {
+  margin-top: 44px;
+}
+
+.cs-section > .cs-figure {
+  margin-top: var(--space-5);
+}
+
+/* ----------------------------------------------------------------------- */
+/* Reduced motion                                                           */
+/* ----------------------------------------------------------------------- */
+
+/* Every change is instant (the sequencer skips its fades and waits too); the global 1ms reduced-motion
+   transition (base.css) would blend two layers for a frame, so it is switched off here. Hover keeps
+   its accent edge without the scale. */
+html[data-motion='reduce'] :is(.cs-layer, .cs-hl, .cs-heading, .cs-heading::before, .cs-canvas, .cs-zoom, .cs-demo__expand) {
+  transition: none !important;
+}
+
+html[data-motion='reduce'] .cs-zoom:is(:hover, :focus-visible),
+html[data-motion='reduce'] .cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .cs-layer[data-state='shown'] .cs-canvas,
+html[data-motion='reduce'] .cs-demo__expand:is(:hover, :focus-visible) {
+  transform: none;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Next project                                                             */
+/* ----------------------------------------------------------------------- */
+
+.next-project {
+  width: 100%;
+  max-width: calc(var(--case-max) + 2 * var(--gutter));
+  margin: clamp(72px, 8vw, 112px) auto 0;
+  padding-inline: var(--gutter);
+}
+
+/* One link: the small PNG, "Next project" and the name. */
+.next-project__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 64px;
+  margin-left: -8px;
+  padding: 8px 20px 8px 8px;
+  border-radius: 16px;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.next-project__thumb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--thumb-w, 104px);
+  height: var(--thumb-h, 84px);
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.45));
+  transition:
+    transform 200ms var(--ease-out),
+    filter 200ms var(--ease-out);
+}
+
+.next-project__thumb .picture,
+.next-project__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.next-project__text {
+  display: grid;
+  gap: 2px;
+}
+
+.next-project__label {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-weight: var(--weight-label);
+  line-height: 1.4;
+}
+
+.next-project__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--stage-ivory);
+  font-size: clamp(1.25rem, 1.15rem + 0.35vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  transition: color 180ms var(--ease-out);
+}
+
+.next-project__arrow {
+  flex: none;
+  transition: transform 180ms var(--ease-out);
+}
+
+.next-project__link:is(:hover, :focus-visible) .next-project__thumb {
+  transform: scale(1.04);
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.45)) drop-shadow(0 0 12px rgb(var(--next-accent-rgb, 201 184 255) / 0.42));
+}
+
+.next-project__link:is(:hover, :focus-visible) .next-project__name {
+  color: var(--next-accent, var(--stage-ivory));
+}
+
+.next-project__link:is(:hover, :focus-visible) .next-project__arrow {
+  transform: translateX(3px);
+}
+
+.next-project__link:focus-visible {
+  outline: 2px solid var(--next-accent, var(--color-focus));
+  outline-offset: 2px;
+}
+
+html[data-motion='reduce'] :is(.next-project__thumb, .next-project__name, .next-project__arrow) {
+  transition: none;
+}
+
+html[data-motion='reduce'] .next-project__link:is(:hover, :focus-visible) :is(.next-project__thumb, .next-project__arrow) {
+  transform: none;
+}
+
+/* ======================================================================= */
+/* LEGACY, until Creative Production (FilmScroll, Results "Other agency     */
+/* work") moves to the new layout. Delete once nothing uses them.           */
+/* ======================================================================= */
 
 .cs-meta__row {
   display: grid;
@@ -170,303 +791,6 @@
   margin-top: var(--space-5);
 }
 
-@media (max-width: 599.98px) {
-  .cs-meta__row {
-    grid-template-columns: 7rem minmax(0, 1fr);
-  }
-
-  .cs-note p {
-    font-size: 1rem;
-  }
-}
-
-/* ----------------------------------------------------------------------- */
-/* Sections and blocks                                                      */
-/* ----------------------------------------------------------------------- */
-
-.cs-body {
-  padding-top: clamp(var(--space-7), 5vw, 60px);
-}
-
-.cs-section + .cs-section {
-  margin-top: clamp(56px, 5vw, 72px);
-}
-
-.cs-section {
-  /* Added to the root's scroll-padding-top: headings land clear of the header. */
-  scroll-margin-top: var(--space-2);
-}
-
-.cs-heading {
-  margin-bottom: var(--space-5);
-  color: var(--stage-ivory);
-  font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  font-weight: var(--weight-heading);
-}
-
-.cs-heading:focus {
-  outline: none;
-}
-
-.cs-block {
-  position: relative;
-}
-
-.cs-block + .cs-block {
-  margin-top: 40px;
-}
-
-.cs-block__title {
-  margin-bottom: 10px;
-  color: var(--stage-ivory);
-  font-size: 1.1875rem;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  font-weight: var(--weight-heading);
-}
-
-/* The active block: a short accent marker beside its first line (no long progress line). */
-.cs[data-layout='sticky'] .cs-block::before {
-  content: '';
-  position: absolute;
-  left: -20px;
-  top: 0.2em;
-  width: 3px;
-  height: 24px;
-  border-radius: 2px;
-  background: var(--case-accent);
-  opacity: 0;
-  transform: scaleY(0.4);
-  transform-origin: 50% 0;
-  transition:
-    opacity 150ms var(--ease-out),
-    transform 200ms var(--ease-out);
-}
-
-.cs[data-layout='sticky'] .cs-block[data-active]::before {
-  opacity: 1;
-  transform: none;
-}
-
-/*
- * The end of the pinned range: CaseScroll lowers the activation line
- * gradually near the end so the last visual becomes active while the media
- * region is still pinned (for about 22% of the viewport). --cs-tail is set
- * only when the region is too tall for that (a tall portrait frame on a
- * short viewport); it is 0 on most pages, and no block gets extra height.
- */
-.cs[data-layout='sticky'] > .cs-body {
-  padding-bottom: var(--cs-tail, 0px);
-}
-
-/* ----------------------------------------------------------------------- */
-/* Media region, frame and layers                                           */
-/* ----------------------------------------------------------------------- */
-
-.cs-media {
-  align-self: stretch;
-}
-
-.cs-sticky {
-  position: sticky;
-  top: var(--cs-top);
-}
-
-.cs-mf {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.cs-figure {
-  display: grid;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.cs-frame {
-  position: relative;
-  container-type: size;
-  width: 100%;
-  margin-inline: auto;
-}
-
-/* The sticky frame never grows taller than the viewport leaves room for (portrait frames narrow instead). */
-.cs-mf[data-variant='sticky'] .cs-frame {
-  width: min(100%, calc((100vh - var(--cs-top) - var(--cs-chrome)) * var(--cs-frame-r)));
-}
-
-/* Stacked figures: tall visuals (phones) are bounded by the viewport height. */
-.cs-mf[data-variant='inline'] .cs-frame {
-  width: min(100%, calc(72svh * var(--cs-frame-r)));
-}
-
-.cs-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  display: grid;
-  place-items: center;
-  opacity: 0;
-  visibility: hidden;
-}
-
-/*
- * States are set by CaseScroll's sequencer. A change: the new layer is
- * 'shown' on top and fades in (Web Animation, 120ms) while the old one stays
- * 'under' at full opacity; the old one is hidden only afterwards.
- */
-.cs-layer[data-state='shown'] {
-  z-index: 2;
-  opacity: 1;
-  visibility: visible;
-}
-
-.cs-layer[data-state='under'] {
-  z-index: 1;
-  opacity: 1;
-  visibility: visible;
-}
-
-/* The recording, while the demo is shown (React sets its state). */
-.cs-layer--video {
-  z-index: 3;
-}
-
-.cs-frame[data-demo] .cs-layer:not(.cs-layer--video) {
-  visibility: hidden;
-}
-
-/* The visual's own box, contained in the frame (highlights are placed in percent of it). */
-.cs-canvas {
-  position: relative;
-  width: min(100cqw, calc(100cqh * var(--r)));
-  aspect-ratio: var(--r);
-}
-
-.cs-canvas .picture,
-.cs-canvas img,
-.cs-canvas .image-fallback {
-  width: 100%;
-  height: 100%;
-}
-
-/* Opaque screenshots: a subtle radius and edge. Transparent artwork keeps its alpha: no panel, no edge. */
-.cs-layer:not([data-transparent]) .cs-canvas {
-  overflow: hidden;
-  border-radius: 10px;
-  background: var(--color-surface);
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.08),
-    0 28px 56px -30px rgb(0 0 0 / 0.9);
-}
-
-.cs-layer[data-layer^='ph:'] .cs-canvas {
-  background: none;
-}
-
-/* One meaningful region: a thin accent outline, a soft glow and a mild dim outside it (opaque screenshots only). */
-.cs-hl {
-  position: absolute;
-  z-index: 1;
-  border-radius: 8px;
-  box-shadow:
-    0 0 0 2px var(--case-accent),
-    0 0 18px 2px color-mix(in oklch, var(--case-accent) 45%, transparent);
-  opacity: 0;
-  pointer-events: none;
-}
-
-.cs-hl[data-dim] {
-  box-shadow:
-    0 0 0 2px var(--case-accent),
-    0 0 18px 2px color-mix(in oklch, var(--case-accent) 45%, transparent),
-    0 0 0 200vmax rgb(5 6 9 / 0.2);
-}
-
-/* Shown by the sequencer (fades are Web Animations: 60ms out, 150ms in). */
-.cs-hl[data-on] {
-  opacity: 1;
-}
-
-.cs-video {
-  width: 100%;
-  height: 100%;
-  background: #000;
-  object-fit: contain;
-}
-
-.cs-video:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: -2px;
-}
-
-.cs-caption {
-  max-width: 64ch;
-  min-height: 3em;
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  line-height: 1.5;
-}
-
-.cs-mf[data-variant='inline'] .cs-caption {
-  min-height: 0;
-}
-
-.cs-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
-}
-
-.cs-mf[data-variant='sticky'] .cs-controls {
-  min-height: 46px;
-}
-
-/* Portrait frames (phones) sit centred in the column with their caption and controls. */
-.cs-mf[data-portrait] .cs-caption {
-  margin-inline: auto;
-  text-align: center;
-}
-
-.cs-mf[data-portrait] .cs-controls {
-  justify-content: center;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Stacked (below 960px)                                                    */
-/* ----------------------------------------------------------------------- */
-
-.cs[data-layout='stacked'] .cs-inline--opening {
-  margin-top: var(--space-6);
-}
-
-.cs[data-layout='stacked'] .cs-body {
-  padding-top: var(--space-8);
-}
-
-.cs[data-layout='stacked'] .cs-block + .cs-block {
-  margin-top: 44px;
-}
-
-.cs-block > .cs-inline {
-  margin-top: var(--space-5);
-}
-
-/* Reduced motion: every change is instant (the sequencer skips its fades and waits too). The global
-   1ms reduced-motion transition (base.css) would blend two layers for a frame, so it is switched off here. */
-html[data-motion='reduce'] .cs-layer,
-html[data-motion='reduce'] .cs-hl,
-html[data-motion='reduce'] .cs-block::before {
-  transition: none !important;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Results (compact) and next project (one actionable row)                  */
-/* ----------------------------------------------------------------------- */
-
 .case-results {
   display: grid;
   gap: var(--space-5);
@@ -479,7 +803,7 @@ html[data-motion='reduce'] .cs-block::before {
 
 @media (min-width: 960px) {
   .case-results {
-    grid-template-columns: minmax(0, 44fr) minmax(0, 50fr);
+    grid-template-columns: minmax(0, 42fr) minmax(0, 52fr);
     column-gap: var(--case-gap);
     align-items: start;
   }
@@ -492,8 +816,8 @@ html[data-motion='reduce'] .cs-block::before {
 .case-results__heading {
   margin-bottom: var(--space-4);
   color: var(--stage-ivory);
-  font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
-  line-height: 1.2;
+  font-size: clamp(1.375rem, 1.22rem + 0.45vw, 1.625rem);
+  line-height: 1.22;
   letter-spacing: -0.02em;
   font-weight: var(--weight-heading);
 }
@@ -502,660 +826,3 @@ html[data-motion='reduce'] .cs-block::before {
   min-width: 0;
   max-width: 460px;
 }
-
-/* A small evidence figure: tall images (phones, slides) are capped in height instead of filling the column. */
-.case-results__figure .media-frame {
-  justify-self: start;
-  max-width: 100%;
-}
-
-.case-results__figure .picture,
-.case-results__figure .picture img {
-  width: auto;
-  max-width: 100%;
-  max-height: min(420px, 60vh);
-}
-
-.next-project {
-  width: 100%;
-  max-width: calc(var(--case-max) + 2 * var(--gutter));
-  margin: var(--space-7) auto 0;
-  padding-inline: var(--gutter);
-}
-
-.next-project__link {
-  display: grid;
-  gap: 2px;
-  max-width: 560px;
-  min-height: 64px;
-  padding: 14px 20px;
-  border-radius: 12px;
-  background: rgb(10 11 18 / 0.72);
-  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.55);
-  color: var(--color-text);
-  text-decoration: none;
-  transition:
-    background-color var(--dur-feedback) var(--ease-out),
-    box-shadow var(--dur-feedback) var(--ease-out),
-    transform var(--dur-feedback) var(--ease-out);
-}
-
-.next-project__label {
-  color: var(--stage-ivory);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-.next-project__arrow {
-  display: inline-block;
-  margin-left: 2px;
-  transition: transform var(--dur-feedback) var(--ease-out);
-}
-
-.next-project__desc {
-  color: var(--color-muted);
-  font-size: 0.9375rem;
-  line-height: 1.45;
-}
-
-.next-project__link:hover {
-  background: rgb(26 28 42 / 0.86);
-  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.9);
-  transform: translateY(-1px);
-}
-
-.next-project__link:hover .next-project__arrow {
-  transform: translate(2px, -2px);
-}
-
-.next-project__link:active {
-  background: rgb(6 7 11 / 0.9);
-  transform: none;
-}
-
-.next-project__link:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-  border-radius: 12px;
-}
-
-html[data-motion='reduce'] .next-project__link,
-html[data-motion='reduce'] .next-project__arrow {
-  transition: none;
-}
-
-/* A related-project line inside prose (legacy pages; new pages carry this in NextProject). */
-.related-project {
-  display: grid;
-  gap: 2px;
-  margin-top: var(--space-5);
-  color: var(--color-muted);
-  font-size: 0.9375rem;
-  line-height: 1.5;
-}
-
-.related-project__label {
-  color: var(--color-muted);
-  font-size: 0.875rem;
-  font-weight: var(--weight-label);
-}
-
-.related-project__link {
-  justify-self: start;
-  color: var(--color-text);
-  font-size: 1.0625rem;
-  font-weight: var(--weight-label);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-decoration-color: color-mix(in oklch, currentColor 60%, transparent);
-  text-underline-offset: 3px;
-}
-
-.related-project__link:hover {
-  text-decoration-color: currentColor;
-}
-
-/* ======================================================================= */
-/* LEGACY: CaseOpening / CaseSection / StickyVisual for pages that have not */
-/* moved to CaseScroll yet. Delete this block once no page imports them.    */
-/* ======================================================================= */
-
-.case-shell {
-  width: 100%;
-  max-width: calc(1200px + 2 * var(--gutter));
-  margin-inline: auto;
-  padding-inline: var(--gutter);
-}
-
-@media (min-width: 960px) {
-  .case-opening,
-  .case-section:not([data-wide]),
-  .sv-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 38fr) minmax(0, 57fr);
-    column-gap: 56px;
-    align-items: start;
-  }
-}
-
-.case-title {
-  color: var(--stage-ivory);
-  font-size: clamp(2.125rem, 1.75rem + 1.5vw, 2.75rem);
-  line-height: 1.08;
-  letter-spacing: -0.03em;
-  font-weight: var(--weight-heading);
-}
-
-.case-subtitle {
-  margin-top: var(--space-3);
-  color: var(--color-muted);
-  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
-  line-height: 1.4;
-}
-
-.case-heading {
-  margin-bottom: var(--space-4);
-  color: var(--stage-ivory);
-  font-size: clamp(1.375rem, 1.25rem + 0.5vw, 1.625rem);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  font-weight: var(--weight-heading);
-}
-
-.case-heading:focus {
-  outline: none;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Opening                                                                  */
-/* ----------------------------------------------------------------------- */
-
-.case-opening {
-  row-gap: var(--space-6);
-  padding-top: clamp(var(--space-6), 4.5vw, var(--space-8));
-}
-
-.case-opening__text {
-  --scrim-pad: 28px;
-}
-
-/* The section links sit at the bottom of the opening text: the scrim reaches well past them. */
-.case .case-opening__text {
-  --scrim-pad-end: 88px;
-}
-
-.case-opening__description {
-  margin-top: var(--space-5);
-}
-
-.case-facts {
-  display: grid;
-  gap: var(--space-2);
-  margin-top: var(--space-5);
-  padding-block: var(--space-4);
-  border-block: 1px solid rgb(238 234 226 / 0.12);
-}
-
-.case-facts__row {
-  display: grid;
-  grid-template-columns: 6.5rem minmax(0, 1fr);
-  gap: var(--space-4);
-  font-size: 0.9375rem;
-  line-height: 1.45;
-}
-
-.case-facts dt {
-  color: var(--color-muted);
-}
-
-.case-facts dd {
-  color: var(--color-text);
-}
-
-.case-note {
-  margin-top: var(--space-4);
-  padding-left: var(--space-3);
-  border-left: 2px solid var(--case-accent);
-  color: var(--color-text);
-  font-size: 0.9375rem;
-  line-height: 1.5;
-}
-
-/* Body text is at least 16px on phones and tablets, boundary notes included. */
-@media (max-width: 959.98px) {
-  .case-note {
-    font-size: 1rem;
-  }
-}
-
-.case-summary {
-  margin-top: var(--space-4);
-}
-
-.case-summary p {
-  max-width: 62ch;
-  color: var(--color-muted);
-  font-size: 1rem;
-  line-height: 1.55;
-}
-
-.section-links {
-  margin-top: var(--space-5);
-}
-
-.section-links ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  list-style: none;
-}
-
-.section-links__link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 0 var(--space-3);
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.18);
-  color: var(--color-text);
-  font-size: var(--text-small);
-  font-weight: var(--weight-label);
-  text-decoration: none;
-  transition:
-    background-color var(--dur-feedback) var(--ease-out),
-    box-shadow var(--dur-feedback) var(--ease-out);
-}
-
-.section-links__link:hover {
-  background: rgb(238 234 226 / 0.06);
-  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.32);
-}
-
-.section-links__link:focus-visible {
-  border-radius: 999px;
-}
-
-.case-opening__media {
-  position: relative;
-  min-width: 0;
-}
-
-/* A subtle local pool of light beneath the featured artifact. */
-.case-opening__media::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: 8%;
-  right: 8%;
-  bottom: -40px;
-  height: 90px;
-  background: radial-gradient(closest-side in oklch, color-mix(in oklch, var(--case-accent) 22%, transparent), transparent);
-  pointer-events: none;
-}
-
-.case-hero {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.case-hero__frame {
-  position: relative;
-  border-radius: 14px;
-  overflow: hidden;
-  background: var(--color-surface);
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.08),
-    0 30px 60px -30px rgb(0 0 0 / 0.9);
-}
-
-.case-hero__frame[data-bare] {
-  background: none;
-  box-shadow: none;
-  overflow: visible;
-  border-radius: 0;
-}
-
-@media (min-width: 960px) {
-  .case-opening__media {
-    padding-top: var(--space-2);
-  }
-}
-
-/* Stacked: the representative image follows the section links with a clear gap. */
-@media (max-width: 959.98px) {
-  .case-opening__media {
-    margin-top: var(--space-6);
-  }
-}
-
-/* ----------------------------------------------------------------------- */
-/* Sections                                                                 */
-/* ----------------------------------------------------------------------- */
-
-.case-section {
-  margin-top: clamp(var(--space-7), 6.5vw, 96px);
-  /* Added to the root's scroll-padding-top (header + 16px, base.css): headings land about 24px under the header. */
-  scroll-margin-top: var(--space-2);
-}
-
-.case-section__text {
-  min-width: 0;
-}
-
-.case-section__aside {
-  min-width: 0;
-  margin-top: var(--space-5);
-}
-
-.case-section__wide {
-  margin-top: var(--space-2);
-}
-
-@media (min-width: 960px) {
-  .case-section__aside {
-    margin-top: 0;
-    padding-top: var(--space-2);
-  }
-
-  /* A wide section keeps its heading in the text column. */
-  .case-section[data-wide] > .case-section__text {
-    width: calc((100% - 56px) * 38 / 95);
-  }
-}
-
-/* Reading scrims: a dark field behind text columns (stage.css .reading-scrim). */
-.case .reading-scrim {
-  --scrim-pad: 28px;
-  --scrim-pad-x: 44px;
-  --scrim-strength: 0.6;
-}
-
-@media (max-width: 959.98px) {
-  .case .reading-scrim {
-    --scrim-pad-x: 16px;
-    --scrim-pad: 16px;
-  }
-}
-
-/* ----------------------------------------------------------------------- */
-/* Sticky visual (StickyVisual.tsx)                                         */
-/* ----------------------------------------------------------------------- */
-
-.sticky-visual {
-  --sv-top: calc(var(--header-height) + var(--space-6));
-}
-
-.sv-steps {
-  display: grid;
-  list-style: none;
-}
-
-.sv-grid .sv-step {
-  min-height: clamp(360px, 54vh, 500px);
-  padding: var(--space-1) 0 var(--space-7) var(--space-5);
-  border-left: 2px solid rgb(238 234 226 / 0.12);
-  transition: border-color var(--dur-highlight) var(--ease-out);
-}
-
-/*
- * The last step is tall enough that the sticky figure stays pinned until the
- * last paragraph has passed the middle of the viewport:
- * (sticky top + figure height) × 2 − viewport height. --sv-fig-h is measured
- * by StickyVisual (useStickyFigureHeight), so this holds for every figure.
- */
-.sv-grid .sv-step:last-child {
-  min-height: max(clamp(300px, 44vh, 440px), calc(2 * (var(--sv-top) + var(--sv-fig-h, 0px)) - 100vh));
-  padding-bottom: 0;
-}
-
-.sv-grid .sv-step[data-active] {
-  border-left-color: var(--case-accent);
-}
-
-.sv-step {
-  position: relative;
-  isolation: isolate;
-}
-
-/* The same dark reading field as the other text columns. */
-.sv-step::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: -12px -36px 12px -24px;
-  border-radius: 32px;
-  background: radial-gradient(closest-side in oklch, rgb(5 6 9 / 0.58), rgb(5 6 9 / 0.44) 70%, rgb(5 6 9 / 0));
-  pointer-events: none;
-}
-
-.sv-step__title {
-  margin-bottom: var(--space-3);
-  color: var(--stage-ivory);
-  font-size: 1.1875rem;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  font-weight: var(--weight-heading);
-}
-
-.sv-media {
-  align-self: stretch;
-  min-width: 0;
-}
-
-.sv-sticky {
-  position: sticky;
-  top: var(--sv-top);
-  display: grid;
-  gap: var(--space-3);
-}
-
-.sv-frame {
-  position: relative;
-  width: 100%;
-  border-radius: 14px;
-  overflow: hidden;
-  background: var(--color-surface);
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.08),
-    0 30px 60px -30px rgb(0 0 0 / 0.9);
-}
-
-/* Phone screenshots carry their own device frame: no box, bounded height. */
-.sv-frame[data-transparent] {
-  width: auto;
-  height: min(620px, calc(100vh - var(--header-height) - 200px));
-  margin-inline: auto;
-  background: none;
-  box-shadow: none;
-  overflow: visible;
-  border-radius: 0;
-}
-
-.sv-inline .sv-frame[data-transparent] {
-  height: auto;
-  width: min(300px, 78%);
-}
-
-.sv-layer {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity var(--dur-crossfade) var(--ease-out);
-}
-
-.sv-inline .sv-layer {
-  position: relative;
-}
-
-/*
- * Stacked frames keep the section's frame ratio, and each image is
- * contained and centred in it as in the sticky frame, so a highlight lands on
- * the same region even when a step's image has a different ratio.
- */
-.sv-inline .sv-frame:not([data-transparent]) .sv-layer {
-  position: absolute;
-  inset: 0;
-}
-
-.sv-layer[data-active] {
-  opacity: 1;
-}
-
-.sv-layer .picture,
-.sv-layer img {
-  width: 100%;
-  height: 100%;
-}
-
-.sv-inline .sv-frame[data-transparent] .sv-layer .picture,
-.sv-inline .sv-frame[data-transparent] .sv-layer img {
-  height: auto;
-}
-
-/* The highlighted region of the image: the one place a screenshot glows. */
-.sv-highlight {
-  position: absolute;
-  border-radius: 8px;
-  box-shadow:
-    0 0 0 2px var(--case-accent),
-    0 0 24px 2px color-mix(in oklch, var(--case-accent) 45%, transparent);
-  opacity: 0;
-  transition: opacity var(--dur-highlight) var(--ease-out);
-  pointer-events: none;
-}
-
-.sv-highlight[data-dim] {
-  box-shadow:
-    0 0 0 2px var(--case-accent),
-    0 0 24px 2px color-mix(in oklch, var(--case-accent) 45%, transparent),
-    0 0 0 200vmax rgb(5 6 9 / 0.34);
-}
-
-.sv-highlight[data-active] {
-  opacity: 1;
-}
-
-.sv-marker {
-  position: absolute;
-  left: -11px;
-  top: -11px;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--case-accent);
-  color: var(--stage-room);
-  font-size: 0.75rem;
-  font-weight: 650;
-  line-height: 1;
-}
-
-.sv-caption {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  min-height: 3em;
-}
-
-.sv-caption__num {
-  flex: none;
-  display: inline-grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--case-accent);
-  color: var(--stage-room);
-  font-size: 0.75rem;
-  font-weight: 650;
-  transform: translateY(3px);
-}
-
-.sv-zoom {
-  position: absolute;
-  right: var(--space-3);
-  bottom: var(--space-3);
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: rgb(9 10 15 / 0.78);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.16);
-  color: var(--color-text);
-  cursor: zoom-in;
-}
-
-.sv-zoom:focus-visible {
-  border-radius: 50%;
-}
-
-.sv-video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: #000;
-  object-fit: contain;
-}
-
-.sv-video:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: -2px;
-}
-
-.sv-demo {
-  justify-self: start;
-}
-
-/*
- * With a recorded walkthrough, Watch demo sits directly beneath the frame
- * with the caption beside it (the same on every page).
- */
-.sv-sticky[data-demo] {
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: var(--space-5);
-  row-gap: var(--space-4);
-  align-items: start;
-}
-
-.sv-sticky[data-demo] > .sv-frame {
-  grid-column: 1 / -1;
-}
-
-.sv-sticky[data-demo] > .sv-demo {
-  grid-row: 2;
-  grid-column: 1;
-  min-width: 9.5rem;
-}
-
-.sv-sticky[data-demo] > .sv-caption {
-  grid-row: 2;
-  grid-column: 2;
-  min-height: 44px;
-  padding-top: 2px;
-}
-
-.sv-stack .sv-step {
-  padding-bottom: var(--space-7);
-}
-
-.sv-stack .sv-step::before {
-  inset: -8px -16px auto -16px;
-  height: 60%;
-}
-
-.sv-stack__demo {
-  margin-bottom: var(--space-6);
-}
-
-.sv-inline {
-  display: grid;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-}
-

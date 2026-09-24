@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { accentVars } from '../../content/accents'
 import { projectForPath } from '../../content/projects'
 import { SITE } from '../../content/site'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
-import { goToSection } from './RouteFocus'
-import { MobileMenu, WorkShelf } from './WorkShelf'
+import { ExternalMark, MobileMenu, WorkShelf } from './WorkShelf'
 
 const SHELF_ID = 'work-shelf'
 const MENU_ID = 'site-menu'
@@ -12,27 +12,31 @@ const DESKTOP_QUERY = '(min-width: 900px)'
 const INTERACTIVE = 'a[href], button, input, select, textarea, summary, video, [contenteditable], [tabindex]:not([tabindex="-1"])'
 const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
+/** The restored original creative homepage: an isolated static build, opened with a full page load. */
+const CREATIVE_HREF = '/creative/'
+
 const modified = (e: MouseEvent) => e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey
 
-/** Moves to the footer's contact area in place (every professional page has it). */
-export function goToContact(e?: MouseEvent<HTMLAnchorElement>) {
-  if (e && modified(e)) return
-  if (goToSection('contact')) e?.preventDefault()
-}
-
 /**
- * Header: a two-line home link on the left ("Harlie Katz" over
- * "Professional portfolio"); Work, About and Contact on the right.
+ * Header. On the homepage there is no brand (the page's own identity block
+ * is the introduction), only the navigation. On every other page a smaller
+ * home link sits on the left: "Harlie Katz" (28px, the homepage title's pale
+ * core and soft lavender glow at a smaller size) over "Professional
+ * portfolio". Navigation on the right:
  *
- * - Work is a button that opens the Work shelf (WorkShelf.tsx): click
- *   toggles, Escape or a click outside closes (focus returns to Work),
- *   Arrow Down or keyboard activation moves focus to the first project.
- * - About opens the dedicated About page (`/about`).
- * - Contact scrolls to the single contact area in the footer (`#contact`).
+ * - Work: a button that opens the Work shelf (WorkShelf.tsx). Click toggles;
+ *   Escape, a click outside or focus leaving closes it (focus returns to
+ *   Work); Arrow Down or keyboard activation moves focus to the first project.
+ * - About: the dedicated About page (`/about`).
+ * - Creative Portfolio: a plain link to the restored original creative
+ *   homepage (`/creative/`, a separate build, so a full page load).
  *
  * Below 900px the three become one "Menu" button with an accessible panel
- * (six projects, About, Contact): focus stays inside, Escape closes, the
- * page behind does not scroll.
+ * (six projects, About, Creative Portfolio): focus stays inside, Escape
+ * closes, the page behind does not scroll.
+ *
+ * On a case study the header carries that project's accent (`--accent`), so
+ * its hover and focus states match the page; elsewhere they are lavender.
  */
 export function Header() {
   const { pathname } = useLocation()
@@ -62,12 +66,13 @@ export function Header() {
     setOpen(false)
   }
 
-  // Desktop shelf: Escape, a click outside, or focus leaving the header
-  // closes it. Focus returns to Work, except when the click itself landed on
-  // something focusable (a link, a button, a field), which keeps the focus.
+  // Desktop shelf: Escape, a click outside Work and its shelf, or focus
+  // leaving them (e.g. Tab on to About) closes it. Focus returns to Work,
+  // except when the click itself landed on something focusable (a link, a
+  // button, a field), which keeps the focus.
   useEffect(() => {
     if (!open || !desktop) return
-    const header = headerRef.current
+    const scope = workRef.current?.closest('li')
     const focusWork = () => workRef.current?.focus({ preventScroll: true })
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
@@ -76,15 +81,15 @@ export function Header() {
       focusWork()
     }
     const onPointer = (e: PointerEvent) => {
-      if (header?.contains(e.target as Node)) return
-      const hadFocus = header?.contains(document.activeElement)
+      if (scope?.contains(e.target as Node)) return
+      const hadFocus = scope?.contains(document.activeElement)
       setOpen(false)
       const interactive = e.target instanceof Element && e.target.closest(INTERACTIVE)
       // After the browser's own mousedown focus handling (which would otherwise focus <main>).
       if (hadFocus && !interactive) window.setTimeout(focusWork, 0)
     }
     const onFocus = (e: FocusEvent) => {
-      if (e.target instanceof Node && !header?.contains(e.target)) setOpen(false)
+      if (e.target instanceof Node && !scope?.contains(e.target)) setOpen(false)
     }
     document.addEventListener('keydown', onKey)
     document.addEventListener('pointerdown', onPointer)
@@ -131,24 +136,12 @@ export function Header() {
     }
   }, [open, desktop])
 
-  /** Closes the menu at once (and unlocks the page) before an in-page scroll. */
-  const closeNow = () => {
-    document.documentElement.classList.remove('is-menu-open')
-    setOpen(false)
-  }
-
   const onAbout = (e: MouseEvent<HTMLAnchorElement>) => {
     if (modified(e)) return
     setOpen(false)
   }
 
-  const onContact = (e: MouseEvent<HTMLAnchorElement>) => {
-    if (modified(e)) return
-    e.preventDefault()
-    closeNow()
-    goToSection('contact')
-  }
-
+  const home = pathname === '/'
   const active = projectForPath(pathname)
   const inWork = Boolean(active)
   const onAboutPage = pathname === '/about'
@@ -157,14 +150,18 @@ export function Header() {
     <header
       ref={headerRef}
       className="site-header"
+      data-home={home || undefined}
       data-scrolled={scrolled}
       data-open={open ? (desktop ? 'shelf' : 'menu') : undefined}
+      style={active ? accentVars(active.accent) : undefined}
     >
       <div className="shell site-header__inner">
-        <Link to="/" className="site-brand" aria-current={pathname === '/' ? 'page' : undefined}>
-          <span className="site-brand__name">{SITE.name}</span>
-          <span className="site-brand__role">Professional portfolio</span>
-        </Link>
+        {!home && (
+          <Link to="/" className="site-brand">
+            <span className="site-brand__name">{SITE.name}</span>
+            <span className="site-brand__role">Professional portfolio</span>
+          </Link>
+        )}
 
         {desktop ? (
           <nav className="site-nav" aria-label="Primary">
@@ -223,8 +220,9 @@ export function Header() {
                 </Link>
               </li>
               <li>
-                <a href="#contact" className="site-nav__item" onClick={onContact}>
-                  Contact
+                <a href={CREATIVE_HREF} className="site-nav__item">
+                  Creative Portfolio
+                  <ExternalMark />
                 </a>
               </li>
             </ul>
@@ -254,9 +252,9 @@ export function Header() {
           open={open}
           activeId={active?.id}
           aboutCurrent={onAboutPage}
+          creativeHref={CREATIVE_HREF}
           onNavigate={() => setOpen(false)}
           onAbout={onAbout}
-          onContact={onContact}
         />
       )}
     </header>

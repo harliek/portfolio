@@ -14,11 +14,12 @@ const MOBILE_QUERY = `(max-width: ${STAGE.background.mobileBelow - 0.02}px)`
  * muted loop fades in over it once frames play. One file per device class,
  * chosen once.
  *
- * Readability (src/styles/stage.css): broad gradients only, no boxes. A
- * base shade per route; a reading layer that is strongest behind the text
- * column on interior pages and, on the homepage, deepens as the visitor
- * scrolls from the carousel into About (`--read`, 0 → 1); and a soft band
- * that dims the bright floor line wherever it sits in the viewport.
+ * Readability (src/styles/stage.css): broad, smoothly blended gradients
+ * only, no boxes. A base shade per route (lightest on the homepage, where
+ * the room frames the carousel); on interior pages a reading layer that is
+ * strongest behind the text column and eases off towards the media and the
+ * outer margins; a soft pool behind the homepage identity; and a band that
+ * dims the bright floor line wherever it sits in the viewport.
  *
  * While a project opens from the carousel (projectTransition.ts), the set
  * already shows the destination's treatment, quickly (`data-hurry`), so the
@@ -26,9 +27,9 @@ const MOBILE_QUERY = `(max-width: ${STAGE.background.mobileBelow - 0.02}px)`
  * the bright floor line never crosses it.
  *
  * Reduced motion (OS or the footer's "Reduce motion"): poster only, no video
- * request. The video pauses while the tab is hidden, while an image is
- * enlarged or the small-screen menu is open, and while anything is
- * fullscreen. Decorative: aria-hidden.
+ * request. The video pauses whenever it cannot be seen or is covered: the
+ * tab is hidden, an image or video is enlarged, the small-screen menu is
+ * open, or anything is fullscreen. Decorative: aria-hidden.
  */
 export function StageBackground({ route: current }: { route: StageRoute }) {
   const reduced = useReducedMotion()
@@ -38,7 +39,6 @@ export function StageBackground({ route: current }: { route: StageRoute }) {
   const [mobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches)
   const file = mobile ? STAGE_MEDIA.background.mobile : STAGE_MEDIA.background.desktop
   const [playing, setPlaying] = useState(false)
-  const rootRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   // Play only while it can be seen: the tab is visible, no image dialog or
@@ -74,42 +74,11 @@ export function StageBackground({ route: current }: { route: StageRoute }) {
     video.playbackRate = rate
   }, [route, reduced])
 
-  // Homepage: the reading treatment follows the scroll from the carousel
-  // (a lighter room) into About (the interior-page treatment).
-  useEffect(() => {
-    const el = rootRef.current
-    if (!el) return
-    if (route !== 'home') {
-      el.style.removeProperty('--read')
-      return
-    }
-    const { start, span } = STAGE.homeReading
-    let frame = 0
-    const update = () => {
-      frame = 0
-      const h = window.innerHeight
-      const p = Math.min(1, Math.max(0, (window.scrollY - h * start) / (h * span)))
-      el.style.setProperty('--read', p.toFixed(3))
-    }
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(update)
-    }
-    update()
-    window.addEventListener('scroll', schedule, { passive: true })
-    window.addEventListener('resize', schedule)
-    return () => {
-      cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', schedule)
-      window.removeEventListener('resize', schedule)
-    }
-  }, [route])
-
   const desktop = getImage(STAGE_MEDIA.background.desktop.poster)
   const phone = getImage(STAGE_MEDIA.background.mobile.poster)
 
   return (
     <div
-      ref={rootRef}
       className="stage-bg"
       data-route={route}
       data-hurry={hurry || undefined}

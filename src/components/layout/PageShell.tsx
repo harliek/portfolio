@@ -12,10 +12,12 @@ import { StageBackground } from './StageBackground'
 /**
  * Root layout of the professional site: the persistent background set
  * (mounted once, outside the keyed route content, so the same <video> keeps
- * playing across every navigation), skip link, header with the Work shelf,
- * main (the new page rises 6px as it settles; no blank beat), the footer
- * (the single contact area and the "Reduce motion" setting), and the
- * pointer trail. The creative portfolio has its own layout.
+ * playing across every navigation), skip link, header (no brand on the
+ * homepage) with the Work shelf, main (the new page rises 6px as it
+ * settles; no blank beat; no rise while a carousel object travels into it),
+ * the compact footer (copyright and the "Reduce motion" setting), and the
+ * pointer trail. The restored creative portfolio is a separate static
+ * build at /creative/, outside this shell.
  */
 export function PageShell() {
   const { pathname } = useLocation()

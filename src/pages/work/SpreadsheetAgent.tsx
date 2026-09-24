@@ -2,34 +2,29 @@ import '../../styles/pages/spreadsheet-agent.css'
 import { CaseLayout } from '../../components/case/CaseLayout'
 import { CaseScroll } from '../../components/case/CaseScroll'
 import { NextProject } from '../../components/case/NextProject'
-import { Results } from '../../components/case/Results'
 import { SPREADSHEET_AGENT as C } from '../../content/pages/spreadsheet-agent'
 import { projectById } from '../../content/projects'
-import { useMediaQuery } from '../../hooks/useMediaQuery'
 
 const project = projectById('spreadsheet-agent')
 
 /**
- * One 5:3 frame for every state: the walkthrough crops share that ratio
- * (src/content/crops/spreadsheet-agent.ts), and the recording (≈1.98:1)
- * plays contained in the same frame.
+ * Spreadsheet Agent: the real recording (request, build plan, saved sheet)
+ * autoplays beside the story (CaseScroll video media). Its poster, shown when
+ * autoplay is refused or motion is reduced, is the saved sheet beside the
+ * request and the assistant's reply (25.3s, `sheet-returned`), which is more
+ * representative than the recording's first frame (the All Sheets list).
  */
-const FRAME_RATIO = '5 / 3'
-
 export default function SpreadsheetAgent() {
-  // Same breakpoint as CaseScroll's split layout.
-  const desktop = useMediaQuery('(min-width: 960px)')
   return (
     <CaseLayout project={project} className="page-spreadsheet-agent">
       <CaseScroll
         project={project}
-        situation={C.situation}
-        opening={C.opening}
-        sections={C.sections(desktop)}
-        frameRatio={FRAME_RATIO}
-        demo={{ video: 'spreadsheet-agent', label: 'Play spreadsheet demo' }}
+        meta={C.meta}
+        summary={C.summary}
+        media={{ kind: 'video', video: 'spreadsheet-agent', poster: 'sheet-returned' }}
+        sections={C.sections}
+        outcome={C.outcome}
       />
-      <Results>{C.results}</Results>
       <NextProject current={project.id} />
     </CaseLayout>
   )

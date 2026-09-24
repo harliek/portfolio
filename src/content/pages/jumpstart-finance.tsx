@@ -36,15 +36,17 @@ import type { CaseMedia, StorySection } from '../../components/case/CaseScroll'
  * No presentation slides (competitors, business model, traction) appear on
  * the page (brief-v5 section 24). The phone PNG in the opening is the
  * redesigned cover artwork; the stage shows only the original 2024 screens,
- * and the opening caption says which is which.
+ * and the opening caption's “Original 2024 prototype” tag says which is which
+ * (round 1, R1-04: no second qualification). The role is stated once, in the
+ * metadata (R1-01).
  */
 
 export const JUMPSTART_FINANCE = {
-  meta: ['Student venture · Porto · 2024', 'Founder and Product Lead'],
+  meta: ['Founder and Product Lead · Student venture, Porto', 'June to July 2024 · Prototype and academy pitch'],
   summary: (
     <p>
-      At the European Innovation Academy in Porto, I led a <strong>five-person team</strong> as founder and product lead, building Jumpstart, a
-      financial education app for young adults. We took it from concept to a mobile prototype and a pitch.
+      At the European Innovation Academy in Porto, I led a <strong>five-person team</strong> building Jumpstart, a financial education app for young
+      adults. We took it from concept to a mobile prototype and a pitch.
     </p>
   ),
   media: {
@@ -54,7 +56,7 @@ export const JUMPSTART_FINANCE = {
     opening: {
       image: 'jf-screen-home',
       label: 'Original 2024 prototype',
-      caption: 'The home screen. The phone in the introduction is later cover artwork, not the original app.',
+      caption: 'The home screen.',
     },
   } satisfies CaseMedia,
   sections: [

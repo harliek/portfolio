@@ -100,6 +100,11 @@ export interface VideoAsset {
   variants: VideoVariant[]
   poster: ImageId
   posterTimestamp: number
+  /**
+   * Seconds. Where the first playback begins (DemoVideo applies it once, before
+   * the recording first plays; the loop then restarts from 0).
+   */
+  startAt?: number
   hasAudio: boolean
   caption: string
   provenance: Provenance
@@ -513,8 +518,8 @@ export const IMAGES = {
   'spreadsheet-agent-poster': img({
     id: 'spreadsheet-agent-poster', file: 'spreadsheet-agent-poster', width: 2940, height: 1486, widths: [960, 1600], fallback: 'jpg',
     alt: '', provenance: 'prototype-recording', synthetic: true,
-    source: 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov', role: 'Video poster', timestamp: 1.5,
-    notes: 'Opening sheet-list frame, so the poster does not repeat the 25.3s hero and step-2 still.',
+    source: 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov', role: 'Video poster', timestamp: 21,
+    notes: 'The build plan under review (21s; the cursor rests in empty space below Row limit), so a visitor who sees only the poster (reduced motion, autoplay refused) still sees the review step.',
   }),
 
   /* Valiance */
@@ -898,7 +903,7 @@ export const VIDEOS = {
       { src: '/media/video/merch-console-1600.mp4', width: 1600, height: 808, bytes: 4_806_528 },
     ],
     poster: 'merch-console-poster', posterTimestamp: 0.3, hasAudio: false,
-    caption: 'Recorded walkthrough of the Merch Console prototype.',
+    caption: 'Recorded walkthrough of the working prototype and its 240-product catalog.',
     provenance: 'independent-prototype', synthetic: true,
     source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov (2940×1486, 60fps timebase, 57.3s)',
     notes: 'Silent screen recording (variable frame rate, 60fps timebase) encoded at 30fps and trimmed at 56.3s, before the macOS capture toolbar appears. The assistant-style panel is not evidence of a live model connection.',
@@ -909,11 +914,11 @@ export const VIDEOS = {
       { src: '/media/video/spreadsheet-agent-960.mp4', width: 960, height: 486, maxViewport: 899, bytes: 992_352 },
       { src: '/media/video/spreadsheet-agent-1600.mp4', width: 1600, height: 808, bytes: 2_108_339 },
     ],
-    poster: 'spreadsheet-agent-poster', posterTimestamp: 1.5, hasAudio: false,
-    caption: 'Walkthrough from request to saved sheet.',
+    poster: 'spreadsheet-agent-poster', posterTimestamp: 21, startAt: 16.5, hasAudio: false,
+    caption: 'From request to build plan to saved sheet.',
     provenance: 'prototype-recording', synthetic: true,
     source: 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov (2940×1486, 60fps timebase, 37.8s)',
-    notes: 'Silent screen recording (variable frame rate, 60fps timebase) encoded at 30fps and trimmed at 36.4s, before the macOS capture toolbar appears.',
+    notes: 'Silent screen recording (variable frame rate, 60fps timebase) encoded at 30fps and trimmed at 36.4s, before the macOS capture toolbar appears. The first play starts at 16.5s (the request almost typed): the build plan is on screen from 19.5 to 22.5s and the saved sheet from 25.3s.',
   }),
   aristocracy: v({
     id: 'aristocracy', title: 'Aristocracy', width: 1440, height: 1080, duration: 87.6,

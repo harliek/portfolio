@@ -40,7 +40,7 @@ export interface Project {
   name: string
   /** Supporting label (carousel caption, case subtitle when none is given). */
   label: string
-  /** Very short category for the Work shelf. */
+  /** Very short context for the Work shelf and menu, as on the case page (employer or internship, or independent work). */
   category: string
   /** One short factual sentence for the Selected work index. */
   summary: string
@@ -100,7 +100,7 @@ export const PROJECTS: Project[] = [
     order: 2,
     name: 'CafePress UK',
     label: 'UK market research and storefront prototype',
-    category: 'Internship research',
+    category: 'PlanetArt internship',
     summary: 'UK market research and a localized storefront prototype during a PlanetArt internship.',
     year: '2026',
     dateRange: 'Jun–Aug 2026',
@@ -148,7 +148,7 @@ export const PROJECTS: Project[] = [
     order: 4,
     name: 'AI Leasing Agent',
     label: 'Workflow requirements and testing at Valiance Capital',
-    category: 'Workflow requirements',
+    category: 'Valiance Capital',
     summary: 'Workflow requirements and testing for a third-party leasing assistant adopted across 18 properties.',
     year: '2024–2025',
     dateRange: 'Oct 2024–Jun 2025',
@@ -172,7 +172,7 @@ export const PROJECTS: Project[] = [
     order: 5,
     name: 'Creative Production',
     label: 'Client film production at Shift Content',
-    category: 'Agency production',
+    category: 'Shift Content internship',
     summary: 'Production support on client films and related agency work during an internship at Shift Content in London.',
     year: '2026',
     dateRange: 'Jan–May 2026',

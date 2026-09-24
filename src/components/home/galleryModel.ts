@@ -92,6 +92,9 @@ export function featuredSize(item: CarouselItem): ObjectSize {
 
 export const FEATURED_SIZES: ObjectSize[] = CAROUSEL_ITEMS.map(featuredSize)
 
+/** The item featured at a fresh opening: Merchandising Platform, with About Me on its left and CafePress UK on its right. */
+export const OPENING_POS = 1
+
 export const widthClass = (w: number): WidthClass => (w >= 1000 ? 'desktop' : w >= 600 ? 'tablet' : 'phone')
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
@@ -131,14 +134,26 @@ export function floorLine(W: number, H: number, file: 'desktop' | 'mobile') {
   return file === 'mobile' ? Math.max(0.652 * H, 0.55 * H + 0.181 * W) : Math.max(0.65 * H, 0.55 * H + 0.075 * W)
 }
 
-export function buildScene(W: number, H: number, file: 'desktop' | 'mobile'): Scene {
+/**
+ * The scene for a window. `identityBottom` is the bottom of the homepage
+ * identity (name and descriptor) in stage px, when known: on portrait
+ * windows the floor rises towards it (see GALLERY.floor.portrait).
+ */
+export function buildScene(W: number, H: number, file: 'desktop' | 'mobile', identityBottom = 0): Scene {
   const cls = widthClass(W)
   const p = GALLERY.layout[cls]
   const u = sizeFactor(W, H, cls)
-  const { horizonLift } = GALLERY.floor
+  const { horizonLift, portrait } = GALLERY.floor
   const bottom = cls === 'phone' ? GALLERY.floor.phoneBottom : GALLERY.floor.bottom
-  const yb0 = H - clamp(bottom.share * H, bottom.min, bottom.max)
-  const yh = Math.min(floorLine(W, H, file) - horizonLift * H, yb0 - 60)
+  const line = floorLine(W, H, file)
+  let yb0 = H - clamp(bottom.share * H, bottom.min, bottom.max)
+  if (H > W && identityBottom > 0) {
+    // The opening's featured object stands `band` of the height below the
+    // identity, its base still on the floor in front of the far wall.
+    const front = FEATURED_SIZES[OPENING_POS].h * u * frontBoost({ cls, W, H, u }, FEATURED_SIZES)[OPENING_POS]
+    yb0 = Math.min(yb0, Math.max(line + portrait.belowLine * H, identityBottom + portrait.band * H + front))
+  }
+  const yh = Math.min(line - horizonLift * H, yb0 - 60)
   return { W, H, u, cls, p, x0: p.x0 * W, yb0, yh }
 }
 
@@ -161,7 +176,7 @@ let order: number[] = []
  * How much each object may grow at the front (phones only; see
  * GALLERY.phoneBoost), from its featured size at the scene's size factor.
  */
-export function frontBoost(scene: Scene, sizes: ObjectSize[]): number[] {
+export function frontBoost(scene: Pick<Scene, 'cls' | 'W' | 'H' | 'u'>, sizes: ObjectSize[]): number[] {
   if (scene.cls !== 'phone') return sizes.map(() => 1)
   const { max, fit, height } = GALLERY.phoneBoost
   return sizes.map((z) => clamp(Math.min((fit * scene.W) / (z.w * scene.u), (height * scene.H) / (z.h * scene.u)), 1, max))

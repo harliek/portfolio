@@ -4,9 +4,14 @@ import type { StorySection } from '../../components/case/CaseScroll'
  * Merchandising Platform (CaseScroll, `video` media: the real recording
  * autoplays on the right, so the sections carry no visuals).
  *
- * Copy is brief-v5 section 18, edited only for the copy rules (first person,
- * no colons or em dashes, word targets, the Ask sentence once). Word counts:
- * opening 36, The problem 30, What I built 44, The result 24.
+ * Copy is brief-v5 section 18, edited for the copy rules (first person, no
+ * colons or em dashes, word targets, the Ask sentence once) and round 1 of the
+ * critique (R1-01, R1-03, R1-04, R1-06): the metadata carries role, status and
+ * the synthetic-data qualification (stated once, there); "What I built" opens
+ * with the reorder calculation instead of repeating the summary's list, and
+ * states the Ask design as a choice; the 240-product catalog is named in the
+ * recording's caption (src/content/media.ts), next to the evidence. Word
+ * counts: opening 21, The problem 30, What I built 35, The result 22.
  *
  * Every statement is checked against the recording
  * (PlanetArt/Merchandising Dashboard/Dashboard Video.mov, 57.3s, read frame by
@@ -43,11 +48,11 @@ import type { StorySection } from '../../components/case/CaseScroll'
  */
 
 export const MERCHANDISING_PLATFORM = {
-  meta: ['Independent project · 2026', 'Product design and prototyping'],
+  meta: ['Product design and build · Independent project', '2026 · Working prototype on synthetic data'],
   summary: (
     <p>
-      After my PlanetArt internship, I built an independent merchandising platform using synthetic data. I brought catalog, stock, sales, and
-      replenishment information into <strong>one workspace</strong>. It is a working web app with a catalog of 240 products.
+      After my PlanetArt internship, I built an independent merchandising platform. I brought catalog, stock, sales, and replenishment information into{' '}
+      <strong>one workspace</strong>.
     </p>
   ),
   sections: [
@@ -66,9 +71,8 @@ export const MERCHANDISING_PLATFORM = {
       title: 'What I built',
       body: (
         <p>
-          I connected catalog records, stock levels, and sales history with cost, price, margin, and profit. The platform{' '}
-          <strong>calculates reorder quantities</strong>, accounts for vendor minimum order quantities, and <strong>shows the calculation</strong> before
-          export. The Ask view matches questions to a fixed set of query patterns.
+          The platform <strong>calculates reorder quantities</strong>, accounts for vendor minimum order quantities, and{' '}
+          <strong>shows the calculation</strong> before export. I kept Ask to a fixed set of query patterns so every answer shows the query it ran.
         </p>
       ),
     },
@@ -78,8 +82,7 @@ export const MERCHANDISING_PLATFORM = {
     title: 'The result',
     body: (
       <p>
-        Merchandisers can evaluate stock and reorder decisions in one place, check the reasoning behind each recommendation, and export their work as CSV or
-        PDF.
+        In the working prototype, a merchandiser can check the reasoning behind each reorder and export the order sheet as CSV or PDF.
       </p>
     ),
   } satisfies StorySection,

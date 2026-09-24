@@ -9,10 +9,11 @@ const project = projectById('spreadsheet-agent')
 
 /**
  * Spreadsheet Agent: the real recording (request, build plan, saved sheet)
- * autoplays beside the story (CaseScroll video media). Its poster, shown when
- * autoplay is refused or motion is reduced, is the saved sheet beside the
- * request and the assistant's reply (25.3s, `sheet-returned`), which is more
- * representative than the recording's first frame (the All Sheets list).
+ * autoplays beside the story (CaseScroll video media). Its first play starts
+ * at 16.5s (the manifest's startAt), so the build plan, the page's key
+ * decision, appears within about 3s; the loop then restarts from 0. Its poster
+ * (the manifest default), shown when autoplay is refused or motion is
+ * reduced, is the build plan under review (21s).
  */
 export default function SpreadsheetAgent() {
   return (
@@ -21,7 +22,7 @@ export default function SpreadsheetAgent() {
         project={project}
         meta={C.meta}
         summary={C.summary}
-        media={{ kind: 'video', video: 'spreadsheet-agent', poster: 'sheet-returned' }}
+        media={{ kind: 'video', video: 'spreadsheet-agent' }}
         sections={C.sections}
         outcome={C.outcome}
       />

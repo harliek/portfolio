@@ -5,6 +5,7 @@ import { TRANSCRIPTS } from '../../../content/transcripts'
 import { useMediaQuery } from '../../../hooks/useMediaQuery'
 import { goToSection } from '../../layout/RouteFocus'
 import { CoverSlot } from '../../transition/CoverSlot'
+import { metaLine } from '../../case/metaLine'
 import { StoryTracker } from '../../case/storyTracker'
 import { FilmPlayer } from './FilmPlayer'
 
@@ -175,7 +176,7 @@ export function FilmScroll({ project, meta, summary, films, coverScale = 0.72 }:
             <p className="cs-meta">
               {meta.map((line) => (
                 <span key={line} className="cs-meta__line">
-                  {line}
+                  {metaLine(line)}
                 </span>
               ))}
             </p>

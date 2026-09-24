@@ -4,7 +4,7 @@
  *   <CaseLayout project={project} className="page-x">
  *     <CaseScroll
  *       project={project}
- *       meta={['Independent project · 2026', 'Product design and prototyping']}   // lines, no colons
+ *       meta={['Product design and build · Independent project', '2026 · Working prototype']}   // Role · Organization, Dates · Status; no colons
  *       summary={<p>First-person opening, 35 to 55 words.</p>}
  *       media={{ kind: 'video', video: 'merch-console' }}                          // autoplaying recording
  *       //  or { kind: 'states', frameRatio: '16 / 9', opening: { image: 'x-full', caption: '…' } }
@@ -36,7 +36,8 @@
  *   `highlight` (ONE region in percent of the image: x, y from its top-left), `expandTo` (the image
  *   the click opens, e.g. the full conversation behind a crop; default `image`), `alt` (overrides
  *   the manifest alt), `label` (a short visible tag before the caption, e.g. 'Illustrative
- *   conversation'; state a qualification once).
+ *   conversation'; state a qualification once). The desktop stage shows the label with every
+ *   state; the stacked figures show it only the first time it appears; the enlarged view always.
  * - Every stage image is itself the zoom control (hover: 1.5% larger with an accent edge; click or
  *   Enter opens the shared ImageDialog; Escape or Close returns focus).
  * - Ids: section ids become DOM ids (the h2 is `${id}-title`); keep them unique on the page.
@@ -64,6 +65,7 @@ import type { Project } from '../../content/projects'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { DemoVideo } from '../media/DemoVideo'
 import { CoverSlot } from '../transition/CoverSlot'
+import { metaLine } from './metaLine'
 import { InlineVisual, StatesStage } from './StatesStage'
 import { StoryTracker } from './storyTracker'
 
@@ -97,7 +99,7 @@ export type CaseMedia =
 
 export interface CaseScrollProps {
   project: Project
-  /** Metadata lines, no colons (e.g. ['Independent project · 2026', 'Product design and prototyping']). */
+  /** Two metadata lines, no colons: Role · Organization, then Dates · Status (e.g. ['Leasing and Operations Associate · Valiance Capital', 'October 2024 to June 2025 · Adopted across all 18 properties']). */
   meta: string[]
   /** First-person opening, 35 to 55 words. */
   summary: ReactNode
@@ -133,17 +135,22 @@ export function CaseScroll({ project, meta, summary, media, sections, outcome, c
   // States media: the opening, then every section that brings a visual; each section shows the latest state at or before it.
   const states: Visual[] = []
   const sectionState: number[] = []
-  // Stacked: a section's figure only where the image changes (the same screenshot with a moved highlight is not repeated).
+  // Stacked: a section's figure only where the image changes (the same screenshot with a moved highlight is not repeated),
+  // and a figure's label only the first time it appears on the page (the opening figure first).
   const inline: Array<Visual | undefined> = []
+  const inlineLabel: boolean[] = []
   if (media.kind === 'states') {
     states.push(media.opening)
     let shown = media.opening.image
+    const labels = new Set(media.opening.label ? [media.opening.label] : [])
     story.forEach((s) => {
       if (s.visual) states.push(s.visual)
       sectionState.push(states.length - 1)
       const fresh = s.visual && s.visual.image !== shown ? s.visual : undefined
       if (fresh) shown = fresh.image
       inline.push(fresh)
+      inlineLabel.push(Boolean(fresh?.label && !labels.has(fresh.label)))
+      if (fresh?.label) labels.add(fresh.label)
     })
   }
   const target = active < 0 ? 0 : (sectionState[active] ?? 0)
@@ -160,7 +167,7 @@ export function CaseScroll({ project, meta, summary, media, sections, outcome, c
             <p className="cs-meta">
               {meta.map((line) => (
                 <span key={line} className="cs-meta__line">
-                  {line}
+                  {metaLine(line)}
                 </span>
               ))}
             </p>
@@ -200,7 +207,7 @@ export function CaseScroll({ project, meta, summary, media, sections, outcome, c
               {section.title}
             </h2>
             <div className="case-prose">{asProse(section.body)}</div>
-            {stacked && inline[i] && <InlineVisual visual={inline[i]} sizes={STAGE_SIZES} />}
+            {stacked && inline[i] && <InlineVisual visual={inline[i]} sizes={STAGE_SIZES} showLabel={inlineLabel[i]} />}
           </section>
         ))}
       </div>

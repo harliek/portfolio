@@ -42,7 +42,7 @@ export const GALLERY = {
    * grow by up to `max`, within `fit` of the width and `height` of the
    * window height (its neighbours keep their size).
    */
-  phoneBoost: { max: 1.6, fit: 0.7, height: 0.45 },
+  phoneBoost: { max: 1.6, fit: 0.76, height: 0.45 },
 
   /** Layout per width class: desktop (≥ 1000px), tablet (600 to 999px), phone (< 600px). */
   layout: {
@@ -72,7 +72,7 @@ export const GALLERY = {
     /** Tablets show the featured object and its two neighbours (the outer ones only while passing). */
     tablet: { x0: 0.5, k: 0.8, c: 0.35, turnMax: 0.26, turnReach: 1.35, gaps: [22, 36, 48, 56], tuck: 50, bias: 0, fade: [1.35, 1.9], fadeLeft: [1.35, 1.9] },
     /** Phones: the featured slot stands right of centre, so the left neighbour (About Me at the opening) shows whole with its name and the right one only peeks in. */
-    phone: { x0: 0.6, k: 0.55, c: 0.35, turnMax: 0.18, turnReach: 1.35, gaps: [10, 22, 30, 40], tuck: 26, bias: 0, fade: [1.3, 1.85], fadeLeft: [1.3, 1.85] },
+    phone: { x0: 0.6, k: 0.65, c: 0.35, turnMax: 0.18, turnReach: 1.35, gaps: [10, 22, 30, 40], tuck: 40, bias: 0, fade: [1.3, 1.85], fadeLeft: [1.3, 1.85] },
   },
 
   /**
@@ -82,8 +82,18 @@ export const GALLERY = {
    * draws it: the loop's line at 65% of its frame, object-fit cover at 50%
    * 55%), minus `horizonLift` of the window height. Phones stand the
    * objects higher (`phoneBottom`), nearer the middle of the tall window.
+   * Portrait windows (tablets, phones) raise the floor further, until the
+   * opening's featured object stands `portrait.band` of the window height
+   * below the identity, but never closer than `portrait.belowLine` of the
+   * height to the far floor line (the objects stay on the floor). The
+   * arrows stay at the bottom edge.
    */
-  floor: { bottom: { share: 0.145, min: 96, max: 150 }, phoneBottom: { share: 0.28, min: 96, max: 250 }, horizonLift: 0.02 },
+  floor: {
+    bottom: { share: 0.145, min: 96, max: 150 },
+    phoneBottom: { share: 0.28, min: 96, max: 250 },
+    horizonLift: 0.02,
+    portrait: { band: 0.22, belowLine: 0.025 },
+  },
 
   /** Distance dimming (opacity) at distance a: 1 − linear·a − square·a². */
   dim: { linear: 0.08, square: 0.025 },

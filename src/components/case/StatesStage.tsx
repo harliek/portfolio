@@ -246,10 +246,10 @@ function HighlightBox({ rect, dim, on }: { rect: Rect; dim: boolean; on?: boolea
 }
 
 /** The caption line: an optional label (e.g. "Illustrative conversation"), a space, then the caption. */
-function Caption({ visual }: { visual: Visual }) {
+function Caption({ visual, showLabel = true }: { visual: Visual; showLabel?: boolean }) {
   return (
     <>
-      {visual.label && (
+      {showLabel && visual.label && (
         <>
           <span className="cs-label">{visual.label}</span>{' '}
         </>
@@ -420,12 +420,16 @@ export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) 
  * A stacked figure in reading order: the image at its own ratio (bounded by
  * the viewport height, so phones never fill the screen), its highlight shown
  * at once, the caption below, and the same direct zoom.
+ *
+ * `showLabel={false}`: the label (e.g. "Illustrative conversation") has
+ * already appeared in an earlier figure on the page, so this caption leaves it
+ * out (a qualification is stated once). The enlarged view still carries it.
  */
-export function InlineVisual({ visual, sizes, priority = false }: { visual: Visual; sizes: string; priority?: boolean }) {
+export function InlineVisual({ visual, sizes, priority = false, showLabel = true }: { visual: Visual; sizes: string; priority?: boolean; showLabel?: boolean }) {
   const captionId = useId()
   const transparent = isTransparent(visual)
   const r = imageRatio(visual)
-  const hasCaption = Boolean(visual.caption || visual.label)
+  const hasCaption = Boolean(visual.caption || (showLabel && visual.label))
   return (
     <figure className="cs-figure" data-variant="inline">
       <div className="cs-stage" data-kind="inline" style={{ '--stage-r': r } as CSSProperties}>
@@ -439,7 +443,7 @@ export function InlineVisual({ visual, sizes, priority = false }: { visual: Visu
       </div>
       {hasCaption && (
         <figcaption id={captionId} className="cs-caption">
-          <Caption visual={visual} />
+          <Caption visual={visual} showLabel={showLabel} />
         </figcaption>
       )}
     </figure>

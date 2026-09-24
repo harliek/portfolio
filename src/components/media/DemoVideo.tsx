@@ -19,6 +19,14 @@ import { ResponsiveImage } from './ResponsiveImage'
  *   hidden), resumed when it returns, unless the visitor paused it: an
  *   explicit pause is never overridden.
  * - Reduced motion: no autoplay; the poster with "Play demo".
+ * - A manifest `startAt` (e.g. the Spreadsheet Agent's 16.5s, just before its
+ *   build plan appears) is applied once, right before the recording first
+ *   plays (by itself, through "Play demo", or in the larger view); the loop
+ *   then restarts from 0. Nothing seeks until playback is requested, so the
+ *   poster stays for visitors who never start it.
+ * - While "Play demo" is offered, the poster image lies over the player, so a
+ *   seek or a closed larger view never replaces it with an arbitrary frame;
+ *   likewise while the first seek to the start time is under way.
  * - Expand (a small button inside the player, top right, never on the native
  *   control bar): a larger view continues from the same time; the inline copy
  *   is paused first, so two copies never play. Closing restores the inline
@@ -83,6 +91,7 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
   const videoRef = useRef<HTMLVideoElement>(null)
   const expandRef = useRef<HTMLButtonElement>(null)
   const [src] = useState(() => pickVariant(asset).src)
+  const startAt = asset.startAt ?? 0
   const [status, setStatus] = useState<Status>('idle')
   const [hasFrame, setHasFrame] = useState(false)
   const [expanded, setExpanded] = useState<Expanded | null>(null)
@@ -90,15 +99,30 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
   const [posterSrc, setPosterSrc] = useState<string>()
   /** The recording itself is in full screen (Expand on a phone or touch screen): its native controls are always there. */
   const [fullscreen, setFullscreen] = useState(false)
+  /** Seeking to the start time from a frame already on screen: the poster covers the frame until the seek lands. */
+  const [covering, setCovering] = useState(false)
   const posterReady = posterSrc !== undefined
   /** Imperative state read by event handlers (never rendered). */
-  const ctl = useRef({ inView: false, userPaused: false, selfPause: false, autoStart: false, userStarted: false, expanded: false, reduced, posterReady })
+  const ctl = useRef({ inView: false, userPaused: false, selfPause: false, autoStart: false, userStarted: false, expanded: false, reduced, posterReady, startDone: !(startAt > 0) })
+
+  /** The manifest's start time, once, when playback is about to begin (needs the recording's metadata; see onLoadedMetadata). */
+  const seekToStart = useCallback(() => {
+    const v = videoRef.current
+    const c = ctl.current
+    if (!v || c.startDone || v.readyState < HTMLMediaElement.HAVE_METADATA) return
+    c.startDone = true
+    const last = Number.isFinite(v.duration) ? v.duration - 1 : startAt
+    if (v.currentTime >= 0.05) return
+    if (v.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) setCovering(true)
+    v.currentTime = Math.max(0, Math.min(startAt, last))
+  }, [startAt])
 
   /** Starts playback by itself when allowed: visible, not paused by the visitor, not expanded, no reduced motion. */
   const tryPlay = useCallback(() => {
     const v = videoRef.current
     const c = ctl.current
     if (!v || !v.paused || !c.posterReady || c.reduced || c.userPaused || c.expanded || !c.inView || document.visibilityState === 'hidden') return
+    seekToStart()
     c.autoStart = true
     v.play().then(
       () => {
@@ -110,7 +134,7 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
         if (err instanceof DOMException && err.name === 'NotAllowedError') setStatus('blocked')
       },
     )
-  }, [])
+  }, [seekToStart])
 
   /** Pauses without counting as the visitor's pause. */
   const autoPause = useCallback(() => {
@@ -219,6 +243,7 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
     const v = videoRef.current
     if (!v) return
     ctl.current.userPaused = false
+    seekToStart()
     v.play().then(
       () => v.focus({ preventScroll: true }),
       () => {},
@@ -232,15 +257,19 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
     // Blocked or never started: the visitor asked to watch, so the larger view plays (a user gesture). A paused
     // recording stays paused.
     const play = playing || status === 'blocked' || (status === 'idle' && !reduced)
+    const c = ctl.current
     if (window.matchMedia(NATIVE_FULLSCREEN).matches) {
       // The same element in full screen: it simply continues (started first, within the gesture, if the visitor
       // asked to watch). Without full screen support, the dialog below takes over.
       if (play && !playing) playNow()
       if (enterFullscreen(v)) return
     }
-    ctl.current.expanded = true
+    // Never played yet and about to play: the larger view begins where the first play would.
+    const time = !c.startDone && play ? startAt : v.currentTime
+    if (play) c.startDone = true
+    c.expanded = true
     autoPause()
-    setExpanded({ time: v.currentTime, play, muted: v.muted, volume: v.volume })
+    setExpanded({ time, play, muted: v.muted, volume: v.volume })
   }
 
   const closeExpanded = (result: { time: number; playing: boolean; muted: boolean; volume: number }) => {
@@ -268,11 +297,25 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
   const showPlay = status === 'blocked' || (status === 'idle' && reduced)
   const label = caption ?? asset.caption
 
+  const onLoadedMetadata = () => {
+    // Playback was requested before the metadata arrived: begin at the start time, before the first frame shows.
+    if (videoRef.current && !videoRef.current.paused) seekToStart()
+  }
+
   return (
     <figure className="cs-figure cs-demo" data-variant={variant}>
       <div ref={stageRef} className="cs-stage" data-kind="video" data-status={status} style={{ '--stage-r': ratio } as CSSProperties}>
-        {/* Drawn underneath until the recording has a frame: the stage is never empty. */}
-        {!hasFrame && <ResponsiveImage image={posterId} sizes={sizes} decorative fit="contain" priority className="cs-demo__poster" />}
+        {/* Drawn underneath until the recording has a frame (the stage is never empty), and over it while "Play demo" is offered. */}
+        {(!hasFrame || showPlay || covering) && (
+          <ResponsiveImage
+            image={posterId}
+            sizes={sizes}
+            decorative
+            fit="contain"
+            priority
+            className={showPlay || covering ? 'cs-demo__poster cs-demo__poster--over' : 'cs-demo__poster'}
+          />
+        )}
         <video
           ref={videoRef}
           className="cs-demo__video"
@@ -287,7 +330,15 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
           preload={!posterReady ? 'none' : reduced ? 'metadata' : 'auto'}
           aria-label={asset.title}
           aria-describedby={captionId}
-          onLoadedData={() => setHasFrame(true)}
+          onLoadedMetadata={onLoadedMetadata}
+          // A frame at the start time: after the seek, never the first frame on its way there.
+          onLoadedData={() => {
+            if (!videoRef.current?.seeking) setHasFrame(true)
+          }}
+          onSeeked={() => {
+            setHasFrame(true)
+            setCovering(false)
+          }}
           onPlay={onPlay}
           onPause={onPause}
         />

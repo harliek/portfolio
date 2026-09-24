@@ -113,6 +113,8 @@ const FRAMES = [
   ['sheet-returned', 'Spreadsheet Agent/Spreadsheet Video.mov', 25.3],
   ['sheet-list', 'Spreadsheet Agent/Spreadsheet Video.mov', 35.5],
   ['sheet-start', 'Spreadsheet Agent/Spreadsheet Video.mov', 1.5],
+  // The Spreadsheet Agent poster: the build plan under review (the cursor rests below Row limit).
+  ['sheet-poster', 'Spreadsheet Agent/Spreadsheet Video.mov', 21.0],
   ['sheet-plan', 'Spreadsheet Agent/Spreadsheet Video.mov', 20.5],
   // Sources of the Spreadsheet Agent case crops (scripts/crops/spreadsheet-agent.json).
   ['sheet-request-typed', 'Spreadsheet Agent/Spreadsheet Video.mov', 17.7],
@@ -343,7 +345,7 @@ async function images() {
   for (const n of ['sheet-plan', 'merch-replenish', 'merch-ask', 'merch-promotions']) {
     dims[n] = await variants(n, F(n), [800, 1200, 1600], { quality: 'ui' })
   }
-  dims['spreadsheet-agent-poster'] = await variants('spreadsheet-agent-poster', F('sheet-start'), [960, 1600], { quality: 'ui' })
+  dims['spreadsheet-agent-poster'] = await variants('spreadsheet-agent-poster', F('sheet-poster'), [960, 1600], { quality: 'ui' })
 
   // Valiance
   dims['valiance-messages'] = await variants('valiance-messages', src('Valiance Capital/messages.png'), [800, 1200, 1672], { quality: 'ui' })

@@ -505,6 +505,11 @@
   object-fit: contain;
 }
 
+/* While "Play demo" is offered, the poster covers whatever frame the player holds. */
+.cs-demo__poster--over {
+  z-index: 1;
+}
+
 .cs-demo__video {
   display: block;
   background: transparent;

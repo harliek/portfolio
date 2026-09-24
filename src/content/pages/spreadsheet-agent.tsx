@@ -4,13 +4,17 @@ import type { StorySection } from '../../components/case/CaseScroll'
  * Spreadsheet Agent (CaseScroll, `video` media: the real recording autoplays
  * on the right, so the sections carry no visuals).
  *
- * Copy is brief-v5 section 19, edited only for the copy rules and lead
- * decision 4 (one qualification, "The AI responses in this prototype are
- * simulated.", stated once in the opening next to the claim it qualifies; no
- * "retrieves data" claim). The opening adds the homepage sentence (brief-v5
- * section 9, "I designed a review step before a request becomes a
- * spreadsheet"). Word counts: opening 35, The problem 37, My approach 40,
- * The result 37.
+ * Copy is brief-v5 section 19, edited for the copy rules and lead decision 4
+ * (one qualification, the simulated AI responses, stated once; no "retrieves
+ * data" claim). Round 1 of the critique (R1-01, R1-04) moved that
+ * qualification into the metadata's status line ("Prototype with simulated AI
+ * responses") and removed the result's first sentence, which repeated the
+ * opening. The opening adds the homepage sentence (brief-v5 section 9, "I
+ * designed a review step before a request becomes a spreadsheet"). Word
+ * counts: opening 28, The problem 37, My approach 40, The result 20.
+ *
+ * The recording starts at 16.5s on its first play (VIDEOS startAt), so the
+ * build plan appears within about 3s; its poster is the plan at 21s.
  *
  * Every statement is checked against the recording
  * (Spreadsheet Agent/Spreadsheet Video.mov, 37.8s, read frame by frame; the
@@ -37,11 +41,11 @@ import type { StorySection } from '../../components/case/CaseScroll'
  */
 
 export const SPREADSHEET_AGENT = {
-  meta: ['Independent project · 2026', 'Product design and prototyping'],
+  meta: ['Product design and build · Independent project', '2026 · Prototype with simulated AI responses'],
   summary: (
     <p>
       I built a spreadsheet agent that turns a natural language request into a structured, editable sheet. I designed <strong>a review step</strong>{' '}
-      before a request becomes a sheet. The AI responses in this prototype are simulated.
+      before a request becomes a sheet.
     </p>
   ),
   sections: [
@@ -71,8 +75,7 @@ export const SPREADSHEET_AGENT = {
     title: 'The result',
     body: (
       <p>
-        A user can move from a written request to a usable spreadsheet without building its structure manually. Reviewing the plan first makes it easier to
-        catch the wrong columns, filters, or interpretation before the sheet is created.
+        Reviewing the plan first makes it easier to catch the wrong columns, filters, or interpretation before the sheet is created.
       </p>
     ),
   } satisfies StorySection,

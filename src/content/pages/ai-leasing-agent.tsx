@@ -41,7 +41,7 @@ const LABEL = 'Illustrative conversation'
 const view = (v: Omit<Visual, 'label' | 'expandTo'>): Visual => ({ ...v, label: LABEL, expandTo: FULL })
 
 export const AI_LEASING_AGENT = {
-  meta: ['Leasing and Operations Associate · Valiance Capital', 'October 2024 to June 2025'],
+  meta: ['Leasing and Operations Associate · Valiance Capital', 'October 2024 to June 2025 · Adopted across all 18 properties'],
   summary: (
     <p>
       At Valiance Capital, I <strong>proposed an AI leasing agent</strong>, wrote its requirements and workflow documentation, and developed test cases for its

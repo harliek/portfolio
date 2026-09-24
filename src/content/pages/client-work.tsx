@@ -3,8 +3,10 @@ import type { VideoId } from '../media'
 
 /**
  * Creative Production (route /work/creative-production; the files keep the
- * older client-work name). Copy is brief-v5 section 22, edited only for the
- * copy rules. FilmScroll lays it out.
+ * older client-work name). Copy is brief-v5 section 22, edited for the copy
+ * rules; round 1 of the critique (R1-01, R1-04) gave the metadata the role
+ * (the résumé title, as on About), dates and status, and shortened the
+ * summary so the films' sections carry the specifics. FilmScroll lays it out.
  *
  * Evidence (docs/content-provenance.md, Shift Content)
  * - Harlie's weekly journals and Data 197 report (Shift Content/Shift
@@ -26,7 +28,7 @@ import type { VideoId } from '../media'
  *
  * Harlie's own statements kept as written and reported as not shown by the
  * sources: interview "audio" (the sources say equipment and lighting),
- * "operated the camera" (the sources say camera setup and B-roll), the
+ * "camera work on set" (the sources say camera setup and B-roll), the
  * Nickleby material being "for its site", and filming at the run-club event
  * for the final film (the sources say production support and event
  * coverage). The investment-firm shoot in the journal is not named, so
@@ -57,11 +59,10 @@ export interface ClientFilm {
 }
 
 export const CLIENT_WORK = {
-  meta: ['Shift Content internship · London · 2026', 'Film and campaign production'],
+  meta: ['Creative Strategy and Client Solutions Intern · Shift Content, London', 'January to May 2026 · Three client films'],
   summary: (
     <p>
-      At Shift Content in London, I worked directly with the founder to produce client films. I set up lighting and interview audio,{' '}
-      <strong>operated the camera, filmed B-roll</strong> and behind-the-scenes footage, and worked on editing.
+      At Shift Content in London, I worked directly with the founder on client films, from <strong>lighting and camera work on set</strong> to editing.
     </p>
   ),
   films: [

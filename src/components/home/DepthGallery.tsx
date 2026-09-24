@@ -8,7 +8,7 @@ import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { isPlainClick, openProject, warmProject } from '../transition/projectTransition'
 import { notePosition, persistPosition, recallPosition } from './carouselMemory'
 import { GalleryObject } from './GalleryObject'
-import { buildScene, FEATURED_SIZES, frontBoost, mod, place, type Placement, type Scene } from './galleryModel'
+import { buildScene, FEATURED_SIZES, frontBoost, mod, OPENING_POS, place, type Placement, type Scene } from './galleryModel'
 
 /** Debug handle for browser checks in development. */
 interface GalleryDebug {
@@ -29,8 +29,6 @@ declare global {
 }
 
 const N = CAROUSEL_ITEMS.length
-/** The opening: Merchandising Platform featured, About Me on its left, CafePress UK on its right. */
-const OPENING_POS = 1
 const TOUCH_QUERY = '(hover: none), (pointer: coarse)'
 /** Open menus and dialogs keep their own wheel scrolling. */
 const OWN_SCROLL = '.work-shelf[data-open], .site-menu[data-open], [role="dialog"], [aria-modal="true"], dialog'
@@ -169,8 +167,14 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
       nameRow = Math.max(...labels.map((label) => label.querySelector<HTMLElement>('.gobj__name')?.offsetHeight ?? 24))
     }
 
+    /** The bottom of the identity (name and descriptor) in stage px; portrait windows raise the floor towards it. */
+    const identityBottom = () => {
+      const id = root.closest('.home')?.querySelector('.home-id__block')
+      return id ? id.getBoundingClientRect().bottom - stage.getBoundingClientRect().top : 0
+    }
+
     const measure = () => {
-      scene = buildScene(stage.clientWidth, stage.clientHeight, floorFile())
+      scene = buildScene(stage.clientWidth, stage.clientHeight, floorFile(), identityBottom())
       const { u } = scene
       root.style.setProperty('--u', u.toFixed(4))
       root.dataset.cls = scene.cls
@@ -843,8 +847,8 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
     let alive = true
     void document.fonts?.ready.then(() => {
       if (!alive) return
-      measureLabels()
-      written.lt.fill('')
+      // The names' widths and the identity's height (the portrait floor) follow the loaded fonts.
+      measure()
       layout()
     })
 

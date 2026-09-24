@@ -4,8 +4,11 @@ import type { CaseMedia, Rect, StorySection } from '../../components/case/CaseSc
  * CafePress UK (route /work/cafepress-uk, CaseScroll states media).
  *
  * Copy is brief-v5 section 23 under the copy rules and lead decision 3 (H1
- * “CafePress UK”; the launch framing stays in the metadata and the copy, and
- * nothing says the store launched). Edits to the brief's text, each for
+ * “CafePress UK”; nothing says the store launched). Round 1 of the critique
+ * (R1-01, R1-03, R1-05): the metadata gives the role and status; the launch
+ * is framed once, in the summary (“for a potential UK launch”), and the result
+ * speaks of planning “a UK launch”; What I found ends with the recommendation
+ * (deck p. 8, recommendations 1 and 2). Edits to the brief's text, each for
  * accuracy or repetition only:
  * - “UK competitors” → “Competitors in the UK market”. The deck's competitor
  *   slide (p. 5) reviews Printful, Prodigi, Printify, Vistaprint and 4imprint
@@ -23,7 +26,10 @@ import type { CaseMedia, Rect, StorySection } from '../../components/case/CaseSc
  *   (“adapt an existing B2B model with targeted localization”).
  * - What I found: deck p. 5, the four “Key patterns observed” (category-led,
  *   recognizable brands, eco-friendly products, UK offerings mirroring
- *   US-style merchandising); p. 6 takeaway.
+ *   US-style merchandising); p. 6 takeaway; p. 8 “UK Launch Recommendations”
+ *   1 (“Adapt the existing US B2B model”, rather than “creating a completely
+ *   separate strategy”) and 2 (“Localize the assortment selectively”,
+ *   “UK-relevant brands and eco-friendly product options”).
  * - What I made: uk web.png (Basket, Fast UK Delivery, UK-Based Support, a
  *   pound sign, a 020 number with Mon–Fri hours, eight categories); deck p. 8
  *   and p. 9 (recommendations). The prototype shows no prices, so the page
@@ -45,7 +51,7 @@ const UK_HEADLINE: Rect = { x: 9, y: 69.6, w: 90.6, h: 27.9 }
 const FULL = 'cp-storefront' as const
 
 export const CAFEPRESS_UK = {
-  meta: ['UK launch research · PlanetArt internship', 'June to August 2026'],
+  meta: ['Product Operations and Merchandising Intern · PlanetArt', 'June to August 2026 · Market research and storefront prototype'],
   summary: (
     <p>
       During my PlanetArt internship, I researched the UK B2B promotional-products market and coded a <strong>localized CafePress storefront prototype</strong>{' '}
@@ -74,7 +80,8 @@ export const CAFEPRESS_UK = {
       body: (
         <p>
           Competitors in the UK market used familiar category-led merchandising, prominently featured recognizable brands, and consistently offered eco-friendly
-          products. <strong>The overlap with the US market</strong> gave CafePress a clear starting point for the launch.
+          products. So I recommended <strong>adapting the US B2B model</strong> rather than building a separate UK strategy, and localizing the assortment
+          around UK brands and eco-friendly products.
         </p>
       ),
       visual: {
@@ -90,7 +97,7 @@ export const CAFEPRESS_UK = {
       body: (
         <p>
           I turned the research into the coded storefront, with <strong>UK wording, local contact details</strong>, and a category structure for the B2B offer. I
-          presented it with my market research and recommendations for the launch.
+          presented it with my market research and recommendations.
         </p>
       ),
       visual: {
@@ -106,8 +113,8 @@ export const CAFEPRESS_UK = {
     title: 'The result',
     body: (
       <p>
-        I gave the team <strong>a concrete UK storefront concept</strong> and a researched approach to assortment and localization that they could use to plan the
-        launch.
+        I gave the team <strong>a concrete UK storefront concept</strong> and a researched approach to assortment and localization that they could use to plan a
+        UK launch.
       </p>
     ),
     visual: {

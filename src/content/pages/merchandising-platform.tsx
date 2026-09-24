@@ -14,8 +14,11 @@ import type { StorySection } from '../../components/case/CaseScroll'
  * (R2-04): What I built states the two judgments with their reasons (the
  * quantity shows its working, and the platform stops at an export so the
  * merchandiser decides) instead of a feature list, and The result says what
- * the prototype demonstrates without repeating it. Word counts: opening 21,
- * The problem 30, What I built 48, The result 24.
+ * the prototype demonstrates without repeating it. Round 5 (R5-01, R5-03):
+ * the summary drops the “independent” the metadata already gives, What I
+ * built names Harlie as the one who made each choice and says what Ask is,
+ * and The result no longer repeats the metadata's “working prototype”. Word
+ * counts: opening 20, The problem 30, What I built 50, The result 20.
  *
  * The recording starts at 11s on its first play (VIDEOS startAt), just before
  * the Canyon Pouch drawer opens with its 200 unit quantity and “Show the
@@ -61,7 +64,7 @@ export const MERCHANDISING_PLATFORM = {
   meta: ['Product design and build · Independent project', '2026 · Working prototype on synthetic data'],
   summary: (
     <p>
-      After my PlanetArt internship, I built an independent merchandising platform. I brought catalog, stock, sales, and replenishment information into{' '}
+      After my PlanetArt internship, I built a merchandising platform that brings catalog, stock, sales, and replenishment information into{' '}
       <strong>one workspace</strong>.
     </p>
   ),
@@ -81,8 +84,9 @@ export const MERCHANDISING_PLATFORM = {
       title: 'What I built',
       body: (
         <p>
-          Each reorder quantity <strong>shows its working</strong>, including any vendor minimum that sets it, and the platform stops at an exported order
-          sheet rather than placing orders, so the merchandiser makes the call. I kept Ask to fixed query patterns so every answer shows the query it ran.
+          I made each reorder quantity <strong>show its working</strong>, including any vendor minimum that sets it. The platform stops at an exported
+          order sheet rather than placing orders, so the merchandiser makes the call. I limited the Ask feature to fixed query patterns, so every answer
+          shows the query it ran.
         </p>
       ),
     },
@@ -92,7 +96,7 @@ export const MERCHANDISING_PLATFORM = {
     title: 'The result',
     body: (
       <p>
-        In the working prototype, a merchandiser goes from the products that need a decision to a checked order sheet, exported as CSV or PDF.
+        A merchandiser goes from the products that need a decision to a checked order sheet, exported as CSV or PDF.
       </p>
     ),
   } satisfies StorySection,

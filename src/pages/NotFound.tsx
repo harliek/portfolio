@@ -8,7 +8,6 @@ export function NotFound() {
       <h1 className="t-display" tabIndex={-1}>
         Page not found
       </h1>
-      <p className="t-body t-muted">This page is unavailable. You can return to the work.</p>
       <ul className="not-found__links">
         <li>
           <Link className="button" to="/">

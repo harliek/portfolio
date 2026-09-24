@@ -14,8 +14,11 @@ import type { StorySection } from '../../components/case/CaseScroll'
  * (R2-05): My approach gives the reason for the extra step, and The result
  * states what the recording shows the prototype producing (25.3s) instead of
  * restating the rationale; the synthetic dataset is visible in the recording
- * and the metadata keeps the one qualification. Word counts: opening 28, The
- * problem 37, My approach 40, The result 26.
+ * and the metadata keeps the one qualification. Round 5 (R1-04 again): the
+ * review step is stated once in each place, with its detail only in My
+ * approach (no bold there), which names Harlie as the one who made the
+ * choice. Word counts: opening 24, The problem 37, My approach 34, The
+ * result 21.
  *
  * The recording starts at 16.5s on its first play (VIDEOS startAt), so the
  * build plan appears within about 3s; its poster is the plan at 21s.
@@ -48,8 +51,8 @@ export const SPREADSHEET_AGENT = {
   meta: ['Product design and build · Independent project', '2026 · Prototype with simulated AI responses'],
   summary: (
     <p>
-      I built a spreadsheet agent that turns a natural language request into a structured, editable sheet. I designed <strong>a review step</strong>{' '}
-      before a request becomes a sheet.
+      I built a spreadsheet agent that turns a natural language request into a structured, editable sheet, with <strong>a review step</strong> before
+      anything is built.
     </p>
   ),
   sections: [
@@ -68,8 +71,8 @@ export const SPREADSHEET_AGENT = {
       title: 'My approach',
       body: (
         <p>
-          Before building anything, the agent shows <strong>a plan</strong> with its source, filters, columns, sort order, and any words it could not use.
-          The extra step means a wrong column or filter can be caught before the sheet exists, not after.
+          I made the agent show its plan first, with the source, filters, columns, sort order, and any words it could not use, so a wrong column or
+          filter is caught before the sheet exists.
         </p>
       ),
     },
@@ -79,7 +82,7 @@ export const SPREADSHEET_AGENT = {
     title: 'The result',
     body: (
       <p>
-        In the prototype, one written request becomes a reviewed plan and then a saved, editable sheet of 1,200 rows and six columns, with a CSV download.
+        In the prototype, one written request becomes a saved, editable sheet of 1,200 rows and six columns, with a CSV download.
       </p>
     ),
   } satisfies StorySection,

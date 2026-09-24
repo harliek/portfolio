@@ -14,6 +14,10 @@ import type { CaseMedia, Rect, StorySection } from '../../components/case/CaseSc
  * recommendations. “UK competitors” reads “Competitors in the UK market”: the
  * deck's competitor slide (p. 5) reviews Printful, Prodigi, Printify,
  * Vistaprint and 4imprint as comparable businesses; not all are UK companies.
+ * Round 5 (R5-01, R5-02, R5-11): the summary starts with Harlie's action (the
+ * metadata names PlanetArt), each section has one job (What I found reports
+ * the findings and the curation, The result alone gives the recommendations),
+ * and captions that only name what the image shows were shortened or removed.
  *
  * Sources (PlanetArt/planetart presentation.pdf, dated 08/20/2026, slide
  * numbers as printed):
@@ -28,16 +32,15 @@ import type { CaseMedia, Rect, StorySection } from '../../components/case/CaseSc
  * - What I found: p. 5, the “Key patterns observed” (category-led,
  *   recognizable brands, eco-friendly products, UK offerings mirroring
  *   US-style merchandising); p. 6 (“Using UK vendors including PF Concept and
- *   Ralawise, I curated a broad assortment of potential launch items”, and the
- *   takeaway); p. 8 recommendations 1 (“Adapt the existing US B2B model”) and
- *   2 (“Localize the assortment selectively”, “UK-relevant brands and
- *   eco-friendly product options”).
+ *   Ralawise, I curated a broad assortment of potential launch items”).
  * - What I made: uk web.png (Basket, Fast UK Delivery, UK-Based Support, a
  *   pound sign, a 020 number with Mon–Fri hours, eight categories). The
  *   prototype shows no prices, so the page never claims GBP pricing.
- * - The result: p. 8, the three recommendations (the third, “Support launch
- *   with operational readiness”, names product data, vendor coordination and
- *   merchandising workflows). That she presented them is Harlie's statement.
+ * - The result: p. 8, the three recommendations (1 “Adapt the existing US B2B
+ *   model”; 2 “Localize the assortment selectively”, “UK-relevant brands and
+ *   eco-friendly product options”; 3 “Support launch with operational
+ *   readiness”, naming product data, vendor coordination and merchandising
+ *   workflows). That she presented them is Harlie's statement.
  *
  * No slide appears on the page (brief-v5 section 24). The stage shows the
  * storefront, then focused crops of its navigation and UK details
@@ -64,8 +67,7 @@ export const CAFEPRESS_UK = {
   meta: ['Product Operations and Merchandising Intern · PlanetArt', 'June to August 2026 · Market research and storefront prototype'],
   summary: (
     <p>
-      During my PlanetArt internship, I researched the UK B2B promotional-products market and coded a localized CafePress storefront prototype for a
-      potential UK launch.
+      I researched the UK B2B promotional-products market and coded a localized CafePress storefront prototype for a potential UK launch.
     </p>
   ),
   media: {
@@ -80,7 +82,7 @@ export const CAFEPRESS_UK = {
       title: 'The question',
       body: (
         <p>
-          Could CafePress bring its US business offer to the UK? I looked at competitors, UK vendors and assortment, the site experience, and the
+          Could CafePress bring its US business offer to the UK? I evaluated competitors, UK vendors and assortment, the site experience, and the
           operations it would need.
         </p>
       ),
@@ -91,13 +93,12 @@ export const CAFEPRESS_UK = {
       body: (
         <p>
           Competitors in the UK market used category-led merchandising, featured recognizable brands, and consistently offered eco-friendly products, much
-          like the US. So I recommended <strong>adapting the US B2B model</strong> and localizing the assortment around UK brands and eco-friendly
-          products, which I curated from UK vendors such as PF Concept and Ralawise.
+          like the US. Using UK vendors such as PF Concept and Ralawise, I curated a broad assortment of potential launch items.
         </p>
       ),
       visual: {
         image: 'cp-header-nav',
-        caption: 'The storefront’s category row, with Eco-Friendly as its own category.',
+        caption: 'Eco-Friendly as its own category.',
         highlight: ECO_CATEGORY,
         expandTo: FULL,
         phone: { image: 'cp-phone-nav', highlight: ECO_CATEGORY_PHONE },
@@ -124,13 +125,12 @@ export const CAFEPRESS_UK = {
     title: 'The result',
     body: (
       <p>
-        I presented the storefront and <strong>three recommendations</strong> to the team, adapting the US model, localizing the assortment selectively, and
-        preparing product data and vendor workflows before a UK launch.
+        I presented the storefront to the team with three recommendations, to <strong>adapt the US B2B model</strong>, localize the assortment selectively
+        with UK brands and eco-friendly products, and prepare product data and vendor workflows before a UK launch.
       </p>
     ),
     visual: {
       image: 'cp-header-brand',
-      caption: 'The storefront’s headline for UK businesses.',
       highlight: UK_HEADLINE,
       expandTo: FULL,
       phone: { image: 'cp-phone-headline', highlight: UK_HEADLINE_PHONE },

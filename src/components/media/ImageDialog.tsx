@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { getImage, largestSrc, PROVENANCE_LABEL, type ImageAsset, type ImageId } from '../../content/media'
+import { getImage, largestSrc, type ImageAsset, type ImageId } from '../../content/media'
 
 /** A region in percent of the opened image (x, y from its top-left corner). */
 export type Region = { x: number; y: number; w: number; h: number }
@@ -10,10 +10,11 @@ export interface OpenOptions {
    * (`[data-zoom-id]`, document order); pass `[id]` for a single image.
    */
   gallery?: ImageId[]
-  /** Caption for the opened image (default: its manifest caption), e.g. the caption shown beside it on the page. */
+  /**
+   * Caption for the opened image (default: its manifest caption), e.g. the caption shown beside it on the page,
+   * with the visual's own label when it has one (e.g. Illustrative conversation). The dialog adds no label of its own.
+   */
   caption?: ReactNode
-  /** The caption carries its own label (e.g. Illustrative conversation), so the manifest's provenance label is not added. */
-  labelled?: boolean
   /** Opens in the actual-size view (e.g. a wide image on a phone, where fitting it would make it no larger). */
   detail?: boolean
   /** The actual-size view opens (and reopens after Fit to screen) centred on this region (default: the top left). */
@@ -67,7 +68,7 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   const [index, setIndex] = useState(0)
   const [detail, setDetail] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
-  const [override, setOverride] = useState<{ id: ImageId; caption: ReactNode; labelled: boolean } | null>(null)
+  const [override, setOverride] = useState<{ id: ImageId; caption: ReactNode } | null>(null)
   /** Where the actual-size view of image `id` opens, and what it marks (with the page accent from the trigger). */
   const [spot, setSpot] = useState<{ id: ImageId; focus?: Region; highlight?: Region; accent: CSSProperties } | null>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -76,7 +77,7 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   const open = useCallback((id: ImageId, trigger: HTMLElement, options?: OpenOptions) => {
     const list = options?.gallery ?? galleryFrom(trigger)
     triggerRef.current = trigger
-    setOverride(options?.caption ? { id, caption: options.caption, labelled: Boolean(options.labelled) } : null)
+    setOverride(options?.caption ? { id, caption: options.caption } : null)
     if (options?.focus || options?.highlight) {
       const css = getComputedStyle(trigger)
       const accent = { '--case-accent': css.getPropertyValue('--case-accent').trim() || undefined, '--case-accent-rgb': css.getPropertyValue('--case-accent-rgb').trim() || undefined } as CSSProperties
@@ -144,8 +145,8 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   )
 
   const api = useMemo(() => ({ open }), [open])
+  // The caption alone: a tag appears only when the visual carries its own label (inside its caption), never a provenance fallback.
   const ownCaption = current && override && override.id === current.id ? override : null
-  const label = current && !ownCaption?.labelled ? PROVENANCE_LABEL[current.provenance] : null
 
   return (
     <ImageDialogContext.Provider value={api}>
@@ -236,12 +237,6 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
               </div>
             </div>
             <p id="image-dialog-caption" className="image-dialog__caption t-small">
-              {label && (
-                <>
-                  <span className="provenance">{label}</span>
-                  <span className="provenance-sep"> · </span>
-                </>
-              )}
               {ownCaption ? ownCaption.caption : (current.caption ?? current.alt)}
             </p>
           </div>

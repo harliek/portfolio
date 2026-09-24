@@ -65,13 +65,13 @@
  * (components/transition) hides them while the cover PNG travels into its slot, then fades them in.
  */
 import '../../styles/case.css'
-import { useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { Fragment, useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
 import type { ImageId, VideoId } from '../../content/media'
 import type { Project } from '../../content/projects'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { DemoVideo } from '../media/DemoVideo'
 import { CoverSlot } from '../transition/CoverSlot'
-import { metaLine } from './metaLine'
+import { metaSegments } from './metaLine'
 import { InlineVisual, StatesStage } from './StatesStage'
 import { StoryTracker } from './storyTracker'
 
@@ -179,7 +179,12 @@ export function CaseScroll({ project, meta, summary, media, sections, outcome, c
             <p className="cs-meta">
               {meta.map((line) => (
                 <span key={line} className="cs-meta__line">
-                  {metaLine(line)}
+                  {metaSegments(line).map((seg, i) => (
+                    <Fragment key={seg}>
+                      {i > 0 && ' '}
+                      <span className="cs-meta__seg">{seg}</span>
+                    </Fragment>
+                  ))}
                 </span>
               ))}
             </p>

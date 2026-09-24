@@ -97,7 +97,7 @@ export const ABOUT = {
       org: 'Shift Content',
       role: 'Creative Strategy and Client Solutions Intern',
       dates: 'January to May 2026',
-      contribution: 'Produced client films with the founder, from lighting and interview audio to camera work and editing.',
+      contribution: 'Worked with the founder on client films, from lighting and interview audio to camera work and editing.',
       project: 'client-work',
     },
     {
@@ -128,12 +128,12 @@ export const ABOUT = {
     /** The restored original creative homepage (a separate static build, outside the router). */
     href: '/creative/',
     cta: 'Open creative portfolio',
-    text: 'Short films and charcoal drawings in my original creative portfolio.',
+    text: 'Short films and charcoal drawings.',
   },
   film: {
     title: 'An Artistic End',
     note: 'An experimental short film about self-objectification, artistic identity, and existential isolation.',
-    meta: 'Short film · Published on YouTube, January 2026',
+    meta: 'Published on YouTube · January 2026',
     youtubeId: 'a2Vm1LFB_68',
     poster: FILM_POSTER,
     play: 'Play film',

@@ -12,17 +12,14 @@ import type { VideoId } from './media'
  * speech recognition. Lines with no subtitle were transcribed from the audio
  * only where several recognition runs agreed. Speakers are named only when the
  * film names them on screen.
+ *
+ * No methodology note opens a transcript (round 5, R5-06): the bracketed stage
+ * directions and the one [inaudible] marker explain themselves, and the
+ * per-film method is recorded in docs/transcripts.md.
  */
 export const TRANSCRIPTS: Partial<Record<VideoId, ReactNode>> = {
   aristocracy: (
     <>
-      <p>
-        <em>
-          Transcript prepared from the film’s burned-in subtitles and checked against the soundtrack with
-          automatic speech recognition. The short off-screen calls at the start are not subtitled and were
-          transcribed from the audio.
-        </em>
-      </p>
       <p>
         <strong>Off-screen voice</strong> Turning over. Lights!
       </p>
@@ -96,13 +93,6 @@ export const TRANSCRIPTS: Partial<Record<VideoId, ReactNode>> = {
   nickleby: (
     <>
       <p>
-        <em>
-          Transcript prepared from the film’s burned-in subtitles and on-screen question cards, and checked
-          against the soundtrack with automatic speech recognition. The self-introduction is not subtitled and
-          was transcribed from the audio. Each question appears on screen as a title card and is read aloud.
-        </em>
-      </p>
-      <p>
         <em>[Music plays under most of the film. Opening title card.]</em>
       </p>
       <p>
@@ -170,13 +160,6 @@ export const TRANSCRIPTS: Partial<Record<VideoId, ReactNode>> = {
   ),
   heck: (
     <>
-      <p>
-        <em>
-          This film has no subtitles. Transcript prepared from the soundtrack with automatic speech
-          recognition, cross-checked across three recognition models. One word could not be resolved and is
-          marked [inaudible].
-        </em>
-      </p>
       <p>
         <em>[Music.]</em>
       </p>

@@ -91,7 +91,7 @@ export const PROJECTS: Project[] = [
     next: 'cafepress-uk',
     seo: {
       title: 'Merchandising Platform',
-      description: 'An independent merchandising application prototype that uses synthetic data, separate from PlanetArt systems.',
+      description: 'An independent merchandising prototype on synthetic data, where each reorder quantity shows its working before export.',
     },
   },
   {
@@ -139,7 +139,7 @@ export const PROJECTS: Project[] = [
     next: 'ai-leasing-agent',
     seo: {
       title: 'Spreadsheet Agent',
-      description: 'An independent spreadsheet workflow prototype with simulated AI responses and no live model connection.',
+      description: 'A spreadsheet agent prototype that shows a reviewable plan before building a sheet, with simulated AI responses.',
     },
   },
   {
@@ -163,7 +163,7 @@ export const PROJECTS: Project[] = [
     next: 'client-work',
     seo: {
       title: 'AI Leasing Agent',
-      description: 'Workflow requirements and testing for an AI leasing assistant at Valiance Capital. The production assistant was supplied by a third-party platform.',
+      description: 'Requirements, workflow documentation, and testing for a third-party AI leasing assistant adopted across 18 Valiance Capital properties.',
     },
   },
   {
@@ -187,7 +187,7 @@ export const PROJECTS: Project[] = [
     next: 'jumpstart-finance',
     seo: {
       title: 'Creative Production',
-      description: 'Production preparation, coordination, and related agency work on client films at Shift Content in London.',
+      description: 'Lighting, camera work, B-roll, and editing on three client films at Shift Content in London.',
     },
   },
   {

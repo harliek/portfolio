@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState, useSyncExternalStore, type MouseEvent, type ReactNode } from 'react'
+import { Fragment, useCallback, useEffect, useState, useSyncExternalStore, type MouseEvent, type ReactNode } from 'react'
 import type { ClientFilm } from '../../../content/pages/client-work'
 import type { Project } from '../../../content/projects'
 import { TRANSCRIPTS } from '../../../content/transcripts'
 import { useMediaQuery } from '../../../hooks/useMediaQuery'
 import { goToSection } from '../../layout/RouteFocus'
 import { CoverSlot } from '../../transition/CoverSlot'
-import { metaLine } from '../../case/metaLine'
+import { metaSegments } from '../../case/metaLine'
 import { StoryTracker } from '../../case/storyTracker'
 import { FilmPlayer } from './FilmPlayer'
 
@@ -180,7 +180,12 @@ export function FilmScroll({ project, meta, summary, films, coverScale = 0.72 }:
             <p className="cs-meta">
               {meta.map((line) => (
                 <span key={line} className="cs-meta__line">
-                  {metaLine(line)}
+                  {metaSegments(line).map((seg, i) => (
+                    <Fragment key={seg}>
+                      {i > 0 && ' '}
+                      <span className="cs-meta__seg">{seg}</span>
+                    </Fragment>
+                  ))}
                 </span>
               ))}
             </p>

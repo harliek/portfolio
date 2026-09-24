@@ -9,7 +9,8 @@ import type { CaseMedia, Rect, StorySection, Visual } from '../../components/cas
  * (“My contribution” and “Testing and rollout”) so the story has three
  * sections of 25 to 45 words and each of the three highlights the brief asks
  * for (the answer, the live-information check, the staff handoff) follows the
- * text that describes it. No other wording is changed.
+ * text that describes it. No other wording is changed. Round 5 (R5-01): the
+ * summary starts with Harlie's action; the metadata names Valiance Capital.
  *
  * Sources: the résumé (Valiance Capital, Leasing & Operations Associate,
  * Oct 2024 to Jun 2025; “Managed CRM and leasing operations for a 1,000+
@@ -52,8 +53,8 @@ export const AI_LEASING_AGENT = {
   meta: ['Leasing and Operations Associate · Valiance Capital', 'October 2024 to June 2025 · Adopted across all 18 properties'],
   summary: (
     <p>
-      At Valiance Capital, I <strong>proposed an AI leasing agent</strong>, wrote its requirements and workflow documentation, and developed test cases for its
-      rollout across the portfolio.
+      I <strong>proposed an AI leasing agent</strong>, wrote its requirements and workflow documentation, and developed test cases for its rollout across the
+      portfolio.
     </p>
   ),
   media: {

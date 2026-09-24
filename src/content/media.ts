@@ -897,13 +897,13 @@ const v = (a: Omit<VideoAsset, 'type'>): VideoAsset => ({ type: 'video', ...a })
 
 export const VIDEOS = {
   'merch-console': v({
-    id: 'merch-console', title: 'Merch Console walkthrough', width: 1600, height: 808, duration: 56.3,
+    id: 'merch-console', title: 'Merchandising Platform walkthrough', width: 1600, height: 808, duration: 56.3,
     variants: [
       { src: '/media/video/merch-console-960.mp4', width: 960, height: 486, maxViewport: 899, bytes: 1_894_643 },
       { src: '/media/video/merch-console-1600.mp4', width: 1600, height: 808, bytes: 4_806_528 },
     ],
     poster: 'merch-replenish', posterTimestamp: 12, startAt: 11, hasAudio: false,
-    caption: 'Recorded walkthrough of the working prototype and its 240-product catalog.',
+    caption: 'Recorded walkthrough of the 240-product catalog.',
     provenance: 'independent-prototype', synthetic: true,
     source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov (2940×1486, 60fps timebase, 57.3s)',
     notes: 'Silent screen recording (variable frame rate, 60fps timebase) encoded at 30fps and trimmed at 56.3s, before the macOS capture toolbar appears. The assistant-style panel is not evidence of a live model connection. The first play starts at 11s, just before the Canyon Pouch drawer opens (about 11.7 to 18s) with its 200 unit quantity and Show the working; the poster is that drawer at 12s (merch-replenish, the same 2940×1486 frame size), so a visitor who sees only the poster still sees the calculation.',

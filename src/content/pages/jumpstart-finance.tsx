@@ -43,15 +43,18 @@ import type { CaseMedia, StorySection } from '../../components/case/CaseScroll'
  * redesigned cover artwork; the stage shows only the original 2024 screens,
  * and the opening caption's “Original 2024 prototype” tag says which is which
  * (round 1, R1-04: no second qualification). The role is stated once, in the
- * metadata (R1-01).
+ * metadata (R1-01). Round 5 (R5-01, R5-04, R5-11): the summary starts with
+ * Harlie's action (the metadata names Porto, the summary the academy), What
+ * we built opens with her contribution, “gamified” and “engaged” are no
+ * longer repeated, and the community caption no longer names the levels the
+ * screen already shows.
  */
 
 export const JUMPSTART_FINANCE = {
   meta: ['Founder and Product Lead · Student venture, Porto', 'June to July 2024 · Prototype and academy pitch'],
   summary: (
     <p>
-      At the European Innovation Academy in Porto, I led a <strong>five&#8209;person team</strong> building Jumpstart, a financial education app for young
-      adults.
+      I led a <strong>five&#8209;person team</strong> at the European Innovation Academy building Jumpstart, a financial education app for young adults.
     </p>
   ),
   media: {
@@ -71,7 +74,7 @@ export const JUMPSTART_FINANCE = {
       body: (
         <p>
           Many young adults want to understand personal finance but struggle to stay engaged with conventional financial education. Our premise was
-          that gamified learning would keep them engaged.
+          that gamified learning would hold their attention.
         </p>
       ),
       visual: {
@@ -84,9 +87,9 @@ export const JUMPSTART_FINANCE = {
       title: 'What we built',
       body: (
         <p>
-          In our comparison of Robinhood, Zogo, and Acorns, none offered a community forum and only Zogo was gamified. So we built the prototype around gamified
-          lessons, a level path, and a community where members answer each other’s questions. I led the product concept,
-          positioning, prototype, and business model.
+          I led the product concept, positioning, prototype, and business model. Our comparison of Robinhood, Zogo, and Acorns found no community forum
+          and only one gamified app, Zogo, so we built the prototype around lessons, a level path, and a community where members answer each other’s
+          questions.
         </p>
       ),
       visual: {
@@ -106,7 +109,7 @@ export const JUMPSTART_FINANCE = {
     ),
     visual: {
       image: 'jf-screen-community',
-      caption: 'The community, with each member’s level beside their name.',
+      caption: 'The community.',
     },
   } satisfies StorySection,
 }

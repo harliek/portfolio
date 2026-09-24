@@ -298,16 +298,15 @@ function useZoom(visual: Visual) {
   const target = expandTarget(visual)
   return (trigger: HTMLElement) => {
     const caption = visual.caption ? <Caption visual={visual} /> : undefined
-    const labelled = Boolean(visual.label)
     if (window.matchMedia(PHONE).matches) {
       const id = visual.image
       const { width, height } = getImage(id)
       const detail = width > height && width > window.innerWidth
-      dialog.open(id, trigger, { gallery: [id], caption, labelled, detail, focus: detail ? WHOLE : undefined })
+      dialog.open(id, trigger, { gallery: [id], caption, detail, focus: detail ? WHOLE : undefined })
       return
     }
     const spot = spotIn(visual, target)
-    dialog.open(target, trigger, { gallery: [target], caption, labelled, ...(spot && { detail: true, focus: spot.focus, highlight: spot.highlight }) })
+    dialog.open(target, trigger, { gallery: [target], caption, ...(spot && { detail: true, focus: spot.focus, highlight: spot.highlight }) })
   }
 }
 

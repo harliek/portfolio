@@ -168,6 +168,11 @@
   display: block;
 }
 
+/* One phrase of a metadata line (metaLine.ts): a narrow line breaks at a middle dot, never inside a phrase that fits. */
+.cs-meta__seg {
+  display: inline-block;
+}
+
 .cs-meta__line:first-child {
   color: var(--color-text);
 }

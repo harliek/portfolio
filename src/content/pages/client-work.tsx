@@ -31,6 +31,12 @@ import type { VideoId } from '../media'
  *   purpose from those summaries in place of "fashion campaign shoot",
  *   "branded run-club event" and "energy of the evening"; Harlie's part is
  *   unchanged. Nickleby already states its need (one filming day).
+ * - Round 5 (R5-01, R5-05): the summary starts with Harlie's action (the
+ *   metadata names Shift Content, London); Aristocracy splits the long first
+ *   sentence and restores the verified deliverables; the tour section gives
+ *   the client context first. “Powered by Gymshark” is spoken in the film
+ *   (see src/content/transcripts.tsx). The tour's body says “The tour” rather
+ *   than repeating the full name of the heading directly above it.
  *
  * Harlie's own statements kept as written and reported as not shown by the
  * sources: interview "audio" (the sources say equipment and lighting),
@@ -66,7 +72,7 @@ export const CLIENT_WORK = {
   meta: ['Creative Strategy and Client Solutions Intern · Shift Content, London', 'January to May 2026 · Three client films'],
   summary: (
     <p>
-      At Shift Content in London, I worked directly with the founder on client films, from <strong>lighting and camera work on set</strong> to editing.
+      I worked directly with the founder on client films, from <strong>lighting and camera work on set</strong> to editing.
     </p>
   ),
   films: [
@@ -91,8 +97,9 @@ export const CLIENT_WORK = {
       video: 'aristocracy',
       body: (
         <p>
-          I helped run a two-day shoot for Aristocracy London’s spring and summer campaign, ahead of its Manchester store opening,
-          handling lighting, setup, and on-set coordination. I also filmed behind-the-scenes footage for the agency’s marketing.
+          I helped run a two-day shoot for Aristocracy London’s spring and summer campaign, ahead of its Manchester store opening. I handled lighting,
+          setup, and on-set coordination and filmed behind-the-scenes footage for the agency’s marketing. We delivered campaign video, e-commerce
+          imagery, and social assets.
         </p>
       ),
     },
@@ -104,8 +111,8 @@ export const CLIENT_WORK = {
       video: 'heck',
       body: (
         <p>
-          I filmed and supported production for the tour with Gymshark, capturing the participants for the final film. The tour brought women together to
-          run after dark as a visible group.
+          The tour, powered by Gymshark, brought women together to run after dark. I filmed the participants and supported production for the final
+          film.
         </p>
       ),
     },

@@ -295,6 +295,11 @@
   grid-column: 2;
 }
 
+/* A phone crop that reads in place has no expand control: its caption takes the whole row. */
+.cs-figure[data-in-place] > .cs-caption {
+  grid-column: 1 / -1;
+}
+
 /* Beside the story: the caption 12px under the media, the control level with its first line. */
 .cs-figure[data-variant='sticky'] {
   align-items: start;
@@ -484,10 +489,10 @@
 
 /*
  * The expand control, at the right end of the caption row (images, recordings and films alike), never on the
- * artwork. With a mouse it is a quiet glyph that appears while the figure is hovered or its media has keyboard
- * focus (and stays while a recording is not playing), in the accent while the media is hovered; on touch it is an
- * outlined 44px button, always there. For images the picture itself is the enlargement control, so this one is a
- * pointer and touch shortcut; for recordings it is the control.
+ * artwork, and always visible (round 4, R4-01: it is the one enlarge control of a player, so it never waits for
+ * hover). With a mouse it is a quiet glyph, in the accent while the media is hovered or focused; on touch it is an
+ * outlined 44px button. For images the picture itself is the enlargement control, so this one is a pointer and
+ * touch shortcut; for recordings it is the control (their native full screen button is removed, DemoVideo).
  */
 .cs-expand {
   position: relative;
@@ -501,9 +506,7 @@
   background: transparent;
   color: var(--color-muted);
   cursor: pointer;
-  opacity: 0;
   transition:
-    opacity var(--dur-feedback) var(--ease-out),
     color var(--dur-feedback) var(--ease-out),
     box-shadow var(--dur-feedback) var(--ease-out);
 }
@@ -514,13 +517,6 @@
   position: absolute;
   inset: -8px;
   border-radius: 50%;
-}
-
-.cs-figure:hover > .cs-expand,
-.cs-figure:has(.cs-zoom:focus-visible) > .cs-expand,
-.cs-figure:has(> .cs-stage[data-kind='video']:is(:not([data-status='playing']), :focus-within)) > .cs-expand,
-.cs-expand:focus-visible {
-  opacity: 1;
 }
 
 .cs-expand:is(:hover, :focus-visible),
@@ -536,7 +532,6 @@
 
 @media (hover: none) {
   .cs-expand {
-    opacity: 1;
     box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22);
     color: var(--color-text);
   }
@@ -633,6 +628,13 @@
 .cs-demo__video:focus-visible {
   outline: 2px solid var(--case-accent);
   outline-offset: -2px;
+}
+
+/* One enlarge control per player (R4-01): Chromium draws the full screen button that controlsList="nofullscreen"
+   disables as a greyed icon, so it is removed from the inline player (it returns while the recording itself is in
+   full screen, to leave it). A separate rule: browsers without this pseudo-element drop only this rule. */
+.cs-demo__video:not(:fullscreen)::-webkit-media-controls-fullscreen-button {
+  display: none;
 }
 
 /* Autoplay refused, or reduced motion: one obvious play action over the poster. */

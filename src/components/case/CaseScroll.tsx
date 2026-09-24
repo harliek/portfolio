@@ -38,9 +38,12 @@
  *   the manifest alt), `label` (a short visible tag before the caption, e.g. 'Illustrative
  *   conversation'; state a qualification once). The desktop stage shows the label with every
  *   state; the stacked figures show it only the first time it appears; the enlarged view always.
+ *   `phone` (optional): a narrower crop for phones that reads in place (no enlarge control there).
  * - Every stage image is itself the zoom control (hover: 1.5% larger with an accent edge; click or
  *   Enter opens the shared ImageDialog; Escape or Close returns focus). The expand icon sits at the
- *   right end of the caption row, never on the image (hover and focus with a mouse; always on touch).
+ *   right end of the caption row, never on the image, always visible. A crop registered in
+ *   src/content/crops (CROP_REGIONS) opens its `expandTo` image at actual size, centred on the
+ *   crop, with the section's highlight drawn at its place; Fit to screen shows the whole image.
  * - Beside the story, a stage limited by the window's height keeps the media at the column's left
  *   edge, and its caption row takes the media's width (a caption never runs past its media).
  * - Ids: section ids become DOM ids (the h2 is `${id}-title`); keep them unique on the page.
@@ -84,6 +87,12 @@ export interface Visual {
   alt?: string
   /** A short visible tag before the caption. */
   label?: 'Illustrative conversation' | string
+  /**
+   * Phones (below 600px): a narrower crop of the same evidence that reads in place (its text at about 10px or
+   * more in the 350px column), with its own highlight in percent of that crop. The stacked figure shows it
+   * instead of `image`, without an enlarge control.
+   */
+  phone?: { image: ImageId; highlight?: Rect }
 }
 
 /** `visual` omitted = keep the current one (states media only). */

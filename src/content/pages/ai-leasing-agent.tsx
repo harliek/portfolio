@@ -25,8 +25,11 @@ import type { CaseMedia, Rect, StorySection, Visual } from '../../components/cas
  * The only image is an illustrative conversation with invented names and data
  * (Valiance Capital/messages.png; its footer reads “Reconstruction · Invented
  * data”), shown as readable crops (src/content/crops/ai-leasing-agent.ts), each
- * labelled “Illustrative conversation”. A click opens the whole illustration.
- * Highlights are percentages of each crop.
+ * labelled “Illustrative conversation”. A click opens the whole illustration
+ * at actual size on the clicked detail. Highlights are percentages of each crop.
+ * Phones show narrower crops of just the message or panel column (`phone`,
+ * round 4, R4-06), which read in place; the request and the handoff crops are
+ * themselves the detail, so they carry no highlight there.
  */
 
 /** Jordan's message (availability, a cat, a fee waiver, a unit hold), in ala-chat-request. */
@@ -37,6 +40,8 @@ const ANSWER: Rect = { x: 13.2, y: 68.4, w: 72.3, h: 10.8 }
 const LIVE_CHECK: Rect = { x: 18.5, y: 19.7, w: 74.7, h: 39.1 }
 /** Oski's referral to staff and Sam's reply, in ala-chat-handoff. */
 const HANDOFF: Rect = { x: 10.9, y: 24.1, w: 84, h: 55.5 }
+/** The Live data required card in the phone crop ala-phone-panel (source x 1188–1632, y 437–582, as LIVE_CHECK). */
+const LIVE_CHECK_PHONE: Rect = { x: 4.91, y: 22.47, w: 90.8, h: 36.62 }
 
 const FULL = 'valiance-messages' as const
 const LABEL = 'Illustrative conversation'
@@ -55,7 +60,7 @@ export const AI_LEASING_AGENT = {
     kind: 'states',
     // All three crops are 16:10.
     frameRatio: '16 / 10',
-    opening: view({ image: 'ala-chat-request', caption: 'A prospective resident writes to the property’s web chat.' }),
+    opening: view({ image: 'ala-chat-request', caption: 'A prospective resident writes to the property’s web chat.', phone: { image: 'ala-phone-request' } }),
   } satisfies CaseMedia,
   sections: [
     {
@@ -89,7 +94,12 @@ export const AI_LEASING_AGENT = {
           scenarios, then expanded its use.
         </p>
       ),
-      visual: view({ image: 'ala-live-check', caption: 'Current pricing and availability come from a live data check.', highlight: LIVE_CHECK }),
+      visual: view({
+        image: 'ala-live-check',
+        caption: 'Current pricing and availability come from a live data check.',
+        highlight: LIVE_CHECK,
+        phone: { image: 'ala-phone-panel', highlight: LIVE_CHECK_PHONE },
+      }),
     },
   ] satisfies StorySection[],
   outcome: {
@@ -101,6 +111,11 @@ export const AI_LEASING_AGENT = {
         focus on resident and prospect interactions that needed a person.
       </p>
     ),
-    visual: view({ image: 'ala-chat-handoff', caption: 'The fee waiver and unit hold go to a member of the leasing team.', highlight: HANDOFF }),
+    visual: view({
+      image: 'ala-chat-handoff',
+      caption: 'The fee waiver and unit hold go to a member of the leasing team.',
+      highlight: HANDOFF,
+      phone: { image: 'ala-phone-handoff' },
+    }),
   } satisfies StorySection,
 }

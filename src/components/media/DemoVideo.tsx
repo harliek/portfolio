@@ -28,7 +28,9 @@ import { ResponsiveImage } from './ResponsiveImage'
  *   seek or a closed larger view never replaces it with an arbitrary frame;
  *   likewise while the first seek to the start time is under way.
  * - Expand (a small button at the right end of the caption row, never on the
- *   recording): a larger view continues from the same time; the inline copy
+ *   recording, always visible; the native full screen button is removed so
+ *   it is the player's one enlarge control, and full screen stays available
+ *   inside the larger view): a larger view continues from the same time; the inline copy
  *   is paused first, so two copies never play. Closing restores the inline
  *   copy at the expanded view's time, playing if the expanded one was
  *   playing, paused (as the visitor's own pause) if it was paused. Focus
@@ -327,6 +329,9 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
           loop
           playsInline
           controls={!showPlay || fullscreen}
+          // One enlarge control per player (R4-01): Expand below the recording. The native full screen button
+          // returns only while the recording is in full screen (touch Expand), so it can be left there.
+          controlsList={fullscreen ? undefined : 'nofullscreen'}
           preload={!posterReady ? 'none' : reduced ? 'metadata' : 'auto'}
           aria-label={asset.title}
           aria-describedby={captionId}

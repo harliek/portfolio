@@ -26,9 +26,10 @@ import { FilmPlayer } from './FilmPlayer'
  * Nickleby Capital film; while it only previews, scrolling moves the player
  * to the film of the section being read. Once the visitor opens a film (Watch
  * film, Watch with sound, unmuting, playing, scrubbing, full screen or
- * expand), it stays in place while the page scrolls. The navigation marks
+ * expand), it stays in place while the page scrolls, and so does the active
+ * section heading (one notion of the current film). The navigation marks
  * the film in the player; choosing another project there returns the player
- * to previews and scrolls to that project. A link to a project
+ * (and the heading) to following the scroll and scrolls to that project. A link to a project
  * (#aristocracy) selects it the same way on arrival. One film plays at a time.
  * Below 960px: title, metadata, summary, cover, then each project under its
  * heading with its own player (only the first previews by itself); the
@@ -157,9 +158,10 @@ export function FilmScroll({ project, meta, summary, films, coverScale = 0.72 }:
 
   const openedIndex = films.findIndex((f) => f.id === openedId)
   const pickedIndex = films.findIndex((f) => f.id === pickedId)
-  // The section marked as active: the chosen project until the visitor scrolls, else the scroll position.
-  const current = pickedIndex >= 0 ? pickedIndex : active
-  const shown = openedIndex >= 0 ? openedIndex : Math.max(0, current)
+  // One notion of the current film (R4-03): the opened film keeps the active heading, the chip and the player
+  // together while the page scrolls; otherwise the chosen project until the visitor scrolls, else the scroll position.
+  const current = openedIndex >= 0 ? openedIndex : pickedIndex >= 0 ? pickedIndex : active
+  const shown = Math.max(0, current)
 
   // Choosing a project in the navigation: a different film than the opened one returns the player to previews.
   const pick = (id: FilmId) => {

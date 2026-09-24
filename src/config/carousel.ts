@@ -138,7 +138,11 @@ export const GALLERY = {
   drift: { rate: 0.1, wave: 0.62, rampMs: 1800 },
   /** A fresh opening holds still this long, so the About-first composition reads. */
   openingHoldMs: 3200,
-  /** After movement settles, a short reading pause before the drift resumes. */
+  /**
+   * After wheel or trackpad movement settles, a short reading pause before
+   * the drift resumes. A deliberate step (arrow button, arrow key, swipe)
+   * holds instead until the next input.
+   */
   readPauseMs: 2600,
   /** After hover or focus ends, at least this long before a pending drift resumes. */
   resumeDelayMs: 900,

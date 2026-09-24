@@ -1,7 +1,7 @@
-import { CAFEPRESS_UK_CROPS } from './cafepress-uk'
+import { CAFEPRESS_UK_CROPS, CAFEPRESS_UK_REGIONS } from './cafepress-uk'
 import { MERCHANDISING_PLATFORM_CROPS } from './merchandising-platform'
 import { SPREADSHEET_AGENT_CROPS } from './spreadsheet-agent'
-import { AI_LEASING_AGENT_CROPS } from './ai-leasing-agent'
+import { AI_LEASING_AGENT_CROPS, AI_LEASING_AGENT_REGIONS } from './ai-leasing-agent'
 import { JUMPSTART_FINANCE_CROPS } from './jumpstart-finance'
 import { CLIENT_WORK_CROPS } from './client-work'
 
@@ -13,4 +13,22 @@ export const CROP_IMAGES = {
   ...AI_LEASING_AGENT_CROPS,
   ...JUMPSTART_FINANCE_CROPS,
   ...CLIENT_WORK_CROPS,
+}
+
+/**
+ * Where a crop sits in the image its larger view opens (`of`, an image id), in
+ * that image's source pixels. The enlarged view of a crop opens at actual size
+ * centred on this rectangle, with the section's highlight mapped onto it.
+ */
+export interface CropRegion {
+  of: string
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+export const CROP_REGIONS: Record<string, CropRegion> = {
+  ...CAFEPRESS_UK_REGIONS,
+  ...AI_LEASING_AGENT_REGIONS,
 }

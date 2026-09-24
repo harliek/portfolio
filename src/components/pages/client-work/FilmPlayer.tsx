@@ -336,10 +336,14 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
     if (v && !c.opened && !(v.loop && v.currentTime < 0.3)) open()
   }
 
-  // Full screen from the native controls counts as opening the film.
+  // This film itself in full screen (touch Expand): its native full screen button returns, so it can be left there.
+  const [fullscreen, setFullscreen] = useState(false)
+  // Full screen (touch Expand, or a double click on the film) counts as opening the film.
   useEffect(() => {
     const onFullscreen = () => {
-      if (document.fullscreenElement && document.fullscreenElement === videoRef.current && !ctl.current.opened) open()
+      const own = Boolean(document.fullscreenElement) && document.fullscreenElement === videoRef.current
+      setFullscreen(own)
+      if (own && !ctl.current.opened) open()
     }
     document.addEventListener('fullscreenchange', onFullscreen)
     return () => document.removeEventListener('fullscreenchange', onFullscreen)
@@ -482,6 +486,8 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
             loop={!opened}
             playsInline
             controls={!posterOnly}
+            // One enlarge control per player (R4-01): Expand below the film; no native full screen button beside it.
+            controlsList={fullscreen ? undefined : 'nofullscreen'}
             preload={opened || (preview && !reduced && posterReady) ? 'auto' : 'none'}
             data-ambient={opened ? undefined : ''}
             aria-label={`${name} film`}

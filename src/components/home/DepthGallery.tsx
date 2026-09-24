@@ -14,7 +14,7 @@ import { buildScene, FEATURED_SIZES, frontBoost, mod, OPENING_POS, place, type P
 interface GalleryDebug {
   pos: () => number
   mode: () => string
-  state: () => { hover: number; focus: number; touch: boolean; busy: boolean; forced: boolean; featured: number }
+  state: () => { hover: number; focus: number; touch: boolean; busy: boolean; forced: boolean; featured: number; manual: boolean }
   placements: () => Placement[]
   /** Moves the gallery to a position and holds it there (no drift) until the next input; `drift` starts the idle drift from there at once. */
   seek: (pos: number, drift?: boolean) => void
@@ -70,8 +70,12 @@ const FOOT = CAROUSEL_ITEMS.map((item) => GALLERY.label.foot[item.kind] ?? 0)
  * lasts (one comfortable gesture ≈ one project), then it settles on the
  * nearest project with a critically damped spring (no bounce). After a
  * short reading pause a very slow idle drift resumes in the established
- * direction. The previous and next arrows, the arrow keys (focus in the
- * gallery) and horizontal swipes step one project with the same motion.
+ * direction (as it starts on a fresh visit after the opening hold). The
+ * previous and next arrows, the arrow keys (focus in the gallery) and
+ * horizontal swipes step one project with the same motion; such a
+ * deliberate step hands control to the visitor, so the arrangement then
+ * holds (no drift) until the next input. Arrow keys on an object step from
+ * that object: the one beside it comes to the front and takes the focus.
  *
  * Hover or keyboard focus on an object pauses everything at once (input
  * meanwhile is discarded, never applied later); the object comes slightly
@@ -85,7 +89,8 @@ const FOOT = CAROUSEL_ITEMS.map((item) => GALLERY.label.foot[item.kind] ?? 0)
  * Reduced motion: the same arrangement, still; steps (arrows, keys, swipe,
  * one per wheel gesture) change with a short cross-fade.
  *
- * Browser Back restores the position (carouselMemory.ts); every listener
+ * Browser Back restores the position, still held if the visitor had
+ * stepped to it (carouselMemory.ts); every listener
  * (including the window wheel listener) is removed when the homepage
  * unmounts.
  */
@@ -102,8 +107,8 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
   const objectRefs = useRef<Array<HTMLSpanElement | null>>([])
   const labelRefs = useRef<Array<HTMLSpanElement | null>>([])
   const linkRefs = useRef<Array<HTMLAnchorElement | null>>([])
-  /** The position survives effect re-runs within one history entry (the motion setting changed). */
-  const kept = useRef<{ key: string; pos: number } | null>(null)
+  /** The position (and a hold the visitor chose) survives effect re-runs within one history entry (the motion setting changed). */
+  const kept = useRef<{ key: string; pos: number; manual: boolean } | null>(null)
   const api = useRef<{ step: (dir: 1 | -1) => void; freeze: (i: number) => void; resume: (i: number) => void; dragged: () => boolean } | null>(null)
   // The images' `sizes`: chosen for this window, raised if a resize makes the objects notably larger.
   const [sizes, setSizes] = useState(initialSizes)
@@ -420,11 +425,20 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
     // ------------------------------------------------------------------
     const restored = recallPosition(locationKey, navigationType)
     const same = kept.current?.key === locationKey
+    /**
+     * The visitor took control (an arrow button, an arrow key, keyboard focus
+     * bringing an object forward, or a swipe): once settled, the arrangement
+     * holds until the next input instead of drifting, also after Back from a
+     * project. Wheel input clears it (the reading pause, then the drift).
+     */
+    let manual = Boolean(same ? kept.current!.manual : restored?.manual)
     let pos = same ? kept.current!.pos : (restored?.pos ?? OPENING_POS)
+    // Held where the visitor stepped (an opening mid-step kept a position between two projects).
+    if (manual) pos = Math.round(pos)
     let vel = 0
     let mode: Mode = 'hold'
     let target = Math.round(pos)
-    let holdUntil = performance.now() + (same || restored ? GALLERY.readPauseMs : GALLERY.openingHoldMs)
+    let holdUntil = manual ? Infinity : performance.now() + (same || restored ? GALLERY.readPauseMs : GALLERY.openingHoldMs)
     let driftDir: 1 | -1 = 1
     let driftRamp = 0
     /** Moves started from the keyboard (arrow keys, focus) run even while focus or hover would pause. */
@@ -438,8 +452,8 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
     const debugScale = () => (import.meta.env.DEV ? (window.__homeGallery?.timeScale ?? 1) : 1)
 
     const save = () => {
-      kept.current = { key: locationKey, pos }
-      notePosition(locationKey, { pos: mod(pos, N) })
+      kept.current = { key: locationKey, pos, manual }
+      notePosition(locationKey, { pos: mod(pos, N), manual })
       persistPosition(locationKey)
     }
     const halted = () => (st.hover >= 0 || st.focus >= 0 || st.touch) && !forced
@@ -454,7 +468,9 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
     }
     const wakeAt = (t: number) => {
       window.clearTimeout(wake)
-      wake = window.setTimeout(kick, Math.max(0, t - performance.now()) + 16)
+      wake = 0
+      // Held until the next input: nothing to wake for (and an infinite delay would fire at once).
+      if (Number.isFinite(t)) wake = window.setTimeout(kick, Math.max(0, t - performance.now()) + 16)
     }
 
     /** The wheel gesture ended: settle on a project (the next one in the gesture's direction once it moved). */
@@ -506,7 +522,7 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
           vel = 0
           forced = false
           mode = 'hold'
-          holdUntil = now + GALLERY.readPauseMs
+          holdUntil = manual ? Infinity : now + GALLERY.readPauseMs
           save()
           announce()
           again = false
@@ -582,6 +598,7 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
     const step = (dir: 1 | -1, fromKeyboard = false) => {
       if (st.busy) return target
       driftDir = dir
+      manual = true
       if (reduced) {
         const T = (swapping ? target : Math.round(pos)) + dir
         target = T
@@ -597,11 +614,43 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
       return target
     }
 
+    /** The resting position the gallery is at or heading to (its featured project). */
+    const heading = () => (reduced ? (swapping ? target : Math.round(pos)) : mode === 'settle' ? target : Math.round(pos))
+
+    /**
+     * Arrow keys on object i: the object beside it (in the key's direction)
+     * comes to the front, and the caller moves the focus to it. From the
+     * featured object this is one ordinary step; from a neighbour it may
+     * mean no movement (the featured one is beside it) or a longer one.
+     * Returns the new position.
+     */
+    const stepFrom = (i: number, dir: 1 | -1) => {
+      const ref = heading()
+      if (st.busy || mod(ref, N) === i) return step(dir, true)
+      const half = Math.floor(N / 2)
+      const T = ref + clamp(mod(i - ref + half, N) - half + dir, -half, half)
+      driftDir = dir
+      manual = true
+      if (reduced) {
+        if (T !== ref) {
+          target = T
+          crossfadeTo(T)
+        }
+        return T
+      }
+      target = T
+      mode = 'settle'
+      forced = true
+      kick()
+      return T
+    }
+
     /** Brings item i to the front (keyboard focus). */
     const feature = (i: number) => {
       const d = P[i].d
       if (Math.abs(d) < 0.02 && mode !== 'settle') return
       const T = Math.round(pos + d)
+      manual = true
       if (reduced) {
         if (Math.abs(d) >= 0.5) crossfadeTo(T)
         return
@@ -677,7 +726,8 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
 
     // ------------------------------------------------------------------
     // Keyboard: focus pauses everything and lifts the object where it stands;
-    // only an object not clearly shown comes to the front. Arrows step.
+    // only an object not clearly shown comes to the front. Arrows step from
+    // the focused object (stepFrom).
     // ------------------------------------------------------------------
     /** Wholly inside the window with its name shown (phones, which show one object at a time: at the front). */
     const clearlyShown = (i: number) => {
@@ -711,9 +761,16 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
       const onArrow = el?.closest('.gallery__arrow')
       if (!onLink && !onArrow) return
       e.preventDefault()
-      const T = step(e.key === 'ArrowRight' ? 1 : -1, Boolean(onLink))
-      if (onLink) links[mod(T, N)].focus({ preventScroll: true })
-      else announcePending = true
+      const dir = e.key === 'ArrowRight' ? 1 : -1
+      const at = onLink ? links.indexOf(onLink as HTMLAnchorElement) : -1
+      if (at >= 0) {
+        // From the focused object (not the featured one): focus never skips an object.
+        const T = stepFrom(at, dir)
+        links[mod(T, N)].focus({ preventScroll: true })
+      } else {
+        announcePending = true
+        step(dir)
+      }
     }
     root.addEventListener('focusin', onFocusIn)
     root.addEventListener('focusout', onFocusOut)
@@ -766,6 +823,8 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
       g.last = now
       driftDir = dir
       forced = false
+      // Scrolling: after it settles, the reading pause and then the drift.
+      manual = false
       mode = 'input'
       kick()
     }
@@ -843,6 +902,8 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
           target = clamp(Math.round(pos + flick), drag.anchor - 1, drag.anchor + 1)
           vel = drag.v
           if (target !== drag.anchor) driftDir = target > drag.anchor ? 1 : -1
+          // A deliberate swipe: once settled, it holds until the next input.
+          manual = true
           mode = 'settle'
         }
       }
@@ -924,7 +985,7 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
       window.__homeGallery = {
         pos: () => pos,
         mode: () => mode,
-        state: () => ({ hover: st.hover, focus: st.focus, touch: st.touch, busy: st.busy, forced, featured }),
+        state: () => ({ hover: st.hover, focus: st.focus, touch: st.touch, busy: st.busy, forced, featured, manual }),
         placements: () => P.map((p) => ({ ...p })),
         seek: (p, drift) => {
           pos = p

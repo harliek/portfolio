@@ -181,6 +181,11 @@
   outline-offset: -2px;
 }
 
+/* One enlarge control per player (R4-01, as case.css .cs-demo__video): no greyed full screen button in Chromium. */
+.page-client-work .fp-video:not(:fullscreen)::-webkit-media-controls-fullscreen-button {
+  display: none;
+}
+
 /* Poster only: one obvious Watch film action. */
 .page-client-work .fp-center {
   position: absolute;
@@ -244,20 +249,14 @@
   }
 }
 
-/* Expand (case.css .cs-expand): with a mouse, while the player is hovered, and whenever the film is not a
-   playing preview, in the accent while the film is hovered or focused; always on touch. Hidden until the film's
-   recording is attached. */
-.page-client-work .fp:hover > .fp-expand,
-.page-client-work .fp:has(> .fp-frame:is(:not([data-mode='preview']), :focus-within)) > .fp-expand {
-  opacity: 1;
-}
-
+/* Expand (case.css .cs-expand): always visible (R4-01), in the accent while the film is hovered or focused. Dimmed
+   and inert for the moment a new film's recording is being attached (a film change while previewing). */
 .page-client-work .fp:has(> .fp-frame:is(:hover, :focus-within)) > .fp-expand {
   color: color-mix(in oklch, var(--case-accent) 80%, var(--stage-ivory));
 }
 
 .page-client-work .fp-expand:disabled {
-  opacity: 0;
+  opacity: 0.4;
   pointer-events: none;
 }
 

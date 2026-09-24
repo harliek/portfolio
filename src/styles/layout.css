@@ -359,7 +359,8 @@ a:focus-visible > .site-nav__mark {
 /* ----------------------------------------------------------------------- */
 
 /*
- * Each entry is one link (on a visible outlined surface in the small-screen
+ * Each entry is one link, except the current project, which is text (on a
+ * visible outlined surface in the small-screen
  * menu; boxless at rest in the Work shelf): the project's PNG object whole
  * (contained in a 48px square, never cropped), the name, and a muted
  * category line. Hover and focus light the entry in the project's
@@ -396,7 +397,7 @@ a:focus-visible > .site-nav__mark {
   background: transparent;
 }
 
-.shelf-item:hover,
+.shelf-item:is(a):hover,
 .shelf-item:focus-visible {
   border-color: rgb(var(--_acc-rgb) / 0.62);
   background: rgb(var(--_acc-rgb) / 0.08);
@@ -408,7 +409,7 @@ a:focus-visible > .site-nav__mark {
   outline-offset: 2px;
 }
 
-.shelf-item:active {
+.shelf-item:is(a):active {
   background: rgb(var(--_acc-rgb) / 0.05);
 }
 
@@ -432,7 +433,7 @@ a:focus-visible > .site-nav__mark {
     filter var(--dur-feedback) var(--ease-out);
 }
 
-.shelf-item:hover .shelf-item__thumb .picture img,
+.shelf-item:is(a):hover .shelf-item__thumb .picture img,
 .shelf-item:focus-visible .shelf-item__thumb .picture img {
   transform: scale(1.06);
   filter: drop-shadow(0 0 5px rgb(var(--_acc-rgb) / 0.65));
@@ -452,7 +453,7 @@ a:focus-visible > .site-nav__mark {
   transition: color var(--dur-feedback) var(--ease-out);
 }
 
-.shelf-item:hover .shelf-item__name,
+.shelf-item:is(a):hover .shelf-item__name,
 .shelf-item:focus-visible .shelf-item__name {
   color: color-mix(in oklch, var(--_acc) 38%, #fff);
 }
@@ -466,7 +467,11 @@ a:focus-visible > .site-nav__mark {
   text-wrap: balance;
 }
 
-/* The current project: its accent edge and a plain "Current page" line (text, not colour alone). */
+/*
+ * The current project: text, not a link (WorkShelf.tsx), with its accent
+ * edge and a plain "Current page" line (text, not colour alone); it does
+ * not respond to hover.
+ */
 .shelf-item[aria-current='page'] {
   border-color: rgb(var(--_acc-rgb) / 0.7);
   background: rgb(var(--_acc-rgb) / 0.1);

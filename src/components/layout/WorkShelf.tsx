@@ -22,21 +22,43 @@ export function ExternalMark() {
  * One project entry: one ordinary link with a small thumbnail of the
  * project's PNG object (whole, never cropped), the project name and its
  * one-line context (employer or independent work), the same in the shelf
- * and the small-screen menu. The current project says "Current page" instead. Hover and focus use the project's
- * own accent and prepare the destination (code, cover, opening image).
- * A plain click opens the page with the transition module's short plain
- * reveal (no image travels from a 48px thumbnail); modified clicks stay
- * native (new tab, new window).
+ * and the small-screen menu. Hover and focus use the project's own accent
+ * and prepare the destination (code, cover, opening image). A plain click
+ * opens the page with the transition module's short plain reveal (no image
+ * travels from a 48px thumbnail); modified clicks stay native (new tab, new
+ * window).
+ *
+ * The project on screen is not a link: the same entry, highlighted and
+ * saying "Current page", as plain text marked `aria-current="page"`
+ * (following it would only reload this page and add a Back step). The
+ * shelf's arrow keys and Tab pass over it.
  */
 function ProjectLink({ project, current, thumbs, className, onNavigate }: { project: Project; current: boolean; thumbs: boolean; className: string; onNavigate: () => void }) {
   const navigate = useNavigate()
   const path = projectPath(project)
+  const content = (
+    <>
+      <span className="shelf-item__thumb" aria-hidden="true">
+        {thumbs && <ResponsiveImage image={project.cover} sizes={THUMB_SIZES} decorative fit="contain" />}
+      </span>
+      <span className="shelf-item__text">
+        <span className="shelf-item__name">{project.name}</span>
+        <span className="shelf-item__meta">{current ? 'Current page' : project.category}</span>
+      </span>
+    </>
+  )
+  if (current) {
+    return (
+      <span className={className} style={accentVars(project.accent)} aria-current="page">
+        {content}
+      </span>
+    )
+  }
   return (
     <Link
       to={path}
       className={className}
       style={accentVars(project.accent)}
-      aria-current={current ? 'page' : undefined}
       onClick={(e) => {
         onNavigate()
         if (!isPlainClick(e)) return
@@ -46,13 +68,7 @@ function ProjectLink({ project, current, thumbs, className, onNavigate }: { proj
       onPointerEnter={() => warmProject(path)}
       onFocus={() => warmProject(path)}
     >
-      <span className="shelf-item__thumb" aria-hidden="true">
-        {thumbs && <ResponsiveImage image={project.cover} sizes={THUMB_SIZES} decorative fit="contain" />}
-      </span>
-      <span className="shelf-item__text">
-        <span className="shelf-item__name">{project.name}</span>
-        <span className="shelf-item__meta">{current ? 'Current page' : project.category}</span>
-      </span>
+      {content}
     </Link>
   )
 }
@@ -80,10 +96,11 @@ interface WorkShelfProps {
  *
  * Opening and closing live in Header.tsx (click toggles; Escape, a click
  * outside or focus leaving closes; following a link closes). Here: Arrow
- * Left/Right move between entries (Home/End jump to the ends), Arrow
+ * Left/Right move between the links (Home/End jump to the ends), Arrow
  * Up/Down move between the two rows, Arrow Up from the
  * first row closes the shelf and returns to Work, Tab works as usual, and
- * opening from the keyboard focuses the first entry.
+ * opening from the keyboard focuses the first link. The current project
+ * (text, not a link) is passed over.
  */
 export function WorkShelf({ id, open, focusFirst, thumbs, activeId, onNavigate, onClose }: WorkShelfProps) {
   const listRef = useRef<HTMLUListElement>(null)
@@ -96,26 +113,41 @@ export function WorkShelf({ id, open, focusFirst, thumbs, activeId, onNavigate, 
   const onKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
     const list = listRef.current
     if (!list) return
-    const items = [...list.querySelectorAll<HTMLAnchorElement>('a')]
-    const i = items.indexOf(document.activeElement as HTMLAnchorElement)
+    // Every entry keeps its place in the grid; only the links take focus (the current project is text).
+    const entries = [...list.querySelectorAll<HTMLElement>('.shelf-item')]
+    const i = entries.indexOf(document.activeElement as HTMLElement)
     if (i < 0) return
-    const last = items.length - 1
-    const columns = getComputedStyle(list).gridTemplateColumns.split(' ').filter(Boolean).length || items.length
+    const n = entries.length
+    const isLink = (k: number) => entries[k]?.tagName === 'A'
+    const columns = getComputedStyle(list).gridTemplateColumns.split(' ').filter(Boolean).length || n
+    /** The next link from k in direction dir, around the ends. */
+    const walk = (k: number, dir: 1 | -1) => {
+      for (let s = 1; s < n; s++) {
+        const t = (((k + dir * s) % n) + n) % n
+        if (isLink(t)) return t
+      }
+      return i
+    }
+    /** The entry t in another row, or the link beside it in that row. */
+    const inRow = (t: number) => {
+      const start = t - (t % columns)
+      return [t, t + 1, t - 1].find((k) => k >= start && k < Math.min(n, start + columns) && isLink(k)) ?? i
+    }
     let next = -1
-    if (e.key === 'ArrowRight') next = i === last ? 0 : i + 1
-    else if (e.key === 'ArrowLeft') next = i === 0 ? last : i - 1
-    else if (e.key === 'Home') next = 0
-    else if (e.key === 'End') next = last
-    else if (e.key === 'ArrowDown') next = i + columns <= last ? i + columns : i
+    if (e.key === 'ArrowRight') next = walk(i, 1)
+    else if (e.key === 'ArrowLeft') next = walk(i, -1)
+    else if (e.key === 'Home') next = isLink(0) ? 0 : walk(0, 1)
+    else if (e.key === 'End') next = isLink(n - 1) ? n - 1 : walk(n - 1, -1)
+    else if (e.key === 'ArrowDown') next = i + columns < n ? inRow(i + columns) : i
     else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      if (i - columns >= 0) items[i - columns].focus()
+      if (i - columns >= 0) entries[inRow(i - columns)].focus()
       else onClose()
       return
     }
     if (next < 0) return
     e.preventDefault()
-    items[next].focus()
+    entries[next].focus()
   }
 
   const style = {

@@ -1,8 +1,10 @@
 import { useId, useLayoutEffect, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type Ref, type RefObject } from 'react'
-import { getImage } from '../../content/media'
+import { CROP_REGIONS } from '../../content/crops'
+import { getImage, type ImageId } from '../../content/media'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { prefersReducedMotion, useReducedMotion } from '../../hooks/useReducedMotion'
 import { ExpandIcon } from '../media/ExpandIcon'
-import { useImageDialog } from '../media/ImageDialog'
+import { useImageDialog, type Region } from '../media/ImageDialog'
 import { ResponsiveImage } from '../media/ResponsiveImage'
 import type { Rect, Visual } from './CaseScroll'
 
@@ -11,11 +13,14 @@ import type { Rect, Visual } from './CaseScroll'
  * active section (StatesStage, desktop), and the stacked figures below 960px
  * (InlineVisual). Every image opens the shared ImageDialog directly: a click
  * or Enter on the image itself (a real button with the image's exact bounds),
- * never a detached "Enlarge image" button.
+ * never a detached "Enlarge image" button. On phones a visual's `phone` crop
+ * reads in place instead, without an enlarge control.
  */
 
-/** Phones: a zoom opens the tapped image itself (ZoomButton). */
+/** Phones: a zoom opens the tapped image itself (ZoomButton); a visual's `phone` crop replaces its figure. */
 const PHONE = '(max-width: 599.98px)'
+/** The whole image as a focus region (its centre). */
+const WHOLE: Region = { x: 0, y: 0, w: 100, h: 100 }
 /** Frame change timings (ms): highlight out, layer in, settle, same-image pause, highlight in. */
 const T = { hlOut: 60, layerIn: 120, settle: 30, sameLayer: 60, hlIn: 150 }
 
@@ -27,7 +32,8 @@ export function ratioNumber(ratio: string): number {
 }
 
 const layerKey = (v: Visual) => `img:${v.image}`
-const imageRatio = (v: Visual) => getImage(v.image).width / getImage(v.image).height
+const ratioOf = (id: ImageId) => getImage(id).width / getImage(id).height
+const imageRatio = (v: Visual) => ratioOf(v.image)
 const isTransparent = (v: Visual) => Boolean(getImage(v.image).transparent)
 const expandTarget = (v: Visual) => v.expandTo ?? v.image
 /** The sequencer's layer keys and highlight flags from their string signatures (stable effect dependencies). */
@@ -262,24 +268,46 @@ function Caption({ visual, showLabel = true }: { visual: Visual; showLabel?: boo
 }
 
 /**
+ * Where a crop sits in the image its larger view opens, in percent of that
+ * image (CROP_REGIONS), and the visual's highlight mapped onto it; null when
+ * the visual is not a registered crop of `target`.
+ */
+function spotIn(visual: Visual, target: ImageId): { focus: Region; highlight?: Region } | null {
+  const region = CROP_REGIONS[visual.image]
+  if (!region || region.of !== target) return null
+  const { width, height } = getImage(target)
+  const pct = (x: number, y: number, w: number, h: number): Region => ({ x: (x / width) * 100, y: (y / height) * 100, w: (w / width) * 100, h: (h / height) * 100 })
+  const hl = visual.highlight
+  return {
+    focus: pct(region.x, region.y, region.w, region.h),
+    highlight: hl && pct(region.x + (hl.x / 100) * region.w, region.y + (hl.y / 100) * region.h, (hl.w / 100) * region.w, (hl.h / 100) * region.h),
+  }
+}
+
+/**
  * Opens the enlarged view of a visual: `expandTo` (e.g. the whole
- * conversation behind a crop). On a phone that whole image would fit the
- * screen smaller than the crop the visitor tapped, so there the tapped image
- * itself opens, a wide one at actual size. Focus returns to `trigger`.
+ * conversation behind a crop). A crop of it opens there at actual size,
+ * centred on the crop, with the section's highlight at its place (Fit to
+ * screen shows the whole image), so the view enlarges what was clicked. On a
+ * phone that whole image would fit the screen smaller than the crop the
+ * visitor tapped, so there the tapped image itself opens, a wide one at actual
+ * size from its centre. Focus returns to `trigger`.
  */
 function useZoom(visual: Visual) {
   const dialog = useImageDialog()
   const target = expandTarget(visual)
   return (trigger: HTMLElement) => {
-    const phone = window.matchMedia(PHONE).matches
-    const id = phone ? visual.image : target
-    const { width, height } = getImage(id)
-    dialog.open(id, trigger, {
-      gallery: [id],
-      caption: visual.caption ? <Caption visual={visual} /> : undefined,
-      labelled: Boolean(visual.label),
-      detail: phone && width > height && width > window.innerWidth,
-    })
+    const caption = visual.caption ? <Caption visual={visual} /> : undefined
+    const labelled = Boolean(visual.label)
+    if (window.matchMedia(PHONE).matches) {
+      const id = visual.image
+      const { width, height } = getImage(id)
+      const detail = width > height && width > window.innerWidth
+      dialog.open(id, trigger, { gallery: [id], caption, labelled, detail, focus: detail ? WHOLE : undefined })
+      return
+    }
+    const spot = spotIn(visual, target)
+    dialog.open(target, trigger, { gallery: [target], caption, labelled, ...(spot && { detail: true, focus: spot.focus, highlight: spot.highlight }) })
   }
 }
 
@@ -447,7 +475,9 @@ export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) 
 /**
  * A stacked figure in reading order: the image at its own ratio (bounded by
  * the viewport height, so phones never fill the screen), its highlight shown
- * at once, the caption below, and the same direct zoom.
+ * at once, the caption below, and the same direct zoom. On a phone, a visual
+ * with a `phone` crop shows that narrower crop, which reads in place, with no
+ * enlarge control.
  *
  * `showLabel={false}`: the label (e.g. "Illustrative conversation") has
  * already appeared in an earlier figure on the page, so this caption leaves it
@@ -457,21 +487,25 @@ export function InlineVisual({ visual, sizes, priority = false, showLabel = true
   const captionId = useId()
   const zoomRef = useRef<HTMLButtonElement>(null)
   const open = useZoom(visual)
-  const transparent = isTransparent(visual)
-  const r = imageRatio(visual)
+  const inPlace = useMediaQuery(PHONE) ? (visual.phone ?? null) : null
+  const image = inPlace?.image ?? visual.image
+  const highlight = inPlace ? inPlace.highlight : visual.highlight
+  const transparent = Boolean(getImage(image).transparent)
+  const r = ratioOf(image)
   const hasCaption = Boolean(visual.caption || (showLabel && visual.label))
   return (
-    <figure className="cs-figure" data-variant="inline" style={{ '--stage-r': r } as CSSProperties}>
+    <figure className="cs-figure" data-variant="inline" data-in-place={inPlace ? '' : undefined} style={{ '--stage-r': r } as CSSProperties}>
       <div className="cs-stage" data-kind="inline">
         <div className="cs-layer" data-state="shown" data-transparent={transparent || undefined}>
           <div className="cs-canvas" style={{ '--r': r } as CSSProperties}>
-            <ResponsiveImage image={visual.image} sizes={sizes} fit="contain" priority={priority} alt={visual.alt} />
-            {visual.highlight && <HighlightBox rect={visual.highlight} dim={!transparent} on />}
+            {/* The phone crop's own description (the visual's alt describes the wider crop). */}
+            <ResponsiveImage key={image} image={image} sizes={sizes} fit="contain" priority={priority} alt={inPlace ? undefined : visual.alt} />
+            {highlight && <HighlightBox rect={highlight} dim={!transparent} on />}
           </div>
         </div>
-        <ZoomButton ref={zoomRef} visual={visual} captionId={hasCaption ? captionId : undefined} open={open} />
+        {!inPlace && <ZoomButton ref={zoomRef} visual={visual} captionId={hasCaption ? captionId : undefined} open={open} />}
       </div>
-      <ExpandShortcut open={open} zoomRef={zoomRef} />
+      {!inPlace && <ExpandShortcut open={open} zoomRef={zoomRef} />}
       {hasCaption && (
         <figcaption id={captionId} className="cs-caption">
           <Caption visual={visual} showLabel={showLabel} />

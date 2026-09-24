@@ -42,6 +42,9 @@ import type { CaseMedia, Rect, StorySection } from '../../components/case/CaseSc
  * No slide appears on the page (brief-v5 section 24). The stage shows the
  * storefront, then focused crops of its navigation and UK details
  * (src/content/crops/cafepress-uk.ts). Highlights are percentages of each crop.
+ * A click on a detail opens the whole storefront at actual size on that
+ * detail. Phones show narrower crops of the same details (`phone`, round 4,
+ * R4-06), which read in place; the whole storefront still opens its detail view.
  */
 
 /** Eco-Friendly in the category row, in cp-header-nav. */
@@ -50,6 +53,10 @@ const ECO_CATEGORY: Rect = { x: 17.8, y: 42.9, w: 18.7, h: 10 }
 const UK_CONTACT: Rect = { x: 24.7, y: 19.5, w: 67.4, h: 15.5 }
 /** The headline “Branded Promotional Products for UK Businesses”, in cp-header-brand (source x 62–714, y 282–400; at least 60px inside every crop edge). */
 const UK_HEADLINE: Rect = { x: 6, y: 48.2, w: 62.7, h: 20.2 }
+/** Eco-Friendly in the phone crop cp-phone-nav (source x 1091–1216, y 186–218). */
+const ECO_CATEGORY_PHONE: Rect = { x: 8.07, y: 75, w: 19.78, h: 19.05 }
+/** The headline in the phone crop cp-phone-headline (source x 60–710, y 282–400). */
+const UK_HEADLINE_PHONE: Rect = { x: 1.79, y: 5.65, w: 96.73, h: 33.33 }
 
 const FULL = 'cp-storefront' as const
 
@@ -93,6 +100,7 @@ export const CAFEPRESS_UK = {
         caption: 'The storefront’s category row, with Eco-Friendly as its own category.',
         highlight: ECO_CATEGORY,
         expandTo: FULL,
+        phone: { image: 'cp-phone-nav', highlight: ECO_CATEGORY_PHONE },
       },
     },
     {
@@ -122,9 +130,10 @@ export const CAFEPRESS_UK = {
     ),
     visual: {
       image: 'cp-header-brand',
-      caption: 'The storefront’s name and headline for UK businesses.',
+      caption: 'The storefront’s headline for UK businesses.',
       highlight: UK_HEADLINE,
       expandTo: FULL,
+      phone: { image: 'cp-phone-headline', highlight: UK_HEADLINE_PHONE },
     },
   } satisfies StorySection,
 }

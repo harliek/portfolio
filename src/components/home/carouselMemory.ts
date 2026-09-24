@@ -15,6 +15,8 @@ import type { NavigationType } from 'react-router-dom'
 export interface SavedPosition {
   /** Gallery position in items (the featured object's index when settled). */
   pos?: number
+  /** The visitor had stepped to it (arrows, keys, swipe): it holds on return instead of drifting. */
+  manual?: boolean
 }
 
 const STORAGE_KEY = 'hk-home-gallery'

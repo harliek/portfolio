@@ -1,5 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { getImage, largestSrc, PROVENANCE_LABEL, type ImageId } from '../../content/media'
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { getImage, largestSrc, PROVENANCE_LABEL, type ImageAsset, type ImageId } from '../../content/media'
+
+/** A region in percent of the opened image (x, y from its top-left corner). */
+export type Region = { x: number; y: number; w: number; h: number }
 
 export interface OpenOptions {
   /**
@@ -13,6 +16,10 @@ export interface OpenOptions {
   labelled?: boolean
   /** Opens in the actual-size view (e.g. a wide image on a phone, where fitting it would make it no larger). */
   detail?: boolean
+  /** The actual-size view opens (and reopens after Fit to screen) centred on this region (default: the top left). */
+  focus?: Region
+  /** A region marked in the actual-size view, in the page's accent (read from the trigger), e.g. the section's highlight. */
+  highlight?: Region
 }
 
 interface DialogApi {
@@ -20,6 +27,12 @@ interface DialogApi {
 }
 
 const ImageDialogContext = createContext<DialogApi | null>(null)
+
+/** The largest variant's pixel size (what the actual-size view shows once it has loaded). */
+function actualSize(asset: ImageAsset): CSSProperties {
+  const w = asset.widths[asset.widths.length - 1] ?? asset.width
+  return { width: w, height: Math.round((w * asset.height) / asset.width) }
+}
 
 export function useImageDialog(): DialogApi {
   const ctx = useContext(ImageDialogContext)
@@ -42,7 +55,9 @@ function galleryFrom(trigger: HTMLElement): ImageId[] {
  * - Page scrolling is locked while open.
  * - Previous/Next buttons and the arrow keys appear only when there is more
  *   than one image.
- * - "Actual size" switches to a scrollable detail view for dense artifacts.
+ * - "Actual size" switches to a scrollable detail view for dense artifacts,
+ *   centred on `focus` when given (e.g. the crop the visitor clicked), with
+ *   `highlight` marked on the image there; "Fit to screen" shows it whole.
  */
 export function ImageDialogProvider({ children }: { children: ReactNode }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -53,16 +68,40 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   const [detail, setDetail] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [override, setOverride] = useState<{ id: ImageId; caption: ReactNode; labelled: boolean } | null>(null)
+  /** Where the actual-size view of image `id` opens, and what it marks (with the page accent from the trigger). */
+  const [spot, setSpot] = useState<{ id: ImageId; focus?: Region; highlight?: Region; accent: CSSProperties } | null>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLDivElement>(null)
 
   const open = useCallback((id: ImageId, trigger: HTMLElement, options?: OpenOptions) => {
     const list = options?.gallery ?? galleryFrom(trigger)
     triggerRef.current = trigger
     setOverride(options?.caption ? { id, caption: options.caption, labelled: Boolean(options.labelled) } : null)
+    if (options?.focus || options?.highlight) {
+      const css = getComputedStyle(trigger)
+      const accent = { '--case-accent': css.getPropertyValue('--case-accent').trim() || undefined, '--case-accent-rgb': css.getPropertyValue('--case-accent-rgb').trim() || undefined } as CSSProperties
+      setSpot({ id, focus: options.focus, highlight: options.highlight, accent })
+    } else setSpot(null)
     setGallery(list.length ? list : [id])
     setIndex(Math.max(0, list.indexOf(id)))
     setDetail(Boolean(options?.detail))
     setIsOpen(true)
   }, [])
+
+  const count = gallery.length
+  const current = isOpen && count ? getImage(gallery[index]) : null
+  const place = current && spot && spot.id === current.id ? spot : null
+
+  /** Actual size: scroll the focus region to the middle of the view (the browser keeps it within the image). */
+  const centre = useCallback(() => {
+    const stage = stageRef.current
+    const canvas = canvasRef.current
+    const f = place?.focus
+    if (!stage || !canvas || !f || stage.dataset.detail !== 'true') return
+    // Layout offsets (the stage is the canvas's offset parent), unaffected by the dialog's opening scale.
+    stage.scrollLeft = canvas.offsetLeft + ((f.x + f.w / 2) / 100) * canvas.offsetWidth - stage.clientWidth / 2
+    stage.scrollTop = canvas.offsetTop + ((f.y + f.h / 2) / 100) * canvas.offsetHeight - stage.clientHeight / 2
+  }, [place])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -71,8 +110,14 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
       dialog.showModal()
       document.documentElement.classList.add('is-dialog-open')
       closeRef.current?.focus()
+      centre()
     }
-  }, [isOpen])
+  }, [isOpen, centre])
+
+  // Actual size chosen again (after Fit to screen): back to the focus region, before the frame is painted.
+  useLayoutEffect(() => {
+    if (detail && dialogRef.current?.open) centre()
+  }, [detail, centre])
 
   const close = useCallback(() => {
     dialogRef.current?.close()
@@ -90,7 +135,6 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   // Close if the page unmounts underneath the dialog.
   useEffect(() => () => document.documentElement.classList.remove('is-dialog-open'), [])
 
-  const count = gallery.length
   const go = useCallback(
     (delta: number) => {
       setIndex((i) => Math.min(count - 1, Math.max(0, i + delta)))
@@ -100,7 +144,6 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   )
 
   const api = useMemo(() => ({ open }), [open])
-  const current = isOpen && count ? getImage(gallery[index]) : null
   const ownCaption = current && override && override.id === current.id ? override : null
   const label = current && !ownCaption?.labelled ? PROVENANCE_LABEL[current.provenance] : null
 
@@ -151,24 +194,46 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
               </div>
             </div>
             <div
+              ref={stageRef}
               className="image-dialog__stage"
+              style={{ position: 'relative' }}
               data-detail={detail}
               role={detail ? 'region' : undefined}
               tabIndex={detail ? 0 : undefined}
               aria-label={detail ? 'Scrollable detail view' : undefined}
             >
-              <picture key={current.id}>
-                <source type="image/avif" srcSet={largestSrc(current, 'avif')} />
-                <source type="image/webp" srcSet={largestSrc(current, 'webp')} />
-                <img
-                  data-transparent={current.transparent ? 'true' : undefined}
-                  src={largestSrc(current, current.fallback)}
-                  width={current.width}
-                  height={current.height}
-                  alt={current.alt}
-                  decoding="async"
-                />
-              </picture>
+              {/* Actual size: the image's own box (its highlight is placed in percent of it); fit: no box of its own. */}
+              <div ref={canvasRef} style={detail ? { position: 'relative', width: 'max-content', margin: 'auto' } : { display: 'contents' }}>
+                <picture key={current.id}>
+                  <source type="image/avif" srcSet={largestSrc(current, 'avif')} />
+                  <source type="image/webp" srcSet={largestSrc(current, 'webp')} />
+                  <img
+                    data-transparent={current.transparent ? 'true' : undefined}
+                    src={largestSrc(current, current.fallback)}
+                    width={current.width}
+                    height={current.height}
+                    alt={current.alt}
+                    decoding="async"
+                    // Actual size has its final size before the file arrives, so the view opens on its focus at once.
+                    style={detail ? actualSize(current) : undefined}
+                  />
+                </picture>
+                {detail && place?.highlight && (
+                  <span
+                    className="cs-hl image-dialog__hl"
+                    data-on=""
+                    data-dim=""
+                    aria-hidden="true"
+                    style={{
+                      ...place.accent,
+                      left: `${place.highlight.x}%`,
+                      top: `${place.highlight.y}%`,
+                      width: `${place.highlight.w}%`,
+                      height: `${place.highlight.h}%`,
+                    }}
+                  />
+                )}
+              </div>
             </div>
             <p id="image-dialog-caption" className="image-dialog__caption t-small">
               {label && (

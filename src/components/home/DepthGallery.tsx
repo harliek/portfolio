@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { GALLERY } from '../../config/carousel'
 import { ACCENTS, accentVars, type AccentId } from '../../content/accents'
@@ -109,9 +109,21 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
   const linkRefs = useRef<Array<HTMLAnchorElement | null>>([])
   /** The position (and a hold the visitor chose) survives effect re-runs within one history entry (the motion setting changed). */
   const kept = useRef<{ key: string; pos: number; manual: boolean } | null>(null)
-  const api = useRef<{ step: (dir: 1 | -1) => void; freeze: (i: number) => void; resume: (i: number) => void; dragged: () => boolean } | null>(null)
+  const api = useRef<{ step: (dir: 1 | -1) => void; freeze: (i: number) => void; resume: (i: number) => void; dragged: () => boolean; appear: () => void } | null>(null)
   // The images' `sizes`: chosen for this window, raised if a resize makes the objects notably larger.
   const [sizes, setSizes] = useState(initialSizes)
+  /**
+   * When each object's image was ready to show (performance.now(); 0: already
+   * loaded at mount; NaN: not yet). Until then the object (with its floor
+   * light, shadow and reflection) and its name stay hidden; then they fade
+   * in together (GALLERY.appear; at once with reduced motion).
+   */
+  const shownAt = useRef<number[]>(Array.from({ length: N }, () => Number.NaN))
+  const markReady = useCallback((i: number, instant: boolean) => {
+    if (!Number.isNaN(shownAt.current[i])) return
+    shownAt.current[i] = instant ? 0 : performance.now()
+    api.current?.appear()
+  }, [])
 
   useLayoutEffect(() => {
     const root = rootRef.current
@@ -206,9 +218,17 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
       written.lt.fill('')
     }
 
+    /** How far each object has appeared (0 until its image has decoded, then a short fade to 1). */
+    const appeared = new Float64Array(N)
     const layout = () => {
       place(pos, widths, boost, scene, P)
       const { u, W, H, cls } = scene
+      const tNow = performance.now()
+      for (let i = 0; i < N; i++) {
+        const t = shownAt.current[i]
+        const x = Number.isNaN(t) ? 0 : t === 0 || reduced ? 1 : clamp((tNow - t) / GALLERY.appear.ms, 0, 1)
+        appeared[i] = x * (2 - x)
+      }
       const persp = (GALLERY.perspective * u).toFixed(0)
       const { gap, gapDepth, edgeFade, edgeMargin, clear, rise, phoneFade, touchSubs: touchSubsCfg } = GALLERY.label
       const phone = cls === 'phone'
@@ -261,7 +281,7 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
           obj.style.transform = t
           written.t[i] = t
         }
-        const o = p.op.toFixed(3)
+        const o = (p.op * appeared[i]).toFixed(3)
         if (o !== written.o[i]) {
           obj.style.opacity = o
           written.o[i] = o
@@ -337,7 +357,7 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
             : 1 - 0.2 * clamp(p.a - 1.5, 0, 1)
         nameX[i] = lx
         nameY[i] = ly
-        nameOp[i] = p.vis * depthFade * edge * clamp(1 - crowd / (16 * u), 0, 1) * clamp((H - 8 - ly) / 8, 0, 1)
+        nameOp[i] = appeared[i] * p.vis * depthFade * edge * clamp(1 - crowd / (16 * u), 0, 1) * clamp((H - 8 - ly) / 8, 0, 1)
         // The label stands at the name; the caption box (and with it the subtitle) is offset by --sx, the name kept in place.
         const lt = `translate3d(${px(lx)}px, ${px(ly)}px, 0)`
         if (lt !== written.lt[i]) {
@@ -372,7 +392,7 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
         }
         // Pointer targets: only objects (and names) that are clearly shown.
         const inStage = Math.min(p.x + p.hw, W) - Math.max(p.x - p.hw, 0)
-        const off = (p.op < 0.35 || inStage < p.hw * 0.9 ? 1 : 0) + (lop < 0.45 ? 2 : 0)
+        const off = (p.op * appeared[i] < 0.35 || inStage < p.hw * 0.9 ? 1 : 0) + (lop < 0.45 ? 2 : 0)
         if (off !== written.off[i]) {
           if (off & 1) items[i].dataset.off = ''
           else delete items[i].dataset.off
@@ -433,8 +453,9 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
      */
     let manual = Boolean(same ? kept.current!.manual : restored?.manual)
     let pos = same ? kept.current!.pos : (restored?.pos ?? OPENING_POS)
-    // Held where the visitor stepped (an opening mid-step kept a position between two projects).
-    if (manual) pos = Math.round(pos)
+    // Held where the visitor stepped (an opening mid-step kept a position between two projects);
+    // reduced motion (also switched on mid-drift) rests on the nearest project.
+    if (manual || reduced) pos = Math.round(pos)
     let vel = 0
     let mode: Mode = 'hold'
     let target = Math.round(pos)
@@ -443,7 +464,8 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
     let driftRamp = 0
     /** Moves started from the keyboard (arrow keys, focus) run even while focus or hover would pause. */
     let forced = false
-    const gesture = { start: 0, anchor: 0, goal: 0, last: 0, lastAbs: 0, acc: 0, stepped: false }
+    /** The wheel gesture: `last` is its last applied event, `seen` the last event at all (applied or discarded). */
+    const gesture = { start: 0, anchor: 0, goal: 0, last: 0, seen: -Infinity, lastAbs: 0, acc: 0, stepped: false }
     const st = { hover: -1, focus: -1, active: -1, touch: false, busy: false, visible: document.visibilityState === 'visible' }
     let raf = 0
     let last = 0
@@ -535,12 +557,14 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
         }
       }
       if (mode === 'drift') {
-        const { rate, wave, rampMs } = GALLERY.drift
+        const { rate, wave: base, phoneWave, rampMs } = GALLERY.drift
         driftRamp = Math.min(1, driftRamp + (dt * 1000) / rampMs)
         const ramp = driftRamp * driftRamp * (3 - 2 * driftRamp)
         const f = pos - Math.floor(pos)
-        // Slower near each featured position, never stopped; the same average rate.
-        const v = rate * Math.sqrt(1 - wave * wave) * (1 - wave * Math.cos(2 * Math.PI * f)) * ramp * driftDir * debugScale()
+        // Slower near each featured position, never stopped. Phones dwell longer at each
+        // project and cross faster between them, in the same time per project.
+        const wave = scene.cls === 'phone' ? phoneWave : base
+        const v = ((rate * (1 - base * base)) / Math.sqrt(1 - wave * wave)) * (1 - wave * Math.cos(2 * Math.PI * f)) * ramp * driftDir * debugScale()
         pos += v * dt
         vel = v
       }
@@ -665,6 +689,23 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
     layout()
     root.dataset.ready = 'true'
 
+    // Objects whose image decoded after the gallery mounted fade in (layout reads `shownAt`).
+    let appearRaf = 0
+    const fading = () => {
+      if (reduced) return false
+      const now = performance.now()
+      return shownAt.current.some((t) => t > 0 && now - t < GALLERY.appear.ms)
+    }
+    const appearFrame = () => {
+      appearRaf = 0
+      layout()
+      if (fading()) appearRaf = requestAnimationFrame(appearFrame)
+    }
+    const appear = () => {
+      if (!appearRaf) appearRaf = requestAnimationFrame(appearFrame)
+    }
+    if (fading()) appear()
+
     // ------------------------------------------------------------------
     // Hover (mouse and pen): only an object's silhouette or its name counts.
     // ------------------------------------------------------------------
@@ -786,12 +827,23 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
       const html = document.documentElement
       if (html.classList.contains('is-menu-open') || html.classList.contains('is-dialog-open')) return
       e.preventDefault()
-      if (st.busy || halted() || mode === 'drag') return // discarded, never applied later
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1
       const raw = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * unit
       if (!raw) return
       const now = performance.now()
       const g = gesture
+      // A new wheel gesture (not the rest of one already under way, such as a
+      // trackpad's momentum) over a hovered object is deliberate: it ends the
+      // hover pause, as if the pointer had left. Hover returns with the
+      // pointer's next movement. Drift and settling still pause on hover.
+      const fresh = now - g.seen > GALLERY.wheel.gapMs
+      g.seen = now
+      if (fresh && st.hover >= 0 && st.focus < 0 && !st.touch && !st.busy) {
+        clearGrace()
+        st.hover = -1
+        setActive()
+      }
+      if (st.busy || halted() || mode === 'drag') return // discarded, never applied later
       if (reduced) {
         if (now - g.last > GALLERY.wheel.gapMs) {
           g.acc = 0
@@ -810,9 +862,13 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
       const delta = clamp(raw, -maxEvent, maxEvent)
       const dir = delta > 0 ? 1 : -1
       if (mode !== 'input' || now - g.last > gapMs) {
-        g.anchor = mode === 'settle' ? target : Math.round(pos)
-        g.start = pos
-        g.goal = pos
+        // A new gesture while the previous step is still settling starts from
+        // where that step is going (one notch = one more project, as the
+        // arrows); the movement itself still eases on from the current place.
+        const settling = mode === 'settle'
+        g.anchor = settling ? target : Math.round(pos)
+        g.start = settling ? target : pos
+        g.goal = g.start
         g.lastAbs = 0
       } else if (Math.abs(g.goal - (g.anchor + dir)) < 1e-6 && Math.abs(delta) > 14 && Math.abs(delta) > g.lastAbs * 1.8) {
         // A fresh swipe while the previous one's momentum is still arriving: one more project.
@@ -900,7 +956,11 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
         } else {
           const flick = e.type === 'pointercancel' ? 0 : clamp(drag.v * GALLERY.swipe.flick, -0.6, 0.6)
           target = clamp(Math.round(pos + flick), drag.anchor - 1, drag.anchor + 1)
-          vel = drag.v
+          // The flick carries into the settle only towards the target, and never so fast
+          // that the spring passes it (no swing past the project and back).
+          const x = pos - target
+          const most = GALLERY.settle.omega * Math.abs(x)
+          vel = drag.v * x < 0 ? clamp(drag.v, -most, most) : 0
           if (target !== drag.anchor) driftDir = target > drag.anchor ? 1 : -1
           // A deliberate swipe: once settled, it holds until the next input.
           manual = true
@@ -979,6 +1039,7 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
         kick()
       },
       dragged: () => performance.now() - drag.endedAt < 400,
+      appear,
     }
 
     if (import.meta.env.DEV) {
@@ -1008,6 +1069,7 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
       alive = false
       cancelAnimationFrame(raf)
       cancelAnimationFrame(resizeFrame)
+      cancelAnimationFrame(appearRaf)
       window.clearTimeout(wake)
       window.clearTimeout(fade)
       clearGrace()
@@ -1075,6 +1137,8 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
               >
                 <GalleryObject
                   item={item}
+                  index={i}
+                  onReady={markReady}
                   sizes={sizes[i]}
                   priority={i <= 3 || i === N - 1}
                   objectRef={(el) => {

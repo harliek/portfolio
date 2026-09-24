@@ -134,8 +134,14 @@ export const GALLERY = {
     touchSubs: { minWidth: 900, subGap: 16 },
   },
 
-  /** Very slow idle drift: items per second on average, and its wave (slower near each featured position, never stopped). */
-  drift: { rate: 0.1, wave: 0.62, rampMs: 1800 },
+  /**
+   * Very slow idle drift: its rate (items per second) and wave (slower near
+   * each featured position, never stopped). Phones use the stronger
+   * `phoneWave` in the same time per project: the drift dwells longer at
+   * each project and crosses faster between them, so a name is readable
+   * more of the time (only the front one shows there).
+   */
+  drift: { rate: 0.1, wave: 0.62, phoneWave: 0.9, rampMs: 1800 },
   /** A fresh opening holds still this long, so the About-first composition reads. */
   openingHoldMs: 3200,
   /**
@@ -162,7 +168,12 @@ export const GALLERY = {
   swipe: { widthPerItem: 0.55, flick: 0.22, slop: 8 },
 
   hover: {
-    /** Forward (px at u = 1) and +5% (the inner wrapper; the gallery transform stays on the outer element). */
+    /**
+     * Forward (px at u = 1) and +5% (the inner wrapper; the gallery transform
+     * stays on the outer element). The featured object, the largest, grows
+     * +3% (home.css), about the same pixels, so it never covers a
+     * neighbour's embedded title. `scale` is the largest (for image sizes).
+     */
     lift: 8,
     scale: 1.05,
     /** After the pointer leaves an object, it may reach the object's name (or come back) within this long without resuming. */
@@ -170,6 +181,13 @@ export const GALLERY = {
   },
   /** Reduced motion: steps cross-fade (ms out, ms in); a wheel gesture moves one step after this much scrolling (px). */
   reduced: { outMs: 110, inMs: 170, wheelPx: 40 },
+  /**
+   * An object (with its floor light and name) is never shown before its
+   * image has decoded; then it fades in over `ms`, or shows at once when
+   * that happens within `instantWithin` ms of the gallery mounting (a
+   * cached image, such as on Back).
+   */
+  appear: { ms: 200, instantWithin: 150 },
   /** Largest frame time used for one step (s), so a stalled frame never produces a jump. */
   maxStep: 0.05,
 } as const

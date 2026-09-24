@@ -17,7 +17,8 @@ import './transition.css'
  * 1. the caller freezes the carousel (openProject returned 'cover'); a copy
  *    of the clicked image (the same file, `currentSrc`, with its glow) takes
  *    its place and comes a little forward, while the page being left fades
- *    out;
+ *    out (a copy of an object turned in 3D starts with the same turn and
+ *    turns to face the viewer on the way, so nothing flattens in one frame);
  * 2. the route changes once the route's code has loaded and the slot's
  *    image file has decoded (never later than TRANSITION.navigateCapMs; a
  *    failed chunk still navigates and RouteError handles it);
@@ -385,6 +386,43 @@ function placeBox(el: HTMLElement, b: Box) {
 
 const toBox = (d: DOMRect): Box => ({ x: d.left, y: d.top, w: d.width, h: d.height })
 
+/** A 3D turn on an ancestor of the source (the gallery's objects are turned towards the viewer): the copy starts turned the same way. */
+interface Turn {
+  /** The image's box with the turn taken off (viewport px): the copy's box. */
+  box: Box
+  /** The turn's origin within that box (px) and its perspective in viewport px. */
+  origin: string
+  perspective: number
+  /** The ancestor's own rotateY(), verbatim. */
+  rotate: string
+}
+
+const TURN = /perspective\(\s*([\d.]+)px\s*\)\s*(rotateY\(\s*-?[\d.e-]+(?:rad|deg|grad|turn)?\s*\))/
+
+/**
+ * The turn of the nearest ancestor of `el` whose inline transform ends in
+ * perspective() rotateY() (the depth gallery writes one per object),
+ * measured by taking it off for one synchronous measurement: the image's
+ * flat box, the turn's origin and the perspective at the ancestor's scale.
+ */
+function turnOf(el: HTMLElement, img: HTMLImageElement, ratio: number | undefined): Turn | null {
+  for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
+    const t = n.style.transform
+    const m = t ? TURN.exec(t) : null
+    if (!m) continue
+    n.style.transform = t.replace(m[0], '').trim() || 'none'
+    const box = contentBox(el, img, ratio)
+    const rect = n.getBoundingClientRect()
+    const [ox, oy] = getComputedStyle(n).transformOrigin.split(' ').map(parseFloat)
+    n.style.transform = t
+    const k = n.offsetWidth ? rect.width / n.offsetWidth : 1
+    if (!box || !Number.isFinite(ox) || !Number.isFinite(oy)) return null
+    const origin = `${(rect.left + ox * k - box.x).toFixed(2)}px ${(rect.top + oy * k - box.y).toFixed(2)}px`
+    return { box, origin, perspective: parseFloat(m[1]) * k, rotate: m[2] }
+  }
+  return null
+}
+
 /**
  * The `[data-cover-source]` object for a click: `source` itself, the object
  * around it, or the one inside it (a whole link was passed). Only an image
@@ -398,9 +436,10 @@ function coverSource(source: HTMLElement | null | undefined) {
   const src = img?.currentSrc || img?.src
   if (!img || !src || !img.complete || !img.naturalWidth) return null
   const id = el.dataset.coverSource || null
-  const box = contentBox(el, img, coverRatio(id))
+  const ratio = coverRatio(id)
+  const box = contentBox(el, img, ratio)
   if (!box || box.w < 12 || visibleShare(box) < 0.3) return null
-  return { el, img, src, box, id }
+  return { el, img, src, box, id, turn: turnOf(el, img, ratio) }
 }
 
 // ---------------------------------------------------------------------------
@@ -714,8 +753,10 @@ function startCover(path: string, found: NonNullable<ReturnType<typeof coverSour
   clone.appendChild(img)
   // A cut-out shown with a faded lower edge (the headshot) keeps that fade in flight (transition.css).
   if (getComputedStyle(found.el).maskImage !== 'none' || getComputedStyle(found.img).maskImage !== 'none') clone.dataset.fade = 'bottom'
-  placeBox(clone, found.box)
-  clone.style.transformOrigin = '50% 50%'
+  // A turned object's copy starts turned as it stands (flat box, the same origin and perspective).
+  const turn = found.turn
+  placeBox(clone, turn?.box ?? found.box)
+  clone.style.transformOrigin = turn?.origin ?? '50% 50%'
   clone.style.filter = painted.filter
   clone.style.opacity = String(painted.opacity)
   document.body.appendChild(clone)
@@ -724,9 +765,14 @@ function startCover(path: string, found: NonNullable<ReturnType<typeof coverSour
   found.el.setAttribute('data-cover-moving', '')
   begin(r)
 
-  // Step 1: forward, while the page being left fades out.
+  // Step 1: forward (a turned object turns to face the viewer on the way), while the page being left fades out.
   const { forwardMs, forwardScale, forwardLift } = TRANSITION
-  r.forward = clone.animate([{ transform: 'none' }, { transform: `translateY(${-forwardLift}px) scale(${forwardScale})` }], {
+  const from = turn ? `translateY(0px) scale(1) perspective(${turn.perspective.toFixed(2)}px) ${turn.rotate}` : 'none'
+  const to = turn
+    ? `translateY(${-forwardLift}px) scale(${forwardScale}) perspective(${turn.perspective.toFixed(2)}px) rotateY(0rad)`
+    : `translateY(${-forwardLift}px) scale(${forwardScale})`
+  clone.style.transform = from
+  r.forward = clone.animate([{ transform: from }, { transform: to }], {
     duration: forwardMs,
     easing: TRANSITION.forwardEase,
     fill: 'forwards',

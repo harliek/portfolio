@@ -6,6 +6,7 @@ import { ExpandIcon } from '../../media/ExpandIcon'
 import { enterFullscreen, NATIVE_FULLSCREEN } from '../../media/fullscreen'
 import { ResponsiveImage } from '../../media/ResponsiveImage'
 import { shortDuration, spokenDuration } from '../../media/duration'
+import { onFramePresented } from '../../media/videoFrame'
 import { FilmDialog, type FilmState } from './FilmDialog'
 
 /*
@@ -40,6 +41,10 @@ import { FilmDialog, type FilmState } from './FilmDialog'
  * full nor started until the shown film's poster has loaded, so a slow
  * connection shows the poster (not a dark frame with a spinner) first. The
  * video's own poster reuses the file the picture loaded (no second download).
+ * The recording stays transparent over the poster until it has put a frame on
+ * screen (`data-has-frame`), then fades in (client-work.css .fp-video; at once
+ * under reduced motion): no black frame when a preview starts, and poster to
+ * film is a short dissolve rather than a cut.
  */
 
 /** Share of the frame that must be visible before a preview starts. */
@@ -121,6 +126,7 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
   const [playing, setPlaying] = useState(false)
   const [blocked, setBlocked] = useState(false)
   const [previewsStopped, setPreviewsStopped] = useState(false)
+  /** The attached recording has put a frame on screen (it is shown from then on, over the poster). */
   const [hasFrame, setHasFrame] = useState(false)
   const [expanded, setExpanded] = useState<FilmState | null>(null)
   /** Each film's loaded poster file, by index ('' if it failed); a film is missing until its poster has loaded. */
@@ -272,7 +278,7 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
     }
   }, [silenced, reduced, opened, preview, previewsStopped, isAttached, posterReady, autoPause, tryPreview])
 
-  // A newly attached recording: a clean state, then the preview if allowed.
+  // A newly attached recording: a clean state, then the preview if allowed. It appears once it has a frame.
   const attachVideo = useCallback(
     (el: HTMLVideoElement | null) => {
       videoRef.current = el
@@ -280,20 +286,22 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
       const c = ctl.current
       el.muted = !c.opened
       el.defaultMuted = el.muted
+      const stop = onFramePresented(el, () => {
+        if (videoRef.current === el) setHasFrame(true)
+      })
       // Watch film was pressed before this recording was attached: play it now (still within the gesture's activation).
       if (c.pendingPlay) {
         c.pendingPlay = false
         el.muted = false
         el.play().catch(() => {})
       }
+      return () => {
+        stop()
+        if (videoRef.current === el) videoRef.current = null
+      }
     },
     [],
   )
-
-  const onLoadedData = () => {
-    setHasFrame(true)
-    tryPreview()
-  }
 
   const onPlay = () => {
     const c = ctl.current
@@ -391,8 +399,10 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
     c.expanded = true
     open()
     autoPause()
-    // From a preview the visitor asked to watch: the larger view plays with sound.
-    setExpanded({ time: v.currentTime, play, muted: wasPreview ? false : v.muted, volume: v.volume })
+    // The larger view opens on what is on screen here (this frame, or the poster); from a preview the visitor asked
+    // to watch, so it plays with sound.
+    const from = hasFrame ? v : (frameRef.current?.querySelector<HTMLImageElement>(`[data-poster="${view.front}"] img`) ?? null)
+    setExpanded({ time: v.currentTime, play, muted: wasPreview ? false : v.muted, volume: v.volume, from })
   }
 
   const closeExpanded = (result: FilmState) => {
@@ -492,7 +502,7 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
             data-ambient={opened ? undefined : ''}
             aria-label={`${name} film`}
             aria-describedby={captionId}
-            onLoadedData={onLoadedData}
+            onLoadedData={tryPreview}
             onPlay={onPlay}
             onPause={onPause}
             onVolumeChange={onVolumeChange}

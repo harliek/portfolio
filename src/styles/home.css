@@ -154,6 +154,7 @@ html.home-scene .site-main {
 
 /* Glow, floor light and brightness by depth (discrete steps with a transition; never re-rendered every frame). */
 .gobj {
+  --hover-scale: 1.05;
   --edge-a: 0.56;
   --edge-r: 1.5px;
   --halo-a: 0.32;
@@ -169,7 +170,9 @@ html.home-scene .site-main {
   --foot-x: 0;
 }
 
+/* The featured object is the largest: +3% on hover is about the pixels a neighbour gains at +5%, and never covers a neighbour's title. */
 .gobj[data-tier='0'] {
+  --hover-scale: 1.03;
   --edge-a: 0.78;
   --edge-r: 1.75px;
   --halo-a: 0.46;
@@ -251,7 +254,11 @@ html.home-scene .site-main {
   --foot: 0.78;
 }
 
-/* The positioned element: DepthGallery writes its transform, opacity and z-index every frame. */
+/*
+ * The positioned element: DepthGallery writes its transform, opacity and
+ * z-index every frame (never transitioned, also where reduced motion gives
+ * every element a 1ms transition, which would show the first frames' values late).
+ */
 .gobj__object {
   position: absolute;
   left: 0;
@@ -261,6 +268,7 @@ html.home-scene .site-main {
   transform-origin: 50% 100%;
   will-change: transform, opacity;
   pointer-events: none;
+  transition-property: none;
 }
 
 /* The accent light spilling onto the floor beneath the object. */
@@ -331,7 +339,7 @@ html.home-scene .site-main {
 }
 
 .gobj[data-active] .gobj__lift {
-  transform: translateY(calc(var(--hover-lift) * -1)) scale(1.05);
+  transform: translateY(calc(var(--hover-lift) * -1)) scale(var(--hover-scale));
 }
 
 .gobj__art {
@@ -365,7 +373,7 @@ html.home-scene .site-main {
 }
 
 /*
- * The room's light on the artwork, masked by the same image (DepthGallery
+ * The room's light on the artwork, masked by the same image (GalleryObject
  * sets the mask once the file has loaded): a cool lavender light from above
  * and a gentle falloff towards the floor, stronger for farther objects, so
  * the studio renders sit in the dark room. Never over the object's centre,
@@ -382,6 +390,11 @@ html.home-scene .site-main {
   opacity: var(--shade-o, 0.9);
   pointer-events: none;
   transition: opacity 520ms var(--ease-out);
+}
+
+/* Until its mask is set (GalleryObject.tsx), the light would draw as a rectangle: hidden. */
+.gobj__shade:not([data-masked]) {
+  opacity: 0;
 }
 
 /*
@@ -415,7 +428,7 @@ html.home-scene .site-main {
   pointer-events: none;
 }
 
-/* The name, upright and readable beneath its object (never turned with it); DepthGallery places it. */
+/* The name, upright and readable beneath its object (never turned with it); DepthGallery places it and sets its opacity (never transitioned). */
 .gobj__label {
   position: absolute;
   left: 0;
@@ -423,6 +436,7 @@ html.home-scene .site-main {
   z-index: 200;
   will-change: transform, opacity;
   pointer-events: none;
+  transition-property: none;
 }
 
 /* Only the name (and the subtitle while it shows) takes the pointer, never the reserved space. */

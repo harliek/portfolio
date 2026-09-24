@@ -6,7 +6,8 @@
  * The moving copy of the clicked PNG object: the same image file, fixed to
  * the viewport, above the page and the header, below the pointer trail.
  * Its box always has the image's own proportions; only a uniform scale and
- * a translation animate (never a stretch or a turn). Never interactive.
+ * a translation animate (never a stretch), after a copy of a turned gallery
+ * object has turned to face the viewer while coming forward. Never interactive.
  * No will-change: the running animations are composited anyway, and without
  * it the landed copy is drawn at its final size, exactly as sharp as the
  * slot image that replaces it.

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { getImage, largestSrc, type ImageAsset, type ImageId } from '../../content/media'
+import { closeOnCancel, closeWithFade } from './dialogExit'
 
 /** A region in percent of the opened image (x, y from its top-left corner). */
 export type Region = { x: number; y: number; w: number; h: number }
@@ -51,7 +52,8 @@ function galleryFrom(trigger: HTMLElement): ImageId[] {
 /**
  * One shared native <dialog> for image enlargement.
  * - A visible, labelled Close button (focused on open); Escape and a click on
- *   the backdrop also close (native cancel event).
+ *   the backdrop also close (native cancel event). It fades in and, on every
+ *   one of these, fades out again (dialogExit.ts) before focus returns.
  * - showModal() contains focus; focus returns to the activating control.
  * - Page scrolling is locked while open.
  * - Previous/Next buttons and the arrow keys appear only when there is more
@@ -121,7 +123,7 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   }, [detail, centre])
 
   const close = useCallback(() => {
-    dialogRef.current?.close()
+    closeWithFade(dialogRef.current)
   }, [])
 
   // Runs for every close path: button, Escape, backdrop, route change.
@@ -156,6 +158,7 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
         className="image-dialog"
         aria-labelledby={current ? 'image-dialog-caption' : undefined}
         onClose={onClose}
+        onCancel={closeOnCancel}
         onKeyDown={(e) => {
           if (count < 2) return
           if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1) }

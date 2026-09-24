@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useId, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { fallbackSrc, getImage, getVideo, type ImageId, type VideoAsset, type VideoId } from '../../content/media'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { ExpandIcon } from './ExpandIcon'
 import { enterFullscreen, NATIVE_FULLSCREEN } from './fullscreen'
+import { closeOnCancel, closeWithFade } from './dialogExit'
 import { ResponsiveImage } from './ResponsiveImage'
+import { drawUnderlay, onFramePresented, type Underlay } from './videoFrame'
 
 /*
  * DemoVideo: a product recording that plays by itself (CaseScroll `video`
@@ -40,9 +42,12 @@ import { ResponsiveImage } from './ResponsiveImage'
  * - The poster wins the bandwidth: the recording is neither requested in
  *   full nor started until the poster image has loaded, so a slow connection
  *   shows the poster (not an empty frame with a spinner) first.
- * - Nothing loads twice: the poster is drawn underneath until the first frame
- *   exists, so the stage is never empty, and the video's own poster reuses the
- *   file the picture already loaded.
+ * - Nothing loads twice: the poster is drawn underneath, so the stage is never
+ *   empty, and the video's own poster reuses the file the picture already
+ *   loaded. The recording stays transparent until it has put a frame on
+ *   screen, then fades in over the poster (videoFrame.ts; at once under
+ *   reduced motion): no black frame, and poster to recording is a short
+ *   dissolve rather than a cut.
  */
 
 /** Share of the player that must be visible before it starts by itself. */
@@ -81,6 +86,8 @@ interface Expanded {
   play: boolean
   muted: boolean
   volume: number
+  /** What the inline player shows as the larger view opens (its frame, or the poster): drawn there until its own copy has a frame. */
+  from: Underlay | null
 }
 
 export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVideoProps) {
@@ -95,6 +102,7 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
   const [src] = useState(() => pickVariant(asset).src)
   const startAt = asset.startAt ?? 0
   const [status, setStatus] = useState<Status>('idle')
+  /** The recording has put a frame on screen (it is shown from then on, over the poster). */
   const [hasFrame, setHasFrame] = useState(false)
   const [expanded, setExpanded] = useState<Expanded | null>(null)
   /** The poster file the picture loaded (undefined until then; '' if it failed). */
@@ -213,6 +221,13 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
     return () => document.removeEventListener('fullscreenchange', onChange)
   }, [])
 
+  // The recording appears once it has a frame of its own (never the black box of a playing video without one).
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v) return
+    return onFramePresented(v, () => setHasFrame(true))
+  }, [])
+
   // Leaving the page always stops playback.
   useEffect(() => {
     const v = videoRef.current
@@ -271,7 +286,9 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
     if (play) c.startDone = true
     c.expanded = true
     autoPause()
-    setExpanded({ time, play, muted: v.muted, volume: v.volume })
+    // The larger view opens on what is on screen here: this frame, or the poster.
+    const from = hasFrame && !showPlay && !covering ? v : (stageRef.current?.querySelector<HTMLImageElement>('.cs-demo__poster img') ?? null)
+    setExpanded({ time, play, muted: v.muted, volume: v.volume, from })
   }
 
   const closeExpanded = (result: { time: number; playing: boolean; muted: boolean; volume: number }) => {
@@ -307,17 +324,15 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
   return (
     <figure className="cs-figure cs-demo" data-variant={variant} style={{ '--stage-r': ratio } as CSSProperties}>
       <div ref={stageRef} className="cs-stage" data-kind="video" data-status={status}>
-        {/* Drawn underneath until the recording has a frame (the stage is never empty), and over it while "Play demo" is offered. */}
-        {(!hasFrame || showPlay || covering) && (
-          <ResponsiveImage
-            image={posterId}
-            sizes={sizes}
-            decorative
-            fit="contain"
-            priority
-            className={showPlay || covering ? 'cs-demo__poster cs-demo__poster--over' : 'cs-demo__poster'}
-          />
-        )}
+        {/* Underneath (the stage is never empty, and the recording fades in over it), and over it while "Play demo" is offered. */}
+        <ResponsiveImage
+          image={posterId}
+          sizes={sizes}
+          decorative
+          fit="contain"
+          priority
+          className={showPlay || covering ? 'cs-demo__poster cs-demo__poster--over' : 'cs-demo__poster'}
+        />
         <video
           ref={videoRef}
           className="cs-demo__video"
@@ -333,17 +348,11 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
           // returns only while the recording is in full screen (touch Expand), so it can be left there.
           controlsList={fullscreen ? undefined : 'nofullscreen'}
           preload={!posterReady ? 'none' : reduced ? 'metadata' : 'auto'}
+          data-frame={hasFrame || undefined}
           aria-label={asset.title}
           aria-describedby={captionId}
           onLoadedMetadata={onLoadedMetadata}
-          // A frame at the start time: after the seek, never the first frame on its way there.
-          onLoadedData={() => {
-            if (!videoRef.current?.seeking) setHasFrame(true)
-          }}
-          onSeeked={() => {
-            setHasFrame(true)
-            setCovering(false)
-          }}
+          onSeeked={() => setCovering(false)}
           onPlay={onPlay}
           onPause={onPause}
         />
@@ -382,17 +391,27 @@ interface VideoDialogProps {
 
 /**
  * A native modal <dialog> (focus contained, Escape and a click on the
- * backdrop close it, page scrolling locked) with the largest variant, which
- * is shown only once it has reached the inline copy's time (no flash of the
- * first frame). Mounted only while open.
+ * backdrop close it, page scrolling locked) with the largest variant. It
+ * opens on the inline player's frame (or poster), drawn underneath, and its
+ * own copy fades in over it once that copy has a frame at the inline time
+ * (never a black stage, nor the first frame). It leaves with a short fade
+ * (dialogExit.ts). Mounted only while open.
  */
 function VideoDialog({ asset, posterSrc, caption, start, onClose }: VideoDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const underRef = useRef<HTMLCanvasElement>(null)
+  const stopRef = useRef<() => void>(undefined)
   const [ready, setReady] = useState(false)
   const titleId = useId()
   const src = asset.variants[asset.variants.length - 1].src
+
+  // Before the first paint: the inline frame, in place of the larger copy until it has one.
+  useLayoutEffect(() => {
+    if (underRef.current) drawUnderlay(underRef.current, start.from)
+  }, [start.from])
+  useEffect(() => () => stopRef.current?.(), [])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -405,19 +424,23 @@ function VideoDialog({ asset, posterSrc, caption, start, onClose }: VideoDialogP
     return () => document.documentElement.classList.remove('is-dialog-open')
   }, [])
 
+  // Shown once its frame at the inline time is on screen: after the seek (then it plays, if the inline copy was
+  // playing), or after play() when there is nothing to seek. Paused at the start: its own poster, at once.
   const onLoadedMetadata = () => {
     const v = videoRef.current
     if (!v) return
     v.muted = start.muted
     v.volume = start.volume
-    if (start.time > 0.05 && Math.abs(v.currentTime - start.time) > 0.05) v.currentTime = start.time
-    else show()
-  }
-
-  const show = () => {
-    setReady(true)
-    const v = videoRef.current
-    if (v && start.play) v.play().catch(() => {})
+    if (start.time > 0.05 && Math.abs(v.currentTime - start.time) > 0.05) {
+      stopRef.current = onFramePresented(v, () => {
+        setReady(true)
+        if (start.play) v.play().catch(() => {})
+      })
+      v.currentTime = start.time
+    } else if (start.play) {
+      stopRef.current = onFramePresented(v, () => setReady(true))
+      v.play().catch(() => setReady(true))
+    } else setReady(true)
   }
 
   // Every close path (button, Escape, backdrop) ends here.
@@ -437,8 +460,9 @@ function VideoDialog({ asset, posterSrc, caption, start, onClose }: VideoDialogP
       className="image-dialog cs-video-dialog"
       aria-labelledby={titleId}
       onClose={handleClose}
+      onCancel={closeOnCancel}
       onClick={(e) => {
-        if (e.target === dialogRef.current) dialogRef.current?.close()
+        if (e.target === dialogRef.current) closeWithFade(dialogRef.current)
       }}
     >
       <div className="image-dialog__panel">
@@ -447,7 +471,7 @@ function VideoDialog({ asset, posterSrc, caption, start, onClose }: VideoDialogP
             {asset.title}
           </p>
           <div className="image-dialog__controls">
-            <button ref={closeRef} type="button" className="button button--small" onClick={() => dialogRef.current?.close()}>
+            <button ref={closeRef} type="button" className="button button--small" onClick={() => closeWithFade(dialogRef.current)}>
               <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
                 <path d="m3.5 3.5 9 9m0-9-9 9" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
@@ -456,6 +480,7 @@ function VideoDialog({ asset, posterSrc, caption, start, onClose }: VideoDialogP
           </div>
         </div>
         <div className="cs-video-dialog__stage">
+          <canvas ref={underRef} className="cs-video-dialog__under" width={asset.width} height={asset.height} aria-hidden="true" />
           <video
             ref={videoRef}
             className="cs-video-dialog__video"
@@ -471,9 +496,6 @@ function VideoDialog({ asset, posterSrc, caption, start, onClose }: VideoDialogP
             preload="auto"
             aria-label={asset.title}
             onLoadedMetadata={onLoadedMetadata}
-            onSeeked={() => {
-              if (!ready) show()
-            }}
           />
         </div>
         <p className="image-dialog__caption t-small">{caption}</p>

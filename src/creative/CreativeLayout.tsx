@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { Outlet, ScrollRestoration, useLocation, useNavigationType } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom'
 import { RouteFocus } from '../components/layout/RouteFocus'
 import { SCROLL_STORAGE_KEY, scrollKey } from '../scrollPositions'
 import '../styles/creative-legacy.css'
@@ -13,6 +13,8 @@ import { Header } from './site/Header'
  * each page ends with the original Contact band and footer. No background
  * video, professional header/footer or pointer trail. Everything it styles is
  * scoped under `.legacy-creative` (src/styles/creative-legacy.css).
+ * RouteFocus moves focus to the new page's H1 after every in-app navigation,
+ * including arriving here from a professional page (link, Back or Forward).
  *
  * The original's Playfair Display comes from Google Fonts (as it did there),
  * requested only while this layout is mounted; Inter is the site's own
@@ -46,33 +48,10 @@ function useLegacyFonts() {
   }, [])
 }
 
-/**
- * Arriving from a professional page (a link, not a fresh load or Back), focus
- * starts at the new page's H1 (or its #hash target), as RouteFocus does for
- * navigation within the creative pages.
- */
-function useArrivalFocus() {
-  const arrival = useRef(useNavigationType())
-  useEffect(() => {
-    if (arrival.current === 'POP') return
-    const id = requestAnimationFrame(() => {
-      const hash = window.location.hash.slice(1)
-      const target =
-        (hash ? document.getElementById(decodeURIComponent(hash)) : null) ??
-        document.querySelector<HTMLElement>('.legacy-creative main h1')
-      if (!target) return
-      if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1')
-      target.focus({ preventScroll: true })
-    })
-    return () => cancelAnimationFrame(id)
-  }, [])
-}
-
 export default function CreativeLayout() {
   const { pathname } = useLocation()
   const [layer, setLayer] = useState<HTMLDivElement | null>(null)
   useLegacyFonts()
-  useArrivalFocus()
 
   return (
     <LayerContext.Provider value={layer}>

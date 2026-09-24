@@ -19,3 +19,9 @@ export const STAGE = {
    */
   homeReading: { start: 0.12, span: 0.5 },
 } as const
+
+export type StageRoute = keyof typeof STAGE.background.rate
+
+/** The background treatment for a professional-site pathname (stage.css `data-route`). */
+export const stageRouteFor = (pathname: string): StageRoute =>
+  pathname === '/' ? 'home' : pathname.startsWith('/work/') ? 'case' : pathname === '/about' ? 'about' : 'other'

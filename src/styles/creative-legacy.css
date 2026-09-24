@@ -1155,13 +1155,6 @@ html:has(.legacy-creative) {
 .legacy-creative .ft-nav a:focus-visible {
   color: var(--paper);
 }
-.legacy-creative .ft-fine {
-  margin-top: 22px;
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: var(--text-3);
-  max-width: 70ch;
-}
 
 /* ==================================================== narrow ============= */
 

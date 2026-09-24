@@ -37,8 +37,10 @@
 /*
  * No bar with hard edges: two soft gradients behind the header. The light
  * one is always there; the deeper one appears once the page scrolls (or the
- * shelf or menu opens) and runs 40px past the header, so text passing
- * underneath fades out instead of meeting an edge.
+ * shelf or menu opens). It is near-opaque behind the name and navigation,
+ * so text scrolled underneath is not legible behind them (no two lines of
+ * text on top of each other), and runs on 40px past the header, so that
+ * text fades out instead of meeting an edge.
  */
 .site-header {
   position: sticky;
@@ -66,9 +68,10 @@
   height: calc(100% + 40px);
   background: linear-gradient(
     to bottom in oklch,
-    rgb(6 7 11 / 0.95),
-    rgb(6 7 11 / 0.9) calc(100% - 40px),
-    rgb(6 7 11 / 0.55) calc(100% - 22px),
+    rgb(6 7 11 / 0.98),
+    rgb(6 7 11 / 0.96) calc(100% - 40px),
+    rgb(6 7 11 / 0.72) calc(100% - 28px),
+    rgb(6 7 11 / 0.3) calc(100% - 14px),
     rgb(6 7 11 / 0)
   );
   opacity: 0;

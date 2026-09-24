@@ -4,16 +4,19 @@ import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { ResponsiveImage } from '../media/ResponsiveImage'
 
 const VIDEO = getVideo('art-portfolio')
-const SIZES = '(min-width: 960px) 640px, calc(100vw - 40px)'
+/** The wide column of About's grid: at most 810px (1440px and wider), narrower below. */
+const SIZES = '(min-width: 960px) 810px, calc(100vw - 40px)'
 
 /**
  * The silent art-portfolio loop beside "My art portfolio".
  *
  * Decorative (the heading, sentence and "Open art portfolio" button carry
  * the meaning and the navigation), so it is hidden from assistive
- * technology and is not a control. The poster is painted first; the video
- * file is requested only when the frame comes near the viewport, plays only
- * while at least a third of it is on screen and the page is visible, and
+ * technology and is not a control. The poster is painted first. The video
+ * element is added only when the frame is about to enter the viewport and
+ * then loads only its metadata; the file itself streams once the frame is at
+ * least a third on screen (and the page is visible), when it plays. A
+ * visitor who never scrolls to it downloads nothing but the poster. It
  * fades in over the poster once frames play. Reduced motion (OS setting or
  * the footer toggle): the poster only, and no video request at all.
  * `data-ambient` keeps it out of the site's one-film-at-a-time rule
@@ -26,7 +29,7 @@ export function ArtPreview() {
   const [near, setNear] = useState(false)
   const [playing, setPlaying] = useState(false)
 
-  // Load the file only once the frame is within 300px of the viewport.
+  // Add the video element only once the frame is within 100px of the viewport.
   useEffect(() => {
     const frame = frameRef.current
     if (reduced || near || !frame) return
@@ -34,7 +37,7 @@ export function ArtPreview() {
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) setNear(true)
       },
-      { rootMargin: '300px 0px' },
+      { rootMargin: '100px 0px' },
     )
     io.observe(frame)
     return () => io.disconnect()
@@ -86,7 +89,7 @@ export function ArtPreview() {
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           disablePictureInPicture
           disableRemotePlayback
           tabIndex={-1}

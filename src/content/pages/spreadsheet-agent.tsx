@@ -59,8 +59,8 @@ function sections(premiseVisual: boolean): Section[] {
           body: (
             <p>
               A written request can be read in more than one way. The prototype is built on the premise that the user should{' '}
-              <strong>check how a request was interpreted before any data reaches the sheet</strong>. The assistant panel says so directly:
-              “Describe the result you need. Review the data source and logic before anything is added to your sheet.”
+              <strong>check how a request was interpreted before any data reaches the sheet</strong>. The assistant panel says so directly, “Describe
+              the result you need. Review the data source and logic before anything is added to your sheet.”
             </p>
           ),
           visual: premiseVisual
@@ -157,9 +157,8 @@ function sections(premiseVisual: boolean): Section[] {
 export const SPREADSHEET_AGENT = {
   situation: (
     <p>
-      Spreadsheet Agent is an independent prototype that I <strong>designed and built</strong>: a spreadsheet workspace with an assistant panel. A
-      user describes the sheet they need, <strong>reviews a proposed plan</strong>, and receives an editable sheet built from a synthetic product
-      catalog.
+      Spreadsheet Agent is a spreadsheet workspace with an assistant panel. A user describes the sheet they need, <strong>reviews a proposed
+      plan</strong>, and receives an editable sheet built from a synthetic product catalog.
     </p>
   ),
   opening: {

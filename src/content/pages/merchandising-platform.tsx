@@ -35,6 +35,12 @@ import type { Section, Visual } from '../../components/case/CaseScroll'
  *    ran. There is no language model involved."
  *  - 28–31s Vendors (scorecards), 32–39s Promotions.
  *
+ * The boundary ("an independent prototype using synthetic data, without a
+ * production backend") is stated once, in the note. The opening caption leaves
+ * out its provenance label, and CaseScroll does not repeat the same label on
+ * later states, stacked figures or the demo. The situation introduces the
+ * working name Merch Console, which the captions and alt text use.
+ *
  * Independent work: the internship is mentioned only as the context in which
  * Harlie saw the problem (deck p. 10: manual work "repeated across
  * spreadsheets and systems"; workflows "fragmented across multiple
@@ -48,14 +54,16 @@ export const MERCHANDISING_PLATFORM = {
   note: 'An independent prototype using synthetic data, without a production backend.',
   situation: (
     <p>
-      The prototype brings catalog status, product economics, and replenishment calculations into one workspace. I built it after my PlanetArt internship,
-      where I had seen <strong>merchandising information split across spreadsheets and separate tools</strong>.
+      The prototype brings catalog status, product economics, and replenishment calculations into one workspace. I built it under the working name Merch
+      Console after my PlanetArt internship, where I had seen <strong>merchandising information split across spreadsheets and separate tools</strong>.
     </p>
   ),
   opening: {
     kind: 'image',
     image: 'mp-overview',
-    caption: 'The Merch Console overview joins product, vendor, inventory, pricing, promotion, and sales data in one view.',
+    caption: 'The overview screen joins product, vendor, inventory, pricing, promotion, and sales data in one view.',
+    // The note states once that this is an independent prototype with synthetic data, so no caption repeats the label.
+    provenanceLabel: false,
   } satisfies Visual,
   sections: [
     {
@@ -66,8 +74,8 @@ export const MERCHANDISING_PLATFORM = {
           id: 'premise-text',
           body: (
             <p>
-              A reorder decision depends on several facts at once: stock on hand, the rate of sales, landed cost, and the vendor’s lead time and minimum
-              order. The prototype tests whether one workspace can show these together and <strong>explain how each suggested quantity is calculated</strong>.
+              A reorder decision depends on stock on hand, the rate of sales, landed cost, and the vendor’s lead time and minimum order, all at once. The
+              prototype tests whether one workspace can show these together and <strong>explain how each suggested quantity is calculated</strong>.
             </p>
           ),
         },
@@ -105,7 +113,7 @@ export const MERCHANDISING_PLATFORM = {
           visual: {
             kind: 'image',
             image: 'mp-economics',
-            caption: 'Part of the Canyon Pouch record: the stock-out estimate and unit economics.',
+            caption: 'The stock-out estimate and unit economics in the Canyon Pouch record.',
             highlight: { x: 1.7, y: 83.9, w: 96.5, h: 7.7 },
           },
         },
@@ -164,7 +172,7 @@ export const MERCHANDISING_PLATFORM = {
   ] satisfies Section[],
   results: (
     <p>
-      The recording demonstrates a working prototype: a catalog of 240 products, product records with unit economics and stock-out estimates, replenishment
+      The recording demonstrates a catalog of 240 products, product records with unit economics and stock-out estimates, replenishment
       quantities that <strong>show their working and respect vendor minimums</strong>, and a question screen that runs fixed queries. It also includes vendor
       scorecards and a promotions view.
     </p>

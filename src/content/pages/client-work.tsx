@@ -41,7 +41,7 @@ export interface ClientFilm {
   /** Short kind of film, shown under the heading. */
   kind: string
   video: VideoId
-  /** Caption under the player (the provenance label "Agency work" is added automatically). */
+  /** Caption under the player (FilmScroll adds the provenance label "Agency work" to the first film only). */
   caption: string
   /** The client and what the agency was asked to make. */
   client: ReactNode

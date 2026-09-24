@@ -97,9 +97,18 @@ interface Controls {
  *
  * Captions are flat HTML placed under each tile's projected lower edge
  * (never rotated), at a constant size. A caption fades out before its box
- * reaches the stage edge, and a tile whose caption is hidden takes no
- * pointer events. Tiles are recycled from one end of the wall to the other
- * only where they are fully outside the stage (and faded, as a safety).
+ * reaches the stage edge. A tile stays a working link while at least
+ * CAROUSEL.minVisible of it is inside the stage (so a tile that looks
+ * clickable is clickable); hovering an edge tile whose caption has faded
+ * brings the caption back, moved inward just enough to stay whole. Tiles
+ * mostly outside the stage take no pointer events. Tiles are recycled from
+ * one end of the wall to the other only where they are fully outside the
+ * stage (and faded, as a safety).
+ *
+ * Static arc (reduced motion): the spacing is set by the stage width (all
+ * seven in view), and each caption is at most the spacing less
+ * CAROUSEL.captionGap wide (a long name wraps), so neighbouring names and
+ * links never meet.
  *
  * Keyboard: all seven links are in the tab order (tile order); focusing one
  * pauses the carousel and, if that tile is outside the readable area,
@@ -147,7 +156,13 @@ function Arc({ moving }: { moving: boolean }) {
     /** Width of each caption's always-visible part (name and "View case study"), and of its description. */
     const textW = new Array<number>(n).fill(0)
     const descW = new Array<number>(n).fill(0)
-    const written = { tile: new Array<string>(n).fill(''), caption: new Array<string>(n).fill(''), fade: new Array<string>(n).fill(''), op: new Array<string>(n).fill('') }
+    const written = {
+      tile: new Array<string>(n).fill(''),
+      caption: new Array<string>(n).fill(''),
+      fade: new Array<string>(n).fill(''),
+      op: new Array<string>(n).fill(''),
+      off: new Array<boolean | null>(n).fill(null),
+    }
     const dpr = window.devicePixelRatio || 1
     const snap = (v: number) => Math.round(v * dpr) / dpr
 
@@ -187,31 +202,44 @@ function Arc({ moving }: { moving: boolean }) {
       const cs = getComputedStyle(root)
       g.capGap = parseFloat(cs.getPropertyValue('--cap-gap')) || 12
       g.fadeEnd = CAROUSEL.captionFadeEnd + (g.W * CAROUSEL.edgeMask) / 2
-      captions.forEach((c, i) => {
-        const el = c as HTMLElement
-        const name = el.querySelector<HTMLElement>('.arc-caption__name')
-        const cta = el.querySelector<HTMLElement>('.arc-caption__cta')
-        const desc = el.querySelector<HTMLElement>('.arc-caption__desc')
-        textW[i] = Math.max(name?.offsetWidth ?? 0, cta?.offsetWidth ?? 0)
-        descW[i] = desc?.offsetWidth ?? 0
-      })
-      const widest = Math.max(...textW)
+      const measureText = () => {
+        captions.forEach((c, i) => {
+          const el = c as HTMLElement
+          const name = el.querySelector<HTMLElement>('.arc-caption__name')
+          const cta = el.querySelector<HTMLElement>('.arc-caption__cta')
+          const desc = el.querySelector<HTMLElement>('.arc-caption__desc')
+          textW[i] = Math.max(name?.offsetWidth ?? 0, cta?.offsetWidth ?? 0)
+          descW[i] = desc?.offsetWidth ?? 0
+        })
+        return Math.max(...textW)
+      }
+      let widest: number
       if (moving) {
+        widest = measureText()
         g.capW = parseFloat(cs.getPropertyValue('--cap-w')) || CAROUSEL.captionWidth
         g.fadeLength = CAROUSEL.captionFadeLength
         g.S = Math.max(CAROUSEL.arc.spacing * g.W, CAROUSEL.arc.minSpacing * g.cw, widest + CAROUSEL.captionGap)
         g.R = g.S / cfg.step
       } else {
-        // All seven in view: the outer tiles (±3 spacings) keep their names inside the stage.
+        // All seven in view: the outer tiles (±3 spacings) keep their names
+        // inside the stage. The spacing follows from the stage width, so each
+        // caption is limited to the spacing less the gap between neighbours
+        // (a long name wraps: home.css); narrower names leave more room, so
+        // this settles in a few passes.
         g.fadeLength = 8
-        const room = Math.max(g.W / 2 - widest / 2 - g.fadeEnd - g.fadeLength, 40)
-        g.R = room / f(((n - 1) / 2) * cfg.step)
-        g.S = cfg.step * g.R
-        g.capW = Math.min(CAROUSEL.still.maxCaption, g.S - 16)
+        g.capW = CAROUSEL.still.maxCaption
+        for (let pass = 0; pass < 4; pass++) {
+          root.style.setProperty('--cap-w', `${g.capW}px`)
+          widest = measureText()
+          const room = Math.max(g.W / 2 - widest / 2 - g.fadeEnd - g.fadeLength, 40)
+          g.R = room / f(((n - 1) / 2) * cfg.step)
+          g.S = cfg.step * g.R
+          const capW = Math.floor(Math.min(CAROUSEL.still.maxCaption, g.S - CAROUSEL.captionGap))
+          if (capW === g.capW) break
+          g.capW = capW
+        }
         root.style.setProperty('--cap-w', `${g.capW}px`)
-        captions.forEach((c, i) => {
-          descW[i] = (c as HTMLElement).querySelector<HTMLElement>('.arc-caption__desc')?.offsetWidth ?? 0
-        })
+        widest = measureText()
       }
       g.p = cfg.perspective * g.R
       g.L = n * g.S
@@ -260,12 +288,25 @@ function Arc({ moving }: { moving: boolean }) {
         if (fadeText !== written.fade[i]) {
           ;(captions[i] as HTMLElement).style.setProperty('--fade', fadeText)
           written.fade[i] = fadeText
-          // A tile whose caption is hidden (at the stage edges) is not interactive.
+        }
+        // A tile mostly outside the stage (past the middle of its edge fade) is not interactive.
+        const off = op <= 0.5 || visibleShare(theta) < CAROUSEL.minVisible
+        if (off !== written.off[i]) {
           const item = items[i] as HTMLLIElement
-          if (fade <= 0.02) item.dataset.off = ''
+          if (off) item.dataset.off = ''
           else delete item.dataset.off
+          written.off[i] = off
         }
       }
+    }
+    /** Share of a tile's projected width inside the stage, measured to the middle of the edge fades. */
+    const visibleShare = (theta: number) => {
+      const a = project(-g.bw / 2, 0, theta).x
+      const b = project(g.bw / 2, 0, theta).x
+      const left = g.W / 2 + Math.min(a, b)
+      const right = g.W / 2 + Math.max(a, b)
+      const inset = (g.W * CAROUSEL.edgeMask) / 2
+      return Math.max(0, Math.min(right, g.W - inset) - Math.max(left, inset)) / Math.max(1, right - left)
     }
 
     const running = () => moving && (!CAROUSEL.pauseOnHover || st.hover < 0) && st.focus < 0 && st.onScreen && st.pageVisible && !st.busy
@@ -306,19 +347,29 @@ function Arc({ moving }: { moving: boolean }) {
     }
 
     const descOf = (i: number) => (captions[i] as HTMLElement).querySelector<HTMLElement>('.arc-caption__desc')
-    /** Near the stage edges, the active tile's revealed description moves inward just enough to stay whole. */
-    let shifted = ''
+    /** Horizontal shift (px) that keeps a box starting at `left`, `width` wide, inside the readable part of the stage. */
+    const inward = (left: number, width: number) => Math.round(Math.max(0, g.fadeEnd - left) - Math.max(0, left + width - (g.W - g.fadeEnd)))
+    const setTranslate = (el: HTMLElement | null | undefined, shift: number) => {
+      if (!el) return
+      if (shift) el.style.setProperty('translate', `${shift}px 0`)
+      else el.style.removeProperty('translate')
+    }
+    /**
+     * Near the stage edges, the active tile's caption (shown whole while it
+     * is active, even where it had faded) moves inward just enough for its
+     * name and label to stay inside the stage, and its revealed description
+     * moves on as far as it needs to as well.
+     */
+    const shifted = { caption: 0, desc: 0 }
     const shiftDescription = () => {
       const i = st.active
       if (i < 0) return
-      const left = xOf[i] + (g.capW - descW[i]) / 2
-      const right = left + descW[i]
-      const shift = Math.round(Math.max(0, g.fadeEnd - left) - Math.max(0, right - (g.W - g.fadeEnd)))
-      const value = shift === 0 ? '' : `${shift}px 0`
-      if (value === shifted) return
-      shifted = value
-      if (value) descOf(i)?.style.setProperty('translate', value)
-      else descOf(i)?.style.removeProperty('translate')
+      const caption = inward(xOf[i] + (g.capW - textW[i]) / 2, textW[i])
+      const desc = inward(xOf[i] + caption + (g.capW - descW[i]) / 2, descW[i])
+      if (caption !== shifted.caption) setTranslate(captions[i], caption)
+      if (desc !== shifted.desc) setTranslate(descOf(i), desc)
+      shifted.caption = caption
+      shifted.desc = desc
     }
     /** Hover or keyboard focus: lift that tile and reveal its description (only keyboard focus pauses the motion). */
     const update = () => {
@@ -326,8 +377,10 @@ function Arc({ moving }: { moving: boolean }) {
       if (next !== st.active) {
         if (st.active >= 0) {
           delete (items[st.active] as HTMLLIElement).dataset.active
-          descOf(st.active)?.style.removeProperty('translate')
-          shifted = ''
+          setTranslate(captions[st.active], 0)
+          setTranslate(descOf(st.active), 0)
+          shifted.caption = 0
+          shifted.desc = 0
         }
         if (next >= 0) (items[next] as HTMLLIElement).dataset.active = ''
         st.active = next
@@ -342,29 +395,44 @@ function Arc({ moving }: { moving: boolean }) {
     root.dataset.ready = 'true'
 
     // Pointer: a tile and its caption belong to one link. Hover does not
-    // pause the motion (unless CAROUSEL.pauseOnHover); it lifts the tile under the pointer. Because
-    // the tiles move under a still pointer, the tile under the pointer is
-    // also re-checked while the carousel moves (recheckHover, a few times a
-    // second). After leaving, a short grace lets the pointer cross between a
-    // tile and its caption without the lift dropping and returning.
+    // pause the motion (unless CAROUSEL.pauseOnHover); it lifts the tile
+    // under the pointer. Because the tiles move under a still pointer, the
+    // tile under the pointer is also re-checked while the carousel moves
+    // (recheckHover, a few times a second), from the last pointer position
+    // in the window: only the tiles and captions take pointer events, so the
+    // browser reports "leaving" the carousel whenever the pointer is between
+    // tiles, although the next tile may be about to arrive under it. After
+    // leaving, a short grace (scheduled once) lets the pointer cross between
+    // a tile and its caption without the lift dropping and returning.
     const indexOf = (el: EventTarget | null) => {
       const link = el instanceof Element ? el.closest('.arc__link') : null
       return link ? links.indexOf(link as HTMLAnchorElement) : -1
     }
+    /** The last known position of a mouse or pen in the window (`inside`: known and still in the window). */
     const pointer = { inside: false, x: 0, y: 0, checked: 0 }
+    /** The tile whose lift is due to drop when `grace` fires (-1: none pending). */
+    let graceFor = -1
+    const clearGrace = () => {
+      window.clearTimeout(grace)
+      graceFor = -1
+    }
     const setHover = (i: number) => {
       if (i >= 0) {
-        window.clearTimeout(grace)
+        clearGrace()
         if (st.hover !== i) {
           st.hover = i
           update()
         }
         return
       }
-      if (st.hover < 0) return
+      // Scheduled once per leave: the re-check under a still pointer repeats
+      // every few frames and must not keep postponing the drop.
+      if (st.hover < 0 || graceFor === st.hover) return
       const leaving = st.hover
-      window.clearTimeout(grace)
+      clearGrace()
+      graceFor = leaving
       grace = window.setTimeout(() => {
+        graceFor = -1
         if (st.hover === leaving) st.hover = -1
         update()
       }, CAROUSEL.hoverGraceMs)
@@ -382,7 +450,8 @@ function Arc({ moving }: { moving: boolean }) {
       pointer.x = e.clientX
       pointer.y = e.clientY
     }
-    const onLeaveRoot = () => {
+    const onLeaveRoot = () => setHover(-1)
+    const onLeaveWindow = () => {
       pointer.inside = false
       setHover(-1)
     }
@@ -400,8 +469,9 @@ function Arc({ moving }: { moving: boolean }) {
     }
     root.addEventListener('pointerover', onOver)
     root.addEventListener('pointerout', onOut)
-    root.addEventListener('pointermove', onMove)
     root.addEventListener('pointerleave', onLeaveRoot)
+    window.addEventListener('pointermove', onMove, { passive: true })
+    document.documentElement.addEventListener('pointerleave', onLeaveWindow)
 
     // Keyboard focus pauses, so the focused link stays in view and can be
     // opened (focus from a pointer click does not pause).
@@ -455,7 +525,7 @@ function Arc({ moving }: { moving: boolean }) {
       freeze: (i) => {
         st.busy = true
         st.glide = null
-        window.clearTimeout(grace)
+        clearGrace()
         root.dataset.leaving = ''
         ;(items[i] as HTMLLIElement).dataset.selected = ''
       },
@@ -480,8 +550,9 @@ function Arc({ moving }: { moving: boolean }) {
       document.removeEventListener('visibilitychange', onVisibility)
       root.removeEventListener('pointerover', onOver)
       root.removeEventListener('pointerout', onOut)
-      root.removeEventListener('pointermove', onMove)
       root.removeEventListener('pointerleave', onLeaveRoot)
+      window.removeEventListener('pointermove', onMove)
+      document.documentElement.removeEventListener('pointerleave', onLeaveWindow)
       root.removeEventListener('focusin', onFocusIn)
       root.removeEventListener('focusout', onFocusOut)
     }

@@ -205,6 +205,8 @@ interface PlayerProps {
   priority?: boolean
   variant: 'sticky' | 'inline'
   controls?: ReactNode
+  /** The film whose caption carries the provenance label ("Agency work"): the first one only, so it is not repeated under every film. */
+  labelled: ClientFilm['id']
 }
 
 /**
@@ -213,7 +215,7 @@ interface PlayerProps {
  * (the previous one stays visible underneath until the new one has faded
  * in), and a loaded film plays on top with native controls.
  */
-function Player({ films, target, loaded, videoRef, hero = false, priority = false, variant, controls }: PlayerProps) {
+function Player({ films, target, loaded, videoRef, hero = false, priority = false, variant, controls, labelled }: PlayerProps) {
   const { pathname } = useLocation()
   const frameRef = useRef<HTMLDivElement>(null)
   const [view, setView] = useState({ front: target, prev: -1 })
@@ -297,7 +299,7 @@ function Player({ films, target, loaded, videoRef, hero = false, priority = fals
           )}
         </div>
         <figcaption className="cw-caption">
-          <CaptionText provenance={getVideo(shown.video).provenance}>{shown.caption}</CaptionText>
+          <CaptionText provenance={shown.id === labelled ? getVideo(shown.video).provenance : undefined}>{shown.caption}</CaptionText>
         </figcaption>
       </figure>
       {controls}
@@ -434,6 +436,7 @@ export function FilmScroll({ project, situation, note, films }: FilmScrollProps)
               hero
               priority
               variant="sticky"
+              labelled={films[0].id}
               controls={
                 <div className="cw-controls">
                   {loaded && (
@@ -480,7 +483,7 @@ export function FilmScroll({ project, situation, note, films }: FilmScrollProps)
 
               {!desktop && (
                 <div className="cw-inline">
-                  <Player films={[film]} target={0} loaded={isLoaded ? film : null} videoRef={videoRef} hero={i === 0} priority={i === 0} variant="inline" />
+                  <Player films={[film]} target={0} loaded={isLoaded ? film : null} videoRef={videoRef} hero={i === 0} priority={i === 0} variant="inline" labelled={films[0].id} />
                 </div>
               )}
 

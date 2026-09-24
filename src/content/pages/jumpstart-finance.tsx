@@ -39,9 +39,8 @@ import type { ImageId } from '../media'
 export const JUMPSTART_FINANCE = {
   situation: (
     <p>
-      Jumpstart Finance was a student venture for <strong>mobile financial education</strong>, developed at the European Innovation Academy in
-      Porto. As Founder and Product Lead, I led a <strong>five-person international team</strong> from the product concept to a prototype and a
-      program pitch.
+      Jumpstart Finance was a venture for <strong>mobile financial education</strong>, developed during the European Innovation Academy program
+      in Porto. I led a <strong>five-person international team</strong> from the product concept to a prototype and a program pitch.
     </p>
   ),
   opening: {
@@ -59,11 +58,10 @@ export const JUMPSTART_FINANCE = {
           body: (
             <>
               <p>
-                The pitch rested on a premise rather than a tested problem. Its solution slide states that{' '}
-                <strong>gamified learning leads to increased engagement</strong>. It also proposed education matched to each person’s experience
-                and goals, and forums where members learn alongside each other.
+                The pitch’s solution slide states that <strong>gamified learning leads to increased engagement</strong>. It also proposed education
+                matched to each person’s experience and goals, and forums where members learn alongside each other. These were the team’s
+                proposals, not tested findings.
               </p>
-              <p>These were the team’s proposals. The project materials include no research that tested them.</p>
             </>
           ),
         },

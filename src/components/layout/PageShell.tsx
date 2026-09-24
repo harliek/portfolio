@@ -1,4 +1,5 @@
 import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom'
+import { stageRouteFor } from '../../config/stage'
 import { useMediaPlayback } from '../../hooks/useMediaPlayback'
 import { SCROLL_STORAGE_KEY, scrollKey } from '../../scrollPositions'
 import { ImageDialogProvider } from '../media/ImageDialog'
@@ -6,10 +7,7 @@ import { Footer } from './Footer'
 import { Header } from './Header'
 import { PointerTrail } from './PointerTrail'
 import { RouteFocus } from './RouteFocus'
-import { StageBackground, type StageRoute } from './StageBackground'
-
-const routeOf = (pathname: string): StageRoute =>
-  pathname === '/' ? 'home' : pathname.startsWith('/work/') ? 'case' : pathname === '/about' ? 'about' : 'other'
+import { StageBackground } from './StageBackground'
 
 /**
  * Root layout of the professional site: the persistent background set
@@ -27,7 +25,7 @@ export function PageShell() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <StageBackground route={routeOf(pathname)} />
+      <StageBackground route={stageRouteFor(pathname)} />
       <Header />
       <main id="main" className="site-main" tabIndex={-1}>
         <div key={pathname} className="route-reveal">

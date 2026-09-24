@@ -251,13 +251,14 @@
 }
 
 /*
- * The last block keeps the media region pinned until it is active:
- * sticky top + region height − activation line (40vh). --cs-media-h is
- * measured by CaseScroll; nothing is added when the block is already tall
- * enough, and no other block gets extra height.
+ * The end of the pinned range: CaseScroll lowers the activation line
+ * gradually near the end so the last visual becomes active while the media
+ * region is still pinned (for about 22% of the viewport). --cs-tail is set
+ * only when the region is too tall for that (a tall portrait frame on a
+ * short viewport); it is 0 on most pages, and no block gets extra height.
  */
-.cs[data-layout='sticky'] .cs-block[data-last] {
-  min-height: max(0px, calc(var(--cs-top) + var(--cs-media-h, 0px) - 40vh + var(--space-2)));
+.cs[data-layout='sticky'] > .cs-body {
+  padding-bottom: var(--cs-tail, 0px);
 }
 
 /* ----------------------------------------------------------------------- */

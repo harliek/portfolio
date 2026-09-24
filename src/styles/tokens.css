@@ -92,7 +92,13 @@
   --space-10: 128px;
 
   /* Layout */
-  --shell-max: 1280px;
+  /*
+   * One content width for the header, footer, case-study grid (case.css
+   * --case-max) and About: at wide screens every page starts and ends on the
+   * same two edges. --shell-max adds the gutters (.shell pads by them).
+   */
+  --content-max: 1240px;
+  --shell-max: calc(var(--content-max) + 2 * var(--gutter));
   --prose-max: 660px;
   --gutter: 20px;
   --header-height: 64px;

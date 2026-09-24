@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react'
 import { TRANSITION } from '../../config/carousel'
-import { getImage, srcSet } from '../../content/media'
+import { fallbackSrc, getImage, srcSet, type ImageId } from '../../content/media'
 import { projectForPath } from '../../content/projects'
 import { prefersReducedMotion } from '../../hooks/useReducedMotion'
 import { prefetchRoute, routeChunks } from '../../routes'
@@ -33,27 +33,57 @@ import { prefetchRoute, routeChunks } from '../../routes'
  * Every inline style or animation this module adds is removed when it ends.
  */
 
-const warmed = new Set<string>()
+/** Warmed opening images, by path (kept so a detached image is never collected mid-load). */
+const warmed = new Map<string, HTMLImageElement>()
 
 /**
- * Prepares a project ahead of the click (hover, focus, touch start): the
- * route's code and the destination's opening image (a preload with the same
- * srcset and sizes as the hero, so the browser picks the same file).
- * Idempotent.
+ * Opening images of the pages a carousel tile opens that are not case
+ * studies. /about opens on the portrait (AboutContent.tsx: keep the `sizes`
+ * in step).
+ */
+const PAGE_HEROES: Record<string, { image: ImageId; sizes: string }> = {
+  '/about': { image: 'headshot', sizes: '(min-width: 960px) 344px, 240px' },
+}
+
+/**
+ * Fetches and decodes an image exactly as the page's ResponsiveImage will
+ * (a detached <picture> with the same AVIF/WebP sources, fallback and
+ * `sizes`, so the browser picks the same file for this viewport). Unlike a
+ * <link rel="preload">, it does not warn when nobody clicks.
+ */
+function warmImage(image: ImageId, sizes: string): HTMLImageElement {
+  const asset = getImage(image)
+  const picture = document.createElement('picture')
+  for (const format of ['avif', 'webp'] as const) {
+    const source = document.createElement('source')
+    source.type = `image/${format}`
+    source.srcset = srcSet(asset, format)
+    source.sizes = sizes
+    picture.appendChild(source)
+  }
+  // Inside the <picture> before any attribute is set, so only the chosen source is requested.
+  const img = document.createElement('img')
+  picture.appendChild(img)
+  img.decoding = 'async'
+  img.sizes = sizes
+  img.srcset = srcSet(asset, asset.fallback)
+  img.src = fallbackSrc(asset)
+  img.decode().catch(() => {})
+  return img
+}
+
+/**
+ * Prepares a destination ahead of the click (hover, focus, touch start):
+ * the route's code and its opening image (projects.ts `hero`, or
+ * PAGE_HEROES), fetched and decoded, so the transition's "decoded before
+ * reveal" step finds it ready. Idempotent.
  */
 export function warmProject(path: string) {
   prefetchRoute(path)
-  const project = projectForPath(path)
-  if (!project || warmed.has(path)) return
-  warmed.add(path)
-  const asset = getImage(project.hero.image)
-  const link = document.createElement('link')
-  link.rel = 'preload'
-  link.as = 'image'
-  link.type = 'image/avif'
-  link.setAttribute('imagesrcset', srcSet(asset, 'avif'))
-  link.setAttribute('imagesizes', project.hero.sizes)
-  document.head.appendChild(link)
+  if (warmed.has(path)) return
+  const hero = projectForPath(path)?.hero ?? PAGE_HEROES[path]
+  if (!hero) return
+  warmed.set(path, warmImage(hero.image, hero.sizes))
 }
 
 export const isPlainClick = (e: MouseEvent) => !e.defaultPrevented && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey
@@ -83,6 +113,32 @@ export function isTransitionPending(path: string) {
   return active !== null && active.path === path && active.phase !== 'reveal'
 }
 
+/*
+ * The destination of the running transition, for components that should
+ * change ahead of the route (StageBackground applies the destination's
+ * darker reading shade while the tile leaves, so it is complete before any
+ * destination text appears). Read with useSyncExternalStore.
+ */
+const targetListeners = new Set<() => void>()
+let target: string | null = null
+
+function setTarget(path: string | null) {
+  if (target === path) return
+  target = path
+  targetListeners.forEach((listener) => listener())
+}
+
+/** Subscribes to changes of `transitionTarget()`. */
+export function subscribeTransitionTarget(listener: () => void) {
+  targetListeners.add(listener)
+  return () => {
+    targetListeners.delete(listener)
+  }
+}
+
+/** The pathname a transition is opening (from the click until the reveal ends), or null. */
+export const transitionTarget = () => target
+
 const onPopState = () => {
   if (!active) return
   if (active.phase === 'leave') cancel()
@@ -101,6 +157,7 @@ function finish() {
   t.anims.forEach((a) => a.cancel())
   if (t.hero) delete t.hero.dataset.transitionPending
   window.removeEventListener('popstate', onPopState)
+  setTarget(null)
 }
 
 /** Stops a transition before the route change and restores the tile (its animations are cancelled). */
@@ -196,6 +253,7 @@ function start(path: string, phase: Phase, tile: HTMLElement | null, revealMs: n
   }
   active = t
   window.addEventListener('popstate', onPopState)
+  setTarget(path)
   return t
 }
 

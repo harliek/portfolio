@@ -330,10 +330,23 @@ html[data-motion='reduce'] .arc__item[data-active] .arc-tile__lift {
   will-change: transform, opacity;
 }
 
-/* A caption faded out at the stage edge (opacity 0) is not a pointer target either. */
+/* A tile mostly outside the stage (data-off) is not a pointer target, nor is its faded caption. */
 .arc__item[data-off] .arc-caption__name,
 .arc__item[data-off] .arc-caption__cta {
   pointer-events: none;
+}
+
+/*
+ * Reduced motion (the static arc): all seven tiles share the stage width,
+ * so ConcaveCarousel.tsx sets --cap-w to the spacing less the gap between
+ * neighbours, and a name longer than that wraps (never overlaps). The
+ * action label stays on one line (CAROUSEL.staticArcMinWidth keeps the
+ * spacing wide enough for it).
+ */
+.arc[data-mode='static'] .arc-caption__name {
+  max-width: 100%;
+  white-space: normal;
+  text-wrap: balance;
 }
 
 .arc__caption .arc-caption__desc {

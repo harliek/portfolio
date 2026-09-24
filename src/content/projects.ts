@@ -21,8 +21,11 @@ export type ProjectId =
 
 export type ProjectAccent = 'violet' | 'green' | 'warm'
 
-/** `sizes` of the wide opening images (the hero components use the same literal). */
-const HERO_SIZES = '(min-width: 1320px) 690px, (min-width: 960px) 55vw, calc(100vw - 40px)'
+/**
+ * `sizes` of the case studies' sticky media frame (CaseScroll's default and
+ * Client Work's POSTER_SIZES use the same literal).
+ */
+const FRAME_SIZES = '(min-width: 960px) 620px, calc(100vw - 32px)'
 
 export interface Project {
   id: ProjectId
@@ -50,9 +53,11 @@ export interface Project {
   /** 3:4 tile artwork from `final tiles/` (carousel tile, Work shelf thumbnail, next project). */
   cover: ImageId
   /**
-   * The first image inside the case opening's [data-case-hero], with the
-   * same `sizes`, so the route transition can fetch it ahead of time (on
-   * hover or focus of a project link). Keep in step with the hero component.
+   * The image the case study opens on (the `opening` visual in
+   * src/content/pages/<page>.tsx, shown in [data-case-hero]) with the same
+   * `sizes` as that frame, so the route transition can fetch and decode it
+   * ahead of time (on hover or focus of a project link). Keep in step with
+   * the page's opening and its frame `sizes`.
    */
   hero: { image: ImageId; sizes: string }
   accent: ProjectAccent
@@ -77,7 +82,7 @@ export const PROJECTS: Project[] = [
     description: 'UK market research and a localized storefront prototype.',
     meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
     cover: 'tile-cafepress-uk',
-    hero: { image: 'planetart-uk', sizes: HERO_SIZES },
+    hero: { image: 'cafepress-monitor', sizes: FRAME_SIZES },
     accent: 'violet',
     next: 'merchandising-platform',
     seo: {
@@ -99,9 +104,9 @@ export const PROJECTS: Project[] = [
     org: 'Independent',
     status: 'Independent prototype',
     description: 'Product, inventory, and replenishment information in one prototype.',
-    meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Prototype with synthetic data' },
+    meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Working prototype' },
     cover: 'tile-merchandising-platform',
-    hero: { image: 'merch-overview', sizes: HERO_SIZES },
+    hero: { image: 'mp-overview', sizes: FRAME_SIZES },
     accent: 'violet',
     next: 'spreadsheet-agent',
     seo: {
@@ -125,7 +130,7 @@ export const PROJECTS: Project[] = [
     description: 'A request, a reviewable plan, and an editable spreadsheet.',
     meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Prototype with simulated AI responses' },
     cover: 'tile-spreadsheet-agent',
-    hero: { image: 'sheet-returned', sizes: HERO_SIZES },
+    hero: { image: 'sa-overview', sizes: FRAME_SIZES },
     accent: 'violet',
     next: 'ai-leasing-agent',
     seo: {
@@ -149,7 +154,7 @@ export const PROJECTS: Project[] = [
     description: 'Requirements and testing for recurring leasing questions.',
     meta: { company: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'October 2024 to June 2025', status: 'Adopted across 18 properties' },
     cover: 'tile-ai-leasing-agent',
-    hero: { image: 'valiance-messages', sizes: HERO_SIZES },
+    hero: { image: 'valiance-messages', sizes: FRAME_SIZES },
     accent: 'violet',
     next: 'jumpstart-finance',
     seo: {
@@ -171,9 +176,9 @@ export const PROJECTS: Project[] = [
     org: 'European Innovation Academy, Porto',
     status: 'Venture concept and prototype',
     description: 'A student venture exploring mobile financial education.',
-    meta: { company: 'European Innovation Academy, Porto', role: 'Founder & Product Lead', dates: 'June to July 2024', status: 'Program concept and prototype' },
+    meta: { company: 'Jumpstart Finance (student venture)', role: 'Founder & Product Lead', dates: 'June to July 2024', status: 'Program concept and prototype' },
     cover: 'tile-jumpstart-finance',
-    hero: { image: 'jumpstart-proto-3', sizes: '(min-width: 960px) 190px, 26vw' },
+    hero: { image: 'jf-screen-home', sizes: '(min-width: 960px) 360px, 300px' },
     accent: 'green',
     next: 'client-work',
     seo: {
@@ -195,9 +200,9 @@ export const PROJECTS: Project[] = [
     org: 'Shift Content, London',
     status: 'Agency client work',
     description: 'Production and campaign support at Shift Content.',
-    meta: { company: 'Shift Content, London', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', status: 'Agency productions with a team' },
+    meta: { company: 'Shift Content, London', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', status: 'Three completed client films' },
     cover: 'tile-client-work',
-    hero: { image: 'nickleby-poster', sizes: '(min-width: 1320px) 720px, (min-width: 960px) 58vw, calc(100vw - 40px)' },
+    hero: { image: 'nickleby-poster', sizes: FRAME_SIZES },
     accent: 'warm',
     next: 'cafepress-uk',
     seo: {

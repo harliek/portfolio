@@ -71,8 +71,8 @@ export function AboutContent({ headingLevel }: AboutContentProps) {
         </div>
         {/* The opening image for the carousel's About Me tile: revealed in place once decoded (projectTransition.ts). */}
         <div ref={portraitRef} className="about-intro__portrait" data-case-hero="" data-transition-pending={pending ? 'true' : undefined}>
-          {/* The page's largest image loads eagerly. */}
-          <ResponsiveImage image="headshot" sizes="(min-width: 960px) 300px, 240px" priority={headingLevel === 1} />
+          {/* The page's largest image loads eagerly. projectTransition.ts (PAGE_HEROES) warms it with the same `sizes`. */}
+          <ResponsiveImage image="headshot" sizes="(min-width: 960px) 344px, 240px" priority={headingLevel === 1} />
         </div>
         <div className="about-intro__body">
           {ABOUT.bio.map((p, i) => (

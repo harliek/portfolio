@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom'
 import { SITE } from '../../content/site'
 
-/* The original footer, with its links mapped to this site. */
+/*
+ * The original footer, with its links mapped to this site. Archive repair:
+ * its fine print ("San Francisco, CA · Reconstructions on this site are
+ * marked where they appear, and use synthetic data.") is omitted; the
+ * professional site no longer presents anything as a reconstruction.
+ */
 export function Foot() {
   return (
     <footer className="ft lc-shell">
@@ -18,7 +23,6 @@ export function Foot() {
           </a>
         </nav>
       </div>
-      <p className="ft-fine">Reconstructions on this site are marked where they appear, and use synthetic data.</p>
     </footer>
   )
 }

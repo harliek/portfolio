@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import { STAGE } from '../../config/stage'
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react'
+import { STAGE, stageRouteFor, type StageRoute } from '../../config/stage'
 import { fallbackSrc, getImage, srcSet, STAGE_MEDIA } from '../../content/media'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
-
-export type StageRoute = keyof typeof STAGE.background.rate
+import { subscribeTransitionTarget, transitionTarget } from '../transition/projectTransition'
 
 const MOBILE_QUERY = `(max-width: ${STAGE.background.mobileBelow - 0.02}px)`
 
@@ -21,13 +20,21 @@ const MOBILE_QUERY = `(max-width: ${STAGE.background.mobileBelow - 0.02}px)`
  * scrolls from the carousel into About (`--read`, 0 → 1); and a soft band
  * that dims the bright floor line wherever it sits in the viewport.
  *
+ * While a project opens from the carousel (projectTransition.ts), the set
+ * already shows the destination's treatment, quickly (`data-hurry`), so the
+ * darker interior shade is complete before the new page's text appears and
+ * the bright floor line never crosses it.
+ *
  * Reduced motion (OS or the footer's "Reduce motion"): poster only, no video
  * request. The video pauses while the tab is hidden, while an image is
  * enlarged or the small-screen menu is open, and while anything is
  * fullscreen. Decorative: aria-hidden.
  */
-export function StageBackground({ route }: { route: StageRoute }) {
+export function StageBackground({ route: current }: { route: StageRoute }) {
   const reduced = useReducedMotion()
+  const opening = useSyncExternalStore(subscribeTransitionTarget, transitionTarget)
+  const route = opening ? stageRouteFor(opening) : current
+  const hurry = route !== current
   const [mobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches)
   const file = mobile ? STAGE_MEDIA.background.mobile : STAGE_MEDIA.background.desktop
   const [playing, setPlaying] = useState(false)
@@ -101,7 +108,14 @@ export function StageBackground({ route }: { route: StageRoute }) {
   const phone = getImage(STAGE_MEDIA.background.mobile.poster)
 
   return (
-    <div ref={rootRef} className="stage-bg" data-route={route} data-file={mobile ? 'mobile' : 'desktop'} aria-hidden="true">
+    <div
+      ref={rootRef}
+      className="stage-bg"
+      data-route={route}
+      data-hurry={hurry || undefined}
+      data-file={mobile ? 'mobile' : 'desktop'}
+      aria-hidden="true"
+    >
       <picture className="stage-bg__poster">
         <source media={MOBILE_QUERY} type="image/avif" srcSet={srcSet(phone, 'avif')} />
         <source media={MOBILE_QUERY} type="image/webp" srcSet={srcSet(phone, 'webp')} />

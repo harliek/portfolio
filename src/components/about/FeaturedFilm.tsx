@@ -4,7 +4,8 @@ import { ABOUT } from '../../content/pages/about'
 import { ResponsiveImage } from '../media/ResponsiveImage'
 
 const FILM = filmById(FEATURED_FILM_ID)
-const SIZES = '(min-width: 960px) 640px, calc(100vw - 40px)'
+/** The wide column of About's grid: at most 810px (1440px and wider), narrower below. */
+const SIZES = '(min-width: 960px) 810px, calc(100vw - 40px)'
 
 /** Privacy-enhanced embed; nothing from YouTube is requested before the visitor presses the button. */
 const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`

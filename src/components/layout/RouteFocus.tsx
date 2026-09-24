@@ -42,6 +42,15 @@ export function goToSection(id: string, behavior?: ScrollBehavior): boolean {
 }
 
 /**
+ * The router's key for the location this document was loaded at ('default'
+ * on a first visit; a reload keeps the key it had). Read once, when the app
+ * starts (PageShell and this module are part of the entry bundle).
+ */
+const INITIAL_KEY: string = (window.history.state as { key?: string } | null)?.key ?? 'default'
+/** Whether a RouteFocus has mounted in this document before (either layout's). */
+let mountedBefore = false
+
+/**
  * After client-side navigation, move focus to the new page's H1 so screen
  * reader and keyboard users start at the top of the new content, or, when
  * the URL has a hash (e.g. "About" → `/#about`, "Contact" → `#contact`), to
@@ -50,17 +59,25 @@ export function goToSection(id: string, behavior?: ScrollBehavior): boolean {
  *
  * The initial load is left alone for focus, but a direct link with a hash
  * is re-aligned once the page has laid out (images and the carousel can
- * shift the target after the router's first scroll). Pages that manage
- * focus themselves (e.g. the project transition) set data-focus-managed on
- * <main> for one navigation.
+ * shift the target after the router's first scroll). Switching between the
+ * professional and creative layouts (each renders its own RouteFocus)
+ * mounts this component afresh; that is a navigation too (a link, Back or
+ * Forward), so focus moves as usual.
+ * Pages that manage focus themselves (e.g. the project transition) set
+ * data-focus-managed on <main> for one navigation.
  */
 export function RouteFocus() {
   const location = useLocation()
   const navType = useNavigationType()
   // The location focus was last handled for. Comparing keys (not a boolean
   // "first run" flag) keeps StrictMode's double effect in dev from acting
-  // twice on one navigation.
-  const handled = useRef(location.key)
+  // twice on one navigation. The first mount in the document, at the
+  // location it was loaded at, is left alone; any other mount follows a
+  // navigation in the app.
+  const handled = useRef<string | null>(!mountedBefore && location.key === INITIAL_KEY ? location.key : null)
+  useEffect(() => {
+    mountedBefore = true
+  }, [])
 
   // Direct load with a hash: re-align after layout settles, unless the
   // visitor has already scrolled.
@@ -92,6 +109,7 @@ export function RouteFocus() {
 
   useEffect(() => {
     if (handled.current === location.key) return
+    const previous = handled.current
     handled.current = location.key
     const main = document.getElementById('main')
     if (!main) return
@@ -101,9 +119,11 @@ export function RouteFocus() {
     }
     const hash = location.hash.slice(1)
     let inner = 0
+    let done = false
     // Two frames: the lazily rendered page has committed and laid out.
     const outer = requestAnimationFrame(() => {
       inner = requestAnimationFrame(() => {
+        done = true
         const anchor = hash ? document.getElementById(decodeURIComponent(hash)) : null
         if (anchor) {
           // Back/Forward restore their own position; new navigations land on the section.
@@ -117,6 +137,9 @@ export function RouteFocus() {
     return () => {
       cancelAnimationFrame(outer)
       cancelAnimationFrame(inner)
+      // Cleaned up before focus moved (StrictMode's mount-time re-run in
+      // development, or an unmount): the next run for this location redoes it.
+      if (!done) handled.current = previous
     }
   }, [location.key, location.hash, navType])
 

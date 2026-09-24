@@ -44,7 +44,11 @@ export const CAROUSEL = {
   still: {
     step: 0.13,
     perspective: 1,
-    /** Caption width limit (px); captions never overlap their neighbours. */
+    /**
+     * Caption width limit (px). Each caption is also at most the spacing
+     * less `captionGap` wide (a long name wraps), so captions never overlap
+     * their neighbours.
+     */
     maxCaption: 240,
   },
 
@@ -60,6 +64,13 @@ export const CAROUSEL = {
   edgeMask: 0.045,
   /** Tiles fade over the last share of a spacing before the recycling point (a safety on unusual screens). */
   recycleFade: 0.3,
+  /**
+   * A tile stays a working link (hover, click) while at least this share of
+   * its width is inside the stage (measured to the middle of the edge
+   * fades). Hovering such an edge tile brings back its faded caption, moved
+   * inward to stay whole. Tiles mostly outside take no pointer events.
+   */
+  minVisible: 0.5,
 
   /** Where the motion starts, in spacings past the first tile (1.5 puts tiles 1–4 in reading order). */
   startOffset: 1.5,
@@ -76,8 +87,13 @@ export const CAROUSEL = {
   /** Keyboard focus on a tile outside the readable area glides it into view over this long (ms). */
   focusGlideMs: 420,
 
-  /** The static arc needs at least this width for all seven tiles; narrower reduced-motion windows use the swipe row. */
-  staticArcMinWidth: 1200,
+  /**
+   * The static arc needs at least this width for all seven tiles: its
+   * spacing must hold a one-line "View case study ↗" / "View About page ↗"
+   * (≈146px) plus `captionGap`. Narrower reduced-motion windows use the
+   * swipe row (bigger tiles, every caption fully visible).
+   */
+  staticArcMinWidth: 1340,
   /** Narrower windows (even with a mouse) get the swipe row: the arc would show only two readable tiles. */
   arcMinWidth: 960,
   /** Touch and coarse pointers get the swipe row (tap opens a project directly). */
@@ -99,14 +115,14 @@ export const CAROUSEL = {
  * Next-project links (no tile) use step 3 alone with `plainRevealMs`.
  */
 export const TRANSITION = {
-  leaveMs: 260,
+  leaveMs: 230,
   leaveScale: 1.06,
   leaveLift: 10,
   navigateCapMs: 700,
   heroWaitMs: 600,
   /** Longest wait for the destination's opening frame to exist before giving up quietly. */
   heroFindMs: 1500,
-  revealMs: 260,
+  revealMs: 240,
   revealScale: 0.985,
   plainRevealMs: 300,
   ease: 'cubic-bezier(0.2, 0.7, 0.2, 1)',

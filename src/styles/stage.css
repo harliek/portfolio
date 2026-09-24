@@ -89,7 +89,8 @@
 .stage-bg__shade {
   background: var(--stage-room);
   opacity: min(0.94, calc(var(--bg-shade) + var(--bg-phone, 0)));
-  transition: opacity 700ms var(--ease-out);
+  /* Short: a route change (header or shelf link) shows the new text at once, over this shade. */
+  transition: opacity 280ms var(--ease-out);
 }
 
 .stage-bg[data-route='home'] {
@@ -124,7 +125,7 @@
 .stage-bg__read {
   background: var(--read-fill);
   opacity: var(--read);
-  transition: opacity 600ms var(--ease-out);
+  transition: opacity 280ms var(--ease-out);
 }
 
 /* The homepage value follows the scroll every frame: keep the easing short. */
@@ -132,6 +133,19 @@
 .stage-bg[data-route='home'] .stage-bg__band,
 .stage-bg[data-route='home'] .stage-bg__reflection {
   transition-duration: 160ms;
+}
+
+/*
+ * A project is opening from the carousel (StageBackground data-hurry): the
+ * destination's treatment is applied while the tile leaves (TRANSITION.leaveMs)
+ * and is complete before the route changes, so the new page's text never
+ * appears over the lighter home room or its bright floor line.
+ */
+.stage-bg[data-hurry] .stage-bg__shade,
+.stage-bg[data-hurry] .stage-bg__read,
+.stage-bg[data-hurry] .stage-bg__band,
+.stage-bg[data-hurry] .stage-bg__reflection {
+  transition-duration: 200ms;
 }
 
 /* Floor-line band: darkest exactly on the line, fading out above and below. */
@@ -148,7 +162,7 @@
     rgb(5 6 9 / 0)
   );
   opacity: calc(var(--band-from) + (var(--band-to) - var(--band-from)) * var(--read));
-  transition: opacity 600ms var(--ease-out);
+  transition: opacity 280ms var(--ease-out);
 }
 
 @media (min-width: 960px) {

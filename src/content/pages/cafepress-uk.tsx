@@ -65,7 +65,7 @@ export const CAFEPRESS_UK = {
           body: (
             <>
               <p>
-                I reviewed five comparable businesses: Printful, Prodigi, Printify, Vistaprint, and 4imprint. The main finding was that{' '}
+                I reviewed five comparable businesses, Printful, Prodigi, Printify, Vistaprint, and 4imprint. The main finding was that{' '}
                 <strong>UK offerings often mirrored US-style merchandising</strong> rather than introducing a different model. The sites were organized by
                 category, featured recognizable brands, and showed eco-friendly products as a recurring theme.
               </p>
@@ -92,7 +92,7 @@ export const CAFEPRESS_UK = {
           visual: {
             kind: 'image',
             image: 'cp-header-brand',
-            caption: 'Detail of the storefront prototype: the CafePress Business UK name and headline.',
+            caption: 'The CafePress Business UK name and headline in the storefront prototype.',
             highlight: { x: 8.1, y: 15.5, w: 42.4, h: 22.9 },
           },
         },
@@ -124,7 +124,7 @@ export const CAFEPRESS_UK = {
           visual: {
             kind: 'image',
             image: 'cp-header-nav',
-            caption: 'Detail of the prototype’s header: the phone number, Sign in, and Basket.',
+            caption: 'The phone number, Sign in, and Basket in the prototype’s header.',
             highlight: { x: 24.7, y: 19.5, w: 67.7, h: 15 },
           },
         },
@@ -148,8 +148,8 @@ export const CAFEPRESS_UK = {
   ] satisfies Section[],
   results: (
     <p>
-      The internship produced a competitor and vendor review, the storefront prototype, and <strong>three recommendations</strong>: adapt the existing US B2B
-      model, localize the assortment selectively, and have product data, vendor coordination, and merchandising workflows ready before any launch.
+      The internship produced a competitor and vendor review, the storefront prototype, and <strong>three recommendations</strong>, to adapt the existing US
+      B2B model, localize the assortment selectively, and have product data, vendor coordination, and merchandising workflows ready before any launch.
     </p>
   ),
   resultsFigure: {

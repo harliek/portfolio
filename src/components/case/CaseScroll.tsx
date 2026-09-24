@@ -29,6 +29,10 @@
  * - Section `title` is the h2; block `title` is an h3 (optional). All text is ordinary document content.
  * - `highlight` is a Rect in PERCENT OF THE IMAGE (x, y from the top-left). Mark ONE meaningful region;
  *   prefer a focused crop over a small highlight in a mostly empty screenshot.
+ * - Captions: the provenance label (media.ts PROVENANCE_LABEL) appears with the first image and then
+ *   only where the provenance changes (the demo: only when it differs from the opening's), in the
+ *   sticky frame and the stacked figures alike. `provenanceLabel: false` leaves it out of one visual
+ *   (e.g. when `note` already says it). State a qualification once; do not repeat it in captions.
  * - `enlarge`: the image the "Enlarge image" button opens (default: the state's image; e.g. the full
  *   conversation behind a crop). `false` hides the button for that state.
  * - Use crops whose ratio matches `frameRatio` so nothing letterboxes; transparent PNGs (phones,
@@ -40,8 +44,8 @@
  *   every one you add. Outside CaseScroll use <Placeholder spec={…} /> directly.
  * - Section ids become DOM ids (h2 = `${id}-title`); avoid 'results' (used by <Results>). Block ids
  *   are React keys and `data-block` values only. Keep each block to one or two short paragraphs;
- *   there is no extra spacing to "give an animation time", except that the LAST block is kept just
- *   tall enough for its visual to activate while the media region is still pinned.
+ *   there is no extra spacing to "give an animation time" (near the end the activation line moves
+ *   down instead, so the last visual is shown while the media region is still pinned).
  * - The demo button, "Enlarge image" and "Return to walkthrough" are rendered for you; do not add
  *   step buttons, tabs or section pills. Optional supplementary material may use a clearly labelled
  *   <details> (secondary look) inside a block body or `children`.
@@ -51,7 +55,9 @@
  *
  * Desktop (≥960px): 44% text / 6% gap / 50% media, max 1240px. The media region is sticky from the
  * opening to the end of the last section. The active block is the last block whose top has passed a
- * line at 40% of the viewport (scroll position, rAF-throttled); the frame then waits until the next
+ * line at 40% of the viewport (scroll position, rAF-throttled; over the last part of the pinned range
+ * the line moves down, at most to 75%, so the last block takes over while the region is still pinned
+ * and keeps it for about 22% of the viewport before the region moves on); the frame then waits until the next
  * image has decoded (the current one stays fully visible), removes the old highlight (60ms), fades the
  * new layer in over the old (120ms) and reveals the new highlight after it settles (150ms). Only the
  * latest target is kept, so fast or backward scrolling never plays a queue of missed changes, and
@@ -60,9 +66,9 @@
  * Below 960px: stacked in reading order; each block is followed by its own visual.
  */
 import '../../styles/case.css'
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
-import { fallbackSrc, getImage, getVideo, type ImageId, type VideoAsset, type VideoId } from '../../content/media'
+import { fallbackSrc, getImage, getVideo, type ImageId, type Provenance, type VideoAsset, type VideoId } from '../../content/media'
 import type { Project } from '../../content/projects'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { prefersReducedMotion, useReducedMotion } from '../../hooks/useReducedMotion'
@@ -77,7 +83,16 @@ export type { PlaceholderSpec }
 export type Rect = { x: number; y: number; w: number; h: number }
 
 export type Visual =
-  | { kind: 'image'; image: ImageId; caption: ReactNode; highlight?: Rect; enlarge?: ImageId | false; alt?: string }
+  | {
+      kind: 'image'
+      image: ImageId
+      caption: ReactNode
+      highlight?: Rect
+      enlarge?: ImageId | false
+      alt?: string
+      /** `false` leaves the provenance label out of this caption (e.g. the page's note already states it). */
+      provenanceLabel?: false
+    }
   | { kind: 'placeholder'; placeholder: PlaceholderSpec; caption?: ReactNode }
 
 /** No `visual` = keep the previous one. */
@@ -118,8 +133,12 @@ const DESKTOP = '(min-width: 960px)'
 const DEFAULT_SIZES = '(min-width: 960px) 620px, calc(100vw - 32px)'
 /** Share of the viewport height where a block becomes active. */
 const ACTIVATION_LINE = 0.4
-/** Distance (px) between the sticky region and the end of its column at which the last block takes over. */
-const END_ROOM = 12
+/** The last visual stays pinned for at least this share of the viewport height of scrolling. */
+const LAST_DWELL = 0.22
+/** The lowest the activation line may move near the end (share of the viewport): a block's heading is in view when its visual appears. */
+const MAX_LINE = 0.75
+/** The line moves down over RAMP × the distance it moves, so the blocks before the last keep most of their time. */
+const RAMP = 3
 
 /** Frame change timings (ms): highlight out, layer in, settle, same-image pause, highlight in. */
 const T = { hlOut: 60, layerIn: 120, settle: 30, sameLayer: 60, hlIn: 150 }
@@ -178,30 +197,47 @@ function whenDecoded(layer: Element | null): Promise<void> {
  * opening). An external store so scroll updates never set state inside an
  * effect; the snapshot only changes when the active block changes.
  *
- * The end of the section: once the sticky region is about to be carried
- * away by the end of the grid, the last block is active even if it is too
- * short to reach the line, so its visual shows beside it without adding
- * empty space under the last paragraph.
+ * The end of the section (desktop): the sticky region is carried away once
+ * the bottom of the text column reaches it, which usually happens before a
+ * short last block reaches the 40% line. So the line moves down gradually
+ * over the last part of the pinned range (never above 40%, never below 75%
+ * of the viewport), timed so the last block becomes active LAST_DWELL of the
+ * viewport before the region starts to move, and the blocks before it keep
+ * most of their time. The line is a pure function of the scroll position,
+ * so fast and backward scrolling land on the same state. Only when the
+ * region is so tall that the last heading would still be below 75% does the
+ * text column get a short tail (--cs-tail) under the last block.
  */
 class ActiveTracker {
   private els: Array<HTMLElement | null> = []
+  private grid: HTMLElement | null = null
   private column: HTMLElement | null = null
   private sticky: HTMLElement | null = null
+  private body: HTMLElement | null = null
   private active = -1
   private frame = 0
   private listeners = new Set<() => void>()
   private ro: ResizeObserver | null = null
+  /** Layout values that do not change with scrolling (re-read after a resize or a content change). */
+  private dirty = true
+  private stickyTop = 0
+  /** The tail under the last block (px). Grows with content changes; recomputed from zero on resize. */
+  private tail = 0
 
   setEl(i: number, el: HTMLElement | null) {
     this.els[i] = el
-    this.schedule()
+    this.relayout()
   }
 
-  /** The media column and its sticky region (desktop only; null when stacked). */
-  setMedia(column: HTMLElement | null, sticky: HTMLElement | null) {
+  /** Ref callback for the media column (desktop only; null when stacked). Its grid, sticky region and text column are found from it. Stable identity. */
+  attachMedia = (column: HTMLElement | null) => {
+    if (column === this.column) return
+    this.setTail(0)
     this.column = column
-    this.sticky = sticky
-    this.schedule()
+    this.grid = column?.parentElement ?? null
+    this.sticky = column?.querySelector<HTMLElement>('.cs-sticky') ?? null
+    this.body = this.grid?.querySelector<HTMLElement>(':scope > .cs-body') ?? null
+    this.relayout()
   }
 
   /** Drops elements beyond the current block count (after sections change). */
@@ -213,8 +249,8 @@ class ActiveTracker {
     this.listeners.add(listener)
     if (this.listeners.size === 1) {
       window.addEventListener('scroll', this.schedule, { passive: true })
-      window.addEventListener('resize', this.schedule)
-      this.ro = new ResizeObserver(this.schedule)
+      window.addEventListener('resize', this.resized)
+      this.ro = new ResizeObserver(this.relayout)
       this.ro.observe(document.body)
       this.schedule()
     }
@@ -222,7 +258,7 @@ class ActiveTracker {
       this.listeners.delete(listener)
       if (this.listeners.size) return
       window.removeEventListener('scroll', this.schedule)
-      window.removeEventListener('resize', this.schedule)
+      window.removeEventListener('resize', this.resized)
       this.ro?.disconnect()
       this.ro = null
       cancelAnimationFrame(this.frame)
@@ -236,22 +272,62 @@ class ActiveTracker {
     if (!this.frame && this.listeners.size) this.frame = requestAnimationFrame(this.measure)
   }
 
+  private relayout = () => {
+    this.dirty = true
+    this.schedule()
+  }
+
+  private resized = () => {
+    this.setTail(0)
+    this.relayout()
+  }
+
+  private setTail(px: number) {
+    this.tail = px
+    if (px > 0) this.grid?.style.setProperty('--cs-tail', `${px}px`)
+    else this.grid?.style.removeProperty('--cs-tail')
+  }
+
+  /** The activation line (px from the viewport top) at the current scroll position. */
+  private line(vh: number) {
+    const base = vh * ACTIVATION_LINE
+    const n = this.els.length
+    const lastEl = this.els[n - 1]
+    const { column, sticky, body } = this
+    if (!lastEl || !column || !sticky || !body) return base
+    const y = window.scrollY
+    if (this.dirty) {
+      this.dirty = false
+      this.stickyTop = Number.parseFloat(getComputedStyle(sticky).top) || 0
+    }
+    const region = this.stickyTop + sticky.offsetHeight
+    const dwell = vh * LAST_DWELL
+    const lastTop = lastEl.getBoundingClientRect().top + y
+    // The tail: only what a region too tall for the viewport needs (none on most pages). The text
+    // column's bottom padding is the current tail (case.css).
+    const after = body.getBoundingClientRect().bottom + y - this.tail - lastTop
+    const tail = Math.max(0, Math.ceil(region + dwell - after - vh * MAX_LINE))
+    if (tail > this.tail) this.setTail(tail)
+    // Scroll position at which the region starts to move with the column, and where the last block takes over.
+    const unpin = column.getBoundingClientRect().bottom + y - region
+    const end = unpin - dwell
+    const shift = Math.min(Math.max(lastTop - end - base, 0), vh * (MAX_LINE - ACTIVATION_LINE))
+    if (!shift) return base
+    // Never before arrival, so the opening visual always has its turn.
+    const start = Math.max(0, end - RAMP * shift)
+    const progress = end > start ? Math.min(Math.max((y - start) / (end - start), 0), 1) : y >= end ? 1 : 0
+    return base + shift * progress
+  }
+
   private measure = () => {
     this.frame = 0
-    const vh = window.innerHeight
-    const line = vh * ACTIVATION_LINE
+    const line = this.line(window.innerHeight)
     let active = -1
     for (let i = 0; i < this.els.length; i++) {
       const el = this.els[i]
       if (!el) continue
       if (el.getBoundingClientRect().top <= line) active = i
       else break
-    }
-    const last = this.els.length - 1
-    const lastEl = this.els[last]
-    if (active < last && lastEl && this.column && this.sticky) {
-      const room = this.column.getBoundingClientRect().bottom - this.sticky.getBoundingClientRect().bottom
-      if (room < END_ROOM && lastEl.getBoundingClientRect().top < vh * 0.8) active = last
     }
     if (active !== this.active) {
       this.active = active
@@ -475,6 +551,10 @@ interface FrameProps {
   /** Eager-load the first state's image with high priority. */
   priority?: boolean
   variant: 'sticky' | 'inline'
+  /** Per state: show its provenance label (see provenanceLabels). */
+  labels: boolean[]
+  /** Show the demo recording's provenance label (only when it differs from the opening's). */
+  demoLabel?: boolean
 }
 
 /** `data-on` is set by the sequencer, never by React. */
@@ -504,7 +584,7 @@ function ReturnIcon() {
  * low priority), the sequencer decides which is shown, one highlight at
  * most, and an optional demo recording in the same frame.
  */
-function MediaFrame({ states, target, ratio, sizes, demo, hero = false, priority = false, variant }: FrameProps) {
+function MediaFrame({ states, target, ratio, sizes, demo, hero = false, priority = false, variant, labels, demoLabel = false }: FrameProps) {
   const reduced = useReducedMotion()
   const { pathname } = useLocation()
   const frameRef = useRef<HTMLDivElement>(null)
@@ -653,9 +733,9 @@ function MediaFrame({ states, target, ratio, sizes, demo, hero = false, priority
         </div>
         <figcaption className="cs-caption" aria-live={variant === 'sticky' ? 'polite' : undefined}>
           {demoOn && video ? (
-            <CaptionText provenance={video.provenance}>{video.caption}</CaptionText>
+            <CaptionText provenance={demoLabel ? video.provenance : undefined}>{video.caption}</CaptionText>
           ) : shownVisual.kind === 'image' ? (
-            <CaptionText provenance={getImage(shownVisual.image).provenance}>{shownVisual.caption}</CaptionText>
+            <CaptionText provenance={labels[view.front] ? getImage(shownVisual.image).provenance : undefined}>{shownVisual.caption}</CaptionText>
           ) : (
             shownVisual.caption
           )}
@@ -726,28 +806,15 @@ export function CaseScroll({ project, situation, note, opening, sections, frameR
     })
   })
   const target = active < 0 ? 0 : (blockState[active] ?? 0)
+  const labels = provenanceLabels(states)
+  const demoLabel = Boolean(demo && (opening.kind !== 'image' || getVideo(demo.video).provenance !== getImage(opening.image).provenance))
   const blockCount = blocks.length
   useEffect(() => tracker.setCount(blockCount), [tracker, blockCount])
-
-  // The sticky region's height (--cs-media-h): the last block is just tall enough to keep the
-  // region pinned until it is active (case.css), so no state is skipped at the end.
-  const gridRef = useRef<HTMLDivElement>(null)
-  useLayoutEffect(() => {
-    const grid = gridRef.current
-    const sticky = grid?.querySelector<HTMLElement>('.cs-sticky')
-    if (!desktop || !grid || !sticky) return
-    const write = () => grid.style.setProperty('--cs-media-h', `${Math.ceil(sticky.offsetHeight)}px`)
-    write()
-    const ro = new ResizeObserver(write)
-    ro.observe(sticky)
-    return () => {
-      ro.disconnect()
-      grid.style.removeProperty('--cs-media-h')
-    }
-  }, [desktop])
+  // Stable, so re-renders never detach the media column (which would reset the tail).
+  const attachMedia = useCallback((el: HTMLDivElement | null) => tracker.attachMedia(el), [tracker])
 
   return (
-    <div ref={gridRef} className="cs" data-layout={desktop ? 'sticky' : 'stacked'}>
+    <div className="cs" data-layout={desktop ? 'sticky' : 'stacked'}>
       <header className="cs-opening">
         <h1 className="cs-title" tabIndex={-1}>
           {project.name}
@@ -758,14 +825,14 @@ export function CaseScroll({ project, situation, note, opening, sections, frameR
       </header>
 
       {desktop ? (
-        <div className="cs-media" ref={(el) => tracker.setMedia(el, el?.querySelector<HTMLElement>('.cs-sticky') ?? null)}>
+        <div className="cs-media" ref={attachMedia}>
           <div className="cs-sticky">
-            <MediaFrame states={states} target={target} ratio={frameRatio} sizes={sizes} demo={demo} hero priority variant="sticky" />
+            <MediaFrame states={states} target={target} ratio={frameRatio} sizes={sizes} demo={demo} hero priority variant="sticky" labels={labels} demoLabel={demoLabel} />
           </div>
         </div>
       ) : (
         <div className="cs-inline cs-inline--opening">
-          <MediaFrame states={[opening]} target={0} ratio={inlineRatio(opening)} sizes={sizes} demo={demo} hero priority variant="inline" />
+          <MediaFrame states={[opening]} target={0} ratio={inlineRatio(opening)} sizes={sizes} demo={demo} hero priority variant="inline" labels={labels.slice(0, 1)} demoLabel={demoLabel} />
         </div>
       )}
 
@@ -790,7 +857,7 @@ export function CaseScroll({ project, situation, note, opening, sections, frameR
                   <div className="case-prose">{asProse(block.body)}</div>
                   {!desktop && block.visual && (
                     <div className="cs-inline">
-                      <MediaFrame states={[block.visual]} target={0} ratio={inlineRatio(block.visual)} sizes={sizes} variant="inline" />
+                      <MediaFrame states={[block.visual]} target={0} ratio={inlineRatio(block.visual)} sizes={sizes} variant="inline" labels={[labels[blockState[index]]]} />
                     </div>
                   )}
                 </div>
@@ -801,6 +868,23 @@ export function CaseScroll({ project, situation, note, opening, sections, frameR
       </div>
     </div>
   )
+}
+
+/**
+ * Which states show their provenance label (e.g. "Independent prototype · Synthetic data"): the first
+ * image, then only where the provenance changes from the previous image, so a qualification is not
+ * repeated under every state (sticky) or every figure (stacked). A visual can leave its label out
+ * with `provenanceLabel: false` (e.g. when the page's note already says it).
+ */
+function provenanceLabels(states: Visual[]): boolean[] {
+  let previous: Provenance | undefined
+  return states.map((v) => {
+    if (v.kind !== 'image') return false
+    const provenance = getImage(v.image).provenance
+    const show = provenance !== previous && v.provenanceLabel !== false
+    previous = provenance
+    return show
+  })
 }
 
 /** Stacked figures use the visual's own ratio (no letterboxing on narrow screens). */

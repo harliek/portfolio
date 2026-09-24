@@ -10,11 +10,17 @@ import type { Rect, Section, Visual } from '../../components/case/CaseScroll'
  *
  * The only image is an illustrative conversation with invented data
  * (Valiance Capital/messages.png, 1672×941, footer "Reconstruction ·
- * Invented data"). Its provenance label ("Illustrative · Synthetic") appears
- * with every view; the opening caption says once that it is not a production
- * screenshot. The three focused views are crops of the thread
- * (src/content/crops/ai-leasing-agent.ts); "Enlarge image" always opens the
- * full conversation.
+ * Invented data"). Its provenance label ("Illustrative · Synthetic") is
+ * shown once, with the opening (CaseScroll shows a label again only when the
+ * provenance changes); the captions describe the example plainly. The three
+ * focused views are crops of the thread (src/content/crops/ai-leasing-agent.ts);
+ * "Enlarge image" always opens the full conversation.
+ *
+ * First-person sentences stay at the level of the three requirement
+ * categories (general policy information, current property data, staff
+ * decisions), the only part supported by Harlie's account (S1). The specific
+ * examples (floor plans, pet policies, the fee waiver, unit 2B) come from the
+ * invented conversation and are introduced as the illustration's.
  *
  *   Jordan  "Hi! I'm looking for a two-bedroom under $2,600 near campus for
  *           August. I have one cat, and I'm hoping to move in on August 15.
@@ -65,8 +71,8 @@ const sections: Section[] = [
         id: 'requirements',
         body: (
           <p>
-            I turned those differences into <strong>requirements</strong>: what the assistant could answer directly, what needed current property
-            data, and when a team member should take over. I also <strong>worked on testing</strong>, checking cases that involved changing
+            I turned those differences into <strong>requirements</strong> covering what the assistant could answer directly, what needed current
+            property data, and when a team member should take over. I also <strong>worked on testing</strong>, checking cases that involved changing
             information, policy limits, and escalation against the requirements.
           </p>
         ),
@@ -75,11 +81,10 @@ const sections: Section[] = [
           placeholder: {
             id: 'ai-leasing-agent-diagram',
             ratio: '836 / 452',
-            label: 'Diagram of the requirements: which questions the assistant answers, which need current property data, and which go to a leasing team member.',
+            label: 'Diagram of the requirements, showing which questions the assistant answers, which need current property data, and which go to a leasing team member.',
             description:
               'Harlie’s own retrospective diagram of the leasing assistant’s requirements, labelled as such. Three routes for an incoming question: (1) general policy questions answered from approved property and policy information (floor plans, pet policy, the application process); (2) questions that need current data (availability, pricing, move-in dates), answered only from current property data; (3) requests that need a staff decision (fee waivers, unit holds, exceptions), handed to a leasing team member. Plain labels; no metrics, no platform internals, no third-party platform name. Landscape 1.85:1, 1672×904 px, text at least 28px in the source so it reads at 620px wide.',
           },
-          caption: 'A diagram of the requirements, to be supplied.',
         },
       },
       {
@@ -87,14 +92,14 @@ const sections: Section[] = [
         title: 'A general policy answer',
         body: (
           <p>
-            I identified questions the assistant could <strong>answer from approved property and policy information</strong>, such as floor plans,
-            pet policies, and the application process.
+            I identified the questions the assistant could <strong>answer from approved property and policy information</strong>. In the
+            illustrative conversation, that is the general information the assistant offers first.
           </p>
         ),
         visual: {
           kind: 'image',
           image: 'ala-conversation-request',
-          caption: 'The assistant offers general information about floor plans, pet policies, and the application process.',
+          caption: 'The example reply offers general information about floor plans, pet policies, and the application process.',
           highlight: GENERAL_ANSWER,
           enlarge: FULL,
         },
@@ -104,14 +109,15 @@ const sections: Section[] = [
         title: 'A request that needs current information',
         body: (
           <p>
-            I distinguished questions that depend on <strong>current availability, pricing, or other changing property data</strong>. Whether a
-            two-bedroom under $2,600 is free for an August 15 move-in depends on what is available when the question is asked.
+            I distinguished questions that depend on <strong>current availability, pricing, or other changing property data</strong>. In the
+            illustrative conversation, whether a two-bedroom under $2,600 is free for an August 15 move-in depends on what is available when the
+            question is asked.
           </p>
         ),
         visual: {
           kind: 'image',
           image: 'ala-conversation-request',
-          caption: 'The request depends on current pricing and availability for an August move-in.',
+          caption: 'The example request depends on current pricing and availability for an August move-in.',
           highlight: CURRENT_REQUEST,
           enlarge: FULL,
         },
@@ -121,14 +127,14 @@ const sections: Section[] = [
         title: 'A staff handoff',
         body: (
           <p>
-            I specified when the assistant should <strong>refer a conversation to a leasing team member</strong>. Requests such as waiving an
-            application fee or holding a unit need staff review, so the assistant says so and a team member takes over.
+            I specified when the assistant should <strong>refer a conversation to a leasing team member</strong>, for requests that need a staff
+            decision. In the illustrative conversation, a request to waive the application fee and hold unit 2B goes to leasing staff.
           </p>
         ),
         visual: {
           kind: 'image',
           image: 'ala-conversation-handoff',
-          caption: 'The fee waiver and unit hold go to leasing staff, and a team member takes over.',
+          caption: 'The example handoff, from the assistant’s referral to the team member’s reply.',
           highlight: HANDOFF,
           enlarge: FULL,
         },
@@ -147,7 +153,7 @@ export const AI_LEASING_AGENT = {
   opening: {
     kind: 'image',
     image: FULL,
-    caption: 'A leasing web chat with invented names and data. Not a production screenshot.',
+    caption: 'A leasing web chat between a prospective resident, the assistant, and a leasing team member.',
   } satisfies Visual,
   sections,
   results: (

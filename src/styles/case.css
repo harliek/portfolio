@@ -1,0 +1,731 @@
+/*
+ * Shared case-study layout (src/components/case/*). Page-specific styles go
+ * in src/styles/pages/<id>.css, scoped under the page class.
+ *
+ * Desktop: content ≈1200px; text ≈38% left, media ≈57% right, gap 56px;
+ * body 17–18px / 1.55; title ≤44px; section headings 22–26px; captions 14px.
+ * Below 960px: one column in reading order, body ≥16px, no sticky travel.
+ */
+
+.case {
+  --case-max: 1200px;
+  --case-gap: 56px;
+  --case-body: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --case-accent: var(--stage-violet);
+  padding-bottom: var(--space-4);
+}
+
+.case-shell {
+  width: 100%;
+  max-width: calc(var(--case-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+@media (min-width: 960px) {
+  .case-opening,
+  .case-section:not([data-wide]),
+  .sv-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 38fr) minmax(0, 57fr);
+    column-gap: var(--case-gap);
+    align-items: start;
+  }
+}
+
+/* ----------------------------------------------------------------------- */
+/* Typography                                                               */
+/* ----------------------------------------------------------------------- */
+
+.case-title {
+  color: var(--stage-ivory);
+  font-size: clamp(2.125rem, 1.75rem + 1.5vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: var(--weight-heading);
+}
+
+.case-subtitle {
+  margin-top: var(--space-3);
+  color: var(--color-muted);
+  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  line-height: 1.4;
+}
+
+.case-heading {
+  margin-bottom: var(--space-4);
+  color: var(--stage-ivory);
+  font-size: clamp(1.375rem, 1.25rem + 0.5vw, 1.625rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: var(--weight-heading);
+}
+
+.case-heading:focus {
+  outline: none;
+}
+
+.case-prose {
+  display: grid;
+  gap: 0.9em;
+}
+
+.case-prose p,
+.case-prose li {
+  max-width: 62ch;
+  color: var(--color-text);
+  font-size: var(--case-body);
+  line-height: 1.55;
+}
+
+.case-prose ul {
+  display: grid;
+  gap: 0.4em;
+  padding-left: 1.1em;
+}
+
+.case-prose a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--case-accent) 70%, transparent);
+  text-underline-offset: 0.2em;
+}
+
+.case-caption {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: 1.5;
+  /* Captions can rest on the bright floor horizon (e.g. 1280×720): a soft dark halo keeps them at AA contrast. */
+  text-shadow:
+    0 0 2px var(--stage-room),
+    0 0 10px var(--stage-room),
+    0 0 18px color-mix(in oklch, var(--stage-room) 80%, transparent);
+}
+
+/* ----------------------------------------------------------------------- */
+/* Opening                                                                  */
+/* ----------------------------------------------------------------------- */
+
+.case-opening {
+  row-gap: var(--space-6);
+  padding-top: clamp(var(--space-6), 4.5vw, var(--space-8));
+}
+
+.case-opening__text {
+  --scrim-pad: 28px;
+}
+
+/* The section links sit at the bottom of the opening text: the scrim reaches well past them. */
+.case .case-opening__text {
+  --scrim-pad-end: 88px;
+}
+
+.case-opening__description {
+  margin-top: var(--space-5);
+}
+
+.case-facts {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  padding-block: var(--space-4);
+  border-block: 1px solid rgb(238 234 226 / 0.12);
+}
+
+.case-facts__row {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: var(--space-4);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.case-facts dt {
+  color: var(--color-muted);
+}
+
+.case-facts dd {
+  color: var(--color-text);
+}
+
+.case-note {
+  margin-top: var(--space-4);
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--case-accent);
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+/* Body text is at least 16px on phones and tablets, boundary notes included. */
+@media (max-width: 959.98px) {
+  .case-note {
+    font-size: 1rem;
+  }
+}
+
+.case-summary {
+  margin-top: var(--space-4);
+}
+
+.case-summary p {
+  max-width: 62ch;
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.section-links {
+  margin-top: var(--space-5);
+}
+
+.section-links ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.section-links__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.18);
+  color: var(--color-text);
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  text-decoration: none;
+  transition:
+    background-color var(--dur-feedback) var(--ease-out),
+    box-shadow var(--dur-feedback) var(--ease-out);
+}
+
+.section-links__link:hover {
+  background: rgb(238 234 226 / 0.06);
+  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.32);
+}
+
+.section-links__link:focus-visible {
+  border-radius: 999px;
+}
+
+.case-opening__media {
+  position: relative;
+  min-width: 0;
+}
+
+/* A subtle local pool of light beneath the featured artifact. */
+.case-opening__media::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 8%;
+  right: 8%;
+  bottom: -40px;
+  height: 90px;
+  background: radial-gradient(closest-side in oklch, color-mix(in oklch, var(--case-accent) 22%, transparent), transparent);
+  pointer-events: none;
+}
+
+.case-hero {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.case-hero__frame {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 30px 60px -30px rgb(0 0 0 / 0.9);
+}
+
+.case-hero__frame[data-bare] {
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+  border-radius: 0;
+}
+
+@media (min-width: 960px) {
+  .case-opening__media {
+    padding-top: var(--space-2);
+  }
+}
+
+/* Stacked: the representative image follows the section links with a clear gap. */
+@media (max-width: 959.98px) {
+  .case-opening__media {
+    margin-top: var(--space-6);
+  }
+}
+
+/* ----------------------------------------------------------------------- */
+/* Sections                                                                 */
+/* ----------------------------------------------------------------------- */
+
+.case-section {
+  margin-top: clamp(var(--space-7), 6.5vw, 96px);
+  /* Added to the root's scroll-padding-top (header + 16px, base.css): headings land about 24px under the header. */
+  scroll-margin-top: var(--space-2);
+}
+
+.case-section__text {
+  min-width: 0;
+}
+
+.case-section__aside {
+  min-width: 0;
+  margin-top: var(--space-5);
+}
+
+.case-section__wide {
+  margin-top: var(--space-2);
+}
+
+@media (min-width: 960px) {
+  .case-section__aside {
+    margin-top: 0;
+    padding-top: var(--space-2);
+  }
+
+  /* A wide section keeps its heading in the text column. */
+  .case-section[data-wide] > .case-section__text {
+    width: calc((100% - var(--case-gap)) * 38 / 95);
+  }
+}
+
+/* Reading scrims: a dark field behind text columns (stage.css .reading-scrim). */
+.case .reading-scrim {
+  --scrim-pad: 28px;
+  --scrim-pad-x: 44px;
+  --scrim-strength: 0.6;
+}
+
+@media (max-width: 959.98px) {
+  .case .reading-scrim {
+    --scrim-pad-x: 16px;
+    --scrim-pad: 16px;
+  }
+}
+
+/* ----------------------------------------------------------------------- */
+/* Sticky visual (StickyVisual.tsx)                                         */
+/* ----------------------------------------------------------------------- */
+
+.sticky-visual {
+  --sv-top: calc(var(--header-height) + var(--space-6));
+}
+
+.sv-steps {
+  display: grid;
+  list-style: none;
+}
+
+.sv-grid .sv-step {
+  min-height: clamp(360px, 54vh, 500px);
+  padding: var(--space-1) 0 var(--space-7) var(--space-5);
+  border-left: 2px solid rgb(238 234 226 / 0.12);
+  transition: border-color var(--dur-highlight) var(--ease-out);
+}
+
+/*
+ * The last step is tall enough that the sticky figure stays pinned until the
+ * last paragraph has passed the middle of the viewport:
+ * (sticky top + figure height) × 2 − viewport height. --sv-fig-h is measured
+ * by StickyVisual (useStickyFigureHeight), so this holds for every figure.
+ */
+.sv-grid .sv-step:last-child {
+  min-height: max(clamp(300px, 44vh, 440px), calc(2 * (var(--sv-top) + var(--sv-fig-h, 0px)) - 100vh));
+  padding-bottom: 0;
+}
+
+.sv-grid .sv-step[data-active] {
+  border-left-color: var(--case-accent);
+}
+
+.sv-step {
+  position: relative;
+  isolation: isolate;
+}
+
+/* The same dark reading field as the other text columns. */
+.sv-step::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -12px -36px 12px -24px;
+  border-radius: 32px;
+  background: radial-gradient(closest-side in oklch, rgb(5 6 9 / 0.58), rgb(5 6 9 / 0.44) 70%, rgb(5 6 9 / 0));
+  pointer-events: none;
+}
+
+.sv-step__title {
+  margin-bottom: var(--space-3);
+  color: var(--stage-ivory);
+  font-size: 1.1875rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  font-weight: var(--weight-heading);
+}
+
+.sv-media {
+  align-self: stretch;
+  min-width: 0;
+}
+
+.sv-sticky {
+  position: sticky;
+  top: var(--sv-top);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.sv-frame {
+  position: relative;
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 30px 60px -30px rgb(0 0 0 / 0.9);
+}
+
+/* Phone screenshots carry their own device frame: no box, bounded height. */
+.sv-frame[data-transparent] {
+  width: auto;
+  height: min(620px, calc(100vh - var(--header-height) - 200px));
+  margin-inline: auto;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+  border-radius: 0;
+}
+
+.sv-inline .sv-frame[data-transparent] {
+  height: auto;
+  width: min(300px, 78%);
+}
+
+.sv-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--dur-crossfade) var(--ease-out);
+}
+
+.sv-inline .sv-layer {
+  position: relative;
+}
+
+/*
+ * Stacked frames keep the section's frame ratio, and each image is
+ * contained and centred in it as in the sticky frame, so a highlight lands on
+ * the same region even when a step's image has a different ratio.
+ */
+.sv-inline .sv-frame:not([data-transparent]) .sv-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.sv-layer[data-active] {
+  opacity: 1;
+}
+
+.sv-layer .picture,
+.sv-layer img {
+  width: 100%;
+  height: 100%;
+}
+
+.sv-inline .sv-frame[data-transparent] .sv-layer .picture,
+.sv-inline .sv-frame[data-transparent] .sv-layer img {
+  height: auto;
+}
+
+/* The highlighted region of the image: the one place a screenshot glows. */
+.sv-highlight {
+  position: absolute;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 2px var(--case-accent),
+    0 0 24px 2px color-mix(in oklch, var(--case-accent) 45%, transparent);
+  opacity: 0;
+  transition: opacity var(--dur-highlight) var(--ease-out);
+  pointer-events: none;
+}
+
+.sv-highlight[data-dim] {
+  box-shadow:
+    0 0 0 2px var(--case-accent),
+    0 0 24px 2px color-mix(in oklch, var(--case-accent) 45%, transparent),
+    0 0 0 200vmax rgb(5 6 9 / 0.34);
+}
+
+.sv-highlight[data-active] {
+  opacity: 1;
+}
+
+.sv-marker {
+  position: absolute;
+  left: -11px;
+  top: -11px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--case-accent);
+  color: var(--stage-room);
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.sv-caption {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-height: 3em;
+}
+
+.sv-caption__num {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--case-accent);
+  color: var(--stage-room);
+  font-size: 0.75rem;
+  font-weight: 650;
+  transform: translateY(3px);
+}
+
+.sv-zoom {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(9 10 15 / 0.78);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.16);
+  color: var(--color-text);
+  cursor: zoom-in;
+}
+
+.sv-zoom:focus-visible {
+  border-radius: 50%;
+}
+
+.sv-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  object-fit: contain;
+}
+
+.sv-video:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+.sv-demo {
+  justify-self: start;
+}
+
+/*
+ * With a recorded walkthrough, Watch demo sits directly beneath the frame
+ * with the caption beside it (the same on every page).
+ */
+.sv-sticky[data-demo] {
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--space-5);
+  row-gap: var(--space-4);
+  align-items: start;
+}
+
+.sv-sticky[data-demo] > .sv-frame {
+  grid-column: 1 / -1;
+}
+
+.sv-sticky[data-demo] > .sv-demo {
+  grid-row: 2;
+  grid-column: 1;
+  min-width: 9.5rem;
+}
+
+.sv-sticky[data-demo] > .sv-caption {
+  grid-row: 2;
+  grid-column: 2;
+  min-height: 44px;
+  padding-top: 2px;
+}
+
+.sv-stack .sv-step {
+  padding-bottom: var(--space-7);
+}
+
+.sv-stack .sv-step::before {
+  inset: -8px -16px auto -16px;
+  height: 60%;
+}
+
+.sv-stack__demo {
+  margin-bottom: var(--space-6);
+}
+
+.sv-inline {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+/* ----------------------------------------------------------------------- */
+/* Results and next project                                                 */
+/* ----------------------------------------------------------------------- */
+
+.case-results__figure {
+  max-width: 440px;
+}
+
+.next-project {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  margin-top: clamp(var(--space-8), 7vw, var(--space-9));
+  padding-top: var(--space-6);
+  border-top: 1px solid rgb(238 234 226 / 0.12);
+}
+
+.next-project__eyebrow {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.next-project__link {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-5);
+  max-width: 600px;
+  margin: calc(-1 * var(--space-3));
+  padding: var(--space-3);
+  border-radius: 18px;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--dur-feedback) var(--ease-out);
+}
+
+.next-project__link:hover {
+  background: rgb(238 234 226 / 0.05);
+}
+
+.next-project__link:focus-visible {
+  border-radius: 18px;
+}
+
+.next-project__cover {
+  display: block;
+  width: 96px;
+  aspect-ratio: 3 / 4;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+.next-project__cover .picture,
+.next-project__cover img {
+  width: 100%;
+  height: 100%;
+}
+
+.next-project__text {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.next-project__name {
+  color: var(--stage-ivory);
+  font-size: 1.375rem;
+  font-weight: var(--weight-heading);
+  letter-spacing: -0.015em;
+}
+
+.next-project__label {
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.next-project__cta {
+  margin-top: var(--space-1);
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  font-weight: var(--weight-label);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--case-accent) 70%, transparent);
+  text-underline-offset: 0.25em;
+}
+
+.next-project__all {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  text-decoration: underline;
+  text-decoration-color: rgb(238 234 226 / 0.25);
+  text-underline-offset: 0.25em;
+}
+
+.next-project__all:hover {
+  color: var(--color-text);
+}
+
+.related-project {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgb(238 234 226 / 0.1);
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.related-project__label {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.related-project__link {
+  justify-self: start;
+  font-size: 1.0625rem;
+  color: var(--color-text);
+  font-weight: var(--weight-label);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--case-accent) 70%, transparent);
+  text-underline-offset: 0.2em;
+}

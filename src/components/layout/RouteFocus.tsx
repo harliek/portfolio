@@ -25,10 +25,13 @@ export function RouteFocus() {
       delete main.dataset.focusManaged
       return
     }
-    // Wait a frame so the lazily rendered page has committed.
+    // Wait a frame so the lazily rendered page has committed. A hash target
+    // (e.g. "All work" → /#all-projects) takes focus instead of the H1.
     const id = requestAnimationFrame(() => {
+      const hash = window.location.hash.slice(1)
+      const anchor = hash ? document.getElementById(decodeURIComponent(hash)) : null
       const h1 = main.querySelector<HTMLElement>('h1')
-      const target = h1 ?? main
+      const target = anchor ?? h1 ?? main
       if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1')
       target.focus({ preventScroll: true })
     })

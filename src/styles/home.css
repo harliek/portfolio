@@ -1,0 +1,476 @@
+/*
+ * Homepage: introduction, the concave carousel (ConcaveCarousel.tsx), the
+ * Selected work index and a small contact link. Carousel geometry and speed
+ * live in src/config/carousel.ts; tile sizes are the custom properties below.
+ */
+
+/* ----------------------------------------------------------------------- */
+/* Introduction                                                             */
+/* ----------------------------------------------------------------------- */
+
+.home-intro {
+  display: grid;
+  justify-items: start;
+  padding-top: clamp(var(--space-5), min(5vw, 6.5vh), var(--space-8));
+}
+
+.home-intro__name {
+  color: var(--stage-ivory);
+  font-size: clamp(2.125rem, 1.35rem + 3.2vw, 3.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  font-weight: var(--weight-heading);
+}
+
+.home-intro__kicker {
+  margin-top: var(--space-3);
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.home-intro__lead {
+  max-width: 46rem;
+  margin-top: var(--space-2);
+  color: var(--color-text);
+  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  line-height: 1.45;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Concave carousel                                                         */
+/* ----------------------------------------------------------------------- */
+
+.home-carousel {
+  margin-top: clamp(var(--space-5), 4.5vh, var(--space-7));
+}
+
+.arc {
+  /* Desktop tiles 300–370px tall (3:4); tablets smaller. */
+  --tile-h: clamp(250px, min(25vw, 37vh), 368px);
+  --tile-w: calc(var(--tile-h) * 0.75);
+  --tile-gap: 28px;
+  /* Reserved caption space: the name is always visible; the description and link fill the rest on hover or focus. */
+  --caption-h: 112px;
+  /* Room above and below for edge tiles, which come closer and read taller. */
+  --pad-top: calc(var(--tile-h) * 0.12);
+  position: relative;
+  width: 100%;
+  max-width: 1760px;
+  margin-inline: auto;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+}
+
+/* A subtle local pool of light under the arc's centre. */
+.arc::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(var(--pad-top) + var(--tile-h) * 0.8);
+  width: min(900px, 70%);
+  height: calc(var(--tile-h) * 0.5);
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side in oklch, color-mix(in oklch, var(--stage-violet) 14%, transparent), transparent);
+  pointer-events: none;
+}
+
+.arc[data-mode='static'] {
+  /* Reduced motion: all six tiles stay in view on the frozen arc. */
+  --tile-h: min(260px, 17vw);
+  --tile-gap: 22px;
+}
+
+.arc__stage {
+  position: relative;
+  /* Extra room at the bottom for edge tiles, which come closer, so their captions never meet the clip. */
+  height: calc(var(--pad-top) * 2 + var(--tile-h) * 1.08 + var(--caption-h));
+}
+
+/* The list is the tiles' direct parent, so it carries the perspective (set in px from the measured tile width). */
+.arc__list {
+  position: absolute;
+  inset: 0;
+  list-style: none;
+  perspective-origin: 50% calc(var(--pad-top) + var(--tile-h) / 2);
+}
+
+.arc__tile {
+  position: absolute;
+  left: 50%;
+  top: var(--pad-top);
+  width: var(--tile-w);
+  margin-left: calc(var(--tile-w) / -2);
+  backface-visibility: hidden;
+  will-change: transform;
+  /* The caption is turned back to face the viewer inside the tile's 3D space. */
+  transform-style: preserve-3d;
+}
+
+.arc__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transform-style: preserve-3d;
+}
+
+.arc__link:focus-visible {
+  outline: none;
+}
+
+.arc__card {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 28px 50px -26px rgb(0 0 0 / 0.9);
+  transition: box-shadow var(--dur-highlight) var(--ease-out);
+}
+
+.arc__card .picture,
+.arc__card img {
+  width: 100%;
+  height: 100%;
+}
+
+/* Restrained edge reflection: a faint top highlight and a violet rim at the lower edge. */
+.arc__card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(to bottom in oklch, rgb(255 255 255 / 0.07), transparent 10%, transparent 84%, color-mix(in oklch, var(--stage-violet) 14%, transparent));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    inset 0 -1px 0 color-mix(in oklch, var(--stage-violet) 40%, transparent);
+  pointer-events: none;
+}
+
+.arc__tile[data-accent='green'] .arc__card::after {
+  background: linear-gradient(to bottom in oklch, rgb(255 255 255 / 0.07), transparent 10%, transparent 84%, color-mix(in oklch, var(--stage-green) 14%, transparent));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    inset 0 -1px 0 color-mix(in oklch, var(--stage-green) 40%, transparent);
+}
+
+.arc__tile[data-accent='warm'] .arc__card::after {
+  background: linear-gradient(to bottom in oklch, rgb(255 255 255 / 0.07), transparent 10%, transparent 84%, color-mix(in oklch, var(--stage-amber) 14%, transparent));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    inset 0 -1px 0 color-mix(in oklch, var(--stage-amber) 40%, transparent);
+}
+
+/* Hover or focus: the edge lights up. No scale change, no movement. */
+.arc__tile:hover .arc__card,
+.arc__link:focus-visible .arc__card {
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--stage-violet) 70%, transparent),
+    0 0 30px -8px color-mix(in oklch, var(--stage-violet) 50%, transparent),
+    0 28px 50px -26px rgb(0 0 0 / 0.9);
+}
+
+.arc__link:focus-visible .arc__card {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 4px;
+}
+
+.arc__caption {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  height: var(--caption-h);
+  padding-top: var(--space-3);
+  /* ConcaveCarousel.tsx sets rotateY(θ), the opposite of the tile's turn, so the text is never slanted. */
+  transform-origin: 50% 0;
+}
+
+.arc__name {
+  color: var(--stage-ivory);
+  font-size: 1rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.arc__more {
+  display: grid;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity var(--dur-highlight) var(--ease-out);
+}
+
+.arc__tile:hover .arc__more,
+.arc__link:focus-visible .arc__more {
+  opacity: 1;
+}
+
+.arc__desc {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.arc__cta {
+  justify-self: start;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: var(--weight-label);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--stage-violet) 70%, transparent);
+  text-underline-offset: 0.25em;
+}
+
+@media (max-width: 1099.98px) {
+  .arc {
+    --tile-gap: 22px;
+    --caption-h: 104px;
+  }
+}
+
+/* Short desktop windows (e.g. 1280×720): a little less space above, slightly larger tiles, captions still above the fold. */
+@media (max-height: 760px) and (min-width: 960px) {
+  .home-intro {
+    padding-top: var(--space-4);
+  }
+
+  .home-carousel {
+    margin-top: var(--space-3);
+  }
+
+  .arc {
+    --tile-h: clamp(280px, min(25vw, 40vh), 368px);
+    --pad-top: calc(var(--tile-h) * 0.1);
+  }
+}
+
+/* ----------------------------------------------------------------------- */
+/* Touch (and narrow reduced motion): a static, swipeable row               */
+/* ----------------------------------------------------------------------- */
+
+.arc-row {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: var(--gutter);
+  scrollbar-width: none;
+}
+
+.arc-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* With a mouse (e.g. a narrow window, or reduced motion on a mid-size screen), a thin scrollbar shows there is more to the side. */
+@media (pointer: fine) {
+  .arc-row {
+    padding-bottom: var(--space-2);
+    scrollbar-width: thin;
+    scrollbar-color: rgb(238 234 226 / 0.35) transparent;
+  }
+
+  .arc-row::-webkit-scrollbar {
+    display: block;
+    height: 6px;
+  }
+
+  .arc-row::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: rgb(238 234 226 / 0.35);
+  }
+}
+
+.arc-row__list {
+  display: flex;
+  gap: var(--space-4);
+  width: max-content;
+  padding-inline: var(--gutter);
+  padding-bottom: var(--space-2);
+  list-style: none;
+}
+
+.arc-row__item {
+  width: min(62vw, 264px);
+  scroll-snap-align: start;
+}
+
+.arc-row__link {
+  display: grid;
+  gap: var(--space-2);
+  color: inherit;
+  text-decoration: none;
+}
+
+.arc-row__link:focus-visible {
+  outline: none;
+}
+
+.arc-row__link:focus-visible .arc-row__card {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.arc-row__card {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  margin-bottom: var(--space-1);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    inset 0 -1px 0 color-mix(in oklch, var(--stage-violet) 40%, transparent),
+    0 22px 40px -24px rgb(0 0 0 / 0.9);
+}
+
+.arc-row__card .picture,
+.arc-row__card img {
+  width: 100%;
+  height: 100%;
+}
+
+.arc-row__name {
+  color: var(--stage-ivory);
+  font-size: 1rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.25;
+}
+
+.arc-row__desc {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Selected work index                                                      */
+/* ----------------------------------------------------------------------- */
+
+.selected-work {
+  margin-top: clamp(var(--space-7), 6vw, var(--space-8));
+  /* Added to the root's scroll-padding-top (header + 16px, base.css). */
+  scroll-margin-top: var(--space-2);
+}
+
+.selected-work:focus {
+  outline: none;
+}
+
+.selected-work__title {
+  color: var(--stage-ivory);
+  font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.selected-work__list {
+  margin-top: var(--space-4);
+  border-top: 1px solid rgb(238 234 226 / 0.14);
+  list-style: none;
+  /* Dark enough that the floor highlight never shows through the rows. */
+  background: linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.72), rgb(5 6 9 / 0.78));
+  border-radius: 0 0 var(--radius-inner) var(--radius-inner);
+}
+
+.selected-work__link {
+  display: grid;
+  grid-template-columns: minmax(0, 13rem) minmax(0, 1fr) 6.5rem auto;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-6);
+  padding: var(--space-4) var(--space-3);
+  border-bottom: 1px solid rgb(238 234 226 / 0.1);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--dur-feedback) var(--ease-out);
+}
+
+.selected-work__link:hover {
+  background: rgb(238 234 226 / 0.04);
+}
+
+.selected-work__link:focus-visible {
+  outline-offset: -2px;
+  border-radius: var(--radius-inner);
+}
+
+.selected-work__name {
+  color: var(--stage-ivory);
+  font-size: 1.0625rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.3;
+}
+
+.selected-work__summary {
+  max-width: 62ch;
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.selected-work__year {
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+.selected-work__go {
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  font-weight: var(--weight-label);
+  white-space: nowrap;
+}
+
+.selected-work__arrow {
+  display: inline-block;
+  transition: transform var(--dur-feedback) var(--ease-out);
+}
+
+.selected-work__link:hover .selected-work__arrow {
+  transform: translateX(3px);
+}
+
+@media (max-width: 959.98px) {
+  .selected-work__link {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-1) var(--space-4);
+    padding-inline: var(--space-2);
+  }
+
+  .selected-work__summary {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .selected-work__go {
+    display: none;
+  }
+}
+
+/* ----------------------------------------------------------------------- */
+/* Small contact link                                                       */
+/* ----------------------------------------------------------------------- */
+
+.home-contact {
+  margin-top: var(--space-6);
+}
+
+.home-contact__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: var(--weight-label);
+  text-decoration: underline;
+  text-decoration-color: rgb(238 234 226 / 0.3);
+  text-underline-offset: 0.25em;
+}
+
+.home-contact__link:hover {
+  text-decoration-color: currentColor;
+}

@@ -1,6 +1,6 @@
 # Content provenance
 
-This file traces every public factual claim on the site to its source, lists claims that were deliberately left out, and records open questions for Harlie. The public copy is the exact copy from the page briefs (`src/content/projects.ts` plus the page components). Media are covered in [`asset-audit.md`](asset-audit.md). Reviewed 2026-09-23.
+This file traces every public factual claim on the site to its source, lists claims that were deliberately left out, and records open questions for Harlie. The public copy is the exact copy from the page briefs (`src/content/projects.ts` plus the page components). Media are covered in [`asset-audit.md`](asset-audit.md) and [`media-plan.md`](media-plan.md). Reviewed 2026-09-24. Rows from earlier builds that the current site no longer follows are marked **Superseded** and point to the [revision section](#revision-six-projects), which records the current decisions.
 
 ## Source hierarchy
 
@@ -34,13 +34,13 @@ PDF page numbers below are PDF pages, not printed slide numbers.
 | Public claim | Where | Source | Status |
 |---|---|---|---|
 | Name “Harlie Katz” | Header, homepage H1, footer, metadata | S3 résumé | Supported |
-| “AI product, strategy & operations.” | Homepage, page titles, social image | S1. Close to the S3 résumé header “AI Implementation \| Product Strategy & Operations”. | Positioning line |
-| “Portfolio of Harlie Katz: merchandising research and prototypes, AI leasing requirements, an independent spreadsheet prototype, a financial-learning venture, and agency creative production.” | Meta description | S1; summarizes the five projects below | Supported via the project rows |
-| “Selected work in AI product definition, product operations, prototyping, and creative production.” | `og:description` | S1 | Summary |
+| “AI product, strategy & operations.” | (formerly homepage, page titles, social image) | S1 | **Superseded** (see [Revision](#revision-six-projects)). The homepage shows “Harlie Katz”, “Portfolio” and “Selected work in applied AI, product development, and creative production.” (latest brief); the social image was re-rendered with the same text. |
+| “Portfolio of Harlie Katz: merchandising research…” | (former meta description) | S1 | **Superseded** (see [Revision](#revision-six-projects)). |
+| “Selected work in AI product definition, product operations, prototyping, and creative production.” | (former `og:description`) | S1 | **Superseded** (see [Revision](#revision-six-projects)). |
 | `harliekatz@berkeley.edu` | Contact block, footer, About, `<noscript>` | S3 résumé | Supported |
 | LinkedIn `https://www.linkedin.com/in/harliekatz/` | Contact block, footer, About | S3 résumé (“linkedin.com/in/harliekatz”) | Supported. The URL was not opened. |
-| Résumé download | Footer (every page), About, `<noscript>` | S3 file, copied byte-identical | **See Q1.** The PDF contains content the site excludes. |
-| No phone number, no GitHub | Whole UI | S1 | Holds for the UI. Does not hold for the résumé PDF (Q1). |
+| Résumé download | Footer (every page), About, `<noscript>` | S3 file, as a portfolio copy (`scripts/portfolio-resume.py`) | The copy removes only the phone number and “, reducing response time by 95%”. Other résumé wording the site does not use is still in it (**Q1**). |
+| No phone number, no GitHub | Whole UI and the résumé download | S1 | Holds. The portfolio copy of the résumé has no phone number and no telephone link. |
 | Project cards: title, organization, year, summary | Homepage rail, “All projects”, next-project links | S1 via `projects.ts` | Per-project rows below |
 
 ---
@@ -181,15 +181,12 @@ The only Valiance files are two logos and one synthetic illustration. No documen
 
 | Public claim | Source | Status |
 |---|---|---|
-| “I studied Cognitive Science at UC Berkeley, with a minor in Data Science and a Certificate in Entrepreneurship & Technology.” | S3 résumé | Supported |
-| “My work has included merchandising research and prototypes, AI leasing requirements, a financial-learning venture, enterprise AI research, and creative production.” | S3 résumé; S2 | Supported. “Enterprise AI research” is the Artesian role, which only the résumé documents. |
-| “Across these projects, I have worked close to the people, information, and decisions a product needs to support.” | S1 | Self-description |
-| “I’m interested in early-career roles in AI product, implementation, product strategy, and operations.” | S1 | Statement of intent |
+| “I studied Cognitive Science at UC Berkeley…”, “My work has included…”, “Across these projects…”, “I’m interested in early-career roles…” (earlier About copy) | S1; S3 | **Superseded** (see [Revision](#revision-six-projects)). About now uses the latest brief's biography verbatim. |
 | “University of California, Berkeley”; “B.A. Cognitive Science · Minor in Data Science”; “Aug 2023–May 2026”; “Certificate in Entrepreneurship & Technology, Sutardja Center”; “Completed in three years.” | S3 résumé (“Completed in 3 years”) | Supported. GPA omitted per S1. |
 | Experience: PlanetArt (Jun–Aug 2026), Shift Content (Jan–May 2026), Artesian Network, “Enterprise AI Research Associate” (Jun 2025–Jan 2026), Valiance Capital (Oct 2024–Jun 2025), Jumpstart Finance (Jun–Jul 2024) | S3 résumé | Supported. The résumé names “The Artesian Network”. |
-| “A small selection of personal drawing work.”; captions “Portrait study.” ×2, “Hand study.” | S1; images from S6 | Descriptive only |
+| “A small selection of personal drawing work.”; captions “Portrait study.” ×2, “Hand study.” | S1; images from S6 | **Superseded** (see [Revision](#revision-six-projects)). About now has the “My art portfolio” link with a small composition of drawings; /art uses Harlie's own titles. |
 | Portrait, alt “Harlie Katz.” | S3 | Supported |
-| Contact copy and links | S1; S3 | Supported |
+| Contact copy and links | S1; S3 | Supported. About no longer repeats a contact row: the site footer (email, LinkedIn, Download resume) directly follows the film section. |
 
 ---
 
@@ -222,15 +219,15 @@ The only Valiance files are two logos and one synthetic illustration. No documen
 | Jumpstart | “Led a 5-person international team … driving 150 sign-ups” (résumé) | The causal link to Harlie is not published; the figure appears only with its qualification |
 | Shift | “Managed clients for film and marketing content, leading projects from brief through production and final delivery.” (résumé) | The materials show a support role |
 | Shift | “Increased qualified inquiries by rebuilding paid search and landing pages across 100+ keywords and 6 client domains.” (résumé) | No evidence |
-| Shift | “Built six Google Ads campaigns”; “Google Ads Search Certification” (journals) | The site says only “Google Ads campaigns” |
-| Shift | LinkedIn posts for the founder, editing footage in Premiere Pro, a voiceover script, BTS content, asset organization (journals and report) | Not tied to the three films, or minor. Editing is not claimed for the published films. |
-| Shift | Nickleby's “five testimonials, nine FAQ responses, and a 60 second social mashup” and its “game show format”; Aristocracy's “over two days”, “Spring/Summer campaign” and “Manchester store launch” (Film case studies) | The agency's descriptions; Harlie's share is not established |
+| Shift | “Built six Google Ads campaigns”; “Google Ads Search Certification” (journals) | **Superseded** (see [Revision](#revision-six-projects)). Client Work now lists both under Other agency work (latest brief: “other agency work … when supported by the source”). |
+| Shift | LinkedIn posts for the founder, editing footage in Premiere Pro, a voiceover script, BTS content, asset organization (journals and report) | **Superseded** (see [Revision](#revision-six-projects)). LinkedIn posts and “Edited B-roll into sequences in Premiere Pro” are now listed under Other agency work. Editing is still not claimed for the three published films. The voiceover script and asset organization remain unpublished. |
+| Shift | Nickleby's “five testimonials, nine FAQ responses, and a 60 second social mashup” and its “game show format”; Aristocracy's “over two days”, “Spring/Summer campaign” and “Manchester store launch” (Film case studies) | **Superseded** (see [Revision](#revision-six-projects)). These now appear as each film's client context and deliverable (the agency's descriptions, stated as the deliverable, not as Harlie's output). The “game show format” is still not used. |
 | Shift | Nickleby Capital Video 2 | Editorial choice: one film per client |
 | Shift | Director, camera, editor or photographer credits | Unknown |
 | Shift | Agency deck client list and case study (`shift content deck.pdf`) | Agency claims unrelated to Harlie's work |
 | About | GPA 3.7; coursework; skills lists; location “San Francisco, CA”; phone number; `harliekatz.netlify.app` (résumé) | Omitted per S1 (phone never in the UI) |
 | About | “Produced 4 executive white papers…”; “Evaluated LLM, RAG, and agent platforms…” (résumé, Artesian); `Olympus.io Projects.pdf` | Not one of the published projects; no evidence reviewed for public use |
-| About | Old-portfolio titles and series (“A Life, Beautifully Worn”, “Time Unspoken”, “The Inevitable”; series “The Art of Aging”); film-festival awards and a magazine credit attached to other works | Descriptive captions only; no titles or awards imported |
+| About | Old-portfolio titles and series (“A Life, Beautifully Worn”, “Time Unspoken”, “The Inevitable”; series “The Art of Aging”); film-festival awards and a magazine credit attached to other works | **Superseded** (see [Revision](#revision-six-projects)). /art now shows all 23 drawings in Harlie's four series with her own titles (latest brief: preserve the available work). Awards and the magazine credit are still not shown. |
 
 ## Naming decisions
 
@@ -253,7 +250,7 @@ The only Valiance files are two logos and one synthetic illustration. No documen
 
 1. **Spreadsheet Agent “make changes” / “Edit the sheet” / “visible edits”.** The recording shows no edit to any cell. This was checked at 2 fps from 24 to 34 s and across the whole file at 2.5 s intervals; cell A2 stays “B2B-1596” throughout. After the build, the only interactions are scrolling, returning to All Sheets, and starring the new sheet. The brief's exact copy was kept, and the decision on it is left open (Q4).
 2. **Valiance “The available materials support that testing role.”** No file in the project folder mentions testing. The résumé says only “Defined development requirements”. The testing role, the proposal and the third-party platform all rest on Harlie's instruction (S1).
-3. **The résumé download republishes excluded content** (Q1).
+3. **The résumé download** now serves a portfolio copy without the phone number and the response-time claim. Other résumé lines the site does not use remain (Q1).
 
 ---
 
@@ -270,6 +267,67 @@ The only Valiance files are two logos and one synthetic illustration. No documen
 | Transcripts follow the burned-in subtitles wherever subtitles and speech recognition disagree. Points where they disagree: Nickleby “in/at Cardiff”; Aristocracy “will/wind”; the Seat Unique title “CEO & Co-founder” (on-screen caption) vs “CEO and founder” (spoken); one inaudible HECK word. | See `docs/transcripts.md`. No one has listened to the soundtracks; a single listening pass by Harlie is recommended. |
 | Screen recordings end at 56.3s and 36.4s | The macOS screen-capture toolbar appears in the final ~1s of both recordings. |
 | Posters do not repeat hero frames. Spreadsheet Agent uses its 1.5s opening sheet list; Aristocracy uses 30.5s. | The hero, poster and step still previously showed the same frame. |
+
+---
+
+<a id="working-model"></a>
+
+## Working Model redesign: evidence decisions
+
+| Decision | Reason |
+|---|---|
+| The homepage stage and case heroes use only real project media from `src/content/media.ts` (screens, PDF excerpts, recorded frames, film stills, and a 6s muted crop of the Aristocracy film). | The redesign brief says to use actual project imagery, not invented imagery or interfaces, and not fake numbers or generated labels. |
+| **Not used:** `inspiration/working-model-assets/tiles-v3-concept/*` (the asset pack's own README calls them fictional concept artwork), `tiles-v2/*` (AI-restyled covers with re-rendered text and figures), and `planetart tile final.jpeg`. | The last file is a 1344×768 image with invented vendor names (for example “Bromothvill.com”, “Khausake”) and invented stock statuses. It reads as generated, not project evidence. It stays in `inspiration/` untouched. |
+| **Not used as project imagery:** `direction-reference.png`, `stage-desktop.png`, `stage-mobile.png`, `tile-back.png`. | The reference is an AI mockup with invented interfaces, used for atmosphere only. The homepage room is the supplied background video with frame-0 posters. |
+| The background video is decorative, muted, looping, has a visible pause control, and is not loaded under reduced motion. | It is a room, not content. Its audio track was removed. |
+| Positioning line: “Turning complex ideas into clear product systems.”, with “AI product · strategy · operations” as the secondary line. | This is a refinement of the brief's suggested “Product designer building clear systems from complex ideas.” It keeps the brief's idea without claiming a “product designer” job title, which would conflict with the About page and the target roles. **Harlie may prefer the original wording (Q13).** |
+| **Superseded:** Merch Console is now labelled “Independent prototype · Synthetic data” wherever it appears (see the final revision table). Earlier builds said “independent rebuild”. | The recording's Ask screen itself states: “There is no language model involved.” This supports the no-live-AI boundary. |
+| Relationship-diagram labels Assortment, Pricing, Inventory, Vendors → Product decisions. | Supplied by the brief. Each is grounded in the internship deck (assortment and vendor research, GBP pricing and localization, inventory and operational readiness). |
+
+## Additional audit notes
+
+- **PlanetArt H1 “Merchandising & UK launch”.** **Superseded** (see [Revision](#revision-six-projects)): the page is now “CafePress UK”, and no page or caption says “UK launch”.
+- **`valiance-messages`** shows “Typically replies in a few minutes” inside the synthetic illustration. It is part of the invented scenario, not a response-time claim, and the image is labelled illustrative and synthetic at every use.
+- **Spreadsheet Agent “Navigation between sheets”** (brief copy). The recording shows only a return from a sheet to the All Sheets list.
+
+---
+
+<a id="presentation-frame"></a>
+
+## Presentation-frame redesign: copy decisions (latest brief)
+
+| Item | Decision | Basis |
+|---|---|---|
+| Positioning line | “Product designer building clear systems from complex ideas.” | Harlie specified this wording in two consecutive briefs. This replaces the lead's earlier refinement and resolves Q13. |
+| Project index years | Valiance **2024–2025** and Shift **2026**. The brief listed 2026 and 2023. | The résumé and case evidence give Oct 2024–Jun 2025 and Jan–May 2026. The brief's figures read as placeholders. |
+| Case pages | Each page is now at most five scenes, using the brief's copy. Earlier long chapters are removed from the pages; the facts they established are kept in this document. | Latest brief. |
+| PlanetArt opening, “A localized storefront and merchandising system…” | Kept (client copy). The opening also shows the status (“Research and prototypes”), and the Merch Console is labelled an independent rebuild with synthetic data wherever it appears. | No production system is claimed. |
+| PlanetArt decision, “Make the boundaries visible before adding more automation.” | Kept (client copy). | Consistent with the deck's AI implementation recommendations: “build structure around AI before continuing to expand disconnected tools”. |
+| PlanetArt before/after | Before: the product spreadsheet embedded in the deck (681×217, `planetart-concept-table`). After: the original concept dashboard (808×514). | Both are original internship artifacts. |
+| Valiance opening, “…find the right information and handoff faster.” | Kept as a statement of purpose. The result scene states only adoption across 18 properties, plus the ownership line. No response-time figure appears anywhere. | The 95% claim remains excluded. |
+| Spreadsheet Agent, “The assistant reduces setup work while keeping the result inspectable.” | Kept (client copy). The opening scene states “Simulated AI responses; no live LLM/API connection.” | The recording shows a simulated response. |
+| Shift, “Concept → Production → Final film” | Concept is a live-text card quoting the agency's supplied project summary, labelled as such. Production is a behind-the-scenes frame. Final film is a graded frame from the preview. | No concept artwork exists in the supplied materials. |
+| About, “Currently: Product design, AI-assisted workflows, and operational tools.” | Kept (client copy, Harlie's self-description). “Previously” lists the résumé roles with their real dates. | Résumé. |
+
+---
+
+<a id="creative"></a>
+
+## Art and Film pages; recruiter-critique copy (latest)
+
+| Item | Decision | Basis |
+|---|---|---|
+| Film list and roles | Five own films: *An Artistic End*, *Before I Wilt*, *Alex*, *My World*, *Velvet is Her Blood* (assistant editor). Two client or production films: *First Edition* and *Relay for Life*. Roles and one-line notes are as given on Harlie's previous portfolio. | Titles, video ids and channel (“Harlie Jade Katz”) were verified through YouTube oEmbed on 2026-09-23. The roles were **not** independently verified (Q16). |
+| Film years | **Superseded** (see [Revision](#revision-six-projects)). Shown as “Published on YouTube, January 2026” (the upload month, verified through oEmbed). | Production years are still unknown; upload dates are not presented as release years (Q16). |
+| Awards and festival selections from the old site (All American Film Festival, Jewish Film Festival, Younger Directors’ Film Festival) and “Published in BSB Magazine” | **Not shown.** | Unverified. |
+| Film descriptions | “First Edition” no longer says “the world’s first solar-electric catamaran” (the client’s claim, unverified). “Relay for Life” is described as made for a fundraising event, without a fundraising-result claim. | Conservative wording. |
+| Embeds | Nothing loads from YouTube until the visitor presses play (youtube-nocookie). | Privacy and performance. |
+| Drawings on /art | **Superseded** (see [Revision](#revision-six-projects)). All 23 drawings, including `sex.jpg` and `body.jpg` (only in their series on /art, never on the homepage or About), with the old site's titles. | Latest brief: “Preserve the available work and its internal navigation.” Q17 is closed. |
+| Positioning | **Superseded** (see [Revision](#revision-six-projects)). No positioning line is shown; the homepage uses the latest brief's “Portfolio” and one sentence. | Latest brief: “Do not display another large positioning slogan.” |
+| Project descriptions | Rewritten per the critique (for example, Spreadsheet Agent: “A prototype exploring how an AI assistant can turn an ambiguous request into an editable, inspectable spreadsheet.”). “Simulated AI” moves to the metadata and disclosure line, and stays visible on the first case scene. | Latest critique. The boundaries are unchanged. |
+| Shift role line | “Production support, lighting and setup, coordination, and B-roll”. The critique suggested “visual development”, which was **not** used. | The Shift journal and the report evidence the tasks used. Nothing in the materials shows visual development. |
+| Generated diagrams | All removed: the Valiance route diagrams and generated cover, the PlanetArt relationship diagrams, the Spreadsheet future outline. Labelled slots (`DiagramSlot` / `PropSlot`) mark where Harlie’s own diagrams and art-directed props will go. Empty slots render nothing on the public site. | The critique: “Do not let AI invent the logic of the case study.” |
+| Valiance card | The illustrative synthetic conversation (`cover-valiance-scenario`). It shows the handoff moment, where a leasing team member takes over, and is labelled synthetic wherever shown. | The critique asks for a visible handoff moment. |
 
 ---
 
@@ -296,16 +354,16 @@ All media were supplied by Harlie for this portfolio. Publication rights for thi
 
 ## Unresolved questions for Harlie
 
-1. **Résumé PDF (high priority).** The public résumé (`/resume/harlie-katz-resume.pdf`) is byte-identical to the supplied file and is linked from every page's footer. It contains:
-   - a personal phone number;
-   - “reducing response time by 95%”;
-   - the “qualified inquiries … 100+ keywords and 6 client domains” claim;
-   - “1,000+ tenant portfolio”;
-   - “retrieves data” and the `spreadsheetagent.netlify.app` link;
-   - GPA 3.7;
-   - “4 executive white papers”.
+1. **Résumé PDF (high priority).** The public résumé (`/resume/harlie-katz-resume.pdf`, linked from About and every footer) is now a portfolio copy made by `scripts/portfolio-resume.py`. It removes exactly two things the site's standing rules exclude: the phone number (and its telephone link) and “, reducing response time by 95%” (the Valiance line now ends “adopted across 18 properties.”). The original in `personal assets/` is unchanged. Still in the copy, in Harlie's own words, and not used on the site:
+   - “Led UK pricing, competitor, and vendor research to shape CafePress’s launch strategy”;
+   - “Built a spreadsheet AI agent that retrieves data and generates, structures, and populates editable sheets through chat” and the `spreadsheetagent.netlify.app` link (the site says simulated AI responses, no live model connection);
+   - “Increased qualified inquiries … 100+ keywords and 6 client domains”;
+   - “Managed CRM and leasing operations for a 1,000+ tenant portfolio”;
+   - “driving 150 sign-ups in 24 hours” and “Translated user research into …”;
+   - “Managed clients … leading projects from brief through production and final delivery”;
+   - GPA 3.7; “4 executive white papers”.
 
-   The site deliberately leaves out each of these. Should a portfolio version of the résumé replace it, or is publishing it as is intended?
+   Please confirm the portfolio copy, or supply a portfolio version with your preferred wording (the review suggested, for example, “Defined development requirements for an AI leasing agent adopted across 18 properties.”, “Researched UK pricing, competitors, and vendors and prototyped a localized storefront.” and “Built a spreadsheet workflow prototype with simulated AI responses.”).
 2. **Spreadsheet Agent demo link.** Should `spreadsheetagent.netlify.app` ever be linked? Is the live build the same as the recording, and does it have any model or data connection?
 3. **Spreadsheet Agent independence.** The recording is stored under `PlanetArt/`. The internship deck proposed “AI agent support: generate spreadsheets”, and the demo uses a B2B merchandising theme. Can you confirm it was built outside the internship and contains no PlanetArt data?
 4. **Spreadsheet Agent edits.** Should the recording be replaced with one that shows an edit, or should the copy be changed (“make changes”, “Edit the sheet”, “visible edits”)?
@@ -336,3 +394,66 @@ All media were supplied by Harlie for this portfolio. Publication rights for thi
     - `Olympus.io Projects.pdf` sits in the Shift folder but reads as Artesian-era research. Is it misfiled, and should that work ever appear?
     - Were any drawings made from third-party reference photos?
 12. **Transcripts.** The Nickleby film shows interviewee names on screen. If transcripts use those names (see `docs/transcripts.md`), confirm that is acceptable.
+13. **Positioning line.** Resolved: Harlie's wording, “Product designer building clear systems from complex ideas.”, is used.
+15. **Project index dates.** The latest brief listed Valiance as 2026 and Shift as 2023. The site uses 2024–2025 and 2026, matching the résumé. Confirm.
+14. **`planetart tile final.jpeg`.** Was this image generated? It contains invented vendor names, so it was not used. If it is a real artifact, say where it came from.
+16. **Film credits and years.** Confirm the roles for each film, taken from the previous portfolio, and give the production years to replace “Published online 2026”. Should any festival selections be shown, with a source?
+17. **Art selection.** Closed: /art shows all 23 drawings with Harlie's own titles, per the latest brief.
+18. **Props and diagrams.** When you have created your own diagrams and art-directed prop images, add them through the slot registry (see `docs/site-structure.md`).
+
+<a id="revision-six-projects"></a>
+
+## Revision: six projects and the shared case layout (latest brief)
+
+Sources as above (S1 Harlie's instructions, S2 project files and recordings, S3 résumé and course documents). This revision supersedes the scene copy of the presentation-frame build.
+
+| Public claim or decision | Source | Status |
+|---|---|---|
+| Six entries: CafePress UK, Merchandising Platform, Spreadsheet Agent, AI Leasing Agent, Jumpstart Finance, Client Work, with the brief's supporting labels | S1 (latest brief) | Supported |
+| CafePress UK is internship research plus a storefront prototype; "not a production launch, and measured commercial outcomes are not available" | S2 deck pp. 3–9; S1 | Supported. The page never says "UK launch" (the deck's title uses "Launch", but no launch is evidenced) |
+| Merchandising Platform is independent, synthetic, separate from PlanetArt systems; catalog stock status, product drawer (chance of running out, unit economics, 28 days), replenishment calculation, "does not place orders", CSV export, Ask screen with fixed query shapes and "no language model involved", 240 SKUs, no backend | S2 recording 0.3s, 8.5s, 12.0s, 46.0s, 53.9s and in-app footer | Supported |
+| Spreadsheet Agent approach sentences (request, build plan for review with source, filters, columns, sort, row limit, Edit plan, "Not used" words; sheet opens in an editable grid with formula bar and toolbar; saved to the sheet list) | S2 recording 12.9s, 20.5s, 25.3s, 35.5s | Supported. No cell edit is shown being typed, so the page does not say an edit was made |
+| "Simulated AI responses. No live model connection." | S1 | Supported (S1). The résumé describes the project as retrieving data through chat; the site follows S1 |
+| AI Leasing Agent: opportunity proposal, requirements, testing; third-party production platform; adopted across 18 properties; "Changes in response time and conversion were not independently verified." | S1; S3 (requirements, 18 properties) | Requirements and adoption supported by S3; proposal, testing and third-party platform S1 only. The résumé's "reducing response time by 95%" is deliberately not published |
+| The three approach categories (general information, current information, staff decisions) | S1 (brief wording) | S1 only; the illustrative conversation is invented data and labelled on every use |
+| Jumpstart: Founder & Product Lead, five-person international team, European Innovation Academy, Porto, Jun–Jul 2024, 150 sign-ups in 24 hours reported in the program pitch, not retention, revenue or product-market fit; business model tiers are assumptions | S3; S2 pitch pp. 7, 10 | Supported. The problem sentence is presented as the team's premise, not a research finding |
+| Client Work role "Creative Strategy and Client Solutions Intern" | S3 ("&"); S1 (brief wording "and") | Supported |
+| Third project title "The Night Club Global Tour" (a run club event with Gymshark; HECK branding in the film) | S2 agency project summary; the film; Harlie's previous portfolio | Supported. Tab label uses this title |
+| Nickleby film is Video 1 | `scripts/prepare-media.mjs` remuxes "Nickleby Capital Video 1.mp4" (100.3s) | Supported. Video 2 (41.0s) is not published |
+| Nickleby contribution (equipment and lighting setup, B-roll during the interviews); deliverable (five testimonials, nine FAQ responses, a 60-second social cut) | S3 journal; S2 agency summary | Supported, but the journal does not name the firm, so linking the shoot to Nickleby remains an inference |
+| Aristocracy contribution (setup, lighting, coordination, behind-the-scenes documentation, two-day production for the Manchester store launch); deliverable (Spring/Summer campaign video, e-commerce imagery, social assets) | S3 report and journal; S2 agency summary | Supported |
+| Night Club contribution "Production support on the event, working with the agency team" | S3 report ("a branded Run Club event") | Supported. The previous portfolio's "Videographer" credit is not verified and is not used |
+| Other agency work (pitch decks, LinkedIn posts, six Google Ads campaigns, Google Ads Search certification, CSS changes to the Squarespace site, editing B-roll in Premiere Pro) | S3 journals and report | Supported |
+| About biography paragraphs | S1 (verbatim) | Personal positioning, not a professional research claim |
+| About experience list and education dates | S3 | Supported exactly |
+| An Artistic End on About: description and "Published on YouTube, January 2026" | Previous portfolio (description); YouTube oEmbed (date) | Supported. The role (Writer, Director, Cinematographer, Editor) comes from the previous portfolio only and is shown on /film, not on About |
+| Drawing titles and series notes on /art | Harlie's previous portfolio (her own titles) | Supported. "Published in BSB Magazine" and awards are omitted |
+| Film roles on /film | Previous portfolio | Not independently verified |
+
+### Open questions for Harlie (this revision)
+
+1. The Jumpstart Results now show a small excerpt of the pitch's "Traction & Validation" slide (the title and "150 sign-ups in 24 hours" only; the unverified "Encouraging customer interviews" bullet, the Instagram handles and the reels are left out). Confirm it may be published.
+2. Confirm that the Nickleby interview shoot in the journal is the Nickleby Capital project. Until then the contribution sentence stays as written (the lead's plan accepts it as a modest inference), and the "Frames from the film" pair no longer includes a B-roll shot, so no frame reads as Harlie's own footage.
+3. Titles for the three drawings not placed in a series on the old site (turn, line, man), if they have any.
+4. The film roles on /film come from the previous portfolio; confirm them.
+
+### Final revision: review fixes (2026-09-24)
+
+| Change | Reason |
+|---|---|
+| The provenance label on every Merchandising Platform image and on its recording reads “Independent prototype · Synthetic data” (was “Independent reconstruction · Synthetic data”). The `merch-overview` caption reads “Merch Console overview screen. Synthetic data, separate from PlanetArt’s internal systems.” | “Reconstruction” implied a copy of an employer system. The brief calls it an independent prototype separate from PlanetArt's internal systems. |
+| CafePress UK storefront dialog caption: “Prototype view. A proposed experience, not a launched site.” | The old wording (“not evidence of a completed UK launch”) implied a launch was underway. |
+| AI Leasing Agent conversation caption: “A leasing web chat with invented names and data. Not a production screenshot.” | The provenance label already says Illustrative · Synthetic; the caption no longer repeats it and matches the page captions. |
+| Watch demo recordings are named by their titles (“Merch Console walkthrough”), not “…walkthrough, recorded walkthrough”. | Repetition. |
+| `film-nickleby-b` is now a wide interview frame (50s). The B-roll frame (70s) was removed. | The B-roll shot invited readers to take it as Harlie's footage; individual camera credits are not documented. |
+| Jumpstart opening summary ends “not evidence of retention, revenue, or product-market fit.” | Matches the Results qualification. |
+| /art intro: “Drawings in four series, each drawing shown with its title, followed by three untitled drawings outside the series.” | The titles belong to drawings, not series; the three extra drawings have none. |
+| The CafePress UK cover pairs the storefront with the Competitor Findings slide. | It showed the storefront hero twice; the tile now shows the research half of the project too. |
+| The social preview shows “Harlie Katz”, “Portfolio” and the homepage sentence. | It still carried the old positioning line. |
+| The CafePress UK page does not say “pricing in pounds”. | The prototype shows no prices; GBP pricing appears only as a recommendation in the deck (p. 7). |
+
+**Facts the page specialists could not verify (kept, conservatively worded):**
+- CafePress UK: “among UK competitors” and “recurring product categories” are the brief's wording; the deck's competitor slide (p. 5) reviews Printful, Prodigi, Printify, Vistaprint and a logo reading “4imprint USA” as comparable businesses for the UK market (not all UK-only), and the recurring theme it names is eco-friendly products. The deck says “existing US B2B model” where the brief says “existing US storefront”. The deck's cover title is “CPB Merchandising Intern”; the page uses the résumé title and dates. The Localization caption names only what is visible (“Basket” is UK wording on the prototype but not on the deck's language list; the £ is an icon beside No Setup Fees).
+- Merchandising Platform: authorship (“I developed this independent prototype”) rests on the brief; the 2026 timeframe comes from `projects.ts` (the in-app date 2026-09-01 belongs to the synthetic data); “no backend” and “edits are stored in the browser” come from the app's own text (no reload is shown); CSV export and “does not place orders” are stated by the drawer's note (no export is run); the catalog filters are shown but not used; the Ask result's Order column is read from its header and summary line.
+- Spreadsheet Agent: “can be reopened” (the new sheet is listed first in All Sheets and starred, but never reopened on screen); “editable” (toolbar, formula bar and an “Ask for a change” field are visible, but no cell edit is typed); only Build sheet of the three plan controls is used; the 2026 timeframe comes from `projects.ts`.
+

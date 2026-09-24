@@ -39,7 +39,7 @@ export function ZoomableImage({ image, sizes, priority, fit, className }: Zoomab
       type="button"
       className={['zoom-trigger', className].filter(Boolean).join(' ')}
       data-zoom-id={image}
-      aria-label={`Enlarge image: ${asset.alt || asset.caption || ''}`}
+      aria-label={`Enlarge image. ${asset.alt || asset.caption || ''}`}
       onClick={(e) => dialog.open(image, e.currentTarget)}
     >
       <ResponsiveImage image={image} sizes={sizes} priority={priority} fit={fit} />

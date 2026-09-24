@@ -1,23 +1,47 @@
 /**
- * Single source of truth for GSAP motion values. CSS-side durations live in
- * src/styles/tokens.css (--dur-*). Easing is perceptually consistent with the
- * CSS curves, not mathematically identical to them.
+ * Single source of truth for motion values (GSAP and the few JS-driven CSS
+ * durations). CSS-side durations live in src/styles/tokens.css (--dur-*).
+ * Every feature below is disabled or made instant when the site-wide motion
+ * preference is "reduce" (src/hooks/useMotionPreference.ts).
  */
 export const MOTION = {
   feedback: { duration: 0.15, pressScale: 0.98 },
-  enterSmall: { duration: 0.45, y: 10, ease: 'power2.out' },
-  enterSection: { duration: 0.55, y: 14, ease: 'power2.out' },
-  stagger: { each: 0.06, max: 0.18 },
-  route: { duration: 0.18, ease: 'power1.out', reducedMax: 0.1 },
-  carouselSnap: { duration: 0.52, ease: 'power3.out' },
-  sharedTransition: { duration: 0.52, ease: 'power3.inOut', neighbourFade: 0.15, align: 0.26 },
-  label: { duration: 0.16, ease: 'power1.out' },
-  mediaFade: { duration: 0.2, ease: 'power1.out' },
-  dialog: { duration: 0.18, scaleFrom: 0.985, ease: 'power2.out' },
-  /** ScrollTrigger start position for once-only entrances. */
-  enterStart: 'top 85%',
-} as const
 
-/** Clamp a stagger so a group never takes longer than MOTION.stagger.max. */
-export const staggerFor = (count: number) =>
-  count <= 1 ? 0 : Math.min(MOTION.stagger.each, MOTION.stagger.max / (count - 1))
+  /** The Work shelf: the Work control shifts left while the shelf reveals horizontally. */
+  shelf: { durationMs: 250, workShiftPx: 6, itemOffsetPx: 28, itemStaggerMs: 16 },
+
+  /** Sticky visual sections: screenshot crossfade and interface highlight. */
+  crossfadeMs: 250,
+  highlightMs: 220,
+
+  /**
+   * Route change. The new page rises 6px while its opacity settles (no
+   * blank beat, never a fade to black). On project selection a copy of the
+   * clicked cover stays in place until the destination's opening image has
+   * decoded, then travels into it (image continuity). Total 300–450ms.
+   */
+  route: {
+    revealMs: 260,
+    continuityMs: 280,
+    continuityEase: 'power2.inOut',
+    /** The cover copy has dissolved after this share of the move… */
+    overlayFadeShare: 0.45,
+    /** …and the opening image starts to appear at this share (never both at half opacity). */
+    heroFadeFrom: 0.4,
+    /** Longest wait for the destination image before the copy simply fades. */
+    heroWaitMs: 1400,
+    fallbackFadeMs: 180,
+  },
+
+  /** Pointer trail (fine pointers only). */
+  trail: {
+    /** Visible length of the line behind the pointer (px). */
+    lengthPx: 34,
+    /** The line fades out this long after the pointer stops (ms). */
+    fadeMs: 190,
+    coreWidth: 1.2,
+    haloWidth: 7,
+    /** Brightness over text (share of full brightness). */
+    overText: 0.4,
+  },
+} as const

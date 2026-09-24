@@ -1,0 +1,122 @@
+/* AI Leasing Agent page (src/pages/work/AILeasingAgent.tsx). Scope every selector under .page-ai-leasing-agent. */
+
+.page-ai-leasing-agent {
+  /* The illustration's own page colour, so crops sit flush in their frames. */
+  --conv-paper: #fcfcfa;
+}
+
+.page-ai-leasing-agent .case-hero__frame {
+  background: var(--conv-paper);
+}
+
+/* The third-party boundary in Context and role, in the same form as the opening note. */
+.page-ai-leasing-agent .ala-boundary {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--case-accent);
+}
+
+/* ----------------------------------------------------------------------- */
+/* Conversation frame (ConversationSteps.tsx)                                */
+/* ----------------------------------------------------------------------- */
+
+.page-ai-leasing-agent .conv-frame {
+  background: var(--conv-paper);
+}
+
+/* A CSS crop of the full illustration (see --crop-* set inline). */
+.page-ai-leasing-agent .conv-crop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.page-ai-leasing-agent .conv-crop .picture {
+  position: absolute;
+  left: var(--crop-x);
+  top: var(--crop-y);
+  width: var(--crop-w);
+  max-width: none;
+}
+
+.page-ai-leasing-agent .conv-crop .picture img {
+  width: 100%;
+  height: auto;
+}
+
+/* The highlighted message glows; everything else is dimmed gently and stays legible. */
+.page-ai-leasing-agent .conv-highlight[data-dim] {
+  box-shadow:
+    0 0 0 2px var(--case-accent),
+    0 0 22px 2px color-mix(in oklch, var(--case-accent) 40%, transparent),
+    0 0 0 200vmax rgb(5 6 9 / 0.3);
+}
+
+.page-ai-leasing-agent .conv-figure {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* Enlarge sits under the caption, so it never covers a highlighted message. */
+.page-ai-leasing-agent .conv-enlarge {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: 0 var(--space-4) 0 var(--space-3);
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.18);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  cursor: zoom-in;
+  transition:
+    background-color var(--dur-feedback) var(--ease-out),
+    box-shadow var(--dur-feedback) var(--ease-out);
+}
+
+.page-ai-leasing-agent .conv-enlarge:hover {
+  background: rgb(238 234 226 / 0.06);
+  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.32);
+}
+
+.page-ai-leasing-agent .conv-enlarge:focus-visible {
+  border-radius: 999px;
+}
+
+/*
+ * Desktop: the frame is at most about 460px tall (the scale of the other
+ * product pages' frames), and the frame, caption and Enlarge always fit the
+ * viewport while sticky.
+ */
+.page-ai-leasing-agent .conv-sticky {
+  width: 100%;
+  max-width: calc(min(460px, 100vh - var(--sv-top) - 190px) * var(--conv-ratio));
+  margin-inline: auto;
+}
+
+.page-ai-leasing-agent .conv-caption {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* Two lines reserved so the note below does not move between steps. */
+.page-ai-leasing-agent .conv-sticky .conv-caption__step {
+  min-height: 3em;
+  color: var(--color-text);
+}
+
+.page-ai-leasing-agent .conv-inline {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.page-ai-leasing-agent .conv-inline .sv-frame {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 18px 40px -24px rgb(0 0 0 / 0.9);
+}

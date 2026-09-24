@@ -1,22 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { getImage, getVideo, fallbackSrc, type VideoAsset, type VideoId } from '../../content/media'
+import { getImage, getVideo, fallbackSrc, type ImageId, type VideoAsset, type VideoId } from '../../content/media'
+import { shortDuration, spokenDuration } from './duration'
 import { ResponsiveImage } from './ResponsiveImage'
 import { CaptionText } from './Figure'
-
-const formatDuration = (seconds: number) => {
-  const s = Math.round(seconds)
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
-}
-
-const spokenDuration = (seconds: number) => {
-  const s = Math.round(seconds)
-  const m = Math.floor(s / 60)
-  const r = s % 60
-  const parts = []
-  if (m) parts.push(`${m} minute${m === 1 ? '' : 's'}`)
-  if (r) parts.push(`${r} second${r === 1 ? '' : 's'}`)
-  return parts.join(' ')
-}
 
 /** Picks the smallest variant suited to the current viewport. */
 function pickVariant(video: VideoAsset) {
@@ -32,6 +18,10 @@ interface VideoFigureProps {
   caption?: ReactNode
   /** A real transcript. Omit entirely when none exists (no empty disclosure). */
   transcript?: ReactNode
+  /** Visible text on the play control instead of the video's title (e.g. "Watch demo"); always shown, also on phones. */
+  label?: string
+  /** Another real frame of the recording as the poster (e.g. when the default poster repeats a nearby image). */
+  poster?: ImageId
   className?: string
 }
 
@@ -40,9 +30,10 @@ interface VideoFigureProps {
  * to play; then the right-sized MP4 is attached and native controls take over.
  * Other playing media pause automatically (see useMediaPlayback).
  */
-export function VideoFigure({ video: id, sizes, caption, transcript, className }: VideoFigureProps) {
+export function VideoFigure({ video: id, sizes, caption, transcript, label, poster: posterId, className }: VideoFigureProps) {
   const video = getVideo(id)
-  const poster = getImage(video.poster)
+  const posterImage = posterId ?? video.poster
+  const poster = getImage(posterImage)
   const [state, setState] = useState<'idle' | 'active' | 'error'>('idle')
   const [attempt, setAttempt] = useState(0)
   const [src, setSrc] = useState<string | null>(null)
@@ -82,16 +73,16 @@ export function VideoFigure({ video: id, sizes, caption, transcript, className }
           <button
             type="button"
             className="video-facade"
-            aria-label={`Play video: ${video.title}, ${spokenDuration(video.duration)}`}
+            aria-label={`${label ? `${label}, ${video.title}` : `Play ${video.title}`}, ${spokenDuration(video.duration)}`}
             onClick={start}
           >
-            <ResponsiveImage image={video.poster} sizes={sizes} decorative fit="cover" />
+            <ResponsiveImage image={posterImage} sizes={sizes} decorative fit="cover" />
             <span className="video-facade__chip" aria-hidden="true">
               <svg viewBox="0 0 16 16" width="14" height="14">
                 <path d="M4.5 2.8v10.4a.5.5 0 0 0 .76.43l8.4-5.2a.5.5 0 0 0 0-.86l-8.4-5.2a.5.5 0 0 0-.76.43Z" fill="currentColor" />
               </svg>
-              <span className="video-facade__title">{video.title}</span>
-              <span className="video-facade__time tabular">{formatDuration(video.duration)}</span>
+              <span className={label ? 'video-facade__label' : 'video-facade__title'}>{label ?? video.title}</span>
+              <span className="video-facade__time tabular">{shortDuration(video.duration)}</span>
             </span>
           </button>
         )}
@@ -116,7 +107,7 @@ export function VideoFigure({ video: id, sizes, caption, transcript, className }
 
         {state === 'error' && (
           <div className="video-error">
-            <ResponsiveImage image={video.poster} sizes={sizes} decorative fit="cover" className="video-error__poster" />
+            <ResponsiveImage image={posterImage} sizes={sizes} decorative fit="cover" className="video-error__poster" />
             <div className="video-error__panel" role="alert">
               <p>This video could not be loaded.</p>
               <div className="video-error__actions">

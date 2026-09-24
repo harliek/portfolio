@@ -1,69 +1,37 @@
 /**
- * Desktop spatial work carousel geometry. Values are tuned from screenshots;
- * change them here rather than in components.
+ * The homepage's concave carousel (src/components/home/ConcaveCarousel.tsx).
  *
- * Model (per card, `o` = signed distance from the active position, in projects):
- *   angle = o × angleStep                (clamped to ±90°)
- *   x     = radius × sin(angle)
- *   z     = radius × (cos(angle) − 1)    (0 at the centre, negative = further away)
- *   rotY  = angle × rotateFactor         (neighbours turn away along the arc)
- * with radius = spacing × cardWidth / sin(angleStep), so the unprojected distance
- * between the active card and its neighbour is `spacing` card widths.
+ * Six tiles stand on the inside of a curved wall around the viewer: the
+ * centre tile faces the viewer, tiles towards the edges turn inward and read
+ * slightly closer and taller. One continuous phase (arc length in px) moves
+ * at a constant linear speed; every tile's transform is derived from it each
+ * frame. A tile is repositioned (recycled) only at the far ends of the arc,
+ * outside the clipped viewport.
+ *
+ * Sizes come from CSS (home.css: --tile-h, --tile-gap); the geometry below
+ * is relative to the measured tile width, so it scales with the tiles.
  */
 export const CAROUSEL = {
-  /** Media queries that must all match for the spatial arc to be used. */
-  enableQuery: '(min-width: 900px) and (pointer: fine) and (prefers-reduced-motion: no-preference)',
-  /** CSS perspective of the stage, px. */
-  perspective: 1400,
-  /** CSS width of a card (padded frame included): clamp(min, vw, max). */
-  cardWidth: { min: 340, vw: 31, max: 440 },
-  cardRatio: 16 / 10,
-  /** Angular separation between neighbouring cards, degrees. */
-  angleStep: 24,
-  /** Unprojected centre-to-centre distance of neighbours, in card widths (1 = touching). */
-  spacing: 1.06,
-  /** Share of the arc angle applied as card rotation (1 = tangent to the arc). */
-  rotateFactor: 1,
-  /** Extra scale falloff per step (perspective does most of the work). */
-  scaleFalloff: 0.04,
-  /** Opacity by distance from the active card: 0, 1, 2 steps; beyond that hidden. */
-  opacity: { active: 1, near: 0.68, far: 0.34, hidden: 0 },
-  /** Far neighbours only (never on the active or focused card); 0 disables. */
-  farBlurPx: 0.5,
-  /** Cards further than this many steps from the active card are hidden and inert. */
-  visibleSteps: 2,
-  /** Vertical room above and below the card inside the stage (shadow, focus ring, hover lift), px. */
-  stagePadBlock: 30,
-  drag: {
-    thresholdPx: 8,
-    /** A single release never moves more than this many projects. */
-    maxStepsPerRelease: 2,
-    /** A release that moved at least this share of one step advances one project. */
-    intentRatio: 0.18,
-    /** Release speed (px/ms) that counts as a flick toward the next project. */
-    flickVelocity: 0.45,
-    /** Drag resistance past the first/last project (share of pointer travel). */
-    edgeResistance: 0.3,
-    /** Maximum overscroll past either end, in steps. */
-    edgeMax: 0.35,
-  },
-  wheel: {
-    /** Accumulated horizontal delta needed to move one project. */
-    threshold: 60,
-    /** Quiet period that ends one gesture. */
-    gestureGapMs: 180,
-    /** A gesture's axis is decided once this much movement (|x| + |y|, px) has accumulated. */
-    axisDecidePx: 8,
-    /** …and it counts as horizontal only if |x| exceeds |y| by this factor; otherwise it is page scroll. */
-    axisBias: 1.5,
-  },
-  hoverLift: 2,
-  transition: {
-    /** If the case-study chunk is not ready this long after opening, navigate without travel. */
-    chunkTimeoutMs: 250,
-    /** Give up on the travel if the destination has not mounted within this time. */
-    landTimeoutMs: 2000,
-    /** After landing, wait at most this long for the hero image before revealing it. */
-    imageWaitMs: 400,
-  },
+  /** Travel speed along the arc at the centre (px per second). 18px/s ≈ 95s per six-project cycle. */
+  speed: 18,
+  /** Wall radius as a multiple of the tile width (smaller = stronger curve). */
+  radius: 3.8,
+  /** A gentler wall for the static arrangement, so all six tiles fit in view. */
+  staticRadius: 6,
+  /** CSS perspective as a multiple of the radius (the viewer stands at the wall's centre). */
+  perspective: 1,
+  /** Where the motion starts: this many tile spacings past the first project (1.5 puts projects 1–4 in reading order). */
+  startOffset: 1.5,
+  /** Largest frame time used for one step (s), so a stalled frame never produces a jump. */
+  maxStep: 0.05,
+  /** After the pointer leaves a tile, motion resumes this long later unless another tile is entered (ms). Pausing is immediate. */
+  resumeGraceMs: 90,
+  /** Static arrangement (reduced motion) needs at least this width for all six tiles on the arc; narrower uses the flat row. */
+  staticArcMinWidth: 1100,
+  /** Narrower windows (even with a mouse) get the flat row: the arc would show only two tiles with clipped names. */
+  arcMinWidth: 700,
+  /** Width of each edge fade (share of the carousel width, matches home.css mask-image). */
+  edgeFade: 0.04,
+  /** Touch and coarse pointers get the static swipe row. */
+  touchQuery: '(hover: none), (pointer: coarse)',
 } as const

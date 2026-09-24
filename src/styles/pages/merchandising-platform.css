@@ -1,0 +1,109 @@
+/*
+ * Merchandising Platform page (src/pages/work/MerchandisingPlatform.tsx).
+ * Every selector is scoped under .page-merchandising-platform.
+ */
+
+.page-merchandising-platform {
+  /* The console's own page colour, so a loading or letterboxed frame never shows a dark band. */
+  --mp-screen: #fff;
+  /* The Results crop is shown at about its natural size (554px of the 1600px derivative). */
+  --mp-crop-max: 554px;
+  /* The same dark reading field as the shared .sv-step scrim (case.css). */
+  --mp-scrim: rgb(5 6 9 / 0.58);
+  --mp-scrim-edge: rgb(5 6 9 / 0.44);
+}
+
+.page-merchandising-platform .case-hero__frame {
+  background: var(--mp-screen);
+}
+
+/* ----------------------------------------------------------------------- */
+/* Approach (desktop sticky layout). Watch demo and the caption share the   */
+/* shared row under the frame (case.css, .sv-sticky[data-demo]).            */
+/* ----------------------------------------------------------------------- */
+
+@media (min-width: 960px) {
+  /*
+   * On short viewports (e.g. 1280×720) the sticky caption row rests on the
+   * floor horizon for the whole section; a soft dark field keeps it readable,
+   * like the scrims behind the reading column. (A sticky box is its own
+   * stacking context, so z-index -1 stays inside the figure.)
+   */
+  .page-merchandising-platform .sv-sticky::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: -28px;
+    right: -28px;
+    bottom: -24px;
+    height: 112px;
+    border-radius: 32px;
+    background: radial-gradient(closest-side in oklch, var(--mp-scrim) 0%, var(--mp-scrim-edge) 70%, transparent);
+    pointer-events: none;
+  }
+}
+
+/* ----------------------------------------------------------------------- */
+/* Results: a readable crop of the product drawer (EvidenceCrop.tsx)        */
+/* ----------------------------------------------------------------------- */
+
+.page-merchandising-platform .mp-results__aside {
+  max-width: var(--mp-crop-max);
+}
+
+.page-merchandising-platform .mp-results__related {
+  min-width: 0;
+}
+
+@media (min-width: 960px) {
+  .page-merchandising-platform .case-results {
+    grid-template-rows: auto 1fr;
+  }
+
+  .page-merchandising-platform .mp-results__aside {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .page-merchandising-platform .mp-results__related {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+.page-merchandising-platform .mp-crop__frame {
+  background: var(--mp-screen);
+}
+
+.page-merchandising-platform .mp-crop__button {
+  /* A little of the console's white below the last line of text, which sits on the screenshot's edge. */
+  padding-bottom: var(--space-3);
+  background: var(--mp-screen);
+}
+
+.page-merchandising-platform .mp-crop__view {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.page-merchandising-platform .mp-crop__image {
+  position: absolute;
+  display: block;
+}
+
+/* The crop's lower right corner holds text, so the enlarge hint sits top right. */
+.page-merchandising-platform .mp-crop .zoom-trigger__hint {
+  top: var(--space-3);
+  bottom: auto;
+}
+
+/* On phones the crop is about 0.6 of its natural size; a smaller hint in the corner keeps clear of Save price. */
+@media (max-width: 599.98px) {
+  .page-merchandising-platform .mp-crop .zoom-trigger__hint {
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+  }
+}

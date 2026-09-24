@@ -1,0 +1,201 @@
+/*
+ * Drawings page (src/pages/Art.tsx). Every selector is scoped under .page-art.
+ * A plain grid of equal cells (3 columns from 900px, 2 below): each drawing
+ * is shown whole on a black mat, never cropped, with its title beneath.
+ */
+
+.page-art {
+  --art-cell-ratio: 4 / 5;
+  --art-gap-x: clamp(var(--space-3), 2.2vw, var(--space-6));
+  --art-gap-y: clamp(var(--space-5), 3vw, var(--space-7));
+  --art-rule: rgb(238 234 226 / 0.12);
+  padding-top: var(--space-7);
+  padding-bottom: var(--space-6);
+}
+
+/* ------------------------------------------------------------------ */
+/* Introduction and series links                                       */
+/* ------------------------------------------------------------------ */
+
+.page-art .art-intro {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.page-art .art-intro__eyebrow {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.page-art .art-intro__title {
+  color: var(--stage-ivory);
+  font-size: clamp(2.125rem, 1.75rem + 1.5vw, 2.75rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.page-art .art-intro__lead {
+  max-width: 58ch;
+  margin-top: var(--space-1);
+  color: var(--color-muted);
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.page-art .art-index {
+  width: 100%;
+  margin-top: var(--space-5);
+  border-block: 1px solid var(--art-rule);
+}
+
+.page-art .art-index__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-6);
+  list-style: none;
+}
+
+.page-art .art-index__link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+  min-height: 44px;
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  font-weight: var(--weight-label);
+  line-height: 1.4;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.3em;
+  transition: text-decoration-color var(--dur-feedback) var(--ease-out);
+}
+
+.page-art .art-index__link:hover {
+  text-decoration-color: var(--stage-violet);
+}
+
+.page-art .art-index__count {
+  color: var(--color-subtle);
+  font-size: 0.8125rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Series                                                              */
+/* ------------------------------------------------------------------ */
+
+.page-art .art-series {
+  margin-top: clamp(var(--space-8), 7vw, var(--space-9));
+}
+
+.page-art .art-intro + .art-series {
+  margin-top: var(--space-8);
+}
+
+/*
+ * The background is fixed while the page scrolls, so every series passes
+ * the bright horizon. A soft dark field travels with each series (and the
+ * introduction) so the horizon never runs through a heading, note or title.
+ */
+.page-art .art-intro,
+.page-art .art-series {
+  position: relative;
+  isolation: isolate;
+}
+
+.page-art .art-intro::before,
+.page-art .art-series::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: calc(-1 * var(--space-4)) max(0px, calc(var(--gutter) - var(--space-5)));
+  border-radius: 32px;
+  background: rgb(5 6 9 / var(--art-field, 0.5));
+  box-shadow: 0 0 56px 36px rgb(5 6 9 / var(--art-field, 0.5));
+  pointer-events: none;
+}
+
+.page-art .art-series__head {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 640px;
+  margin-bottom: var(--space-5);
+}
+
+.page-art .art-series__name {
+  color: var(--stage-ivory);
+  font-size: clamp(1.375rem, 1.25rem + 0.5vw, 1.625rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.page-art .art-series__note {
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.page-art .art-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--art-gap-y) var(--art-gap-x);
+  list-style: none;
+}
+
+@media (min-width: 900px) {
+  .page-art .art-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.page-art .art-work__figure {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* The mat: equal cells, the drawing contained inside (never cropped). */
+.page-art .art-work__frame {
+  aspect-ratio: var(--art-cell-ratio);
+  overflow: hidden;
+  border-radius: 10px;
+  background: #000;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 24px 50px -28px rgb(0 0 0 / 0.9);
+}
+
+.page-art .art-work__frame .zoom-trigger,
+.page-art .art-work__frame .picture,
+.page-art .art-work__frame img {
+  width: 100%;
+  height: 100%;
+}
+
+.page-art .art-work__frame img {
+  object-fit: contain;
+}
+
+.page-art .art-work__frame:has(.zoom-trigger:focus-visible) {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.page-art .art-work__title {
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 599.98px) {
+  .page-art .art-work__title {
+    font-size: 0.875rem;
+  }
+}

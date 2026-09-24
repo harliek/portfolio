@@ -76,9 +76,9 @@ Encode settings: libx264 `-preset slow`, High profile, yuv420p, with BT.709 colo
 | `planetart-assortment` | UK research pair (right) | Original artifact | No | Internship presentation excerpt |
 | `planetart-concept-dashboard` | Original concept chapter | Original artifact | No (see uncertainty) | Internship concept prototype |
 | `planetart-concept-workflow` | Original concept chapter (supporting) | Original artifact | No | Internship concept map |
-| `merch-catalog`, `merch-vendors`, `merch-drawer` | Independent rebuild stills | Independent reconstruction · Synthetic data | Yes | Later independent reconstruction |
-| `merch-console-poster` | Video poster (alt `""`) | Independent reconstruction · Synthetic data | Yes | Later independent reconstruction |
-| `merch-console` | Independent rebuild player | Independent reconstruction · Synthetic data | Yes | Later independent reconstruction |
+| `merch-catalog`, `merch-vendors`, `merch-drawer` | Independent rebuild stills | Independent prototype · Synthetic data (label renamed 2026-09-24; was “Independent reconstruction”) | Yes | Later independent prototype, separate from PlanetArt’s systems |
+| `merch-console-poster` | Video poster (alt `""`) | Independent prototype · Synthetic data (label renamed 2026-09-24; was “Independent reconstruction”) | Yes | Later independent prototype, separate from PlanetArt’s systems |
+| `merch-console` | Independent rebuild player | Independent prototype · Synthetic data (label renamed 2026-09-24; was “Independent reconstruction”) | Yes | Later independent prototype, separate from PlanetArt’s systems |
 
 ### Alt text and captions (from `media.ts`)
 

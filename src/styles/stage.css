@@ -1,0 +1,184 @@
+/*
+ * The dark architectural setting shared by every page: the persistent
+ * background set (StageBackground), the reading scrims that keep the bright
+ * horizon out of body text, the image-continuity copy used when a project
+ * opens, the pointer trail canvas, and the debug outline for empty diagram
+ * slots. Glow is used only on carousel tile edges, the highlighted region of
+ * an image, and a small pool of light under a featured artifact.
+ */
+
+/* ----------------------------------------------------------------------- */
+/* Persistent background set                                                */
+/* ----------------------------------------------------------------------- */
+
+.stage-bg {
+  --bg-shade: 0.5;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--stage-room);
+  pointer-events: none;
+}
+
+.stage-bg__poster,
+.stage-bg__poster img,
+.stage-bg__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: 50% 55%;
+}
+
+.stage-bg__video {
+  opacity: 0;
+  transition: opacity var(--bg-video-fade, 800ms) var(--ease-out);
+}
+
+.stage-bg__video[data-playing] {
+  opacity: 1;
+}
+
+/* Dark overlay: per route, darker on phones. */
+.stage-bg__shade {
+  position: absolute;
+  inset: 0;
+  background: var(--stage-room);
+  opacity: min(0.94, calc(var(--bg-shade) + var(--bg-phone, 0)));
+  transition: opacity 700ms var(--ease-out);
+}
+
+.stage-bg[data-route='home'] {
+  --bg-shade: 0.4;
+}
+
+.stage-bg[data-route='case'] {
+  --bg-shade: 0.58;
+}
+
+.stage-bg[data-route='about'],
+.stage-bg[data-route='creative'],
+.stage-bg[data-route='other'] {
+  --bg-shade: 0.66;
+}
+
+/* A restrained violet light on the floor (atmosphere only; nothing aligns to it). */
+.stage-bg__reflection {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: max(64.7vh, calc(55vh + 7.28vw));
+  height: 40vh;
+  background: radial-gradient(40% 62% at 50% 0% in oklch, color-mix(in oklch, var(--stage-violet) 16%, transparent), transparent 74%);
+  opacity: 0.8;
+}
+
+.stage-bg[data-route='about'] .stage-bg__reflection,
+.stage-bg[data-route='creative'] .stage-bg__reflection,
+.stage-bg[data-route='other'] .stage-bg__reflection {
+  opacity: 0.4;
+}
+
+/* Framing light: darker at the header and at the bottom, soft side vignette. */
+.stage-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.66), rgb(5 6 9 / 0) 22%, rgb(5 6 9 / 0) 62%, rgb(5 6 9 / 0.72)),
+    radial-gradient(130% 95% at 50% 48% in oklch, rgb(5 6 9 / 0) 56%, rgb(5 6 9 / 0.58));
+}
+
+@media (max-width: 767.98px) {
+  .stage-bg {
+    --bg-phone: 0.14;
+  }
+}
+
+/* ----------------------------------------------------------------------- */
+/* Reading scrim: a dark translucent field behind reading columns so the    */
+/* bright horizon never passes through body text.                            */
+/* ----------------------------------------------------------------------- */
+
+.reading-scrim {
+  position: relative;
+  isolation: isolate;
+}
+
+.reading-scrim::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: calc(-1 * var(--scrim-pad, 32px)) calc(-1 * var(--scrim-pad-x, 48px)) calc(-1 * var(--scrim-pad-end, var(--scrim-pad, 32px)));
+  border-radius: 40px;
+  /* Holds most of its strength across the text (an ellipse meeting every side), fading only at the rim. */
+  background: radial-gradient(
+    closest-side in oklch,
+    rgb(5 6 9 / var(--scrim-strength, 0.62)),
+    rgb(5 6 9 / calc(var(--scrim-strength, 0.62) * 0.9)) 62%,
+    rgb(5 6 9 / calc(var(--scrim-strength, 0.62) * 0.55)) 84%,
+    rgb(5 6 9 / 0)
+  );
+  pointer-events: none;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Image continuity (components/transition/projectTransition.ts)            */
+/* ----------------------------------------------------------------------- */
+
+.transition-image {
+  position: fixed;
+  z-index: 70;
+  margin: 0;
+  max-width: none;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px var(--stage-edge), 0 30px 70px -30px rgb(0 0 0 / 0.9);
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
+
+[data-case-hero][data-transition-pending] {
+  opacity: 0;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Pointer trail (fine pointers only; never takes pointer events)           */
+/* ----------------------------------------------------------------------- */
+
+.pointer-trail {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+html:fullscreen .pointer-trail,
+html[data-motion='reduce'] .pointer-trail {
+  display: none;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Empty diagram slots: visible ONLY with the debug flag (?debug=slots)     */
+/* ----------------------------------------------------------------------- */
+
+.slot-debug {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: 1px solid rgb(239 141 116 / 0.7);
+  border-radius: var(--radius-inner);
+  color: var(--stage-coral);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.slot-debug__id {
+  font-weight: var(--weight-label);
+}

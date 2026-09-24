@@ -1,16 +1,10 @@
-/* Page shell: skip link, header, main, footer, grid. */
+/* Page shell: skip link, header with the Work shelf, main, footer, route reveal. */
 
 .shell {
   width: 100%;
   max-width: var(--shell-max);
   margin-inline: auto;
   padding-inline: var(--gutter);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
-  column-gap: var(--grid-gap);
 }
 
 .skip-link {
@@ -33,19 +27,27 @@
   outline-color: var(--color-focus);
 }
 
-/* Header */
+/* ----------------------------------------------------------------------- */
+/* Header                                                                   */
+/* ----------------------------------------------------------------------- */
+
 .site-header {
   position: sticky;
   top: 0;
   z-index: 50;
   height: var(--header-height);
-  background: var(--color-header);
+  background-color: transparent;
+  background-image: linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.72), rgb(5 6 9 / 0));
   border-bottom: 1px solid transparent;
-  transition: border-color var(--dur-route) var(--ease-out);
+  transition:
+    background-color var(--dur-route) var(--ease-out),
+    border-color var(--dur-route) var(--ease-out);
 }
 
-.site-header[data-scrolled='true'] {
-  border-bottom-color: var(--color-line);
+.site-header[data-scrolled='true'],
+.site-header[data-shelf-open] {
+  background-color: var(--color-header);
+  border-bottom-color: rgb(238 234 226 / 0.1);
 }
 
 .site-header__inner {
@@ -60,6 +62,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
+  color: var(--stage-ivory);
   font-size: 1.0625rem;
   font-weight: var(--weight-heading);
   letter-spacing: -0.02em;
@@ -67,77 +70,375 @@
   white-space: nowrap;
 }
 
-.site-nav ul {
+.site-nav__list {
   display: flex;
   align-items: center;
   gap: var(--space-1);
   list-style: none;
+  margin-right: calc(-1 * var(--space-3));
 }
 
-.site-nav a {
+.site-nav__item {
   position: relative;
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   min-height: 44px;
-  padding-inline: var(--space-2);
+  padding: 0 var(--space-3);
+  border: 0;
+  background: none;
   color: var(--color-muted);
-  font-size: var(--text-small);
+  font-size: 0.9375rem;
   font-weight: var(--weight-label);
   text-decoration: none;
   white-space: nowrap;
-  transition: color var(--dur-feedback) var(--ease-out);
+  cursor: pointer;
+  transition:
+    color var(--dur-feedback) var(--ease-out),
+    transform var(--shelf-dur, 250ms) var(--ease-out);
 }
 
-.site-nav a:hover {
+.site-nav__item:hover,
+.site-nav__work[aria-expanded='true'] {
   color: var(--color-text);
 }
 
-/* Current location: brighter text plus an underline bar (not color alone). */
-.site-nav a[data-active='true'] {
+/* Current section: brighter text plus a thin violet underline (not colour alone). */
+.site-nav__item[data-active='true'] {
   color: var(--color-text);
 }
 
-.site-nav a[data-active='true']::after {
+.site-nav__item[data-active='true']::after {
+  content: '';
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: 9px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: var(--stage-violet);
+}
+
+.site-nav__chevron {
+  flex: none;
+  transition: transform var(--dur-feedback) var(--ease-out);
+}
+
+/* Opening the shelf: the Work control moves slightly left; the page does not move. */
+.site-nav__work[aria-expanded='true'] {
+  transform: translateX(-6px);
+}
+
+.site-nav__work[aria-expanded='true'] .site-nav__chevron {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 400px) {
+  .site-nav__item {
+    padding-inline: 10px;
+    font-size: 0.875rem;
+  }
+
+  .site-nav__item[data-active='true']::after {
+    left: 10px;
+    right: 10px;
+  }
+}
+
+/* ----------------------------------------------------------------------- */
+/* Work shelf (WorkShelf.tsx)                                               */
+/* ----------------------------------------------------------------------- */
+
+/* Positioned against the sticky header (its containing block), full width under it. */
+.work-shelf {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 49;
+  padding-block: var(--space-4) var(--space-5);
+  background: var(--stage-room);
+  border-bottom: 1px solid rgb(238 234 226 / 0.1);
+  box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.9);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity calc(var(--shelf-dur) * 0.7) var(--ease-out),
+    visibility 0s linear calc(var(--shelf-dur) * 0.7);
+}
+
+.work-shelf[data-open] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--shelf-dur) var(--ease-out),
+    visibility 0s;
+}
+
+.work-shelf__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.work-shelf__viewport {
+  min-width: 0;
+}
+
+.work-shelf__list {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-2);
+  list-style: none;
+}
+
+/* The horizontal reveal: entries slide in from the Work side while fading in. */
+.work-shelf__entry {
+  opacity: 0;
+  transform: translateX(var(--shelf-offset));
+  transition:
+    opacity calc(var(--shelf-dur) * 0.8) var(--ease-out),
+    transform var(--shelf-dur) var(--ease-out);
+}
+
+.work-shelf[data-open] .work-shelf__entry {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(var(--i) * var(--shelf-stagger));
+}
+
+.shelf-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 76px;
+  padding: var(--space-2);
+  border-radius: var(--radius-inner);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color var(--dur-feedback) var(--ease-out);
+}
+
+.shelf-item:hover {
+  background: rgb(238 234 226 / 0.06);
+}
+
+.shelf-item:focus-visible {
+  outline-offset: -2px;
+  border-radius: var(--radius-inner);
+}
+
+.shelf-item__thumb {
+  display: block;
+  width: 48px;
+  aspect-ratio: 3 / 4;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-media-edge);
+}
+
+.shelf-item__thumb .picture,
+.shelf-item__thumb img {
+  width: 100%;
+  height: 100%;
+}
+
+.shelf-item__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.shelf-item__name {
+  font-size: 0.875rem;
+  font-weight: var(--weight-label);
+  line-height: 1.3;
+}
+
+.shelf-item__category {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+/* Active project: a violet bar under the entry, and a lit thumbnail edge. */
+.shelf-item[aria-current='page'] {
+  background: rgb(165 140 240 / 0.08);
+}
+
+.shelf-item[aria-current='page']::after {
   content: '';
   position: absolute;
   left: var(--space-2);
   right: var(--space-2);
-  bottom: 8px;
+  bottom: 2px;
   height: 2px;
   border-radius: 1px;
-  background: var(--color-accent);
+  background: var(--stage-violet);
 }
 
-@media (max-width: 380px) {
-  .site-brand {
-    font-size: 1rem;
-  }
-
-  .site-nav ul {
-    gap: 0;
-  }
-
-  .site-nav a {
-    padding-inline: 7px;
-  }
+.shelf-item[aria-current='page'] .shelf-item__thumb {
+  box-shadow: 0 0 0 1px var(--stage-violet);
 }
 
-@media (min-width: 600px) {
-  .site-nav ul {
+.work-shelf__close {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-button);
+  background: rgb(238 234 226 / 0.06);
+  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.14);
+  color: var(--color-text);
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  transition: background-color var(--dur-feedback) var(--ease-out);
+}
+
+.work-shelf__close:hover {
+  background: rgb(238 234 226 / 0.12);
+}
+
+/*
+ * Wide screens: Close sits above the row, so the six entries share the full
+ * content width as small cards, each with its name and category on one line.
+ */
+@media (min-width: 1200px) {
+  .work-shelf {
+    padding-block: var(--space-2) var(--space-5);
+  }
+
+  .work-shelf__inner {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-1);
+  }
+
+  .work-shelf__close {
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .work-shelf__list {
+    gap: var(--space-3);
+  }
+
+  .shelf-item {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    justify-items: start;
     gap: var(--space-2);
+    min-height: 0;
+    padding: var(--space-2) var(--space-2) var(--space-3);
   }
 
-  .site-nav a {
-    padding-inline: var(--space-3);
+  .shelf-item__name,
+  .shelf-item__category {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .site-nav a[data-active='true']::after {
-    left: var(--space-3);
-    right: var(--space-3);
+  .shelf-item__text {
+    width: 100%;
   }
 }
 
-/* Main */
+/* Intermediate widths: a deliberately scrollable row with edge fades as overflow cues. */
+@media (max-width: 1199.98px) {
+  .work-shelf__viewport {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--space-2);
+    padding-bottom: var(--space-2);
+    scrollbar-width: thin;
+    scrollbar-color: rgb(238 234 226 / 0.3) transparent;
+    --fade-start: 0px;
+    --fade-end: 0px;
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+  }
+
+  .work-shelf__viewport[data-more-start='true'] {
+    --fade-start: 56px;
+  }
+
+  .work-shelf__viewport[data-more-end='true'] {
+    --fade-end: 72px;
+  }
+
+  .work-shelf__list {
+    display: flex;
+    width: max-content;
+  }
+
+  .work-shelf__entry {
+    width: 212px;
+    scroll-snap-align: start;
+  }
+}
+
+/* Phones: a simple two-column menu; Close sits under it. */
+@media (max-width: 639.98px) {
+  .work-shelf {
+    max-height: calc(100dvh - var(--header-height));
+    overflow-y: auto;
+    padding-block: var(--space-3) var(--space-4);
+  }
+
+  .work-shelf__inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .work-shelf__viewport {
+    overflow: visible;
+    mask-image: none;
+    padding-bottom: 0;
+  }
+
+  .work-shelf__list {
+    display: grid;
+    width: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-1) var(--space-2);
+  }
+
+  .work-shelf__entry {
+    width: auto;
+  }
+
+  .shelf-item {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: var(--space-2);
+    min-height: 68px;
+    padding: 6px;
+  }
+
+  .shelf-item__thumb {
+    width: 40px;
+  }
+
+  .shelf-item__category {
+    font-size: 0.75rem;
+  }
+
+  .work-shelf__close {
+    justify-self: stretch;
+    justify-content: center;
+  }
+}
+
+/* ----------------------------------------------------------------------- */
+/* Main and route reveal                                                    */
+/* ----------------------------------------------------------------------- */
+
 .site-main {
   display: block;
   min-height: calc(100vh - var(--header-height));
@@ -147,75 +448,180 @@
   outline: none;
 }
 
-/* Footer */
+/* The page and footer sit above the fixed set. */
+.site-main,
 .site-footer {
-  margin-top: var(--chapter-gap);
-  border-top: 1px solid var(--color-line);
-  padding-block: var(--space-6) var(--space-7);
+  position: relative;
+  z-index: 1;
+}
+
+/* A new page rises 6px while its opacity settles: never blank, never black. */
+.route-reveal {
+  animation: route-reveal var(--dur-route-reveal) var(--ease-out) both;
+}
+
+@keyframes route-reveal {
+  from {
+    opacity: 0.4;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html[data-motion='reduce'] .route-reveal {
+  animation: none;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Footer (every page): contact, résumé, the Reduce motion toggle           */
+/* ----------------------------------------------------------------------- */
+
+.site-footer {
+  margin-top: var(--space-9);
+  border-top: 1px solid rgb(238 234 226 / 0.1);
+  padding-block: var(--space-7) var(--space-6);
+  background: linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.6), rgb(5 6 9 / 0.88));
   font-size: var(--text-small);
+  /* The root's scroll-padding-top (base.css) already clears the sticky header. */
+  scroll-margin-top: 0;
+}
+
+.site-footer:focus {
+  outline: none;
 }
 
 .site-footer__inner {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-6);
 }
 
-.site-footer__top {
+.site-footer__contact {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.site-footer__title {
+  color: var(--color-text);
+  font-size: 1.375rem;
+  font-weight: var(--weight-heading);
+  letter-spacing: -0.015em;
+}
+
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  list-style: none;
+  margin-inline: calc(-1 * var(--space-2));
+}
+
+.site-footer__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: var(--space-2);
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: var(--weight-label);
+  text-decoration: underline;
+  text-decoration-color: rgb(238 234 226 / 0.3);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+  transition: text-decoration-color var(--dur-feedback) var(--ease-out);
+}
+
+.site-footer__link:hover {
+  text-decoration-color: currentColor;
+}
+
+.site-footer__base {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3) var(--space-5);
-}
-
-.site-footer__name {
-  font-weight: var(--weight-heading);
-  font-size: 1rem;
-}
-
-.site-footer ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-2);
-  list-style: none;
-  margin-inline: calc(-1 * var(--space-2));
-}
-
-.site-footer a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding-inline: var(--space-2);
-  color: var(--color-muted);
-  font-weight: var(--weight-label);
-  text-decoration: none;
-  transition: color var(--dur-feedback) var(--ease-out);
-}
-
-.site-footer a:hover {
-  color: var(--color-text);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgb(238 234 226 / 0.08);
 }
 
 .site-footer__copy {
   color: var(--color-subtle);
 }
 
-/* Route reveal: opacity only. Content is visible by default if JS fails. */
-.route-reveal {
-  animation: route-reveal var(--dur-route) var(--ease-out) both;
+/* The site-wide motion preference: a quiet checkbox-like toggle button. */
+.motion-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  margin-inline: calc(-1 * var(--space-2));
+  border: 0;
+  border-radius: var(--radius-button);
+  background: none;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  transition: color var(--dur-feedback) var(--ease-out);
 }
 
-@keyframes route-reveal {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.motion-toggle:hover,
+.motion-toggle[aria-pressed='true'] {
+  color: var(--color-text);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .route-reveal {
-    animation: none;
-  }
+.motion-toggle__box {
+  position: relative;
+  width: 28px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgb(238 234 226 / 0.1);
+  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.28);
+  transition: background-color var(--dur-feedback) var(--ease-out);
+}
+
+.motion-toggle__box::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-muted);
+  transition:
+    transform var(--dur-feedback) var(--ease-out),
+    background-color var(--dur-feedback) var(--ease-out);
+}
+
+.motion-toggle[aria-pressed='true'] .motion-toggle__box {
+  background: color-mix(in oklch, var(--stage-violet) 45%, transparent);
+}
+
+.motion-toggle[aria-pressed='true'] .motion-toggle__box::after {
+  transform: translateX(12px);
+  background: var(--stage-ivory);
+}
+
+/* Not found / route error */
+.not-found {
+  display: grid;
+  gap: var(--space-5);
+  padding-block: var(--space-8);
+}
+
+.not-found__title {
+  font-size: clamp(2.125rem, 1.6rem + 2vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.not-found__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  list-style: none;
 }

@@ -1,265 +1,496 @@
-/* About page. Every selector is scoped under .page-about. */
+/*
+ * About page (src/pages/About.tsx). Every selector is scoped under .page-about.
+ *
+ * One centred column (--about-max) with a two-column grid from 960px: a
+ * 280px left column (the portrait, then the section headings and the film's
+ * text) and a ≤600px right column (the biography, the lists, the player).
+ */
 
 .page-about {
-  padding-top: var(--space-5);
+  --about-max: 960px;
+  --about-left: 280px;
+  --about-gap: 80px;
+  --about-right: 600px;
+  --about-section-gap: clamp(72px, 9vw, 112px);
+  --about-rule: rgb(238 234 226 / 0.12);
+  padding-top: clamp(var(--space-6), 5vw, var(--space-8));
+  padding-bottom: var(--space-4);
 }
 
-/* Opening: H1 → portrait → copy → links on small screens. */
+.page-about .shell {
+  max-width: calc(var(--about-max) + 2 * var(--gutter));
+}
+
+/* ------------------------------------------------------------------ */
+/* Opening: portrait left, biography right                             */
+/* ------------------------------------------------------------------ */
+
 .page-about .about-intro {
   display: grid;
-  grid-template-areas:
-    'title'
-    'portrait'
-    'copy'
-    'links';
-  gap: var(--space-5);
+  gap: var(--space-6);
 }
 
-.page-about .about-intro__title {
-  grid-area: title;
+@media (min-width: 720px) {
+  .page-about .about-intro {
+    grid-template-columns: clamp(200px, 26vw, var(--about-left)) minmax(0, var(--about-right));
+    column-gap: clamp(var(--space-6), 6.25vw, var(--about-gap));
+    align-items: start;
+  }
 }
 
 .page-about .about-intro__portrait {
-  grid-area: portrait;
-  width: min(100%, 260px);
-  border-radius: var(--radius-inner);
+  width: min(220px, 60vw);
   overflow: hidden;
+  border-radius: 14px;
   background: var(--color-surface);
-  box-shadow: var(--shadow-media);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 30px 60px -30px rgb(0 0 0 / 0.9);
 }
 
-.page-about .about-intro__copy {
-  grid-area: copy;
+@media (min-width: 720px) {
+  .page-about .about-intro__portrait {
+    width: 100%;
+  }
+}
+
+.page-about .about-intro__portrait img {
+  width: 100%;
+  height: auto;
+}
+
+.page-about .about-intro__bio {
   display: grid;
   gap: var(--space-4);
-  max-width: var(--prose-max);
-  color: var(--color-muted);
 }
 
-/* The first sentence introduces the person; give it the text color. */
-.page-about .about-intro__copy p:first-child {
+.page-about .about-intro__name {
+  color: var(--stage-ivory);
+  font-size: clamp(2.125rem, 1.8rem + 1.2vw, 2.75rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.page-about .about-intro__hello {
+  color: var(--stage-ivory);
+  font-size: 1.1875rem;
+  font-weight: var(--weight-label);
+  line-height: 1.5;
+}
+
+.page-about .about-intro__para {
+  max-width: 62ch;
   color: var(--color-text);
+  font-size: clamp(1rem, 0.94rem + 0.3vw, 1.125rem);
+  line-height: 1.6;
+  text-wrap: pretty;
 }
 
-.page-about .about-intro__links {
-  grid-area: links;
+.page-about .about-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  list-style: none;
+  margin-top: var(--space-3);
 }
 
-/* Sections */
-.page-about .about-body {
-  display: grid;
-  gap: var(--chapter-gap);
-  margin-top: var(--chapter-gap);
+.page-about .about-actions .button {
+  min-height: 46px;
+  padding-inline: var(--space-5);
+  font-size: 0.9375rem;
 }
 
-.page-about .about-section {
-  display: grid;
-  gap: var(--space-5);
+.page-about .about-actions__primary {
+  background: var(--stage-ivory);
+  box-shadow: none;
+  color: var(--stage-room);
 }
 
-.page-about .about-section__head {
-  display: grid;
-  gap: var(--space-3);
-  align-content: start;
+.page-about .about-actions__primary:hover:not(:disabled) {
+  background: #fff;
+  box-shadow: none;
 }
 
-.page-about .about-section__intro {
-  color: var(--color-muted);
+.page-about .about-actions__secondary {
+  background: rgb(9 10 15 / 0.6);
+  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.28);
 }
 
-/* Education */
-.page-about .about-edu {
-  display: grid;
-  gap: var(--space-1);
-  align-content: start;
+.page-about .about-actions__secondary:hover:not(:disabled) {
+  background: rgb(238 234 226 / 0.08);
+  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.5);
 }
 
-.page-about .about-edu__school {
-  margin-bottom: var(--space-1);
+/* ------------------------------------------------------------------ */
+/* Shared                                                              */
+/* ------------------------------------------------------------------ */
+
+/* Reading scrims (stage.css .reading-scrim) stay inside the gutter on phones. */
+.page-about .reading-scrim {
+  --scrim-pad: 20px;
+  --scrim-pad-x: min(40px, calc(var(--gutter) - 4px));
 }
 
-.page-about .about-edu__dates,
-.page-about .about-edu__note {
-  color: var(--color-muted);
+.page-about .about-heading {
+  color: var(--stage-ivory);
+  font-size: clamp(1.375rem, 1.25rem + 0.5vw, 1.625rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
-.page-about .about-edu__note {
-  font-size: var(--text-small);
-  line-height: var(--leading-small);
-}
-
-.page-about .about-edu__cert {
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-line);
-}
-
-/* Selected experience: an ordinary dated list. Row layout follows the list's
-   own width (container query), since the list is narrow both on tablets and
-   in the 8-column content track at 900–1200px. */
-.page-about .about-exp {
-  list-style: none;
-  border-top: 1px solid var(--color-line);
-  container: about-exp / inline-size;
-}
-
-.page-about .about-exp > li {
-  border-bottom: 1px solid var(--color-line);
-}
-
-.page-about .about-exp__row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas:
-    'org arrow'
-    'role role'
-    'dates dates';
-  column-gap: var(--space-4);
-  row-gap: 2px;
-  padding-block: var(--space-4);
+.page-about .about-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  min-height: 44px;
   color: var(--color-text);
+  font-size: 1rem;
+  font-weight: var(--weight-label);
+  text-decoration: underline;
+  text-decoration-color: rgb(238 234 226 / 0.32);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+  transition: text-decoration-color var(--dur-feedback) var(--ease-out);
+}
+
+.page-about .about-link:hover {
+  text-decoration-color: var(--stage-violet);
+}
+
+/* A link with a trailing arrow underlines only its words. */
+.page-about .about-link:has(.about-link__text) {
   text-decoration: none;
 }
 
-.page-about .about-exp__row--link:focus-visible {
-  outline-offset: 2px;
-  border-radius: var(--radius-button);
+.page-about .about-link__text {
+  text-decoration: underline;
+  text-decoration-color: rgb(238 234 226 / 0.32);
+  text-underline-offset: 0.3em;
+  transition: text-decoration-color var(--dur-feedback) var(--ease-out);
 }
 
-.page-about .about-exp__org {
-  grid-area: org;
-  font-weight: var(--weight-label);
-  transition: color var(--dur-feedback) var(--ease-out);
+.page-about .about-link:hover .about-link__text {
+  text-decoration-color: var(--stage-violet);
 }
 
-.page-about .about-exp__role {
-  grid-area: role;
-  color: var(--color-muted);
-}
+/* ------------------------------------------------------------------ */
+/* Experience and Education                                            */
+/* ------------------------------------------------------------------ */
 
-.page-about .about-exp__dates {
-  grid-area: dates;
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  line-height: var(--leading-small);
-}
-
-.page-about .about-exp__arrow {
-  grid-area: arrow;
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  transition: color var(--dur-feedback) var(--ease-out);
-}
-
-@media (hover: hover) {
-  .page-about .about-exp__row--link:hover .about-exp__org,
-  .page-about .about-exp__row--link:hover .about-exp__arrow {
-    color: var(--color-accent);
-  }
-}
-
-/* Medium list: organization and dates on one line, role below. */
-@container about-exp (min-width: 480px) {
-  .page-about .about-exp__row {
-    grid-template-columns: minmax(0, 1fr) auto 1rem;
-    grid-template-areas:
-      'org dates arrow'
-      'role role .';
-    align-items: baseline;
-  }
-
-  .page-about .about-exp__dates {
-    text-align: right;
-  }
-}
-
-/* Wide list: one line per role. 11rem keeps "Jumpstart Finance" on one line. */
-@container about-exp (min-width: 700px) {
-  .page-about .about-exp__row {
-    grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) auto 1rem;
-    grid-template-areas: 'org role dates arrow';
-  }
-}
-
-/* Selected drawings: modest, proportions preserved (no forced crops). */
-.page-about .about-drawings {
+.page-about .about-record {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-5) var(--space-4);
-  align-items: start;
+  gap: var(--space-7);
+  margin-top: var(--about-section-gap);
 }
 
-.page-about .about-drawings__item--wide {
-  grid-column: 1 / -1;
+.page-about .about-record__block {
+  display: grid;
+  gap: var(--space-4);
 }
 
-@media (min-width: 600px) {
-  /* Column widths follow each drawing's aspect ratio, so all three share one height. */
-  .page-about .about-drawings {
-    grid-template-columns: minmax(0, 0.8018fr) minmax(0, 0.8001fr) minmax(0, 1.223fr);
-    gap: var(--grid-gap);
-  }
-
-  .page-about .about-drawings__item--wide {
-    grid-column: auto;
-  }
-}
-
-/* Wide: text ≈7 columns, portrait ≈4; sections split heading / content. */
-@media (min-width: 900px) {
-  .page-about {
-    padding-top: var(--space-7);
-  }
-
-  .page-about .about-intro {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-template-rows: auto auto 1fr;
-    grid-template-areas: none;
-    column-gap: var(--grid-gap);
-    row-gap: var(--space-6);
-  }
-
-  .page-about .about-intro__title {
-    grid-column: 1 / span 7;
-    grid-row: 1;
-  }
-
-  .page-about .about-intro__copy {
-    grid-column: 1 / span 7;
-    grid-row: 2;
-  }
-
-  .page-about .about-intro__links {
-    grid-column: 1 / span 7;
-    grid-row: 3;
-    align-self: start;
-  }
-
-  .page-about .about-intro__portrait {
-    grid-column: 9 / span 4;
-    grid-row: 1 / span 3;
-    align-self: start;
-    justify-self: end;
-    width: 100%;
-    max-width: 360px;
-  }
-
-  .page-about .about-section {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--grid-gap);
+@media (min-width: 960px) {
+  .page-about .about-record__block {
+    grid-template-columns: var(--about-left) minmax(0, var(--about-right));
+    column-gap: var(--about-gap);
     align-items: start;
   }
 
-  .page-about .about-section__head {
-    grid-column: 1 / span 4;
-    padding-right: var(--space-5);
+  .page-about .about-record__block .about-heading {
+    padding-top: var(--space-4);
+  }
+}
+
+.page-about .about-roles {
+  list-style: none;
+  border-top: 1px solid var(--about-rule);
+  /* A dark field so the bright horizon never runs through the list. */
+  background: linear-gradient(to right in oklch, rgb(5 6 9 / 0.62), rgb(5 6 9 / 0.5));
+}
+
+.page-about .about-role {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'org dates'
+    'title link';
+  align-items: baseline;
+  gap: 2px var(--space-5);
+  padding: var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--about-rule);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.page-about .about-role__org {
+  grid-area: org;
+  color: var(--stage-ivory);
+  font-weight: var(--weight-heading);
+}
+
+.page-about .about-role__title {
+  grid-area: title;
+  color: var(--color-muted);
+}
+
+.page-about .about-role__dates {
+  grid-area: dates;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.page-about .about-role__link {
+  grid-area: link;
+  justify-self: end;
+}
+
+.page-about .about-role__link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  min-height: 32px;
+  margin-block: -6px;
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  font-weight: var(--weight-label);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.page-about .about-role__name {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--stage-violet) 60%, transparent);
+  text-underline-offset: 0.25em;
+  transition: text-decoration-color var(--dur-feedback) var(--ease-out);
+}
+
+.page-about .about-role__link a:hover .about-role__name {
+  text-decoration-color: var(--stage-violet);
+}
+
+@media (max-width: 559.98px) {
+  .page-about .about-role {
+    grid-template-areas:
+      'org dates'
+      'title title'
+      'link link';
+    padding-inline: var(--space-2);
   }
 
-  .page-about .about-section__content {
-    grid-column: 5 / span 8;
+  .page-about .about-role__link {
+    justify-self: start;
+    margin-top: var(--space-1);
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* My art portfolio: one substantial link beside actual drawings        */
+/* ------------------------------------------------------------------ */
+
+.page-about .about-art {
+  margin-top: var(--about-section-gap);
+}
+
+.page-about .about-art__card {
+  position: relative;
+  display: grid;
+  gap: var(--space-6);
+  align-items: end;
+  padding: clamp(var(--space-5), 4vw, var(--space-7));
+  border-radius: 20px;
+  background: linear-gradient(160deg in oklch, rgb(20 22 31 / 0.94), rgb(9 10 15 / 0.94));
+  box-shadow:
+    inset 0 0 0 1px rgb(238 234 226 / 0.12),
+    0 40px 80px -40px rgb(0 0 0 / 0.9);
+  transition: box-shadow var(--dur-feedback) var(--ease-out);
+}
+
+.page-about .about-art__card:hover {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--stage-violet) 50%, transparent),
+    0 40px 80px -40px rgb(0 0 0 / 0.9);
+}
+
+.page-about .about-art__card:has(.about-art__link:focus-visible) {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+@media (min-width: 720px) {
+  .page-about .about-art__card {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    column-gap: var(--space-7);
+  }
+}
+
+.page-about .about-art__text {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  padding-bottom: var(--space-1);
+}
+
+.page-about .about-art__title {
+  color: var(--stage-ivory);
+  font-size: clamp(1.625rem, 1.4rem + 0.9vw, 2.125rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.page-about .about-art__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* The whole card is the link's hit area. */
+.page-about .about-art__link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 20px;
+}
+
+.page-about .about-art__link:focus-visible {
+  outline: none;
+}
+
+.page-about .about-art__lead {
+  max-width: 34ch;
+  color: var(--color-muted);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+.page-about .about-art__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  margin-top: var(--space-3);
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  font-weight: var(--weight-label);
+}
+
+.page-about .about-art__cta-text {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--stage-violet) 60%, transparent);
+  text-underline-offset: 0.3em;
+}
+
+.page-about .about-art__arrow {
+  display: inline-block;
+  transition: transform var(--dur-feedback) var(--ease-out);
+}
+
+.page-about .about-art__card:hover .about-art__arrow {
+  transform: translateX(3px);
+}
+
+/* Drawings share one baseline; each keeps its proportions (ArtComposition). */
+.page-about .about-art__composition {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(var(--space-3), 1.6vw, var(--space-5));
+  max-width: 480px;
+  width: 100%;
+  justify-self: end;
+}
+
+.page-about .about-art__piece {
+  display: block;
+  flex-basis: 0;
+  min-width: 0;
+  aspect-ratio: var(--ratio);
+  overflow: hidden;
+  border-radius: 6px;
+  background: #000;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.1),
+    0 22px 36px -22px rgb(0 0 0 / 0.95);
+}
+
+.page-about .about-art__piece .picture,
+.page-about .about-art__piece img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 719.98px) {
+  .page-about .about-art__composition {
+    justify-self: start;
+    max-width: 400px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Featured short film: text left, player right, a pool of light below  */
+/* ------------------------------------------------------------------ */
+
+.page-about .about-film {
+  display: grid;
+  gap: var(--space-5);
+  margin-top: var(--about-section-gap);
+}
+
+@media (min-width: 960px) {
+  .page-about .about-film {
+    grid-template-columns: var(--about-left) minmax(0, var(--about-right));
+    column-gap: var(--about-gap);
+    align-items: center;
+  }
+}
+
+.page-about .about-film__text {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.page-about .about-film__eyebrow {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.page-about .about-film__title {
+  margin-bottom: var(--space-1);
+}
+
+.page-about .about-film__note {
+  color: var(--color-text);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.page-about .about-film__meta {
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+.page-about .about-film__media {
+  position: relative;
+  isolation: isolate;
+}
+
+/* A subtle local pool of light beneath the featured artifact. */
+.page-about .about-film__media::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 8%;
+  right: 8%;
+  bottom: -46px;
+  height: 92px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side in oklch, color-mix(in oklch, var(--stage-violet) 30%, transparent), transparent);
+  filter: blur(10px);
+  pointer-events: none;
 }

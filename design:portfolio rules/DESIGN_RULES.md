@@ -1,5 +1,7 @@
 # Design Rules for Harlie's Portfolio
 
+> **Note, 2026-09-23.** A short-lived amendment allowing Motion and Tailwind was **withdrawn** the same day at Harlie's instruction. The constraints below apply in full: GSAP (ScrollTrigger, Flip) plus plain CSS and custom properties, with no Tailwind, Motion or Three.js, and no UI library added only to build a carousel. The Lightswind 3D image slider was studied, and only its layout idea (cards stacked in one grid cell, turned with `rotateY` and pushed with `translateZ`) informs the GSAP/CSS project carousel.
+
 Read this before building or changing any UI. These rules override your defaults.
 
 ## Project constraints (do not break these)

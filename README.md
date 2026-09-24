@@ -1,6 +1,21 @@
 # Harlie Katz — portfolio
 
-A static React site with a spatial homepage, five case studies, and an About page. It is built with Vite, React 19, TypeScript, plain CSS custom properties, GSAP (core, ScrollTrigger, Flip) and React Router.
+A static React site presented as a persistent “presentation frame”: a dark architectural video set that keeps playing while project evidence is rearranged inside it. It covers a one-viewport homepage (a slow, controllable project carousel plus a direct index), five case studies of four scenes each, Art, Film and About.
+
+## Site map
+
+| Path | Page |
+|---|---|
+| `/` | Home: identity, the project stage (auto-advancing under strict rules; `← 01 / 05 → Pause`), “Explore work” index (`/#all-projects`), contact line |
+| `/work/planetart` · `/work/valiance` · `/work/spreadsheet-agent` · `/work/jumpstart` · `/work/shift` | Case studies: 01 Overview · 02 Insight · 03 Decision · 04 Outcome |
+| `/art` | Selected drawings (lazy) |
+| `/film` | Featured short film, short films, client and production work (lazy; YouTube loads only after a click, privacy-enhanced) |
+| `/about` | About, contact, and a closing sequence of drawings and film (lazy) |
+| `*` | Custom 404 |
+
+Navigation: **Work** (menu: the five projects + All work) · **Art** · **Film** · **About** · **Resume ↗**.
+
+It is built with Vite, React 19, TypeScript and React Router. Styling is plain CSS custom properties. GSAP (core, ScrollTrigger, Flip) handles all motion. No Tailwind, Motion or Three.js; see `design:portfolio rules/DESIGN_RULES.md`.
 
 ## Requirements
 
@@ -41,13 +56,22 @@ Media playback tests use the locally installed Google Chrome (`channel: 'chrome'
 
 ```
 src/
-  content/      projects.ts (shared navigation data), media.ts (provenance manifest),
-                site.ts (identity and verified links), transcripts.tsx
-  config/       motion.ts (GSAP values), carousel.ts (spatial arc geometry)
-  components/   layout/, work/ (carousel, snap rail, index), case-study/, media/, diagrams/
-  pages/        Home, About, NotFound, work/<case study>
-  hooks/        reduced motion, media playback policy, page meta, reveal
-  styles/       tokens, base, layout, components, work, case-studies, pages/<page>.css
+  content/      projects.ts (the six work entries, order, labels, routes, next project),
+                media.ts (provenance manifest), site.ts (identity and verified links),
+                creative.ts (films), slots.ts (empty diagram slots, debug flag), transcripts.tsx,
+                pages/<id>.ts(x) (one copy file per page: cafepress-uk, merchandising-platform,
+                spreadsheet-agent, ai-leasing-agent, jumpstart-finance, client-work, about, art)
+  config/       motion.ts (motion values: shelf, crossfade, highlight, route, trail),
+                carousel.ts (concave carousel geometry and speed), stage.ts (background set)
+  components/   layout/ (PageShell, Header, WorkShelf, Footer with Reduce motion, StageBackground,
+                PointerTrail, RouteFocus), home/ (ConcaveCarousel, SelectedWork),
+                case/ (CaseLayout, CaseOpening, CaseSection, StickyVisual, Results, NextProject),
+                pages/<id>/ (page-specific parts), transition/ (image continuity), creative/
+                (FilmPlayer, CreativeNav), media/ (ResponsiveImage, Figure, VideoFigure, ImageDialog,
+                DiagramSlot)
+  pages/        Home, About, Art, Film, NotFound, RouteError, work/<Project>.tsx
+  hooks/        useMotionPreference (single motion source), media playback policy, page meta, reveal
+  styles/       tokens, base, layout, components, stage, home, case, creative, pages/<id>.css
 scripts/prepare-media.mjs   reproducible media pipeline (originals → public/media)
 docs/                       build log, asset audit, content provenance, transcripts, QA report
 tests/                      Playwright specs
@@ -60,7 +84,9 @@ Original source materials (`PlanetArt/`, `Valiance Capital/`, `JumpStart Finance
 ```bash
 npm run media                          # everything
 node scripts/prepare-media.mjs video   # videos only (skips existing files; FORCE=1 to redo)
-node scripts/prepare-media.mjs images  # frames, PDF excerpts, images, covers, social image
+node scripts/prepare-media.mjs images  # frames, PDF excerpts, images, social image
+node scripts/prepare-media.mjs covers  # the six 3:4 cover compositions (needs the images task's cache)
+node scripts/prepare-media.mjs creative  # all 23 drawings and the film stills
 ```
 
 If you change a derivative's dimensions or widths, update the matching entry in `src/content/media.ts`. Record provenance changes in `docs/asset-audit.md`.
@@ -97,4 +123,6 @@ There is no production domain yet, so no canonical URL is declared. Once a domai
 - `docs/content-provenance.md`: sources for each public claim, deliberately excluded claims, unresolved questions.
 - `docs/transcripts.md`: how the film transcripts were produced and checked.
 - `docs/qa-report.md`: responsive, accessibility, keyboard, reduced-motion and performance results.
+- `docs/site-structure.md`: the site architecture: routes, header and Work shelf, footer and the motion preference, the concave carousel, the shared case-study layout and sticky visual section, route transitions, pointer trail, empty diagram slots and their debug flag, and where each page's files live.
+- `docs/media-plan.md`: every image and video, its placement, source and aspect ratio, and what is still needed from Harlie.
 - `THIRD_PARTY_NOTICES.md`: licenses. GSAP uses its own Standard “no charge” license, not MIT; Inter uses the SIL OFL.

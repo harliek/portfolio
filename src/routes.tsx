@@ -1,23 +1,30 @@
-import { createBrowserRouter, type RouteObject } from 'react-router-dom'
+import { createBrowserRouter, Navigate, useLocation, type RouteObject } from 'react-router-dom'
 import { PageShell } from './components/layout/PageShell'
 import { Home } from './pages/Home'
 import { NotFound } from './pages/NotFound'
 import { RouteError } from './pages/RouteError'
 
 /**
- * Case-study and About chunks are loaded lazily. Loaders for each chunk are
- * exported so links can prefetch them on hover/focus (see prefetchRoute).
+ * Case-study, About, Art and Film chunks are loaded lazily. Loaders for each
+ * chunk are exported so links can prefetch them on hover/focus
+ * (prefetchRoute) and the project transition can wait for them.
  */
 export const routeChunks = {
   '/about': () => import('./pages/About'),
-  '/work/planetart': () => import('./pages/work/PlanetArt'),
-  '/work/valiance': () => import('./pages/work/Valiance'),
+  '/art': () => import('./pages/Art'),
+  '/film': () => import('./pages/Film'),
+  '/work/cafepress-uk': () => import('./pages/work/CafePressUK'),
+  '/work/merchandising-platform': () => import('./pages/work/MerchandisingPlatform'),
   '/work/spreadsheet-agent': () => import('./pages/work/SpreadsheetAgent'),
-  '/work/jumpstart': () => import('./pages/work/Jumpstart'),
-  '/work/shift': () => import('./pages/work/Shift'),
+  '/work/valiance': () => import('./pages/work/AILeasingAgent'),
+  '/work/jumpstart': () => import('./pages/work/JumpstartFinance'),
+  '/work/shift': () => import('./pages/work/ClientWork'),
 } as const
 
 type ChunkPath = keyof typeof routeChunks
+
+/** sessionStorage key of RouteError's one automatic reload after a failed chunk. */
+export const CHUNK_RELOAD_KEY = 'hk-chunk-reload'
 
 const prefetched = new Set<string>()
 
@@ -30,15 +37,25 @@ export function prefetchRoute(path: string) {
 
 const lazyPage = (path: ChunkPath): RouteObject['lazy'] => async () => {
   const mod = await routeChunks[path]()
+  try {
+    window.sessionStorage.removeItem(CHUNK_RELOAD_KEY)
+  } catch {
+    /* ignore */
+  }
   return { Component: mod.default }
+}
+
+/** A preserved legacy URL: replaces itself with the current one, keeping any hash. */
+function Legacy({ to }: { to: string }) {
+  const { hash, search } = useLocation()
+  return <Navigate to={{ pathname: to, search, hash }} replace />
 }
 
 export const router = createBrowserRouter([
   {
     path: '/',
     Component: PageShell,
-    // Rendered only while a directly loaded lazy route resolves (a few ms for
-    // these small local chunks); avoids a flash of unrelated content.
+    // Rendered only while a directly loaded lazy route resolves.
     HydrateFallback: () => null,
     children: [
       {
@@ -48,11 +65,21 @@ export const router = createBrowserRouter([
         children: [
           { index: true, Component: Home },
           { path: 'about', lazy: lazyPage('/about') },
-          { path: 'work/planetart', lazy: lazyPage('/work/planetart') },
-          { path: 'work/valiance', lazy: lazyPage('/work/valiance') },
+          { path: 'art', lazy: lazyPage('/art') },
+          { path: 'film', lazy: lazyPage('/film') },
+          { path: 'work/cafepress-uk', lazy: lazyPage('/work/cafepress-uk') },
+          { path: 'work/merchandising-platform', lazy: lazyPage('/work/merchandising-platform') },
           { path: 'work/spreadsheet-agent', lazy: lazyPage('/work/spreadsheet-agent') },
+          { path: 'work/valiance', lazy: lazyPage('/work/valiance') },
           { path: 'work/jumpstart', lazy: lazyPage('/work/jumpstart') },
           { path: 'work/shift', lazy: lazyPage('/work/shift') },
+          // Legacy links: the PlanetArt case study became CafePress UK; the
+          // previous portfolio's Merch Console and Creative URLs.
+          { path: 'work/planetart', element: <Legacy to="/work/cafepress-uk" /> },
+          { path: 'work/planetart/console', element: <Legacy to="/work/merchandising-platform" /> },
+          { path: 'creative', element: <Legacy to="/art" /> },
+          { path: 'creative/art', element: <Legacy to="/art" /> },
+          { path: 'creative/film', element: <Legacy to="/film" /> },
           { path: '*', Component: NotFound },
         ],
       },

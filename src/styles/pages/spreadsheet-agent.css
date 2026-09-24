@@ -1,0 +1,80 @@
+/* Spreadsheet Agent page (src/pages/work/SpreadsheetAgent.tsx). Scope every selector under .page-spreadsheet-agent. */
+
+.page-spreadsheet-agent {
+  /* The prototype's own page colour, so a crossfade between two stills never dips to dark. */
+  --sa-paper: #fff;
+  /* Tallest a stacked crop may be (tablet widths), so image sizes stay predictable. */
+  --sa-crop-max-h: 520px;
+}
+
+.page-spreadsheet-agent .case-hero__frame,
+.page-spreadsheet-agent .sv-frame {
+  background: var(--sa-paper);
+}
+
+/* While the walkthrough plays, the frame is the player's own black. */
+.page-spreadsheet-agent .sv-frame[data-playing] {
+  background: var(--stage-room);
+}
+
+/*
+ * Stacked layout (below 960px). Each still is a faithful crop around its
+ * highlighted region, so the interface text stays readable at phone width.
+ * The variables come from the step data (SpreadsheetAgent.tsx, cropVars).
+ */
+.page-spreadsheet-agent .sticky-visual[data-layout='stacked'] .sv-step:nth-child(1) {
+  --ratio: var(--sa-1-ratio);
+  --max-w: var(--sa-1-max-w);
+  --img-w: var(--sa-1-img-w);
+  --img-x: var(--sa-1-img-x);
+  --img-y: var(--sa-1-img-y);
+  --hl-x: var(--sa-1-hl-x);
+  --hl-y: var(--sa-1-hl-y);
+  --hl-w: var(--sa-1-hl-w);
+  --hl-h: var(--sa-1-hl-h);
+}
+
+.page-spreadsheet-agent .sticky-visual[data-layout='stacked'] .sv-step:nth-child(2) {
+  --ratio: var(--sa-2-ratio);
+  --max-w: var(--sa-2-max-w);
+  --img-w: var(--sa-2-img-w);
+  --img-x: var(--sa-2-img-x);
+  --img-y: var(--sa-2-img-y);
+  --hl-x: var(--sa-2-hl-x);
+  --hl-y: var(--sa-2-hl-y);
+  --hl-w: var(--sa-2-hl-w);
+  --hl-h: var(--sa-2-hl-h);
+}
+
+.page-spreadsheet-agent .sticky-visual[data-layout='stacked'] .sv-step:nth-child(3) {
+  --ratio: var(--sa-3-ratio);
+  --max-w: var(--sa-3-max-w);
+  --img-w: var(--sa-3-img-w);
+  --img-x: var(--sa-3-img-x);
+  --img-y: var(--sa-3-img-y);
+  --hl-x: var(--sa-3-hl-x);
+  --hl-y: var(--sa-3-hl-y);
+  --hl-w: var(--sa-3-hl-w);
+  --hl-h: var(--sa-3-hl-h);
+}
+
+/* The frame's inline aspect ratio is the full still; the crop replaces it. */
+.page-spreadsheet-agent .sticky-visual[data-layout='stacked'] .sv-inline .sv-frame {
+  aspect-ratio: var(--ratio) !important;
+  max-width: min(calc(var(--sa-crop-max-h) * var(--ratio)), var(--max-w));
+}
+
+.page-spreadsheet-agent .sticky-visual[data-layout='stacked'] .sv-inline .sv-layer {
+  position: absolute;
+  inset: auto;
+  left: var(--img-x);
+  top: var(--img-y);
+  width: var(--img-w);
+}
+
+.page-spreadsheet-agent .sticky-visual[data-layout='stacked'] .sv-inline .sv-highlight {
+  left: var(--hl-x) !important;
+  top: var(--hl-y) !important;
+  width: var(--hl-w) !important;
+  height: var(--hl-h) !important;
+}

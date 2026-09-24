@@ -34,12 +34,28 @@
   --color-subtle: #858c9f;
   --color-accent: #8a8fff;
   --color-focus: #aab4ff;
-  --color-light-blue: #5267ff;
-  --color-light-violet: #7860e8;
   --color-line: #303545;
-  --color-header: rgb(9 10 15 / 0.94);
+  /* Nearly opaque: text scrolling under the header is not readable through it. */
+  --color-header: rgb(9 10 15 / 0.985);
   --color-media-edge: rgb(255 255 255 / 0.08);
-  --color-scrim: rgb(5 6 10 / 0.97);
+  /* Opaque: nothing from the page shows around an enlarged image. */
+  --color-scrim: rgb(5 6 10);
+
+  /* The dark architectural setting. Glow appears in three places only: the
+     carousel tile edges, the highlighted region of an image, and a small pool
+     of light beneath a featured artifact. Violet is the ambient colour; green
+     belongs to Jumpstart, warm amber to client imagery. */
+  --stage-violet: #a58cf0;
+  --stage-green: #5cc98a;
+  --stage-coral: #ef8d74;
+  --stage-amber: #e9b067;
+  --stage-ivory: #eeeae2;
+  --stage-room: #050609;
+  --stage-edge: rgb(255 255 255 / 0.1);
+  /* Pointer trail: thin ivory core, soft violet halo. */
+  --trail-core: rgb(238 234 226);
+  --trail-halo: rgb(165 140 240);
+  --glow-soft: 0 0 24px rgb(165 140 240 / 0.28);
 
   /* Typography */
   --font-sans: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -76,14 +92,9 @@
 
   /* Layout */
   --shell-max: 1280px;
-  --media-max: 1120px;
   --prose-max: 660px;
   --gutter: 20px;
-  --grid-columns: 4;
-  --grid-gap: 16px;
   --header-height: 64px;
-  --chapter-gap: var(--space-8);
-  --copy-to-media: var(--space-5);
 
   /* Surfaces */
   --radius-inner: 12px;
@@ -91,21 +102,13 @@
   --radius-outer: calc(var(--radius-inner) + var(--pad-frame));
   --radius-button: 8px;
   --shadow-media: 0 0 0 1px var(--color-media-edge), 0 18px 40px -24px rgb(0 0 0 / 0.7);
-  --shadow-media-hover: 0 0 0 1px rgb(255 255 255 / 0.14), 0 22px 48px -22px rgb(0 0 0 / 0.75);
-
-  /* Light (decorative only; never used for small text) */
-  /* Fades fully to transparent before the box edges (no visible seam). */
-  --light-field: radial-gradient(
-    55% 50% at 50% 52%,
-    rgb(82 103 255 / 0.2) 0%,
-    rgb(120 96 232 / 0.1) 42%,
-    rgb(9 10 15 / 0) 100%
-  );
 
   /* Motion (CSS side; GSAP values live in src/config/motion.ts) */
   --dur-feedback: 150ms;
-  --dur-label: 160ms;
   --dur-route: 180ms;
+  --dur-route-reveal: 260ms;
+  --dur-crossfade: 250ms;
+  --dur-highlight: 220ms;
   --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --press-scale: 0.98;
 
@@ -124,27 +127,27 @@
     --color-subtle: oklch(0.6408 0.0296 269.49);
     --color-accent: oklch(0.6961 0.1621 279.37);
     --color-focus: oklch(0.7902 0.1072 277.8);
-    --color-light-blue: oklch(0.5878 0.2248 271.57);
-    --color-light-violet: oklch(0.5846 0.197 286.73);
     --color-line: oklch(0.3311 0.0292 271.22);
+    --stage-violet: oklch(0.72 0.16 295);
+    --stage-green: oklch(0.72 0.16 150);
+    --stage-coral: oklch(0.72 0.14 35);
+    --stage-amber: oklch(0.8 0.115 70);
+    --stage-ivory: oklch(0.9379 0.0115 84.58);
+    --stage-room: oklch(0.1016 0.0078 271.2);
+    --glow-soft: 0 0 24px color-mix(in oklch, var(--stage-violet) 28%, transparent);
   }
 }
 
 @media (min-width: 600px) {
   :root {
     --gutter: 32px;
-    --grid-columns: 8;
-    --grid-gap: 24px;
   }
 }
 
 @media (min-width: 900px) {
   :root {
     --gutter: 40px;
-    --grid-columns: 12;
     --header-height: 72px;
-    --chapter-gap: var(--space-9);
-    --copy-to-media: var(--space-6);
     --leading-display: 1.04;
     --leading-section: 1.15;
     --leading-sub: 1.25;

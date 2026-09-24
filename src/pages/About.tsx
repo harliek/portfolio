@@ -1,178 +1,157 @@
 import '../styles/pages/about.css'
-import { useRef } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Figure } from '../components/media/Figure'
+import { FilmPlayer } from '../components/creative/FilmPlayer'
+import { ArtComposition } from '../components/pages/about/ArtComposition'
 import { ResponsiveImage } from '../components/media/ResponsiveImage'
-import { ContactBlock } from '../components/work/ContactBlock'
-import { projectById, projectPath, type ProjectId } from '../content/projects'
+import { ABOUT } from '../content/pages/about'
+import { FEATURED_FILM_ID, filmById, publishedLabel } from '../content/creative'
+import { projectById, projectPath } from '../content/projects'
 import { SITE } from '../content/site'
 import { usePageMeta } from '../hooks/usePageMeta'
-import { useReveal } from '../hooks/useReveal'
 import { prefetchRoute } from '../routes'
 
-interface ExperienceRow {
-  org: string
-  role: string
-  dates: string
-  /** Case study for this role; omitted where there is none. */
-  project?: ProjectId
-}
+const FILM = filmById(FEATURED_FILM_ID)
 
-const EXPERIENCE: ExperienceRow[] = [
-  { org: 'PlanetArt', role: 'Product Operations & Merchandising Intern', dates: 'Jun–Aug 2026', project: 'planetart' },
-  { org: 'Shift Content', role: 'Creative Strategy & Client Solutions Intern', dates: 'Jan–May 2026', project: 'shift' },
-  { org: 'Artesian Network', role: 'Enterprise AI Research Associate', dates: 'Jun 2025–Jan 2026' },
-  { org: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'Oct 2024–Jun 2025', project: 'valiance' },
-  { org: 'Jumpstart Finance', role: 'Founder & Product Lead', dates: 'Jun–Jul 2024', project: 'jumpstart' },
-]
+const prefetch = (path: string) => ({
+  onPointerEnter: () => prefetchRoute(path),
+  onFocus: () => prefetchRoute(path),
+})
 
-const PORTRAIT_SIZES = '(min-width: 1248px) 210px, (min-width: 900px) 17vw, (min-width: 600px) 25vw, calc(50vw - 28px)'
-const LANDSCAPE_SIZES = '(min-width: 1248px) 320px, (min-width: 900px) 26vw, (min-width: 600px) 38vw, calc(100vw - 40px)'
-
-/*
- * The spaces between the spans keep the parts separate in link names and
- * copied text in every browser; a grid container does not render them.
+/**
+ * About: an ordinary scrolling page.
+ *
+ * 1. Portrait left (280px) and the biography right (≤600px), with Download
+ *    resume and Contact directly below it.
+ * 2. A compact Experience list (exact organizations, titles and dates from
+ *    the résumé) and Education.
+ * 3. My art portfolio: one substantial link to /art beside a small
+ *    composition of actual drawings.
+ * 4. The featured short film, An Artistic End (click-to-load player in a
+ *    stable 16:9 frame, a subtle pool of light beneath it). Only the verified
+ *    publication date is shown; the role from the old portfolio is not.
+ * 5. The page ends with the site footer's Contact section (email, LinkedIn
+ *    and the résumé), which follows directly, so there is no second contact
+ *    row here. The Contact button above opens an email.
  */
-function ExperienceContent({ row, linked }: { row: ExperienceRow; linked: boolean }) {
-  return (
-    <>
-      <span className="about-exp__org">{row.org}</span>{' '}
-      <span className="about-exp__role">{row.role}</span>{' '}
-      <span className="about-exp__dates tabular">{row.dates}</span>
-      <span className="about-exp__arrow" aria-hidden="true">
-        {linked ? '↗' : ''}
-      </span>
-    </>
-  )
-}
-
 export default function About() {
-  usePageMeta('About', 'About Harlie Katz: Cognitive Science at UC Berkeley, selected experience, drawings, and contact.')
-  const rootRef = useRef<HTMLElement>(null)
-  useReveal(rootRef)
+  usePageMeta('About', 'About Harlie Katz, with experience, education, an art portfolio and a short film.')
+  const [playing, setPlaying] = useState(false)
 
   return (
-    <article ref={rootRef} className="page-about">
+    <article className="page-about">
       <header className="shell about-intro">
-        <h1 className="about-intro__title t-display" tabIndex={-1}>
-          About
-        </h1>
         <div className="about-intro__portrait">
-          <ResponsiveImage image="headshot" sizes="(min-width: 900px) 360px, 260px" priority />
+          <ResponsiveImage image="headshot" sizes="(min-width: 800px) 280px, 220px" priority />
         </div>
-        <div className="about-intro__copy">
-          <p>
-            I’m Harlie Katz. I studied Cognitive Science at UC Berkeley, with a minor in Data Science and a Certificate in
-            Entrepreneurship &amp; Technology.
-          </p>
-          <p>
-            My work has included merchandising research and prototypes, AI leasing requirements, a financial-learning
-            venture, enterprise AI research, and creative production. Across these projects, I have worked close to the
-            people, information, and decisions a product needs to support.
-          </p>
-          <p>I’m interested in early-career roles in AI product, implementation, product strategy, and operations.</p>
-        </div>
-        <ul className="about-intro__links">
-          <li>
-            <a className="button" href={SITE.resume} download={SITE.resumeDownloadName}>
-              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
-                <path
-                  d="M8 2.5v7.5M4.75 6.75 8 10l3.25-3.25M3 13.5h10"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+        <div className="about-intro__bio reading-scrim">
+          <h1 className="about-intro__name" tabIndex={-1}>
+            {SITE.name}
+          </h1>
+          <p className="about-intro__hello">{ABOUT.hello}</p>
+          {ABOUT.bio.map((p) => (
+            <p key={p.slice(0, 24)} className="about-intro__para">
+              {p}
+            </p>
+          ))}
+          <p className="about-actions">
+            <a href={SITE.resume} download={SITE.resumeDownloadName} className="button about-actions__primary">
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M3 13.5h10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Download resume
             </a>
-          </li>
-          <li>
-            <a className="button button--quiet" href={SITE.emailHref}>
-              Email
+            <a href={SITE.emailHref} className="button about-actions__secondary">
+              Contact
             </a>
-          </li>
-          <li>
-            <a className="button button--quiet" href={SITE.linkedin}>
-              LinkedIn <span aria-hidden="true">↗</span>
-            </a>
-          </li>
-        </ul>
+          </p>
+        </div>
       </header>
 
-      <div className="shell about-body">
-        <section className="about-section" aria-labelledby="about-education" data-reveal="">
-          <div className="about-section__head">
-            <h2 id="about-education" className="t-section">
-              Education
-            </h2>
-          </div>
-          <div className="about-section__content about-edu">
-            <h3 className="about-edu__school t-sub">University of California, Berkeley</h3>
-            <p className="about-edu__degree">B.A. Cognitive Science · Minor in Data Science</p>
-            <p className="about-edu__dates tabular">Aug 2023–May 2026</p>
-            <p className="about-edu__note">Completed in three years.</p>
-            <p className="about-edu__cert">Certificate in Entrepreneurship &amp; Technology, Sutardja Center</p>
-          </div>
-        </section>
-
-        <section className="about-section" aria-labelledby="about-experience" data-reveal="">
-          <div className="about-section__head">
-            <h2 id="about-experience" className="t-section">
-              Selected experience
-            </h2>
-          </div>
-          <ul className="about-section__content about-exp">
-            {EXPERIENCE.map((row) => {
-              if (!row.project) {
-                return (
-                  <li key={row.org}>
-                    <div className="about-exp__row">
-                      <ExperienceContent row={row} linked={false} />
-                    </div>
-                  </li>
-                )
-              }
-              const path = projectPath(projectById(row.project))
+      <div className="shell about-record">
+        <section className="about-record__block" aria-labelledby="about-experience-title">
+          <h2 id="about-experience-title" className="about-heading reading-scrim">
+            Experience
+          </h2>
+          <ol className="about-roles" role="list">
+            {ABOUT.experience.map((r) => {
+              const project = 'project' in r && r.project ? projectById(r.project) : null
+              const path = project ? projectPath(project) : null
               return (
-                <li key={row.org}>
-                  <Link
-                    to={path}
-                    className="about-exp__row about-exp__row--link"
-                    onPointerEnter={() => prefetchRoute(path)}
-                    onFocus={() => prefetchRoute(path)}
-                  >
-                    <ExperienceContent row={row} linked />
-                  </Link>
+                <li key={r.org} className="about-role">
+                  <span className="about-role__org">{r.org}</span>
+                  <span className="about-role__title">{r.role}</span>
+                  <span className="about-role__dates tabular">{r.dates}</span>
+                  {project && path && (
+                    <span className="about-role__link">
+                      <Link to={path} {...prefetch(path)}>
+                        <span className="visually-hidden">Case study, </span>
+                        <span className="about-role__name">{project.name}</span>
+                        <span aria-hidden="true">→</span>
+                      </Link>
+                    </span>
+                  )}
                 </li>
               )
             })}
+          </ol>
+        </section>
+
+        <section className="about-record__block" aria-labelledby="about-education-title">
+          <h2 id="about-education-title" className="about-heading reading-scrim">
+            Education
+          </h2>
+          <ul className="about-roles" role="list">
+            <li className="about-role">
+              <span className="about-role__org">{ABOUT.education.school}</span>
+              <span className="about-role__title">{ABOUT.education.degree}</span>
+              <span className="about-role__dates tabular">{ABOUT.education.dates}</span>
+            </li>
           </ul>
         </section>
-
-        <section className="about-section" aria-labelledby="about-drawings" data-reveal="">
-          <div className="about-section__head">
-            <h2 id="about-drawings" className="t-section">
-              Selected drawings
-            </h2>
-            <p className="about-section__intro">A small selection of personal drawing work.</p>
-          </div>
-          <div className="about-section__content about-drawings">
-            <Figure image="drawing-oldwoman" sizes={PORTRAIT_SIZES} zoom showProvenance={false} className="about-drawings__item" />
-            <Figure image="drawing-oldman" sizes={PORTRAIT_SIZES} zoom showProvenance={false} className="about-drawings__item" />
-            <Figure
-              image="drawing-hands"
-              sizes={LANDSCAPE_SIZES}
-              zoom
-              showProvenance={false}
-              className="about-drawings__item about-drawings__item--wide"
-            />
-          </div>
-        </section>
-
-        <ContactBlock intro="For opportunities in AI product, implementation, strategy, or operations:" reveal />
       </div>
+
+      <section className="shell about-art" aria-labelledby="about-art-title">
+        <div className="about-art__card">
+          <div className="about-art__text">
+            <h2 id="about-art-title" className="about-art__title">
+              <Link to="/art" className="about-art__link" {...prefetch('/art')}>
+                {ABOUT.art.title}
+              </Link>
+            </h2>
+            <p className="about-art__lead">{ABOUT.art.text}</p>
+            <p className="about-art__cta" aria-hidden="true">
+              <span className="about-art__cta-text">{ABOUT.art.cta}</span>
+              <span className="about-art__arrow">→</span>
+            </p>
+          </div>
+          <ArtComposition drawings={ABOUT.art.drawings} />
+        </div>
+      </section>
+
+      <section className="shell about-film" aria-labelledby="about-film-title">
+        <div className="about-film__text reading-scrim">
+          <p className="about-film__eyebrow">{ABOUT.film.eyebrow}</p>
+          <h2 id="about-film-title" className="about-heading about-film__title">
+            {FILM.title}
+          </h2>
+          <p className="about-film__note">{FILM.note}</p>
+          <p className="about-film__meta tabular">{publishedLabel(FILM)}</p>
+          <Link to="/film" className="about-link" {...prefetch('/film')}>
+            <span className="about-link__text">{ABOUT.film.more}</span>
+            <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+        <div className="about-film__media">
+          <FilmPlayer
+            film={FILM}
+            sizes="(min-width: 1100px) 560px, (min-width: 800px) 55vw, calc(100vw - 40px)"
+            playing={playing}
+            onPlay={() => setPlaying(true)}
+            label="Watch film"
+          />
+        </div>
+      </section>
     </article>
   )
 }

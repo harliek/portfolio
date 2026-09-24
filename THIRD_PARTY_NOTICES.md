@@ -33,7 +33,9 @@ Vite (MIT), @vitejs/plugin-react (MIT), TypeScript (Apache-2.0), ESLint and type
 
 This section separates code that was copied or adapted from sources that were used only as visual or conceptual references.
 
-- **Copied or adapted code:** none so far. It will be updated if a later phase adapts external code.
+- **Copied or adapted code:** none. No third-party component source ships in this site.
+- **Layout idea adapted (no code copied):** Lightswind “3D Image Slider” (lightswind 3.2.5, MIT; <https://lightswind.com/r/3d-image-slider.json>). Its idea of stacking cards in one grid cell and placing each with `rotateY`/`translateZ` informs the project carousel, which was written from scratch in GSAP and plain CSS as a shallow arc with no continuous rotation.
+- **Researched and not adopted:** Motion, Motion Primitives, Magic UI, Aceternity UI (proprietary licence), ScrollX UI (MIT plus Commons Clause), 21st.dev (mixed or unclear licences), HeroUI (full design system; its styles import Tailwind's preflight), uselayouts, Tailwind CSS and Three.js. This follows Harlie's final instruction to keep GSAP and plain CSS; see the note in `DESIGN_RULES.md`.
 - **Visual and conceptual references only (no code copied):**
   - codrops/3DCarousel (MIT), <https://github.com/codrops/3DCarousel>: the general idea of arranging cards with CSS 3D transforms. The shallow-arc geometry here was written independently for this site.
   - codrops/ScrollBasedLayoutAnimations (MIT), <https://github.com/codrops/ScrollBasedLayoutAnimations>: the capture → change layout → animate pattern described in GSAP's Flip documentation.

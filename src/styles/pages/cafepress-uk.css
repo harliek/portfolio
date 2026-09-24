@@ -1,0 +1,52 @@
+/*
+ * CafePress UK page (src/pages/work/CafePressUK.tsx). Scope every selector
+ * under .page-cafepress-uk.
+ *
+ * Approach, step 2 (Localization) shows a detail of the storefront: the
+ * image is scaled by --cp-detail-zoom from --cp-detail-origin, which keeps
+ * the pound sign, the Basket and the category row in view at a readable
+ * size. Step 3 returns to the full interface. The highlight coordinates in
+ * src/content/pages/cafepress-uk.tsx are computed for these two values.
+ */
+
+.page-cafepress-uk {
+  --cp-detail-zoom: 1.727;
+  --cp-detail-origin: 100% 0;
+}
+
+/*
+ * Both pieces of evidence (the storefront and the presentation slide) have
+ * light backgrounds, so their frames are white: the slide's thin letterbox
+ * bands disappear and the original colours are shown as they are.
+ */
+.page-cafepress-uk .case-hero__frame,
+.page-cafepress-uk .cp-steps .sv-frame {
+  background: #fff;
+}
+
+/* Stacked layout (below 960px): images are contained and centred like in the sticky frame (case.css). */
+
+/* The Localization figure is the header detail. */
+.page-cafepress-uk .cp-steps .sv-stack .sv-step:nth-child(2) .sv-layer img {
+  transform: scale(var(--cp-detail-zoom));
+  transform-origin: var(--cp-detail-origin);
+}
+
+/*
+ * Sticky layout. The storefront layer is shared by steps 2 and 3. It holds
+ * the detail while step 1 or 2 is active (while step 1 is active it is not
+ * visible, so moving to step 2 is a plain crossfade), then eases back to the
+ * full interface when step 3 becomes active. Without :has() support the
+ * storefront simply stays whole.
+ */
+@supports selector(:has(*)) {
+  .page-cafepress-uk .cp-steps .sv-grid .sv-layer:has(img[src*='/planetart-uk-']) img {
+    transform: scale(var(--cp-detail-zoom));
+    transform-origin: var(--cp-detail-origin);
+    transition: transform var(--dur-crossfade) var(--ease-out);
+  }
+
+  .page-cafepress-uk .cp-steps .sv-grid:has(.sv-step:last-child[data-active]) .sv-layer:has(img[src*='/planetart-uk-']) img {
+    transform: none;
+  }
+}

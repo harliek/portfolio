@@ -114,7 +114,7 @@ a {
 }
 
 :where(.site-main :is(p, li, dd, blockquote, figcaption) a[href]):hover {
-  color: var(--accent, var(--accent-default));
+  color: var(--accent-default);
   text-decoration-color: currentColor;
 }
 
@@ -137,13 +137,13 @@ a {
 @media (hover: hover) and (pointer: fine) {
   .site-main :is(h1, h2, h3):not(:is(a, button, summary, label, [role='button'], [role='link'], .home) *):hover,
   .site-main :is(p, li, dd, blockquote, figcaption) :is(strong, b):not(:is(a, button, summary, label, [role='button'], [role='link']) *):hover {
-    color: color-mix(in oklch, var(--accent, var(--accent-default)) 80%, var(--stage-ivory));
+    color: color-mix(in oklch, var(--accent-default) 80%, var(--stage-ivory));
   }
 }
 
 ::selection {
-  background: rgb(var(--accent-rgb, var(--accent-default-rgb)) / 0.34);
-  color: var(--color-text);
+  background: var(--brand-red);
+  color: #fff;
 }
 
 :focus {
@@ -157,7 +157,7 @@ a {
  * list the properties they ease, never `all`).
  */
 :focus-visible {
-  outline: 2px solid var(--accent, var(--color-focus));
+  outline: 2px solid var(--color-focus);
   outline-offset: var(--focus-offset);
 }
 

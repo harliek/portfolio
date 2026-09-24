@@ -22,6 +22,14 @@
   size-adjust: 107.1%;
 }
 
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('/fonts/PlayfairDisplay-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
 
@@ -32,9 +40,9 @@
   --color-text: #f4f5fa;
   --color-muted: #b0b4c3;
   --color-subtle: #858c9f;
-  --color-accent: #8a8fff;
-  /* Lavender (the About accent): focus rings and the default interactive accent. */
-  --color-focus: #c9b8ff;
+  --color-accent: #f46b70;
+  /* Warm red connects focus and interactions to the original portfolio. */
+  --color-focus: #f46b70;
   --color-line: #303545;
   /* Nearly opaque: text scrolling under the header is not readable through it. */
   --color-header: rgb(9 10 15 / 0.985);
@@ -62,12 +70,12 @@
   /*
    * Interactive accent. Case studies set --accent / --accent-rgb (their
    * project accent, src/content/accents.ts) on the article, header and
-   * footer; everywhere else hover and focus states fall back to lavender:
+   * footer; shared controls use the red brand accent:
    * var(--accent, var(--accent-default)). Rules resolve these on the element
    * itself (never through another :root token), so they follow the page.
    */
-  --accent-default: #c9b8ff;
-  --accent-default-rgb: 201 184 255;
+  --accent-default: #f46b70;
+  --accent-default-rgb: 244 107 112;
 
   /*
    * The name "Harlie Katz": a crisp pale core with a subtle lavender to ice
@@ -77,6 +85,9 @@
   --brand-core: #f7f5ff;
   --brand-tint: linear-gradient(100deg, #fdfcff 0%, #f1ecff 38%, #e6efff 78%, #dcecff 100%);
   --brand-glow-rgb: 201 184 255;
+
+  --brand-red: #d32f2f;
+  --font-editorial: 'Playfair Display', Georgia, serif;
 
   /* Typography */
   --font-sans: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -240,10 +251,10 @@
   --radius-control: 10px;
   --control-font: 0.9375rem;
   --control-weight: 600;
-  --btn-primary-bg: #f3f2fb;
-  --btn-primary-bg-hover: #ffffff;
-  --btn-primary-bg-active: #d6d4e6;
-  --btn-primary-fg: #0b0c13;
+  --btn-primary-bg: #c62828;
+  --btn-primary-bg-hover: #d32f2f;
+  --btn-primary-bg-active: #ad2020;
+  --btn-primary-fg: #ffffff;
   --btn-secondary-bg: rgb(10 11 18 / 0.8);
   --btn-secondary-bg-hover: rgb(38 40 56 / 0.88);
   --btn-secondary-bg-active: rgb(22 23 33 / 0.94);
@@ -264,7 +275,7 @@
     --color-text: oklch(0.9708 0.0067 277.16);
     --color-muted: oklch(0.7714 0.0218 273.95);
     --color-subtle: oklch(0.6408 0.0296 269.49);
-    --color-accent: oklch(0.6961 0.1621 279.37);
+    --color-accent: #f46b70;
     --color-line: oklch(0.3311 0.0292 271.22);
     --stage-violet: oklch(0.72 0.16 295);
     --stage-green: oklch(0.72 0.16 150);

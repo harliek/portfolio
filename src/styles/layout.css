@@ -213,8 +213,8 @@
  * study's on its pages, else lavender.
  */
 .site-nav__item {
-  --_acc: var(--accent, var(--accent-default));
-  --_acc-rgb: var(--accent-rgb, var(--accent-default-rgb));
+  --_acc: var(--accent-default);
+  --_acc-rgb: var(--accent-default-rgb);
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -260,7 +260,7 @@
 
 .site-nav__item:hover,
 .site-nav__item:focus-visible {
-  color: rgb(250 250 253);
+  color: var(--accent-default);
   text-shadow: 0 0 12px rgb(var(--_acc-rgb) / 0.4);
 }
 
@@ -338,8 +338,8 @@ a:focus-visible > .site-nav__mark {
 
 /* Small screens: one quietly outlined Menu button (three bars turn into a cross); as quiet as the desktop nav. */
 .menu-button {
-  --_acc: var(--accent, var(--accent-default));
-  --_acc-rgb: var(--accent-rgb, var(--accent-default-rgb));
+  --_acc: var(--accent-default);
+  --_acc-rgb: var(--accent-default-rgb);
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -425,8 +425,8 @@ a:focus-visible > .site-nav__mark {
  * changes size or position, so nothing shifts.
  */
 .shelf-item {
-  --_acc: var(--accent, var(--accent-default));
-  --_acc-rgb: var(--accent-rgb, var(--accent-default-rgb));
+  --_acc: var(--accent-default);
+  --_acc-rgb: var(--accent-default-rgb);
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr);
   align-items: center;
@@ -685,7 +685,7 @@ a:focus-visible > .site-nav__mark {
 }
 
 .site-menu__link {
-  --_acc: var(--accent, var(--accent-default));
+  --_acc: var(--accent-default);
   display: flex;
   align-items: center;
   gap: 10px;

@@ -1,28 +1,24 @@
 import type { NavigationType } from 'react-router-dom'
 
 /**
- * Where the homepage gallery was, per history entry, so browser Back from
- * a project returns to the same position instead of resetting it. A fresh
- * visit (a link, the address bar, a reload, or an in-app link to /) starts
- * at the intended opening (Merchandising Platform featured, About Me on
- * the left).
+ * Which object the homepage carousel had selected, per history entry, so
+ * browser Back from a project returns to the same selection instead of
+ * resetting it (the page's scroll position is restored by the router's
+ * ScrollRestoration). A fresh visit (a link, the address bar, a reload, or
+ * an in-app link to /) starts at the intended opening (Merchandising
+ * Platform selected, About Me on its left).
  *
  * Positions are kept in memory (in-app Back) and in sessionStorage (Back
  * into a reloaded document, e.g. from the creative portfolio, which is a
- * separate page load). The gallery stores its position in items (0 to 7),
- * so it survives a different window size.
- *
- * The visitor's own pause (the gallery's keyboard-revealed "Pause motion"
- * control) lasts for the session: the gallery stays still on every return
- * to the homepage until they resume it.
+ * separate page load). The carousel stores its position in items (0 to
+ * 7), so it survives a different window size.
  */
 export interface SavedPosition {
-  /** Gallery position in items. */
+  /** Carousel position in items. */
   pos?: number
 }
 
-const STORAGE_KEY = 'hk-home-gallery'
-const PAUSE_KEY = 'hk-home-gallery-paused'
+const STORAGE_KEY = 'hk-home-carousel'
 const memory = new Map<string, SavedPosition>()
 
 /** How this document was loaded ('navigate', 'reload', 'back_forward'). */
@@ -73,30 +69,5 @@ export function persistPosition(key: string) {
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(all))
   } catch {
     /* Storage unavailable: in-app Back still restores from memory. */
-  }
-}
-
-let paused: boolean | null = null
-
-/** Whether the visitor paused the gallery's travel (this session). */
-export function recallPaused(): boolean {
-  if (paused === null) {
-    try {
-      paused = window.sessionStorage.getItem(PAUSE_KEY) === '1'
-    } catch {
-      paused = false
-    }
-  }
-  return paused
-}
-
-/** Remembers the visitor's pause for the session. */
-export function notePaused(value: boolean) {
-  paused = value
-  try {
-    if (value) window.sessionStorage.setItem(PAUSE_KEY, '1')
-    else window.sessionStorage.removeItem(PAUSE_KEY)
-  } catch {
-    /* Storage unavailable: the pause lasts while this document does. */
   }
 }

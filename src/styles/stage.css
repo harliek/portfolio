@@ -1,27 +1,31 @@
 /*
- * The architectural setting behind every professional page: the
- * persistent background set (StageBackground, mounted once so it never
- * restarts), its readability layers, a route-transition helper, and the
- * pointer trail canvas.
+ * The settings behind every professional page: the persistent background
+ * set (StageBackground, mounted once so its videos never restart), its
+ * readability layers, a route-transition helper, and the pointer trail
+ * canvas.
  *
- * The loop itself is a dark room, so the layers are light: the room's
- * pillars, lit edges, floor reflections and floor line stay visible, most
- * of all on the homepage and About (brief v8, section 5). Readability uses
- * broad, smoothly blended gradients only (no translucent panels with edges):
- *   __shade    a uniform shade per route: lightest on the homepage, then
- *              About, a little more on case studies
- *   __read     the reading layer (interior pages): on case studies strongest
- *              behind the text column, easing off towards the media and the
- *              outer margins; on About a broad, light layer that is a little
- *              stronger over the brighter floor; on wide windows both ease
- *              off in the margins beside the content column
- *   ::before   homepage only: a faint pool of shade behind the identity
+ * Two layers of the set:
+ * - the film (`.stage-film`, the homepage): the original film of Harlie's
+ *   first portfolio homepage behind the opening and the projects, with a
+ *   restrained overlay (below); it lies over the room and cross-fades with
+ *   it when the route changes, so the room is whole beneath it (never a
+ *   black flash);
+ * - the room (every interior page): the architectural loop, a dark room,
+ *   so its layers are light and its pillars, lit edges and floor line stay
+ *   visible (brief v8, section 5). Readability uses broad, smoothly blended
+ *   gradients only (no translucent panels with edges):
+ *   __shade    a uniform shade per route: About lightest, a little more on
+ *              case studies
+ *   __read     the reading layer: on case studies strongest behind the text
+ *              column, easing off towards the media and the outer margins;
+ *              on About a broad, light layer that is a little stronger over
+ *              the brighter floor; on wide windows both ease off in the
+ *              margins beside the content column
  *   ::after    framing: darker under the header and at the bottom edge, a
- *              light side vignette (per route, lightest on the homepage)
+ *              light side vignette (per route)
  *   __band     a soft band that dims the bright floor line behind reading
- *              text (strong on case studies, light on About, faint on the
- *              homepage, where the objects stand on that line)
- * Text contrast over the video is measured at several loop times
+ *              text (strong on case studies, light on About)
+ * Text contrast over the room is measured at several loop times
  * (node_modules/.cache-scripts/v8s-contrast.mjs).
  */
 
@@ -143,15 +147,6 @@
   transition: opacity var(--dur-2) var(--ease-standard);
 }
 
-/* Homepage: the brightest room. No reading layer; the objects stand on the visible floor line. */
-.stage-bg[data-route='home'] {
-  --bg-shade: 0.04;
-  --read: 0;
-  --frame-top: 0.42;
-  --frame-bottom: 0.34;
-  --vignette: 0.16;
-}
-
 /* Case studies: the reading layer does the work behind the text column; the room stays visible around the media. */
 .stage-bg[data-route='case'] {
   --bg-shade: 0.16;
@@ -159,7 +154,7 @@
 }
 
 /*
- * About (and the not-found page): almost as bright as the homepage. A light
+ * About (and the not-found page): the lightest room. A light
  * reading layer over the dark walls (the pillars stay in view), a little
  * stronger over the brighter floor, where paragraphs pass as the page scrolls.
  */
@@ -220,39 +215,12 @@
 }
 
 /*
- * Homepage: a faint pool of shade behind the identity block in the upper
- * left (the lit pillar edges there never compete with the title). No edge;
- * the gallery below it keeps the bright room. The homepage adds its own
- * pool (home.css .home::before).
- */
-.stage-bg::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: radial-gradient(44% 40% at 20% 24% in oklch, rgb(5 6 9 / 0.36), rgb(5 6 9 / 0.18) 55%, rgb(5 6 9 / 0));
-  opacity: 0;
-  transition: opacity var(--dur-2) var(--ease-standard);
-}
-
-.stage-bg[data-route='home']::before {
-  opacity: 1;
-}
-
-@media (max-width: 767.98px) {
-  .stage-bg::before {
-    background: radial-gradient(95% 30% at 30% 14% in oklch, rgb(5 6 9 / 0.4), rgb(5 6 9 / 0.2) 55%, rgb(5 6 9 / 0));
-  }
-}
-
-/*
  * A project is opening from the carousel (StageBackground data-hurry): the
- * destination's treatment is applied while the tile leaves (TRANSITION.leaveMs)
- * and is complete before the route changes, so the new page's text never
- * appears over the lighter home room or its bright floor line.
+ * destination's treatment (the room, with its reading layers) replaces the
+ * film quickly, so the new page's text never appears over the film.
  */
 .stage-bg[data-hurry],
-.stage-bg[data-hurry]::before,
+.stage-bg[data-hurry] .stage-film,
 .stage-bg[data-hurry] .stage-bg__shade,
 .stage-bg[data-hurry] .stage-bg__read,
 .stage-bg[data-hurry] .stage-bg__band,
@@ -385,8 +353,7 @@
 
 /*
  * Framing light: darker under the header and at the bottom edge, a light
- * side vignette. Per route (--frame-top, --frame-bottom, --vignette): the
- * homepage keeps its pillars and floor in view.
+ * side vignette. Per route (--frame-top, --frame-bottom, --vignette).
  */
 .stage-bg::after {
   content: '';
@@ -395,6 +362,117 @@
   background:
     linear-gradient(to bottom in oklch, rgb(5 6 9 / var(--frame-top)), rgb(5 6 9 / 0) 20%, rgb(5 6 9 / 0) 64%, rgb(5 6 9 / var(--frame-bottom))),
     radial-gradient(130% 95% at 50% 48% in oklch, rgb(5 6 9 / 0) 58%, rgb(5 6 9 / var(--vignette)));
+}
+
+/* ----------------------------------------------------------------------- */
+/* The film (homepage)                                                      */
+/* ----------------------------------------------------------------------- */
+
+/*
+ * Over the room, shown on the homepage only (`data-shown`), cross-fading
+ * with the room on a route change (--film-fade; quicker with data-hurry).
+ * Its own dark ground, so an unloaded poster never shows the room here.
+ * Object-fit cover with the original framing (centred, never stretched);
+ * narrow portrait windows crop a little right of centre, where the subject
+ * stands and lies.
+ */
+.stage-film {
+  --film-enter: 0;
+  --film-x: 50%;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: #030305;
+  opacity: 0;
+  transition: opacity var(--film-fade, 700ms) var(--ease-standard);
+}
+
+.stage-film[data-shown] {
+  opacity: 1;
+}
+
+@media (max-aspect-ratio: 4 / 5) {
+  .stage-film {
+    --film-x: 54%;
+  }
+}
+
+.stage-film__poster,
+.stage-film__poster img,
+.stage-film__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: var(--film-x) 50%;
+}
+
+.stage-film__video {
+  opacity: 0;
+  transition: opacity var(--bg-video-fade, var(--dur-4)) var(--ease-standard);
+}
+
+.stage-film__video[data-playing] {
+  opacity: 1;
+}
+
+/*
+ * Readability, restrained (the footage stays clearly visible): a shade
+ * under the header; a soft gradient, darker on the left, behind the
+ * introduction (::before); and the original's light veil (::after). As the
+ * projects enter (--film-enter, 0 to 1 over about one window of scroll,
+ * StageBackground) the veil deepens slightly and the left side evens out,
+ * so the carousel stands on an even ground. Never a solid black section.
+ */
+.stage-film__shade,
+.stage-film__shade::before,
+.stage-film__shade::after {
+  position: absolute;
+  inset: 0;
+}
+
+.stage-film__shade {
+  background: linear-gradient(to bottom in oklch, rgb(2 2 5 / 0.46), rgb(2 2 5 / 0.14) 11%, rgb(2 2 5 / 0) 22%);
+}
+
+.stage-film__shade::before {
+  content: '';
+  background: linear-gradient(
+    to right in oklch,
+    rgb(2 2 5 / 0.6),
+    rgb(2 2 5 / 0.4) 22%,
+    rgb(2 2 5 / 0.14) 42%,
+    rgb(2 2 5 / 0) 60%
+  );
+  opacity: calc(1 - 0.6 * var(--film-enter));
+}
+
+.stage-film__shade::after {
+  content: '';
+  background: rgb(2 2 5);
+  opacity: calc(0.1 + 0.22 * var(--film-enter));
+}
+
+/*
+ * Portrait phones and tablets: the introduction spans most of the width and
+ * the subject crosses behind it, so its shade is a soft band across the
+ * middle of the window, where the introduction stands (it lightens as the
+ * projects enter, like the left-hand shade).
+ */
+@media (max-width: 999.98px) and (orientation: portrait) {
+  .stage-film__shade::before {
+    background: linear-gradient(
+      to bottom in oklch,
+      rgb(2 2 5 / 0.3),
+      rgb(2 2 5 / 0.5) 28%,
+      rgb(2 2 5 / 0.62) 42%,
+      rgb(2 2 5 / 0.58) 60%,
+      rgb(2 2 5 / 0.22) 78%,
+      rgb(2 2 5 / 0.06)
+    );
+  }
 }
 
 /* ----------------------------------------------------------------------- */

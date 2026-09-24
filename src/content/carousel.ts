@@ -3,20 +3,19 @@ import type { ImageId } from './media'
 import { projectById, projectPath, type ProjectId } from './projects'
 
 /**
- * The homepage's transparent PNG objects (plan-v9 decisions 1 and 2).
+ * The homepage's transparent PNG objects (plan-v11 deliverables 4 and 10).
  *
- * - The six project objects form the depth gallery, in this fixed circular
- *   order: Merchandising Platform, CafePress UK Launch, Spreadsheet Agent,
- *   AI Leasing Agent, Film and Campaign Work, Student Founder of Fintech
- *   Venture, then Merchandising Platform again. CafePress separates
- *   Merchandising Platform and Spreadsheet Agent, and the wrap joins
- *   Jumpstart and Merchandising. Never sorted by name, route or width.
- * - The About portrait is not a gallery object: it belongs to the identity
- *   block, as a small anchor that links to /about (Home.tsx).
+ * All seven objects form the homepage carousel, in this fixed circular
+ * order: About Me, Merchandising Platform, CafePress UK Launch, Spreadsheet
+ * Agent, AI Leasing Agent, Film and Campaign Work, Student Founder of
+ * Fintech Venture, then About Me again. A fresh visit selects Merchandising
+ * Platform, with About Me as its left neighbour and CafePress UK Launch on
+ * its right. Never sorted by name, route or width.
  *
- * Every project object carries its own label beneath it (its display title
- * and subtitle, Harlie's label table), which travels, scales and fades with
- * the object. The link's accessible name is `label`; the subtitle describes it.
+ * Every object carries its own label beneath it (its display title and
+ * subtitle, Harlie's label table; About Me has no subtitle), which travels
+ * and scales with the object. The link's accessible name is the title; the
+ * subtitle describes it.
  */
 
 /** What the object is, which sets its display size (perceived visual weight, not one shared height). */
@@ -25,8 +24,8 @@ export type ObjectKind = 'headshot' | 'monitor' | 'mug' | 'laptop' | 'tablet' | 
 /**
  * Reference size at 1440×900 (CSS px): a width for landscape objects, a
  * height for upright ones. Each destination's CoverSlot (coverGeometry.ts)
- * sizes its reserved cover from these; the homepage gallery has its own
- * sizes (GALLERY.baseScale in src/config/carousel.ts).
+ * sizes its reserved cover from these; the homepage carousel has its own
+ * sizes (GALLERY.area and GALLERY.factor in src/config/carousel.ts).
  */
 export const OBJECT_SIZE: Record<ObjectKind, { width?: number; height?: number }> = {
   headshot: { height: 292 },
@@ -58,7 +57,7 @@ const project = (id: ProjectId, accent: AccentId, image: ImageId, kind: ObjectKi
   return { id: accent, project: id, name: p.displayName, subtitle: p.displaySubtitle, label: p.displayName, path: projectPath(p), image, kind }
 }
 
-/** The About portrait: the identity block's small anchor on the homepage (a link to /about, "About Harlie Katz"). */
+/** The About portrait: the carousel's About Me tile (a link to /about) and the About page's portrait. */
 export const PORTRAIT_ITEM: CarouselItem = {
   id: 'about',
   name: 'About Me',
@@ -70,8 +69,9 @@ export const PORTRAIT_ITEM: CarouselItem = {
   kind: 'headshot',
 }
 
-/** The homepage depth gallery: the six projects in their fixed circular order. */
+/** The homepage carousel: About Me and the six projects, in their fixed circular order. */
 export const GALLERY_ITEMS: CarouselItem[] = [
+  PORTRAIT_ITEM,
   project('merchandising-platform', 'merchandising-platform', 'obj-merchandising-platform', 'monitor'),
   project('cafepress-uk', 'cafepress-uk', 'obj-cafepress-uk', 'mug'),
   project('spreadsheet-agent', 'spreadsheet-agent', 'obj-spreadsheet-agent', 'laptop'),
@@ -83,6 +83,6 @@ export const GALLERY_ITEMS: CarouselItem[] = [
 /**
  * Every PNG object that can move into a destination's cover slot (the route
  * transition and CoverSlot look objects up here by id and by path): the
- * About portrait and the six projects.
+ * About portrait and the six projects, the carousel's seven objects.
  */
-export const CAROUSEL_ITEMS: CarouselItem[] = [PORTRAIT_ITEM, ...GALLERY_ITEMS]
+export const CAROUSEL_ITEMS: CarouselItem[] = GALLERY_ITEMS

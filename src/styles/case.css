@@ -79,7 +79,7 @@
 }
 
 .case-prose a:hover {
-  color: var(--case-accent);
+  color: var(--accent-default);
   text-decoration-color: currentColor;
 }
 
@@ -92,7 +92,7 @@
   .cs-title:hover,
   .cs-heading:hover,
   .case-prose strong:hover {
-    color: color-mix(in oklch, var(--case-accent) 80%, var(--stage-ivory));
+    color: color-mix(in oklch, var(--accent-default) 80%, var(--stage-ivory));
   }
 }
 
@@ -767,7 +767,7 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
 .cs-expand:is(:hover, :focus-visible),
 .cs-figure:has(.cs-zoom:is(:hover, :focus-visible)) .cs-expand,
 .cs-figure:has(.cs-stage[data-kind='video']:is(:hover, :focus-within)) .cs-expand {
-  color: color-mix(in oklch, var(--case-accent) 80%, var(--stage-ivory));
+  color: color-mix(in oklch, var(--accent-default) 80%, var(--stage-ivory));
 }
 
 .cs-expand:focus-visible {

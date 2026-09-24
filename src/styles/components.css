@@ -21,8 +21,8 @@
  */
 .button,
 .nav-chip {
-  --_acc: var(--accent, var(--accent-default));
-  --_acc-rgb: var(--accent-rgb, var(--accent-default-rgb));
+  --_acc: var(--accent-default);
+  --_acc-rgb: var(--accent-default-rgb);
 }
 
 .button {

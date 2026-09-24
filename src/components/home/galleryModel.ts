@@ -1,29 +1,30 @@
 import { GALLERY } from '../../config/carousel'
-import { GALLERY_ITEMS, type CarouselItem } from '../../content/carousel'
+import { GALLERY_ITEMS, type ObjectKind } from '../../content/carousel'
 import { getImage } from '../../content/media'
 
 /**
- * Geometry of the homepage depth gallery (see src/config/carousel.ts).
+ * Geometry of the homepage carousel (see src/config/carousel.ts).
  *
- * Every object's look is derived from one value, its signed depth d (its
- * offset from the active slot, in items; a = |d|), which in turn comes from
- * the gallery's one continuous position `pos`. So the drift, the wheel's
- * acceleration, the arrow steps and a swipe all move the objects through the
- * same smooth path, and an object's place, rise, scale, turn, light, label
- * and stacking order always describe the same depth:
+ * Every object's look comes from one value, its signed slot offset d (its
+ * offset from the selected slot, in items; a = |d|), which in turn comes
+ * from the carousel's one continuous position `pos`. Arrow steps, drags,
+ * swipes and trackpad gestures all move the objects through the same path,
+ * and the same rules apply to every object in every slot:
  *
- * - scale s(a): 1 in front, 0.67 beside it, 0.45 two away (× the object's
- *   own baseScale, which sets its size in front);
- * - y: the base rises towards the far wall as s falls (a receding floor);
- * - x: a curved rail. At each resting position (an integer `pos`) the
- *   neighbours stand a fixed gap clear of the active object and the edge
- *   objects are set at the window's edges with a share of them inside; in
- *   between, each object follows a smooth monotone curve through its own
- *   resting places, so it never stops or reverses while the travel runs;
- * - the turn away from the active slot, which leads the travel (most of an
- *   object's turn happens in the first third of each step, in the
- *   direction of travel);
- * - light, dimming, label size and opacity: knot tables over a.
+ * - scale: the slot's display area (1 selected, 0.8 beside it, 0.65 at the
+ *   outer slots); each silhouette fits that area (contain) × its own factor;
+ * - bottom edge: on one shallow symmetrical curve (the selected object
+ *   lowest, the neighbours about 24px higher, the outer objects about 44px);
+ * - a gentle turn towards the centre, symmetrical on both sides;
+ * - x: at each resting position (an integer `pos`) the neighbours stand a
+ *   fixed silhouette gap from the selected object (more where two shown
+ *   labels need the room), the outer ones beyond; in between, each object
+ *   follows a smooth monotone curve through its own resting places;
+ * - light and label size and opacity: knot tables over a.
+ *
+ * Every measure is taken on the silhouette (GALLERY.opaque), so the thin
+ * transparent margin of a PNG never changes a gap or a bottom edge: the
+ * object element is placed and scaled about its silhouette's bottom centre.
  */
 
 export type WidthClass = keyof typeof GALLERY.layout
@@ -37,115 +38,114 @@ export interface Box {
   b: number
 }
 
-export interface Scene {
-  /** Stage size (the viewport). */
-  W: number
-  H: number
-  /** Size factor (includes `fit`). */
-  u: number
-  cls: WidthClass
-  p: LayoutParams
-  /** The active slot's centre (px). */
-  x0: number
-  /** The active object's base line (px). */
-  yb0: number
-  /** What the objects keep clear of: the identity block's lines and the portrait (stage px). */
-  keep: Box[]
-  /** The whole gallery's share of its size at the window's size factor (below 1 only where an object would come too close to the identity block or the portrait). */
-  fit: number
-  /** Each object's layout box (px) at its largest (the front, with any phone boost) and that boost. */
-  widths: Float64Array
-  heights: Float64Array
-  boost: Float64Array
-  /** Resting places on the rail: x of the object in slot k (−4 to 4) when `pos` rests on r, at [r * SLOTS + k + 4]. */
-  slotX: Float64Array
+/** A label's size at full scale as set in the page (px): the title's inked width and height, the description's widest line and height, the space between them. */
+export interface LabelSize {
+  tw: number
+  th: number
+  sw: number
+  sh: number
+  gap: number
 }
 
-/** What the scene must keep clear of, in stage px (measured by DepthGallery). */
+/** What the scene is fitted to (measured by DepthGallery). */
 export interface SceneFrame {
-  /** The identity block's lines (name, PORTFOLIO, the supporting line) and the portrait's box. */
-  keep?: Box[]
-  /** Height of the tallest label at full size (px). */
-  label?: number
+  /** Header height (px): the carousel's section fills the window below it. */
+  header?: number
+  /** Each label's size at full scale. */
+  labels?: readonly LabelSize[]
+  /** The height reserved for a label at full scale (title and two description lines, px). */
+  labelH?: number
+  /** The controls beneath the carousel, with their gap above (px). */
+  nav?: number
+}
+
+export interface Scene {
+  /** Stage width and window height (px). */
+  W: number
+  H: number
+  cls: WidthClass
+  p: LayoutParams
+  /** Size factor. */
+  u: number
+  /** Silhouette gap between the selected object and each neighbour at rest (px, before any label room). */
+  gap: number
+  /** The selected slot's centre and bottom edge (stage px). */
+  x0: number
+  yb0: number
+  /** The stage's height (px): the objects and their labels. */
+  stageH: number
+  /** Label width (px). */
+  lw: number
+  /** Perspective of the turn (px). */
+  persp: number
+  /** Each object's silhouette at the selected slot (px). */
+  sw: Float64Array
+  sh: Float64Array
+  /** Each object's image box at the selected slot (px). */
+  bw: Float64Array
+  bh: Float64Array
+  /** Resting places: x of the object in slot k (−4 to 4) when `pos` rests on r, at [r * SLOTS + k + 4]. */
+  slotX: Float64Array
+  labels: readonly LabelSize[]
 }
 
 export interface Placement {
-  /** Signed depth: offset from the active slot (items; negative = left). */
+  /** Signed slot offset (items; negative = left). */
   d: number
-  /** Distance from the active slot (|d|). */
+  /** Distance from the selected slot (|d|). */
   a: number
-  /** Depth scale (1 = active). */
+  /** Slot scale (1 = selected). */
   s: number
-  /** Scale of the object's layout box (the depth scale × the share of any front boost in effect). */
-  k: number
-  /** Turn away from the active slot (radians, for rotateY). */
+  /** Turn (radians, for rotateY; towards the centre). */
   turn: number
-  /** Centre x of the object's base (px). */
+  /** x of the silhouette's bottom centre (stage px). */
   x: number
-  /** Base line y (px). */
+  /** Bottom edge y (stage px). */
   base: number
-  /** Projected half-width (px). */
-  hw: number
   /** Share still shown before wrapping round (1 near the front, 0 once far enough to wrap). */
   vis: number
-  /** Opacity (the wrap fade and the wheel's far dimming). */
+  /** Opacity. */
   op: number
-  /** Light by depth (GALLERY.light). */
+  /** Light by slot (GALLERY.slot). */
   glow: number
   dim: number
-  spill: number
-  shadow: number
-  reflect: number
-  /** Label: scale (with the depth) and title and subtitle opacity (before collision control). */
+  /** Label: scale, title and description opacity (before collision control), centre offset from x (px). */
   ls: number
   lt: number
   lsub: number
+  lc: number
   /** Stacking order. */
   z: number
 }
 
-export const newPlacement = (): Placement => ({ d: 0, a: 0, s: 1, k: 1, turn: 0, x: 0, base: 0, hw: 0, vis: 1, op: 1, glow: 0, dim: 0, spill: 0, shadow: 0, reflect: 0, ls: 1, lt: 1, lsub: 1, z: 100 })
+export const newPlacement = (): Placement => ({ d: 0, a: 0, s: 1, turn: 0, x: 0, base: 0, vis: 1, op: 1, glow: 0, dim: 0, ls: 1, lt: 1, lsub: 1, lc: 0, z: 100 })
 
-/** The layout box of each object in front at u = 1 (px), from its baseScale (equal opaque area × baseScale²). */
-export interface ObjectSize {
-  w: number
-  h: number
-}
-
-export function featuredSize(item: CarouselItem): ObjectSize {
-  const image = getImage(item.image)
-  const ratio = image.width / image.height
-  const side = GALLERY.ref * GALLERY.baseScale[item.kind]
-  const area = (side * side) / GALLERY.opaque[item.kind]
-  const w = Math.sqrt(area * ratio)
-  return { w, h: w / ratio }
-}
-
-export const FEATURED_SIZES: ObjectSize[] = GALLERY_ITEMS.map(featuredSize)
-const WIDEST = Math.max(...FEATURED_SIZES.map((s) => s.w))
 const N = GALLERY_ITEMS.length
 /** Resting slots kept per position: −4 to 4. */
 const SLOTS = 9
+const DEG = Math.PI / 180
+
+/** Each object's silhouette proportions and its place inside its image box. */
+const OBJ = GALLERY_ITEMS.map((item) => {
+  const image = getImage(item.image)
+  const o = GALLERY.opaque[item.kind]
+  return { o, ratio: (image.width * o.w) / (image.height * o.h), factor: GALLERY.factor[item.kind], center: GALLERY.center[item.kind] }
+})
 
 /**
- * The top edge of each object's silhouette: for 24 equal columns across its
- * image, the share of the image height above its first opaque pixel (alpha
- * of at least 96 of 255; 1 for a column with none). Measured from the 960px
- * files in public/media/img; the keep-out check reads the object's real
- * outline (a mug's handle, a camera's lens) instead of its box.
+ * Where an object element's silhouette bottom centre sits in its image box
+ * (shares of the box): the element is placed and scaled about this point.
  */
-const TOP_PROFILE: Partial<Record<CarouselItem['image'], readonly number[]>> = {
-  'obj-merchandising-platform': Array.from({ length: 24 }, () => 0.006),
-  'obj-cafepress-uk': [0.046, 0.035, 0.028, 0.024, 0.02, 0.018, 0.017, 0.016, 0.016, 0.016, 0.016, 0.016, 0.017, 0.019, 0.023, 0.028, 0.037, 0.069, 0.139, 0.139, 0.146, 0.169, 0.211, 0.293],
-  'obj-spreadsheet-agent': [0.902, ...Array.from({ length: 22 }, (_, j) => (j === 0 || j === 21 ? 0.021 : 0.018)), 0.902],
-  'obj-ai-leasing-agent': [0.025, ...Array.from({ length: 22 }, () => 0.013), 0.025],
-  'obj-creative-production': [0.406, 0.333, 0.298, 0.257, 0.223, 0.222, 0.223, 0.124, 0.067, 0.029, 0.017, 0.017, 0.023, 0.022, 0.054, 0.06, 0.11, 0.16, 0.195, 0.195, 0.222, 0.222, 0.223, 0.293],
-  'obj-jumpstart-finance': [0.093, 0.044, 0.028, 0.021, ...Array.from({ length: 16 }, () => 0.019), 0.021, 0.029, 0.046, 0.096],
+export function silhouetteOrigin(kind: ObjectKind) {
+  const o = GALLERY.opaque[kind]
+  return { x: o.x + o.w / 2, y: o.y + o.h }
 }
-const PROFILES: readonly (readonly number[])[] = GALLERY_ITEMS.map((item) => TOP_PROFILE[item.image] ?? [0])
 
-/** The item active at a fresh opening: Merchandising Platform (Film and Campaign Work two to its left, CafePress UK beside it on the right). */
-export const OPENING_POS = 0
+/** The item selected at a fresh visit: Merchandising Platform (About Me on its left, CafePress UK Launch on its right). */
+export const OPENING_POS = Math.max(
+  0,
+  GALLERY_ITEMS.findIndex((item) => item.project === 'merchandising-platform'),
+)
 
 export const widthClass = (w: number): WidthClass => (w >= 1000 ? 'desktop' : w >= 600 ? 'tablet' : 'phone')
 
@@ -165,18 +165,6 @@ export function wrapOffset(i: number, pos: number, n: number) {
 /** Positive modulo. */
 export const mod = (v: number, n: number) => ((v % n) + n) % n
 
-/** The size factor for a window (see GALLERY.size), before the keep-out fit. */
-export function sizeFactor(W: number, H: number, cls: WidthClass) {
-  const { min, max, heightOffset, heightSpan, fitBelow, fit } = GALLERY.size
-  const byHeight = (H - heightOffset) / heightSpan
-  let u = Math.min(W / 1440, byHeight)
-  if (W < fitBelow) u = Math.min(byHeight, (W * (cls === 'phone' ? fit.phone : fit.tablet)) / WIDEST)
-  return clamp(u, min, max)
-}
-
-/** Depth scale at distance a from the active slot (1 there; smooth through it). */
-export const depthScale = (a: number, p: LayoutParams) => 1 / (1 + p.k * (Math.sqrt(a * a + p.c * p.c) - p.c))
-
 /** Fritsch–Butland slope between two secants: monotone, 0 at an extremum. */
 const slope = (a: number, b: number) => (a * b <= 0 ? 0 : (2 * a * b) / (a + b))
 
@@ -188,9 +176,9 @@ function hermite(t: number, p1: number, p2: number, m1: number, m2: number) {
 }
 
 /**
- * A knot table over a = 0, 1, 2, 3 (GALLERY.light, GALLERY.label) read at
- * a: a smooth monotone curve, flat at the active slot (so a value changes
- * smoothly as an object passes through it) and after the last knot.
+ * A knot table over a = 0, 1, 2, 3 read at a: a smooth monotone curve,
+ * flat at the selected slot (so a value changes smoothly as an object
+ * passes through it, the same on both sides) and after the last knot.
  */
 export function knot(v: readonly number[], a: number) {
   const n = v.length
@@ -205,63 +193,82 @@ export function knot(v: readonly number[], a: number) {
   return hermite(a - i, v[i], v[i + 1], m1, m2)
 }
 
-const DEG = Math.PI / 180
-/** The turn of a resting slot k (signed, radians): away from the active slot. */
-const slotTurn = (k: number, p: LayoutParams) => Math.sign(k) * p.turn[Math.min(Math.abs(k), p.turn.length - 1)] * DEG
+const slotScale = (a: number) => knot(GALLERY.slot.scale, a)
+/** The turn at signed offset d (radians): towards the centre, so a right-hand object's outer edge comes forward. */
+export const turnAt = (d: number) => -Math.sign(d) * knot(GALLERY.slot.turn, Math.abs(d)) * DEG
+const labelScale = (a: number) => knot(GALLERY.slot.labelScale, a)
+const subShown = (a: number) => knot(GALLERY.slot.sub, a) * (1 - smoothstep(GALLERY.slot.subUntil[0], GALLERY.slot.subUntil[1], a))
 
 /**
- * The turn at signed depth d (radians). Between two resting slots the turn
- * leads the travel: moving leftward (d falling; `left` = 1) an object covers
- * 1 − (1 − q)^lead of its turn at progress q, so the object leaving the
- * front turns away at once and the one arriving straightens early; moving
- * rightward (`left` = 0) the same holds in that direction. `left` between 0
- * and 1 blends the two (a change of direction eases over a few frames).
+ * A point of an object's silhouette (px from its bottom centre, unscaled;
+ * Y upwards negative) as drawn: turned about its bottom centre, in
+ * perspective, then scaled (DepthGallery writes
+ * `scale(s) perspective(P) rotateY(turn)` about that point).
  */
-export function turnAt(d: number, p: LayoutParams, left = 1) {
-  const hi = Math.ceil(d)
-  const q = hi - d
-  if (q === 0) return slotTurn(hi, p)
-  const from = slotTurn(hi, p)
-  const to = slotTurn(hi - 1, p)
-  const lead = (x: number) => 1 - Math.pow(1 - x, p.lead)
-  const m = left * lead(q) + (1 - left) * (1 - lead(1 - q))
-  return from + (to - from) * m
+function project(X: number, Y: number, s: number, turn: number, P: number): [number, number] {
+  const z = -X * Math.sin(turn)
+  const f = P / (P - z)
+  return [s * X * Math.cos(turn) * f, s * Y * f]
 }
 
-/** The box scale at distance a: the depth scale, with any phone front boost fading out beside the front. */
-const boxScale = (a: number, boost: number, p: LayoutParams) => (depthScale(a, p) * (1 + (boost - 1) * (1 - smoothstep(0, 1, a)))) / boost
-
-/**
- * How much each object may grow at the front (phones only; see
- * GALLERY.phoneBoost), from its featured size at the scene's size factor.
- */
-export function frontBoost(scene: Pick<Scene, 'cls' | 'W' | 'H' | 'u'>, sizes: ObjectSize[]): number[] {
-  if (scene.cls !== 'phone') return sizes.map(() => 1)
-  const { max, fit, height } = GALLERY.phoneBoost
-  return sizes.map((z) => clamp(Math.min((fit * scene.W) / (z.w * scene.u), (height * scene.H) / (z.h * scene.u)), 1, max))
+/** How far object i's silhouette reaches left and right of its x at scale s and turn `turn` (px). */
+function extents(scene: Scene, i: number, s: number, turn: number) {
+  const hw = scene.sw[i] / 2
+  return { L: -project(-hw, 0, s, turn, scene.persp)[0], R: project(hw, 0, s, turn, scene.persp)[0] }
 }
 
-/** Each object's layout box (its size in front, with the phone boost), at the scene's size factor. */
-function sizeObjects(scene: Scene) {
-  const boost = frontBoost(scene, FEATURED_SIZES)
+/** The label's centre offset from the object's x (px): under the silhouette's visual centre. */
+const labelOffset = (scene: Scene, i: number, s: number, turn: number) => (OBJ[i].center - 0.5) * scene.sw[i] * s * Math.cos(turn)
+
+/** Half the widest shown line of item i's label at distance a (px), or 0 where it is hidden. */
+function labelHalf(scene: Scene, i: number, a: number) {
+  const L = scene.labels[i]
+  if (!L || knot(GALLERY.slot.title, a) < 0.05) return 0
+  return (Math.max(L.tw, subShown(a) > 0.05 ? L.sw : 0) * labelScale(a)) / 2
+}
+
+/** The silhouette of item i at placement o (stage px), as drawn. */
+export function silhouette(scene: Scene, i: number, o: Placement): Box {
+  const hw = scene.sw[i] / 2
+  const h = scene.sh[i]
+  let l = Infinity
+  let r = -Infinity
+  let t = Infinity
+  for (const X of [-hw, hw]) {
+    for (const Y of [-h, 0]) {
+      const [x, y] = project(X, Y, o.s, o.turn, scene.persp)
+      l = Math.min(l, x)
+      r = Math.max(r, x)
+      t = Math.min(t, y)
+    }
+  }
+  return { l: o.x + l, r: o.x + r, t: o.base + t, b: o.base }
+}
+
+/** Each object's silhouette and image box in the selected slot, for a display area (px). */
+function sizeObjects(scene: Scene, Aw: number, Ah: number) {
   for (let i = 0; i < N; i++) {
-    scene.boost[i] = boost[i]
-    scene.widths[i] = FEATURED_SIZES[i].w * scene.u * boost[i]
-    scene.heights[i] = FEATURED_SIZES[i].h * scene.u * boost[i]
+    const { o, ratio, factor } = OBJ[i]
+    const w = Math.min(Aw, Ah * ratio) * factor
+    scene.sw[i] = w
+    scene.sh[i] = w / ratio
+    scene.bw[i] = w / o.w
+    scene.bh[i] = w / ratio / o.h
   }
 }
 
 /**
- * The resting places on the rail for every resting position r and slot k:
- * the active object at x0; outwards, each neighbour `gap` px clear of the
- * one inside it; the edge slot at the window's edge with `reveal` of the
- * object inside (never closer than `gap2` to the neighbour); beyond, a
- * chain off screen. Widths are each object's projected width at that slot.
+ * The resting places for every resting position r and slot k: the
+ * selected object at x0; outwards, each object its slot's gap clear of the
+ * one inside it (silhouette to silhouette, as drawn at their slots). On
+ * desktop, where the two labels shown there would come within
+ * GALLERY.label.clear of each other, the outer object moves out until they
+ * are clear.
  */
 function restPlaces(scene: Scene) {
-  const { p, u, W, x0, widths, boost, slotX } = scene
-  const half = (i: number, k: number) => (widths[i] * boxScale(Math.abs(k), boost[i], p) * Math.cos(slotTurn(k, p))) / 2
-  const gapBefore = (k: number) => (k === 1 ? p.gap : k <= p.edge ? p.gap2 : p.gapOuter) * u
+  const { p, x0, slotX, gap } = scene
+  const gapBefore = (j: number) => (j === 1 ? gap : j === 2 ? gap * p.gap2 : gap * p.gapOuter)
+  const push = scene.cls === 'desktop' && scene.labels.length === N
   for (let r = 0; r < N; r++) {
     const at = (k: number) => r * SLOTS + k + 4
     slotX[at(0)] = x0
@@ -270,12 +277,28 @@ function restPlaces(scene: Scene) {
         const k = j * side
         const i = mod(r + k, N)
         const prev = mod(r + k - side, N)
-        const hw = half(i, k)
-        const chain = slotX[at(k - side)] + side * (half(prev, k - side) + gapBefore(j) + hw)
-        let x = chain
-        if (j === p.edge) {
-          const edge = side > 0 ? W + (1 - 2 * p.reveal) * hw : -(1 - 2 * p.reveal) * hw
-          x = side > 0 ? Math.max(chain, edge) : Math.min(chain, edge)
+        const kp = k - side
+        const ePrev = extents(scene, prev, slotScale(j - 1), turnAt(kp))
+        const eCur = extents(scene, i, slotScale(j), turnAt(k))
+        const xp = slotX[at(kp)]
+        let x = xp + side * ((side > 0 ? ePrev.R : ePrev.L) + gapBefore(j) + (side > 0 ? eCur.L : eCur.R))
+        if (push && j <= 2) {
+          const hp = labelHalf(scene, prev, j - 1)
+          const hc = labelHalf(scene, i, j)
+          const oc = labelOffset(scene, i, slotScale(j), turnAt(k))
+          if (hp > 0 && hc > 0) {
+            const cp = xp + labelOffset(scene, prev, slotScale(j - 1), turnAt(kp))
+            const need = cp + side * (hp + hc + GALLERY.label.clear) - oc
+            x = side > 0 ? Math.max(x, need) : Math.min(x, need)
+          }
+          // A title standing higher than the bottom edge of the object inside it never reaches under that object.
+          const titleHalf = scene.labels[i] && knot(GALLERY.slot.title, j) > 0.05 ? (scene.labels[i].tw * labelScale(j)) / 2 : 0
+          const titleTop = GALLERY.label.gap - knot(p.rise, j)
+          if (titleHalf > 0 && titleTop < -knot(p.rise, j - 1) + GALLERY.label.clearObject) {
+            const edge = xp + side * (side > 0 ? ePrev.R : ePrev.L)
+            const need = edge + side * (titleHalf + GALLERY.label.clearObject) - oc
+            x = side > 0 ? Math.max(x, need) : Math.min(x, need)
+          }
         }
         slotX[at(k)] = x
       }
@@ -283,7 +306,7 @@ function restPlaces(scene: Scene) {
   }
 }
 
-/** x of item i at signed depth d: a monotone curve through its own resting places. */
+/** x of item i at signed offset d: a monotone curve through its own resting places. */
 function railX(i: number, d: number, scene: Scene) {
   const k0 = Math.floor(d)
   const t = d - k0
@@ -298,168 +321,107 @@ function railX(i: number, d: number, scene: Scene) {
   return hermite(t, p1, p2, slope(p1 - p0, p2 - p1), slope(p2 - p1, p3 - p2))
 }
 
-/**
- * Places every object for `pos`. `left` is the share of leftward travel in
- * the current movement (1: the drift and the wheel; 0: a step back), `rush`
- * the wheel boost's share of its cap (0 at rest). Writes into `out`.
- */
-export function place(pos: number, scene: Scene, out: Placement[], left = 1, rush = 0) {
-  const { p, u, widths, boost } = scene
-  const { light, label } = GALLERY
-  const { turnGain, farDim } = GALLERY.wheel.depth
+/** Places every object for `pos`. Writes into `out`. */
+export function place(pos: number, scene: Scene, out: Placement[]) {
+  const { p } = scene
+  const { slot } = GALLERY
   for (let i = 0; i < out.length; i++) {
     const o = out[i]
     o.d = wrapOffset(i, pos, N)
     o.a = Math.abs(o.d)
-    o.s = depthScale(o.a, p)
-    o.k = boxScale(o.a, boost[i], p)
-    o.turn = turnAt(o.d, p, left) * (1 + turnGain * rush)
+    o.s = slotScale(o.a)
+    o.turn = turnAt(o.d)
     o.x = railX(i, o.d, scene)
-    o.base = scene.yb0 - p.rise * u * (1 - o.s)
-    o.hw = (widths[i] * o.k * Math.cos(o.turn)) / 2
+    o.base = scene.yb0 - knot(p.rise, o.a)
     o.vis = 1 - smoothstep(p.fade[0], p.fade[1], o.a)
-    o.op = o.vis * (1 - farDim * rush * smoothstep(1.2, 2, o.a))
-    o.glow = knot(light.glow, o.a)
-    o.dim = knot(light.dim, o.a)
-    o.spill = knot(light.spill, o.a)
-    o.shadow = knot(light.shadow, o.a)
-    o.reflect = knot(light.reflect, o.a)
-    o.ls = o.s
-    o.lt = knot(label.title, o.a)
-    o.lsub = knot(label.sub, o.a) * (1 - smoothstep(label.subUntil[0], label.subUntil[1], o.a))
+    o.op = o.vis
+    o.glow = knot(slot.glow, o.a)
+    o.dim = knot(slot.dim, o.a)
+    o.ls = labelScale(o.a)
+    // Tablets and phones: the selected object's caption only.
+    const side = p.sideLabels ? 1 : 1 - smoothstep(0.3, 0.7, o.a)
+    o.lt = knot(slot.title, o.a) * side
+    o.lsub = subShown(o.a) * side
+    o.lc = labelOffset(scene, i, o.s, o.turn)
     o.z = Math.round(100 - o.a * 10)
   }
 }
 
-/** Keep-out boxes farther than this to the side of an object's column (px) never count (keepGap). */
-const REACH = 64
-
-/**
- * The least distance (px) between object i's silhouette, at placement `o`,
- * and the keep-out boxes (the identity block's lines, the portrait):
- * straight down to a box it passes beneath, or diagonally or sideways to
- * one beside it; negative where they overlap, Infinity when none is within
- * REACH. The silhouette's top edge comes from TOP_PROFILE, through the
- * object's scale, turn and perspective (as DepthGallery writes its
- * transform); `grow` and `lift` (unscaled px) add the hover's enlargement
- * about the object's base and its rise.
- */
-export function keepGap(i: number, o: Placement, scene: Scene, grow = 1, lift = 0): number {
-  const boxes = scene.keep
-  if (!boxes.length) return Infinity
-  const w = scene.widths[i]
-  const h = scene.heights[i]
-  const prof = PROFILES[i]
-  const cols = prof.length
-  const persp = GALLERY.perspective * scene.u
-  const sin = Math.sin(o.turn)
-  const cos = Math.cos(o.turn)
-  let least = Infinity
-  for (let j = 0; j < cols; j++) {
-    if (prof[j] >= 1) continue
-    // The column's edges and top in the object's own px (from its base centre), then projected.
-    const X0 = (j / cols - 0.5) * w * grow
-    const X1 = ((j + 1) / cols - 0.5) * w * grow
-    const Y = -(1 - prof[j]) * h * grow - lift
-    const f0 = persp / (persp + X0 * sin)
-    const f1 = persp / (persp + X1 * sin)
-    const xa = o.x + o.k * X0 * cos * f0
-    const xb = o.x + o.k * X1 * cos * f1
-    const top = o.base + o.k * Y * Math.max(f0, f1)
-    const l = Math.min(xa, xb)
-    const r = Math.max(xa, xb)
-    for (const box of boxes) {
-      const dx = Math.max(box.l - r, l - box.r)
-      if (dx >= REACH) continue
-      // Beneath the box, beside it, or (the column reaching up past its bottom) overlapping it.
-      const dy = top - box.b
-      const below = o.base - box.t
-      if (below <= 0) continue
-      least = Math.min(least, dx <= 0 ? dy : dy > 0 ? Math.hypot(dx, dy) : dx)
-    }
+/** The widest group of three at rest (the selected object and its two neighbours, silhouettes only), at u = 1 (px). */
+function widestTrio(scene: Scene) {
+  let most = 0
+  for (let r = 0; r < N; r++) {
+    const c = extents(scene, r, 1, 0)
+    const left = extents(scene, mod(r - 1, N), slotScale(1), turnAt(-1))
+    const right = extents(scene, mod(r + 1, N), slotScale(1), turnAt(1))
+    most = Math.max(most, c.L + c.R + left.L + left.R + right.L + right.R)
   }
-  return least
+  return most
 }
 
-/** Samples per item of the loop that the keep-out check walks through. */
-const KEEP_STEPS = 16
-const probe: Placement[] = Array.from({ length: N }, newPlacement)
+/** Default label height before it is measured: a 22px title and two 16px description lines. */
+const LABEL_H = 22 * 1.28 + 6 + 2 * 16 * 1.45
+/** Default height of the controls beneath the carousel (44px buttons and the gap above them). */
+const NAV_H = 44 + 14
 
 /**
- * The least room (px) any shown object leaves to the keep-out boxes round
- * the whole loop (hover included, the wheel's largest turn), with the
- * object and position where it is least.
- */
-export function keepReport(scene: Scene, hover = true) {
-  const { lift, scale } = GALLERY.hover
-  let least = Infinity
-  let at = { i: -1, pos: 0 }
-  const steps = N * KEEP_STEPS
-  for (let s = 0; s < steps; s++) {
-    place(s / KEEP_STEPS, scene, probe, 1, 1)
-    for (let i = 0; i < N; i++) {
-      const o = probe[i]
-      if (o.op < 0.05) continue
-      const g = keepGap(i, o, scene, hover ? scale : 1, hover ? lift * scene.u : 0)
-      if (g < least) {
-        least = g
-        at = { i, pos: s / KEEP_STEPS }
-      }
-    }
-  }
-  return { least, ...at }
-}
-
-const keepRoom = (scene: Scene) => keepReport(scene).least
-
-/**
- * The scene for a window. The active slot stands at x0 with its base at
- * yb0 (landscape: `floor.bottom` above the bottom edge, raised further if
- * the tallest label needs it; portrait windows: `floor.portrait` of the
- * height). If, anywhere round the loop, an object (hovered, at the wheel's
- * largest turn) would come closer than `size.clear` px to the identity
- * block or the portrait, the whole gallery takes a smaller size (`fit`).
+ * The scene for a stage W px wide in a window H px high. The size factor u
+ * fits the class's rule (desktop: the widest trio with its gaps and some
+ * room at the edges; tablet and phone: the widest selected object within
+ * `fit` of the width) and the height: the objects, labels and controls
+ * stand within the window below the header, with GALLERY.stage.margin to
+ * spare above and below.
  */
 export function buildScene(W: number, H: number, frame: SceneFrame = {}): Scene {
   const cls = widthClass(W)
   const p = GALLERY.layout[cls]
-  const u0 = sizeFactor(W, H, cls)
-  const { bottom, labelMargin, portrait } = GALLERY.floor
-  let yb0 = H > W ? H * (cls === 'phone' ? portrait.phone : portrait.tablet) : H - clamp(bottom.share * H, bottom.min, bottom.max)
-  yb0 = Math.min(yb0, H - labelMargin - (frame.label ?? 0) - GALLERY.label.gap)
+  const header = frame.header ?? (W >= 900 ? 72 : 64)
+  const labelH = frame.labelH ?? LABEL_H
+  const nav = frame.nav ?? NAV_H
+  const { top, bottom, margin } = GALLERY.stage
+  const { hover } = GALLERY
+  const lw = cls === 'phone' ? Math.min(GALLERY.label.width.phone, W - 2 * GALLERY.label.inset) : Math.min(GALLERY.label.width[cls], W - 2 * GALLERY.label.inset)
+  const gap = clamp(p.gap.share * W, p.gap.min, p.gap.max)
   const scene: Scene = {
     W,
     H,
-    u: u0,
     cls,
     p,
-    x0: p.x0 * W,
-    yb0,
-    keep: frame.keep ?? [],
-    fit: 1,
-    widths: new Float64Array(N),
-    heights: new Float64Array(N),
-    boost: new Float64Array(N),
+    u: 1,
+    gap,
+    x0: W / 2,
+    yb0: 0,
+    stageH: 0,
+    lw,
+    persp: GALLERY.perspective,
+    sw: new Float64Array(N),
+    sh: new Float64Array(N),
+    bw: new Float64Array(N),
+    bh: new Float64Array(N),
     slotX: new Float64Array(N * SLOTS),
+    labels: frame.labels ?? [],
   }
-  const apply = (fit: number) => {
-    scene.fit = fit
-    scene.u = u0 * fit
-    sizeObjects(scene)
-    restPlaces(scene)
-  }
-  apply(1)
-  const { clear } = GALLERY.size
-  if (scene.keep.length && keepRoom(scene) < clear) {
-    let lo = 0.55
-    let hi = 1
-    for (let k = 0; k < 7; k++) {
-      const mid = (lo + hi) / 2
-      apply(mid)
-      if (keepRoom(scene) >= clear) lo = mid
-      else hi = mid
-    }
-    apply(lo)
-  }
+  // At u = 1 first, to measure the widest trio and the tallest object.
+  sizeObjects(scene, p.area.w, p.area.h)
+  const tallest = Math.max(...scene.sh)
+  const byHeight = (H - header - 2 * margin - top - bottom - GALLERY.label.gap - labelH - nav) / (tallest * hover.scale)
+  let byWidth: number
+  const edgeRoom = clamp(p.edgeRoom.at1280 + p.edgeRoom.perPx * (W - 1280), p.edgeRoom.min, p.edgeRoom.max)
+  if (cls === 'desktop') byWidth = (W - 2 * gap - 2 * edgeRoom) / widestTrio(scene)
+  else byWidth = (p.fit * W) / Math.max(...scene.sw)
+  const u = clamp(Math.min(byWidth, byHeight), p.u.min, p.u.max)
+  scene.u = u
+  scene.persp = GALLERY.perspective * u
+  sizeObjects(scene, p.area.w * u, p.area.h * u)
+  scene.yb0 = top + Math.max(...scene.sh) * hover.scale
+  scene.stageH = scene.yb0 + GALLERY.label.gap + labelH + bottom
+  restPlaces(scene)
   return scene
+}
+
+/** The distance between the selected slot and its neighbours at the resting position nearest `pos` (px): a drag moves one object per this much. */
+export function restSpacing(scene: Scene, pos: number) {
+  const r = mod(Math.round(pos), N)
+  const at = (k: number) => scene.slotX[r * SLOTS + k + 4]
+  return Math.max(40, (at(1) - at(-1)) / 2)
 }

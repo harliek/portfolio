@@ -1197,3 +1197,68 @@ html[data-motion='reduce'] :is(.next-project__thumb, .next-project__name, .next-
 html[data-motion='reduce'] .next-project__link:is(:hover, :focus-visible) :is(.next-project__thumb .picture, .next-project__arrow) {
   transform: none;
 }
+
+/* Give the concept artwork an intentional opening, separate from the demo. */
+@media (min-width: 960px) {
+  .cs:not(.fs)[data-layout='sticky'] {
+    grid-template-rows: auto 1fr;
+    grid-template-areas: 'opening opening' 'body media';
+    row-gap: clamp(48px, 7svh, 80px);
+  }
+  .cs:not(.fs)[data-layout='sticky'] > .cs-opening {
+    display: grid;
+    grid-template-columns: minmax(0, 42fr) minmax(0, 52fr);
+    grid-template-areas: 'intro cover' 'lede cover';
+    column-gap: var(--case-gap);
+    align-content: center;
+    min-height: 340px;
+  }
+  .cs:not(.fs) .cs-opening > .cs-intro { grid-area: intro; }
+  .cs:not(.fs) .cs-opening > .cs-lede { grid-area: lede; }
+  .cs:not(.fs) .cs-opening > .cs-cover {
+    grid-area: cover;
+    align-self: center;
+    justify-content: center;
+    margin-top: 0;
+    --cover-hmax: 300px;
+  }
+}
+@media (max-width: 959.98px) {
+  .cs:not(.fs) .cs-opening > .cs-lede { order: 1; }
+  .cs:not(.fs) .cs-opening > .cs-cover {
+    order: 2;
+    justify-content: center;
+    margin-block: 28px;
+  }
+}
+.cs-player {
+  transition: transform var(--dur-2) var(--ease-respond), box-shadow var(--dur-2), border-color var(--dur-2);
+}
+.cs-player:is(:hover, :focus-within) {
+  border-color: var(--accent-default);
+  box-shadow: 0 0 0 1px var(--accent-default), 0 12px 35px rgb(211 47 47 / 0.16);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .cs-player:hover { transform: scale(1.025); }
+}
+.demo-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgb(10 10 15 / 0.94);
+  border-top: 1px solid rgb(244 107 112 / 0.28);
+}
+.demo-controls button {
+  min-height: 36px;
+  min-width: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 0.75rem;
+}
+.demo-controls button:hover { background: var(--brand-red); }
+.demo-controls input { min-width: 30px; width: 100%; accent-color: var(--accent-default); }
+
+.cs[data-media='video'] { --cs-barh: calc(var(--cs-pbar) + 53px); }

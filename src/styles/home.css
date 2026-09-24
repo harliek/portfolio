@@ -61,11 +61,12 @@
   display: block;
   margin-left: -0.055em;
   font-family: var(--font-editorial);
-  font-size: clamp(4rem, 7.6vw, 7.5rem);
+  font-size: clamp(4rem, 8.8vw, 7.875rem);
   font-weight: 400;
   font-optical-sizing: auto;
   line-height: 0.98;
   letter-spacing: -0.035em;
+  text-transform: uppercase;
   white-space: nowrap;
   color: #fff5f1;
   text-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
@@ -95,7 +96,7 @@
 
 /* Objects follow the introduction without a second viewport of spacing. */
 .gallery {
-  --hover-scale: 1.025;
+  --hover-scale: 1.085;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -581,4 +582,26 @@ html:not([data-motion='reduce']) .gobj__object {
 .gallery__motion:is(:hover, :focus-visible) {
   background: var(--brand-red);
   border-color: var(--accent-default);
+}
+
+/* The carousel sits lower in the film, with room for the editorial opening. */
+.gallery { margin-top: clamp(48px, 9svh, 100px); }
+.home::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(ellipse at 8% 30%, rgb(211 47 47 / 0.14), transparent 48%),
+    radial-gradient(ellipse at 90% 65%, rgb(122 64 174 / 0.12), transparent 50%);
+}
+.gobj[data-active] .gobj__art,
+.gobj[data-pressed] .gobj__art {
+  filter: drop-shadow(1px 0 0 #ef555b) drop-shadow(-1px 0 0 #ef555b)
+    drop-shadow(0 1px 0 #ef555b) drop-shadow(0 -1px 0 #ef555b)
+    drop-shadow(0 0 14px rgb(211 47 47 / 0.3));
+}
+@media (max-width: 599.98px) {
+  .home-intro__word { font-size: clamp(2.5rem, 11.2vw, 4rem); }
+  .gallery { margin-top: 40px; }
 }

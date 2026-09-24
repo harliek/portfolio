@@ -123,7 +123,7 @@ function initialScene() {
  *
  * It sits in the page's normal flow below the introduction: the page
  * scrolls normally, and vertical wheel, trackpad and touch gestures always
- * scroll the page. Objects float gently in place; their selected position changes only on interaction.
+ * scroll the page. Objects rotate slowly through the loop and float gently; pause and reduced motion stop automatic movement.
  *
  * Moving it:
  * - the previous and next arrows (and the arrow keys on an object or an
@@ -446,7 +446,7 @@ export function DepthGallery() {
     let target = pos
     /** Current speed (items per second). */
     let vel = 0
-    const st = { hover: -1, focus: -1, active: -1, press: -1, busy: false, visible: document.visibilityState === 'visible' }
+    const st = { hover: -1, focus: -1, active: -1, press: -1, busy: false, inView: true, visible: document.visibilityState === 'visible' }
     let raf = 0
     let last = 0
     let fade = 0
@@ -470,7 +470,7 @@ export function DepthGallery() {
 
     function frame(now: number) {
       raf = 0
-      if (st.busy || !st.visible) {
+      if (st.busy || !st.visible || !st.inView) {
         last = 0
         return
       }
@@ -498,13 +498,17 @@ export function DepthGallery() {
           again = true
         }
       }
+      if (!reduced && mode === 'rest' && !root!.hasAttribute('data-paused') && st.press < 0 && !root!.querySelector(':focus-visible')) {
+        pos = mod(pos + dt * (st.hover >= 0 ? 0.045 : 0.14), N)
+        target = pos
+      }
       layout()
       // Hover follows what is under a still pointer (mouse and pen) while the objects move.
-      if (pointer.inside && mode !== 'rest' && now >= pollAt && !st.busy) {
+      if (pointer.inside && now >= pollAt && !st.busy) {
         pollAt = now + GALLERY.hover.pollMs
         setHover(indexOf(document.elementFromPoint(pointer.x, pointer.y)))
       }
-      if (again) raf = requestAnimationFrame(frame)
+      if (again || !reduced) raf = requestAnimationFrame(frame)
     }
 
     /**
@@ -991,6 +995,12 @@ export function DepthGallery() {
       else kick()
     }
     document.addEventListener('visibilitychange', onVisibility)
+    const visibilityObserver = new IntersectionObserver(([entry]) => {
+      st.inView = entry.isIntersecting
+      if (st.inView) kick()
+    })
+    visibilityObserver.observe(root)
+    if (!reduced) kick()
     const onPageHide = () => save()
     window.addEventListener('pagehide', onPageHide)
     let resizeFrame = 0
@@ -1083,6 +1093,7 @@ export function DepthGallery() {
       save()
       api.current = null
       ro.disconnect()
+      visibilityObserver.disconnect()
       window.removeEventListener('resize', onResize)
       window.removeEventListener('pagehide', onPageHide)
       window.removeEventListener('pointerup', endPress, true)

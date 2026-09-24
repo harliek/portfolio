@@ -17,8 +17,8 @@ import type { ObjectKind } from '../content/carousel'
  *
  * Tables of four values are knots at a = 0, 1, 2 and 3 (the selected slot,
  * the neighbours, the outer objects and beyond), joined by a smooth
- * monotone curve that is flat through the selected slot. Nothing moves on
- * its own: the carousel rests on an object until the visitor moves it.
+ * monotone curve that is flat through the selected slot. The carousel rotates slowly on its own; interaction takes over, and
+ * the pause control or reduced-motion preference stops automatic movement.
  */
 export const GALLERY = {
   /**
@@ -181,8 +181,8 @@ export const GALLERY = {
   press: { ms: 1200, slop: 14 },
 
   hover: {
-    /** Hover and keyboard focus: +2.5% about the visible bottom edge (home.css has the same value). */
-    scale: 1.025,
+    /** Hover and keyboard focus: +8.5% about the visible bottom edge (home.css has the same value). */
+    scale: 1.085,
     /** Hover follows what is under a still pointer while the carousel moves: checked every this many ms. */
     pollMs: 90,
     /** The light eases in and out over these (ms). */

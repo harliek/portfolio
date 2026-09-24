@@ -3,6 +3,7 @@ import { flushSync } from 'react-dom'
 import { fallbackSrc, getImage, getVideo, type ImageId, type VideoAsset, type VideoId } from '../../content/media'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { ExpandIcon } from './ExpandIcon'
+import { DemoControls } from './DemoControls'
 import { enterFullscreen, NATIVE_FULLSCREEN } from './fullscreen'
 import { closeOnCancel, closeWithFade } from './dialogExit'
 import { ResponsiveImage } from './ResponsiveImage'
@@ -403,7 +404,7 @@ export function DemoVideo({ video: id, full: fullId, label, map, poster, sizes, 
             muted
             loop
             playsInline
-            controls={!showPlay || fullscreen}
+            controls={fullscreen}
             // One enlarge control per player (R4-01): Expand in the player's bar. The native full screen button
             // returns only while the recording is in full screen (touch Expand), so it can be left there.
             controlsList={fullscreen ? undefined : 'nofullscreen'}
@@ -425,6 +426,7 @@ export function DemoVideo({ video: id, full: fullId, label, map, poster, sizes, 
             </span>
           )}
         </div>
+        <DemoControls videoRef={videoRef} />
         {/* The player's own bar, below the recording inside its frame: the label, then the expand control. */}
         <div className="cs-player__bar">
           {label ? (
@@ -602,7 +604,7 @@ function VideoDialog({ asset, posterSrc, label, start, onClose }: VideoDialogPro
             poster={start.time > 0.05 ? undefined : posterSrc}
             width={asset.width}
             height={asset.height}
-            controls
+            controls={start.fullscreen}
             loop
             playsInline
             muted={start.muted}
@@ -611,6 +613,7 @@ function VideoDialog({ asset, posterSrc, label, start, onClose }: VideoDialogPro
             onLoadedMetadata={onLoadedMetadata}
           />
         </div>
+        <DemoControls videoRef={videoRef} />
       </div>
     </dialog>
   )

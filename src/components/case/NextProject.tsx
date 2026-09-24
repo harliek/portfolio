@@ -1,8 +1,10 @@
 import { useRef, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ACCENTS } from '../../content/accents'
+import { getImage } from '../../content/media'
 import { projectById, projectPath, type ProjectId } from '../../content/projects'
 import { ResponsiveImage } from '../media/ResponsiveImage'
+import { coverItem } from '../transition/coverGeometry'
 import { isPlainClick, openProject, warmProject } from '../transition/projectTransition'
 
 /** Thumbnail box (CSS px): the object is contained in it, so a monitor is about 104px across and a phone about 84px tall. */
@@ -16,9 +18,14 @@ const THUMB = { width: 104, height: 84 }
  * The next projects follow the homepage order (projects.ts `next`; About is
  * not part of it).
  *
- * The thumbnail carries a quiet silhouette glow in the NEXT project's accent.
- * Hover and focus: it grows 4% with a stronger glow and the name takes that
- * accent (case.css). A plain click or
+ * The thumbnail is lit by the site's one light model (case.css, tokens.css
+ * --light-*) in the NEXT project's accent: the object stands on the floor of
+ * its box (contained, base down) with a rim and halo on its silhouette, a
+ * soft contact shadow and the accent's light on the floor beneath it, sized
+ * from the object's rendered size (--obj-w, --obj-h) and footprint
+ * (data-kind). Hover and focus: it lifts a little and grows 4% while its
+ * shadow narrows and lightens, its light strengthens and rises, and the name
+ * takes that accent. A plain click or
  * Enter opens it through openProject with the thumbnail as the source
  * (`data-cover-source`), so the same PNG can move into the destination's
  * cover slot; modifier and middle clicks stay native.
@@ -29,12 +36,24 @@ export function NextProject({ current }: { current: ProjectId }) {
   const next = projectById(projectById(current).next)
   const path = projectPath(next)
   const accent = ACCENTS[next.accent]
+  // The object as it is drawn in the box (contained): its width and height set the contact shadow and floor light.
+  const art = getImage(next.cover)
+  const ratio = art.width / art.height
+  const objW = Math.min(THUMB.width, THUMB.height * ratio)
+  const objH = Math.min(THUMB.height, THUMB.width / ratio)
   // The display title, as on the homepage, the Work shelf and the project's cover (brief-v8 section 4).
   const name = next.displayName
   const split = name.lastIndexOf(' ') + 1
   const head = name.slice(0, split)
   const tail = name.slice(split)
-  const style = { '--next-accent': accent.hex, '--next-accent-rgb': accent.rgb, '--thumb-w': `${THUMB.width}px`, '--thumb-h': `${THUMB.height}px` } as CSSProperties
+  const style = {
+    '--next-accent': accent.hex,
+    '--next-accent-rgb': accent.rgb,
+    '--thumb-w': `${THUMB.width}px`,
+    '--thumb-h': `${THUMB.height}px`,
+    '--obj-w': `${objW.toFixed(1)}px`,
+    '--obj-h': `${objH.toFixed(1)}px`,
+  } as CSSProperties
   return (
     <nav className="next-project" aria-label="Next project">
       <Link
@@ -49,7 +68,7 @@ export function NextProject({ current }: { current: ProjectId }) {
         onPointerEnter={() => warmProject(path)}
         onFocus={() => warmProject(path)}
       >
-        <span ref={thumbRef} className="next-project__thumb" data-cover-source={next.accent}>
+        <span ref={thumbRef} className="next-project__thumb" data-cover-source={next.accent} data-kind={coverItem(next.accent)?.kind}>
           <ResponsiveImage image={next.cover} sizes={`${THUMB.width}px`} fit="contain" decorative />
         </span>
         <span className="next-project__text">

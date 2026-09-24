@@ -61,7 +61,13 @@ function swallowPressClick() {
  *   Work); Arrow Down or keyboard activation moves focus to the first project.
  * - About: the dedicated About page (`/about`).
  * - Creative Portfolio: a plain link to the restored original creative
- *   homepage (`/creative/`, a separate build, so a full page load).
+ *   homepage (`/creative/`, a separate build, so a full page load), set a
+ *   step quieter than Work and About with a smaller arrow (a secondary
+ *   alternative, not the primary destination).
+ *
+ * The three are quiet chrome (layout.css): 14px at lowered brightness,
+ * brighter with a thin line under the words on hover, focus and the
+ * current page.
  *
  * Below 900px the three become one "Menu" button with an accessible panel
  * (six projects, About, Creative Portfolio): focus stays inside, Escape
@@ -255,7 +261,7 @@ export function Header() {
                 </Link>
               </li>
               <li>
-                <a href={CREATIVE_HREF} className="site-nav__item">
+                <a href={CREATIVE_HREF} className="site-nav__item site-nav__item--alt">
                   Creative Portfolio
                   <ExternalMark />
                 </a>

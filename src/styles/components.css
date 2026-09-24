@@ -53,11 +53,11 @@
   user-select: none;
   -webkit-user-select: none;
   transition:
-    background-color var(--dur-feedback) var(--ease-out),
-    border-color var(--dur-feedback) var(--ease-out),
-    color var(--dur-feedback) var(--ease-out),
-    box-shadow var(--dur-feedback) var(--ease-out),
-    transform var(--dur-feedback) var(--ease-out);
+    background-color var(--dur-1) var(--ease-standard),
+    border-color var(--dur-1) var(--ease-standard),
+    color var(--dur-1) var(--ease-standard),
+    box-shadow var(--dur-1) var(--ease-standard),
+    transform var(--dur-1) var(--ease-standard);
 }
 
 .button:focus-visible {
@@ -102,7 +102,7 @@
   display: inline-block;
   font-weight: 500;
   line-height: 1;
-  transition: transform var(--dur-feedback) var(--ease-out);
+  transition: transform var(--dur-1) var(--ease-standard);
 }
 
 .button:hover .button__arrow,
@@ -175,11 +175,11 @@ a:hover > .link-arrow {
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color var(--dur-feedback) var(--ease-out),
-    border-color var(--dur-feedback) var(--ease-out),
-    color var(--dur-feedback) var(--ease-out),
-    box-shadow var(--dur-feedback) var(--ease-out),
-    transform var(--dur-feedback) var(--ease-out);
+    background-color var(--dur-1) var(--ease-standard),
+    border-color var(--dur-1) var(--ease-standard),
+    color var(--dur-1) var(--ease-standard),
+    box-shadow var(--dur-1) var(--ease-standard),
+    transform var(--dur-1) var(--ease-standard);
 }
 
 .nav-chip:is(:hover, :focus-visible) {
@@ -272,7 +272,7 @@ a:hover > .link-arrow {
 }
 
 .image-dialog[open] {
-  animation: dialog-in 180ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: dialog-in var(--dur-2) var(--ease-arrive) both;
 }
 
 @keyframes dialog-in {
@@ -439,7 +439,7 @@ html.is-dialog-open {
   border-right: 1.5px solid currentColor;
   border-bottom: 1.5px solid currentColor;
   transform: rotate(-45deg);
-  transition: transform var(--dur-feedback) var(--ease-out);
+  transition: transform var(--dur-1) var(--ease-standard);
 }
 
 .transcript[open] summary::before {

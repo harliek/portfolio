@@ -26,10 +26,35 @@ export type ProjectId =
 export type ProjectAccent = AccentId
 
 /**
- * `sizes` of the case studies' sticky media frame (CaseScroll's default and
- * Client Work's POSTER_SIZES use the same literal).
+ * `sizes` of Creative Production's film posters (FilmScroll POSTER_SIZES uses
+ * the same literal).
  */
 const FRAME_SIZES = '(min-width: 960px) 620px, calc(100vw - 32px)'
+
+/**
+ * `sizes` of the case studies' media stage: CaseScroll STAGE_SIZES (the video
+ * poster, the states stage and its stacked figure) and ConversationStage SIZES.
+ */
+const STAGE_SIZES = '(min-width: 1368px) 645px, (min-width: 960px) 47vw, calc(100vw - 40px)'
+
+/** PhoneGroup PHONE_SIZES (Jumpstart Finance's three prototype phones). */
+const PHONE_SIZES = '(min-width: 1368px) 240px, (min-width: 960px) 18vw, 37vw'
+
+/** Where a page shows a different crop on phones (StatesStage and ConversationStage PHONE). */
+const WIDE = '(min-width: 600px)'
+const PHONE = '(max-width: 599.98px)'
+
+/**
+ * An image a case study shows first beside its heading, with the `sizes` its
+ * component passes, so the route transition fetches and decodes the very
+ * file the page will pick. `media` limits it to the viewports where the page
+ * shows it (a phone crop replaces a wide one below 600px).
+ */
+export interface OpeningImage {
+  image: ImageId
+  sizes: string
+  media?: string
+}
 
 export interface Project {
   id: ProjectId
@@ -65,13 +90,18 @@ export interface Project {
   /** Transparent PNG cover object from `final png tiles/` (carousel, case opening, Work shelf and next-project thumbnails). */
   cover: ImageId
   /**
-   * The image the case study opens on (the `opening` visual in
-   * src/content/pages/<page>.tsx, shown in [data-case-hero]) with the same
-   * `sizes` as that frame, so the route transition can fetch and decode it
-   * ahead of time (on hover or focus of a project link). Keep in step with
-   * the page's opening and its frame `sizes`.
+   * What the case study shows first in its media stage, beside the heading
+   * (the video's poster, the opening state, the conversation, the first
+   * film's poster, the three prototype phones), with the `sizes` its
+   * component passes. The route transition fetches and decodes these with
+   * the cover object while the page being left stays (on hover or focus of a
+   * project link, at the latest on the click), so the heading and its media
+   * arrive together (src/components/transition/projectTransition.ts). Keep in
+   * step with the page's media and its `sizes`: a mismatch costs a short,
+   * capped wait inside the change, and the development transition log
+   * (window.__pageTransitionLog) records "opening not warmed".
    */
-  hero: { image: ImageId; sizes: string }
+  hero: readonly OpeningImage[]
   accent: ProjectAccent
   next: ProjectId
   seo: { title: string; description: string }
@@ -96,7 +126,8 @@ export const PROJECTS: Project[] = [
     description: 'Product, inventory, and replenishment information in one prototype.',
     meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Working prototype' },
     cover: 'obj-merchandising-platform',
-    hero: { image: 'mp-overview', sizes: FRAME_SIZES },
+    // The edited preview's poster (the Canyon Pouch drawer with its quantity), until the preview plays over it.
+    hero: [{ image: 'merch-replenish', sizes: STAGE_SIZES }],
     accent: 'merchandising-platform',
     next: 'cafepress-uk',
     seo: {
@@ -122,7 +153,11 @@ export const PROJECTS: Project[] = [
     description: 'UK market research and a localized storefront prototype.',
     meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
     cover: 'obj-cafepress-uk',
-    hero: { image: 'cafepress-monitor', sizes: FRAME_SIZES },
+    // The opening state (the header with the logo and categories); phones show the headline crop instead.
+    hero: [
+      { image: 'cp-header-brand', sizes: STAGE_SIZES, media: WIDE },
+      { image: 'cp-phone-headline', sizes: STAGE_SIZES, media: PHONE },
+    ],
     accent: 'cafepress-uk',
     next: 'spreadsheet-agent',
     seo: {
@@ -148,7 +183,8 @@ export const PROJECTS: Project[] = [
     description: 'A request, a reviewable plan, and an editable spreadsheet.',
     meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Prototype with simulated AI responses' },
     cover: 'obj-spreadsheet-agent',
-    hero: { image: 'sa-overview', sizes: FRAME_SIZES },
+    // The edited preview's poster (the build plan under review), until the preview plays over it.
+    hero: [{ image: 'spreadsheet-agent-poster', sizes: STAGE_SIZES }],
     accent: 'spreadsheet-agent',
     next: 'ai-leasing-agent',
     seo: {
@@ -174,7 +210,8 @@ export const PROJECTS: Project[] = [
     description: 'Requirements and testing for recurring leasing questions.',
     meta: { company: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'October 2024 to June 2025', status: 'Adopted across 18 properties' },
     cover: 'obj-ai-leasing-agent',
-    hero: { image: 'valiance-messages', sizes: FRAME_SIZES },
+    // The conversation (ConversationStage); phones read it as three message strips further down the page.
+    hero: [{ image: 'ala-conversation', sizes: STAGE_SIZES, media: WIDE }],
     accent: 'ai-leasing-agent',
     next: 'client-work',
     seo: {
@@ -200,7 +237,8 @@ export const PROJECTS: Project[] = [
     description: 'Production and campaign support at Shift Content.',
     meta: { company: 'Shift Content, London', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', status: 'Three completed client films' },
     cover: 'obj-creative-production',
-    hero: { image: 'nickleby-poster', sizes: FRAME_SIZES },
+    // The first film's poster (FilmScroll, Nickleby Capital).
+    hero: [{ image: 'nickleby-poster', sizes: FRAME_SIZES }],
     accent: 'creative-production',
     next: 'jumpstart-finance',
     seo: {
@@ -226,7 +264,12 @@ export const PROJECTS: Project[] = [
     description: 'A student venture exploring mobile financial education.',
     meta: { company: 'Jumpstart Finance (student venture)', role: 'Founder & Product Lead', dates: 'June to July 2024', status: 'Program concept and prototype' },
     cover: 'obj-jumpstart-finance',
-    hero: { image: 'jf-screen-home', sizes: '(min-width: 960px) 360px, 300px' },
+    // The three original prototype screens of the phone group (PhoneGroup).
+    hero: [
+      { image: 'jf-screen-lessons', sizes: PHONE_SIZES },
+      { image: 'jf-screen-progress', sizes: PHONE_SIZES },
+      { image: 'jf-screen-community', sizes: PHONE_SIZES },
+    ],
     accent: 'jumpstart-finance',
     next: 'merchandising-platform',
     seo: {

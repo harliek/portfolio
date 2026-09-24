@@ -1,71 +1,86 @@
 import type { ObjectKind } from '../content/carousel'
-import type { ImageId } from '../content/media'
-
-/** The `sizes` of the case studies' media stage (CaseScroll STAGE_SIZES, ConversationStage SIZES). */
-const STAGE_SIZES = '(min-width: 1368px) 645px, (min-width: 960px) 47vw, calc(100vw - 40px)'
-
-/** PhoneGroup's PHONE_SIZES (Jumpstart Finance). */
-const PHONE_SIZES = '(min-width: 1368px) 240px, (min-width: 960px) 18vw, 37vw'
+import type { OpeningImage } from '../content/projects'
+import { MOTION } from './motion'
 
 /**
- * What each destination shows first beside its heading (the image, or the
- * video poster, that fills its opening media stage), fetched and decoded
- * with the cover while the old page stays, so the page and its media
- * arrive together. Keep in step with the pages and the `sizes` their
- * components pass (a mismatch only costs a short wait inside the change,
- * capped by openingMediaWaitMs; in development the transition log records
- * "opening not warmed"). Routes not listed fall back to projects.ts `hero`.
+ * What a destination that is not a case study shows first beside its
+ * heading, fetched and decoded with its cover object while the old page
+ * stays. Case studies declare theirs in src/content/projects.ts (`hero`, the
+ * page's real opening media with the `sizes` its component passes); an entry
+ * here overrides that.
  */
-const OPENING_MEDIA: Record<string, readonly { image: ImageId; sizes: string }[]> = {
-  '/work/merchandising-platform': [{ image: 'merch-replenish', sizes: STAGE_SIZES }],
-  '/work/cafepress-uk': [{ image: 'cp-header-brand', sizes: STAGE_SIZES }],
-  '/work/spreadsheet-agent': [{ image: 'spreadsheet-agent-poster', sizes: STAGE_SIZES }],
-  '/work/valiance': [{ image: 'ala-conversation', sizes: STAGE_SIZES }],
-  // FilmScroll POSTER_SIZES: the first film's poster.
-  '/work/creative-production': [{ image: 'nickleby-poster', sizes: '(min-width: 960px) 620px, calc(100vw - 32px)' }],
-  // PhoneGroup PHONE_SIZES: the three original prototype screens.
-  '/work/jumpstart': [
-    { image: 'jf-screen-lessons', sizes: PHONE_SIZES },
-    { image: 'jf-screen-progress', sizes: PHONE_SIZES },
-    { image: 'jf-screen-community', sizes: PHONE_SIZES },
-  ],
+const OPENING_MEDIA: Record<string, readonly OpeningImage[]> = {
   // About opens with the portrait (its cover slot) beside the introduction.
   '/about': [],
 }
 
 /**
- * The project route transition (src/components/transition/projectTransition.ts,
- * brief-v8 section 6): no empty interval.
+ * The project route transition (src/components/transition/projectTransition.ts):
+ * "move closer" (spec/motion-plan.md P3), with no empty interval.
  *
  * 1. Wait: the page being left stays as it is (live) until the destination's
- *    code has loaded and its cover object and opening media (`openingMedia`)
- *    have decoded (usually done on hover or focus already). Caps:
- *    `mediaWaitMs` for the images, `chunkWaitMs` for the code (then an
- *    ordinary navigation). A wait past `progressDelayMs` shows a thin accent
- *    line at the top.
- * 2. Change, one view transition. The browser holds a picture of the old page
- *    while the new route renders and its slot and opening media are checked
- *    (capped by `renderWaitMs`, `slotDecodeMs`, `openingMediaWaitMs`; normally
- *    a few milliseconds). Then the old page fades out while the new page
- *    (heading and opening media included) fades in over `pageMs`,
- *    complementary and blended additively, so the room behind never dims.
- * 3. Meanwhile the clicked PNG moves into the destination's cover slot over
- *    `coverMs` with a uniform scale (never stretched or flipped). The page
- *    never waits for it.
+ *    code has loaded and its cover object and opening media have decoded
+ *    (usually done on hover or focus already). Caps: `mediaWaitMs` for the
+ *    images, `chunkWaitMs` for the code (then an ordinary navigation). A wait
+ *    past `progressDelayMs` shows a thin accent line at the top.
+ * 2. Change, one view transition, all on the motion system's move step
+ *    (MOTION.t.move, 420ms) with the arrive curve (front-loaded, no
+ *    overshoot):
+ *    - the chosen PNG advances into the destination's cover slot (`coverMs`),
+ *      with a uniform scale, never stretched or flipped;
+ *    - the rest of the scene steps back: every other PNG object of the page
+ *      being left (the other gallery objects, the portrait anchor) shrinks
+ *      towards its floor, rises a little towards the horizon and dims away
+ *      (`stepBack`);
+ *    - the page being left fades out while the new page (its heading and
+ *      opening media included, live) fades in (`pageMs`), complementary and
+ *      blended additively, so the room behind (the same video) never dims.
+ *    The browser holds the picture of the old page while the new route renders
+ *    and its slot and opening media are checked (capped by `renderWaitMs`,
+ *    `slotDecodeMs`, `openingMediaWaitMs`; normally a few milliseconds).
  *
- * Click to settled is the wait (normally a frame or two) + max(pageMs,
- * coverMs) ≈ 420ms. `hardCapMs` ends any change.
+ * Click to settled is the wait (normally a frame or two) + 420ms. `hardCapMs`
+ * ends any change.
  */
 export const TRANSITION = {
-  /** The cross-fade of the whole page (old out, new in, same curve). */
-  pageMs: 380,
-  /** The PNG's move into its slot. */
-  coverMs: 420,
-  pageEase: 'cubic-bezier(0.33, 0, 0.25, 1)',
-  /** Quick to leave, gentle on arrival. */
-  coverEase: 'cubic-bezier(0.3, 0.1, 0.15, 1)',
-  /** Longest wait for the destination's cover file and opening image (decoded) before changing anyway. */
-  mediaWaitMs: 1200,
+  /** The cross-fade of the whole page (old out, new in, the same curve, so the two always sum to one scene). */
+  pageMs: MOTION.t.move,
+  pageEase: MOTION.ease.arrive,
+  /** The chosen PNG's move into its slot. */
+  coverMs: MOTION.t.move,
+  coverEase: MOTION.ease.arrive,
+  /**
+   * The rest of the scene steps back while the chosen object advances.
+   * - Each other PNG object shrinks to `scale` about its floor point, rises
+   *   by `rise` (a share of its own height: towards the horizon, as the
+   *   gallery places farther objects higher) and moves `converge` of its
+   *   distance towards the chosen object (receding in perspective) over `ms`
+   *   on the arrive curve, while it dims away over `fadeMs` on the exchange
+   *   curve (it stays visible while the recession shows; the arriving page
+   *   covers it, since it recedes behind that page). At
+   *   most `max` objects, the ones in view (transition.css has one rule per
+   *   name, `hk-back-0` to `hk-back-9`).
+   * - The rest of the page's content (title, labels, text) eases back to
+   *   `sceneScale` about the chosen object and clears over `sceneMs`, a
+   *   little sooner than the new page arrives, so old and new headings barely
+   *   overlap. The room is not part of it: it stays whole.
+   */
+  stepBack: {
+    enabled: true,
+    scale: 0.72,
+    rise: 0.07,
+    converge: 0.1,
+    ms: MOTION.t.move,
+    moveEase: MOTION.ease.arrive,
+    fadeMs: 360,
+    fadeEase: MOTION.ease.exchange,
+    sceneScale: 0.985,
+    sceneMs: 360,
+    sceneEase: MOTION.ease.arrive,
+    max: 10,
+  },
+  /** Longest wait for the destination's cover file and opening media (decoded) before changing anyway. */
+  mediaWaitMs: 1600,
   /** Longest wait for the route's code before an ordinary navigation (react-router still keeps the old page until it arrives). */
   chunkWaitMs: 8000,
   /** Inside the change (the browser holds the picture of the old page meanwhile): longest wait for React to render the new route. */
@@ -98,10 +113,7 @@ export const TRANSITION = {
    * CaseScroll's COVER_HEIGHT; a mismatch only costs a fetch at the click).
    */
   slotSizes: { '/about': '(min-width: 720px) 340px, 232px' } as Record<string, string>,
-  /**
-   * What each destination shows first beside its heading, warmed with the
-   * cover while the old page stays (OPENING_MEDIA above).
-   */
+  /** Opening media of destinations other than case studies (OPENING_MEDIA above). */
   openingMedia: OPENING_MEDIA,
   caseCoverHeights: { monitor: 232, laptop: 232, mug: 236, tablet: 272, camera: 228, phone: 292, headshot: 280 } as Record<ObjectKind, number>,
 } as const

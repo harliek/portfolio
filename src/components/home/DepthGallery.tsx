@@ -2,13 +2,23 @@ import { useCallback, useLayoutEffect, useRef, useState, type CSSProperties, typ
 import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { GALLERY } from '../../config/carousel'
 import { ACCENTS, accentVars, type AccentId } from '../../content/accents'
-import { CAROUSEL_ITEMS } from '../../content/carousel'
+import { GALLERY_ITEMS } from '../../content/carousel'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { isPlainClick, openProject, warmProject } from '../transition/projectTransition'
 import { notePaused, notePosition, persistPosition, recallPaused, recallPosition } from './carouselMemory'
 import { GalleryObject } from './GalleryObject'
-import { buildScene, FEATURED_SIZES, frontBoost, mod, objectSizes, OPENING_POS, place, titleGap, type Box, type Placement, type Scene } from './galleryModel'
+import { buildScene, keepReport, mod, newPlacement, OPENING_POS, place, smoothstep, type Box, type Placement, type Scene } from './galleryModel'
+
+/** A label line's box in stage px and its opacity. */
+interface LineBox extends Box {
+  op: number
+}
+/** A label's two lines (debug and checks). */
+interface LabelBox {
+  title: LineBox
+  sub: LineBox
+}
 
 /** Debug handle for browser checks in development. */
 interface GalleryDebug {
@@ -17,10 +27,16 @@ interface GalleryDebug {
   /** Current speed (items per second; positive = leftward travel). */
   speed: () => number
   /** Current wheel boost (extra speed in multiples of the idle speed) and run share (0 to 1). */
-  boost: () => { energy: number; boost: number; run: number }
+  boost: () => { energy: number; boost: number; run: number; rush: number }
+  /** Hover slow-down factor (motion-plan P1a) and the travel's direction share (1 = leftward). */
+  hoverK: () => number
+  left: () => number
   state: () => { hover: number; focus: number; kbd: boolean; press: number; touch: boolean; busy: boolean; paused: boolean; featured: number; holdIn: number; frame: boolean; wake: boolean }
   placements: () => Placement[]
-  scene: () => Scene
+  labels: () => LabelBox[]
+  /** The least room any object leaves to the identity block and the portrait round the loop (px), with where. */
+  keep: (hover?: boolean) => { least: number; i: number; pos: number }
+  scene: () => Omit<Scene, 'slotX' | 'widths' | 'heights' | 'boost'> & { widths: number[]; heights: number[] }
   /** Moves the gallery to a position; `run` continues the travel from there at full speed, otherwise it holds until the next input. */
   seek: (pos: number, run?: boolean) => void
   step: (dir: 1 | -1) => void
@@ -33,7 +49,7 @@ declare global {
   }
 }
 
-const N = CAROUSEL_ITEMS.length
+const N = GALLERY_ITEMS.length
 const TOUCH_QUERY = '(hover: none), (pointer: coarse)'
 /** Open menus and dialogs keep their own wheel scrolling. */
 const OWN_SCROLL = '.work-shelf[data-open], .site-menu[data-open], [role="dialog"], [aria-modal="true"], dialog'
@@ -49,50 +65,80 @@ function rimRgb(id: AccentId) {
 
 /** The largest rendered width at the current window size, for the images' `sizes` (front and hover included). */
 function initialSizes() {
-  const scene = buildScene(window.innerWidth, window.innerHeight, window.innerWidth < 600 ? 'mobile' : 'desktop')
-  const boost = frontBoost(scene, FEATURED_SIZES)
-  return FEATURED_SIZES.map((s, i) => `${Math.ceil(s.w * scene.u * boost[i] * GALLERY.hover.scale)}px`)
+  const scene = buildScene(window.innerWidth, window.innerHeight)
+  return Array.from(scene.widths, (w) => `${Math.ceil(w * GALLERY.hover.scale)}px`)
 }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 const smooth = (t: number) => t * t * (3 - 2 * t)
-const smoothstep = (e0: number, e1: number, x: number) => smooth(clamp((x - e0) / (e1 - e0), 0, 1))
+
+/** Per-frame style writes, skipped when the value has not changed. */
+class Writer {
+  private last = new Map<CSSStyleDeclaration, Map<string, string>>()
+  set(style: CSSStyleDeclaration, prop: string, value: string) {
+    let m = this.last.get(style)
+    if (!m) {
+      m = new Map()
+      this.last.set(style, m)
+    }
+    if (m.get(prop) === value) return
+    m.set(prop, value)
+    style.setProperty(prop, value)
+  }
+  reset() {
+    this.last.clear()
+  }
+}
+
+/** Each object's elements that the frame loop writes. */
+interface Parts {
+  item: HTMLLIElement
+  unit: HTMLSpanElement
+  object: HTMLSpanElement
+  label: HTMLSpanElement
+  name: HTMLElement
+  sub: HTMLElement | null
+  glow: HTMLElement | null
+  dim: HTMLElement | null
+  spill: HTMLElement | null
+  shadow: HTMLElement | null
+  reflect: HTMLElement | null
+}
 
 /**
- * The homepage depth gallery: the seven transparent PNG objects standing in
- * the architectural room at different depths (galleryModel.ts), in their
- * fixed order, with the featured object substantially closer and larger,
- * its two neighbours about three quarters of its size and turned towards
- * the viewer, and the outer ones receding at the window's edges.
+ * The homepage depth gallery: the six project objects standing on a curved
+ * rail in the architectural room, each one an object-label sculpture (its
+ * transparent PNG with its own title and subtitle beneath it, in the same
+ * moving unit). Every property of an object (its place, rise, scale, turn,
+ * light, label size and opacity, stacking order) comes from its one depth
+ * value (galleryModel.ts), so the active object is frontal, larger, lower,
+ * sharper and brighter, and the others turn away, rise, shrink, dim and
+ * quieten their labels together.
  *
  * Motion. The objects travel continuously to the left: each approaches from
- * the right, passes through the featured position and recedes to the left
- * (position, scale, turn, stacking order and brightness change together;
- * one continuous position, no snapping). Wheel and trackpad input, in any
+ * the right, passes through the active slot and recedes to the left (one
+ * continuous position, no snapping). Wheel and trackpad input, in any
  * direction, smoothly speeds up that same leftward travel in proportion to
- * the scrolling, capped at 2.5 times the idle speed, and eases back within
- * about 800 ms of the last input; the page itself never scrolls. The
- * previous and next arrows, the arrow keys (focus in the gallery) and
- * horizontal swipes bring the neighbouring project to the front with a
- * critically damped settle; the travel resumes shortly after.
+ * the scrolling, and eases back within about 800 ms of the last input; the
+ * page itself never scrolls, and other pages never see the listener. While
+ * boosted, objects turn a little further and the far ones dim slightly
+ * (motion-plan P1b). The previous and next chevrons, the arrow keys (focus
+ * in the gallery) and horizontal swipes bring the neighbouring project to
+ * the front with a critically damped settle; the travel resumes shortly
+ * after.
  *
- * Hover never pauses the travel: the object under the pointer (also a
- * still pointer, as the objects glide beneath it) comes slightly forward
- * with a stronger glow. A press picks its object at once: the click that
- * completes it opens that project, whatever has moved under the pointer
- * meanwhile, and the travel holds while the button is down. Keyboard focus
- * in the gallery holds it too, so a focused object stays put to be
- * activated; an object that is not clearly shown comes to the front. A
- * "Pause motion" control, hidden until it receives keyboard focus (the
- * gallery's first stop), stops the travel for the session; Space on an
- * object does the same.
- *
- * Only the foremost object shows its live title and subtitle, centred
- * beneath it in a reserved caption area (the other names stay in the
- * accessibility tree as each link's name).
+ * Hover never stops the travel: it eases to 0.7 of its idle speed (P1a)
+ * while the object under the pointer comes slightly forward with a stronger
+ * glow. A press picks its object at once: the click that completes it opens
+ * that project, whatever has moved under the pointer meanwhile, and the
+ * travel holds while the button is down. Keyboard focus in the gallery
+ * holds it too, so a focused object stays put to be activated; an object
+ * that is not clearly shown comes to the front. A "Pause motion" control,
+ * hidden until it receives keyboard focus (the gallery's first stop),
+ * stops the travel for the session; Space on an object does the same.
  *
  * Reduced motion (the operating system's setting): the same arrangement,
- * still; steps (arrows, keys, swipe, one per wheel gesture) change with a
+ * still; steps (chevrons, keys, swipe, one per wheel gesture) change with a
  * short cross-fade.
  *
  * Browser Back restores the position (carouselMemory.ts); every listener
@@ -107,9 +153,9 @@ export function DepthGallery() {
   const touch = useMediaQuery(TOUCH_QUERY)
   const rootRef = useRef<HTMLElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
-  const barRef = useRef<HTMLDivElement>(null)
   const liveRef = useRef<HTMLParagraphElement>(null)
   const itemRefs = useRef<Array<HTMLLIElement | null>>([])
+  const unitRefs = useRef<Array<HTMLSpanElement | null>>([])
   const objectRefs = useRef<Array<HTMLSpanElement | null>>([])
   const labelRefs = useRef<Array<HTMLSpanElement | null>>([])
   const linkRefs = useRef<Array<HTMLAnchorElement | null>>([])
@@ -131,7 +177,7 @@ export function DepthGallery() {
   /**
    * When each object's image was ready to show (performance.now(); 0: already
    * loaded at mount; NaN: not yet). Until then the object (with its floor
-   * light, shadow and reflection) and its name stay hidden; then they fade
+   * light, shadow and reflection) and its label stay hidden; then they fade
    * in together (GALLERY.appear; at once with reduced motion).
    */
   const shownAt = useRef<number[]>(Array.from({ length: N }, () => Number.NaN))
@@ -145,118 +191,136 @@ export function DepthGallery() {
     const root = rootRef.current
     const stage = stageRef.current
     const items = itemRefs.current.slice(0, N) as HTMLLIElement[]
+    const units = unitRefs.current.slice(0, N) as HTMLSpanElement[]
     const objects = objectRefs.current.slice(0, N) as HTMLSpanElement[]
     const labels = labelRefs.current.slice(0, N) as HTMLSpanElement[]
     const links = linkRefs.current.slice(0, N) as HTMLAnchorElement[]
-    if (!root || !stage || [items, objects, labels, links].some((list) => list.length < N || list.some((x) => !x))) return
+    if (!root || !stage || [items, units, objects, labels, links].some((list) => list.length < N || list.some((x) => !x))) return
+    const parts: Parts[] = items.map((item, i) => ({
+      item,
+      unit: units[i],
+      object: objects[i],
+      label: labels[i],
+      name: labels[i].querySelector<HTMLElement>('.gobj__name')!,
+      sub: labels[i].querySelector<HTMLElement>('.gobj__sub'),
+      glow: objects[i].querySelector<HTMLElement>('.gobj__glow'),
+      dim: objects[i].querySelector<HTMLElement>('.gobj__dim'),
+      spill: objects[i].querySelector<HTMLElement>('.gobj__spill'),
+      shadow: objects[i].querySelector<HTMLElement>('.gobj__shadow'),
+      reflect: objects[i].querySelector<HTMLElement>('.gobj__reflect'),
+    }))
 
     // ------------------------------------------------------------------
     // Measurement and layout
     // ------------------------------------------------------------------
-    let scene: Scene = buildScene(1440, 900, 'desktop')
-    const widths = new Float64Array(N)
-    const heights = new Float64Array(N)
-    let boost: number[] = new Array<number>(N).fill(1)
-    /** Each caption's half-width (px). */
-    const capHalf = new Float64Array(N)
-    const P: Placement[] = Array.from({ length: N }, () => ({ d: 0, a: 0, s: 1, k: 1, turn: 0, x: 0, base: 0, hw: 0, vis: 1, op: 1 }))
-    const written = {
-      t: new Array<string>(N).fill(''),
-      o: new Array<string>(N).fill(''),
-      z: new Array<number>(N).fill(-1),
-      tier: new Array<number>(N).fill(-1),
-      room: new Array<number>(N).fill(-1),
-      off: new Array<number>(N).fill(-1),
-      lt: new Array<string>(N).fill(''),
-      lo: new Array<string>(N).fill(''),
-    }
+    let scene: Scene = buildScene(1440, 900)
+    /** Each label's size at full scale (px): the title's width and height, the subtitle's. */
+    const lab = Array.from({ length: N }, () => ({ tw: 0, th: 0, sw: 0, sh: 0, gap: 0 }))
+    const P: Placement[] = Array.from({ length: N }, newPlacement)
+    const line = (): LineBox => ({ l: 0, t: 0, r: 0, b: 0, op: 0 })
+    const boxes: LabelBox[] = Array.from({ length: N }, () => ({ title: line(), sub: line() }))
+    const w = new Writer()
+    const written = { tier: new Array<number>(N).fill(-1), off: new Array<number>(N).fill(-1) }
     let featured = -1
     const dpr = window.devicePixelRatio || 1
     const px = (v: number) => (Math.round(v * dpr * 4) / (dpr * 4)).toFixed(2)
+    const f3 = (v: number) => clamp(v, 0, 1).toFixed(3)
 
-    const floorFile = (): 'desktop' | 'mobile' => (document.querySelector<HTMLElement>('.stage-bg')?.dataset.file === 'mobile' ? 'mobile' : 'desktop')
+    /** The width of a text's lines as set (px): the widest line, not its box. */
+    const inked = (el: HTMLElement) => {
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      let l = Infinity
+      let r = -Infinity
+      for (const rect of range.getClientRects()) {
+        l = Math.min(l, rect.left)
+        r = Math.max(r, rect.right)
+      }
+      return r > l ? r - l : el.offsetWidth
+    }
 
-    /** The captions' sizes; returns the tallest (px). */
+    /** The labels' widths (from their objects' size in front) and their lines' sizes at full scale; returns the tallest (px). */
     const measureLabels = () => {
+      const { share, min, max } = GALLERY.label.width
       let tallest = 0
-      labels.forEach((label, i) => {
-        const cap = label.querySelector<HTMLElement>('.gobj__caption')
-        capHalf[i] = (cap?.offsetWidth ?? 240) / 2
-        tallest = Math.max(tallest, cap?.offsetHeight ?? 0)
+      parts.forEach((pt, i) => {
+        const lw = Math.min(scene.W - 24, clamp((share * scene.widths[i]) / scene.boost[i], min, max))
+        pt.item.style.setProperty('--lw', `${lw.toFixed(1)}px`)
+        // Measured at full scale (the frame loop writes the transform again).
+        pt.label.style.transform = 'none'
+        lab[i].tw = inked(pt.name)
+        lab[i].th = pt.name.offsetHeight
+        lab[i].sw = pt.sub ? inked(pt.sub) : 0
+        lab[i].sh = pt.sub?.offsetHeight ?? 0
+        lab[i].gap = pt.sub ? parseFloat(getComputedStyle(pt.sub).marginTop) || 0 : 0
+        tallest = Math.max(tallest, lab[i].th + lab[i].sh + lab[i].gap)
       })
       return tallest
     }
 
     /**
-     * The homepage title's right and bottom edges and its lines' boxes, in
-     * stage px: the name and the supporting line by their text, "Port" and
-     * "folio" by their boxes grown by their violet edge.
+     * What the objects keep clear of, in stage px: the identity block's lines
+     * (by their text) and the portrait anchor's box.
      */
-    const identity = () => {
+    const keepOut = (): Box[] => {
       const home = root.closest('.home')
-      const id = home?.querySelector('.home-id__block')
-      if (!home || !id) return null
+      if (!home) return []
       const s = stage.getBoundingClientRect()
-      const box = (r: DOMRect, grow = 0): Box => ({ l: r.left - s.left - grow, t: r.top - s.top - grow, r: r.right - s.left + grow, b: r.bottom - s.top + grow })
+      const box = (r: DOMRect): Box => ({ l: r.left - s.left, t: r.top - s.top, r: r.right - s.left, b: r.bottom - s.top })
       const text = (el: Element) => {
         const range = document.createRange()
         range.selectNodeContents(el)
         return range.getBoundingClientRect()
       }
-      const lines: Box[] = []
-      for (const el of home.querySelectorAll('.home-id__name, .home-id__desc')) lines.push(box(text(el)))
-      for (const el of home.querySelectorAll<HTMLElement>('.home-id__port, .home-id__folio')) lines.push(box(el.getBoundingClientRect(), parseFloat(getComputedStyle(el).fontSize) * 0.03))
-      const r = id.getBoundingClientRect()
-      return { right: r.right - s.left, bottom: r.bottom - s.top, lines }
+      const out: Box[] = []
+      for (const el of home.querySelectorAll('.home-id__name, .home-id__word, .home-id__desc')) out.push(box(text(el)))
+      // The portrait's image, down to where its faded lower edge has mostly gone (home.css: it fades over its lowest 20%).
+      const portrait = home.querySelector('.home-portrait__art img')
+      if (portrait) {
+        const b = box(portrait.getBoundingClientRect())
+        out.push({ ...b, b: b.b - (b.b - b.t) * 0.12 })
+      }
+      return out.filter((b) => b.r > b.l && b.b > b.t)
     }
 
     const measure = () => {
-      const caption = measureLabels()
-      const bar = barRef.current?.querySelector('.gallery__nav')?.getBoundingClientRect()
-      const barTop = bar ? bar.top - stage.getBoundingClientRect().top : stage.clientHeight
-      scene = buildScene(stage.clientWidth, stage.clientHeight, floorFile(), { id: identity(), caption, bar: barTop })
+      // Label widths depend on the objects' sizes: a first scene, then the labels, then the scene that fits them.
+      scene = buildScene(stage.clientWidth, stage.clientHeight)
+      const label = measureLabels()
+      scene = buildScene(stage.clientWidth, stage.clientHeight, { keep: keepOut(), label })
+      measureLabels()
       root.style.setProperty('--u', scene.u.toFixed(4))
       root.dataset.cls = scene.cls
-      const sized = objectSizes(scene)
-      boost = sized.boost
       for (let i = 0; i < N; i++) {
-        widths[i] = sized.widths[i]
-        heights[i] = sized.heights[i]
-        items[i].style.setProperty('--w', `${widths[i].toFixed(2)}px`)
-        items[i].style.setProperty('--h', `${heights[i].toFixed(2)}px`)
+        items[i].style.setProperty('--w', `${scene.widths[i].toFixed(2)}px`)
+        items[i].style.setProperty('--h', `${scene.heights[i].toFixed(2)}px`)
       }
-      written.t.fill('')
-      written.lt.fill('')
+      w.reset()
     }
-
-    /**
-     * How much of the hover's growth and rise object i can take at placement
-     * `p` and stay `hover.clear` px from the title (1: all of it).
-     */
-    const roomAt = (i: number, p: Placement) => {
-      if (p.op <= 0.05 || p.d >= 0.5) return 1
-      const { scale, frontScale, lift, clear } = GALLERY.hover
-      const hs = p.a < 0.5 ? frontScale : scale
-      const gapAt = (r: number) => titleGap(i, p, scene, widths[i], heights[i], 1 + (hs - 1) * r, lift * scene.u * r)
-      if (gapAt(1) >= clear) return 1
-      let lo = 0
-      let hi = 1
-      for (let k = 0; k < 5; k++) {
-        const mid = (lo + hi) / 2
-        if (gapAt(mid) >= clear) lo = mid
-        else hi = mid
-      }
-      return lo
-    }
-    /** The placements a moment ahead on the current movement (for the hover's room). */
-    const PA: Placement[] = P.map((p) => ({ ...p }))
-    const LOOK_AHEAD_S = 0.35
 
     /** How far each object has appeared (0 until its image has decoded, then a short fade to 1). */
     const appeared = new Float64Array(N)
+    /** Hover and keyboard focus light per object, eased (0 to 1). */
+    const hov = new Float64Array(N)
+    const hovTarget = (i: number) => (i === st.active || i === st.press ? 1 : 0)
+    const easeHover = (dt: number) => {
+      let moving = false
+      const { hoverInMs, hoverOutMs } = GALLERY.light
+      for (let i = 0; i < N; i++) {
+        const t = hovTarget(i)
+        if (reduced) hov[i] = t
+        else if (hov[i] !== t) {
+          const tau = (t > hov[i] ? hoverInMs : hoverOutMs) / 3
+          hov[i] += (t - hov[i]) * (1 - Math.exp((-dt * 1000) / tau))
+          if (Math.abs(hov[i] - t) < 0.002) hov[i] = t
+        }
+        if (hov[i] !== t) moving = true
+      }
+      return moving
+    }
+
     const layout = () => {
-      place(pos, widths, boost, scene, P)
-      if (scene.title.length) place(pos + (mode === 'drag' ? 0 : speed * LOOK_AHEAD_S), widths, boost, scene, PA)
+      place(pos, scene, P, left, rush)
       const { u, W } = scene
       const tNow = performance.now()
       for (let i = 0; i < N; i++) {
@@ -265,67 +329,85 @@ export function DepthGallery() {
         appeared[i] = x * (2 - x)
       }
       const persp = (GALLERY.perspective * u).toFixed(0)
-      const { gap, follow, show, edgeMargin } = GALLERY.label
+      const { gap, follow, visible, yieldPx } = GALLERY.label
       let nearest = 0
       for (let i = 1; i < N; i++) if (P[i].a < P[nearest].a) nearest = i
-      // The caption line: a fixed distance below the featured slot's base.
-      const ly = scene.yb0 + gap
+
+      // Labels first: each line's box, then collision control (the farther label yields).
       for (let i = 0; i < N; i++) {
         const p = P[i]
-        const obj = objects[i]
-        // Place, depth scale and floor line come from the model's single horizon
-        // and front position; the turn gets a gentle keystone about the object's
-        // own axis (projectTransition.ts reads this perspective() rotateY() pair).
-        const t = `translate3d(${px(p.x - widths[i] / 2)}px, ${px(p.base - heights[i])}px, 0) scale(${p.k.toFixed(4)}) perspective(${persp}px) rotateY(${p.turn.toFixed(4)}rad)`
-        if (t !== written.t[i]) {
-          obj.style.transform = t
-          written.t[i] = t
+        const h = hov[i]
+        const L = lab[i]
+        const lx = p.x + (GALLERY.center[GALLERY_ITEMS[i].kind] - 0.5) * scene.widths[i] * p.k * Math.cos(p.turn)
+        const ly = p.base + gap * p.s
+        const { title, sub } = boxes[i]
+        title.l = lx - (L.tw * p.ls) / 2
+        title.r = lx + (L.tw * p.ls) / 2
+        title.t = ly
+        title.b = ly + L.th * p.ls
+        sub.l = lx - (L.sw * p.ls) / 2
+        sub.r = lx + (L.sw * p.ls) / 2
+        sub.t = title.b + L.gap * p.ls
+        sub.b = sub.t + L.sh * p.ls
+        // A label mostly outside the window fades out (the object itself may be cut by the edge).
+        const tw = title.r - title.l
+        const inside = tw > 0 ? (Math.min(title.r, W) - Math.max(title.l, 0)) / tw : 1
+        const shown = p.vis * appeared[i] * smoothstep(visible[0], visible[1], inside)
+        title.op = (p.lt + (1 - p.lt) * h * 0.7) * shown
+        sub.op = L.sw > 0 ? (p.lsub + (1 - p.lsub) * h * 0.6) * shown : 0
+      }
+      // Nearest first: each line yields to every shown line of a nearer label it comes within
+      // yieldPx of (the subtitle first; never a subtitle without its title).
+      const byDepth = Array.from({ length: N }, (_, i) => i).sort((x, y) => P[x].a - P[y].a)
+      const room = (a: Box, b: Box) => clamp(Math.max(b.l - a.r, a.l - b.r, b.t - a.b, a.t - b.b) / yieldPx, 0, 1)
+      for (let j = 1; j < N; j++) {
+        const far = boxes[byDepth[j]]
+        let yt = 1
+        let ys = 1
+        for (let k = 0; k < j; k++) {
+          const near = boxes[byDepth[k]]
+          for (const n of [near.title, near.sub]) {
+            if (n.op < 0.02) continue
+            yt = Math.min(yt, room(far.title, n))
+            if (far.sub.op > 0) ys = Math.min(ys, room(far.sub, n))
+          }
         }
-        const o = (p.op * appeared[i]).toFixed(3)
-        if (o !== written.o[i]) {
-          obj.style.opacity = o
-          written.o[i] = o
-        }
-        const z = Math.round(100 - p.a * 10)
-        if (z !== written.z[i]) {
-          obj.style.zIndex = String(z)
-          written.z[i] = z
-        }
+        far.title.op *= yt
+        far.sub.op *= Math.min(ys, yt)
+      }
+
+      for (let i = 0; i < N; i++) {
+        const p = P[i]
+        const pt = parts[i]
+        const h = hov[i]
+        const show = appeared[i]
+        // The moving unit: the object's base centre on the floor; the object and its label inside it.
+        w.set(pt.unit.style, 'transform', `translate3d(${px(p.x)}px, ${px(p.base)}px, 0)`)
+        w.set(pt.unit.style, 'z-index', String(p.z))
+        // Scale and turn about the base (projectTransition.ts reads this perspective() rotateY() pair).
+        w.set(pt.object.style, 'transform', `scale(${p.k.toFixed(4)}) perspective(${persp}px) rotateY(${p.turn.toFixed(4)}rad)`)
+        w.set(pt.object.style, 'opacity', f3(p.op * show))
+        // Light by depth; hover and keyboard focus raise it.
+        if (pt.glow) w.set(pt.glow.style, 'opacity', f3(p.glow + (1 - p.glow) * h))
+        if (pt.dim) w.set(pt.dim.style, 'opacity', f3(p.dim * (1 - 0.6 * h)))
+        if (pt.spill) w.set(pt.spill.style, 'opacity', f3(p.spill * 0.72 + (1 - p.spill * 0.72) * h))
+        if (pt.shadow) w.set(pt.shadow.style, 'opacity', f3(p.shadow * (1 - 0.33 * h)))
+        if (pt.reflect) w.set(pt.reflect.style, 'opacity', f3(p.reflect))
+        // The label: beneath the object's visual centre, scaled with its depth, upright (a slight share of the turn).
+        const { title, sub } = boxes[i]
+        const dx = (title.l + title.r) / 2 - p.x
+        const dy = title.t - p.base
+        w.set(pt.label.style, 'transform', `translate3d(${px(dx)}px, ${px(dy)}px, 0) scale(${p.ls.toFixed(4)}) perspective(${persp}px) rotateY(${(p.turn * follow).toFixed(4)}rad)`)
+        w.set(pt.name.style, 'opacity', f3(title.op))
+        if (pt.sub) w.set(pt.sub.style, 'opacity', f3(sub.op))
         const tier = p.a < 0.5 ? 0 : p.a < 1.5 ? 1 : 2
         if (tier !== written.tier[i]) {
           items[i].dataset.tier = String(tier)
           written.tier[i] = tier
         }
-        // Beneath the title, hover grows and rises the object only as far as
-        // keeps it `hover.clear` px from the title, here and a moment ahead
-        // on its path (the lift eases over 280 ms): --room, 1 fully, 0 not at all.
-        const room = scene.title.length ? Math.min(roomAt(i, p), roomAt(i, PA[i])) : 1
-        const rq = Math.floor(room * 20) / 20
-        if (rq !== written.room[i]) {
-          items[i].style.setProperty('--room', String(rq))
-          written.room[i] = rq
-        }
-        // The caption: only the foremost object's, beneath the featured slot,
-        // following its object a little sideways; it fades out before the
-        // next object becomes the foremost (never two at once).
-        const half = capHalf[i]
-        let lx = scene.x0 + (p.x - scene.x0) * follow
-        if (W > 2 * (half + edgeMargin)) lx = clamp(lx, half + edgeMargin, W - half - edgeMargin)
-        else lx = W / 2
-        const lop = i === nearest ? (1 - smoothstep(show, 0.5, p.a)) * appeared[i] : 0
-        const lt = `translate3d(${px(lx)}px, ${px(ly)}px, 0)`
-        if (lt !== written.lt[i]) {
-          labels[i].style.transform = lt
-          written.lt[i] = lt
-        }
-        const lo = lop.toFixed(3)
-        if (lo !== written.lo[i]) {
-          labels[i].style.opacity = lo
-          written.lo[i] = lo
-        }
-        // Pointer targets: only objects (and the caption) that are clearly shown.
+        // Pointer targets: only objects (and labels) that are clearly shown.
         const inStage = Math.min(p.x + p.hw, W) - Math.max(p.x - p.hw, 0)
-        const off = (p.op * appeared[i] < 0.35 || inStage < p.hw * 0.9 ? 1 : 0) + (lop < 0.45 ? 2 : 0)
+        const off = (p.op * show < 0.35 || inStage < p.hw * 0.9 ? 1 : 0) + (title.op < 0.45 ? 2 : 0)
         if (off !== written.off[i]) {
           if (off & 1) items[i].dataset.off = ''
           else delete items[i].dataset.off
@@ -360,6 +442,13 @@ export function DepthGallery() {
     let energy = 0
     let extra = 0
     let speed = 0
+    /** The wheel boost's share of its cap (motion-plan P1b: a little more turn, far objects a little dimmer). */
+    let rush = 0
+    /** Motion-plan P1a: the idle travel's factor while the pointer rests on an object (eases to 0.7, never stops). */
+    let hoverK = 1
+    /** The share of leftward travel in the current movement (the turn leads the travel in its direction). */
+    let left = 1
+    let lastPos = pos
     const st = { hover: -1, focus: -1, active: -1, kbd: false, press: -1, touch: false, busy: false, visible: document.visibilityState === 'visible' }
     let raf = 0
     let last = 0
@@ -401,19 +490,21 @@ export function DepthGallery() {
       }
       const dt = (last ? Math.min(now - last, GALLERY.maxStep * 1000) / 1000 : 0) * debugScale()
       last = now
+      const lighting = easeHover(dt)
       if (mode === 'drag') {
+        trackDirection(dt)
         layout()
         return
       }
       let again = true
       if (mode === 'step') {
         // Critically damped spring towards the target (exact step): no bounce, no overshoot.
-        const w = GALLERY.settle.omega
+        const om = GALLERY.settle.omega
         const x = pos - target
-        const e = Math.exp(-w * dt)
-        const k = vel + w * x
+        const e = Math.exp(-om * dt)
+        const k = vel + om * x
         pos = target + (x + k * dt) * e
-        vel = (vel - w * k * dt) * e
+        vel = (vel - om * k * dt) * e
         speed = vel
         if (Math.abs(pos - target) < 0.0008 && Math.abs(vel) < 0.02) {
           pos = target
@@ -426,36 +517,46 @@ export function DepthGallery() {
           announce()
         }
       } else if (reduced) {
-        again = false
+        again = lighting
       } else {
         // Continuous leftward travel: the idle speed (a gentle wave, slower near
-        // each featured position, never stopped) eased in and out, plus the
-        // wheel's extra speed.
+        // each active position, never stopped; eased to 0.7 while the pointer
+        // rests on an object) eased in and out, plus the wheel's extra speed.
         const hold = holding()
         const still = hold || now < holdUntil
         const { rate, wave, rampMs, stopMs } = GALLERY.drift
         if (still) rampT = Math.max(0, rampT - (dt * 1000) / stopMs)
         else rampT = Math.min(1, rampT + (dt * 1000) / rampMs)
-        const { decayMs, smoothMs } = GALLERY.wheel
+        const { decayMs, smoothMs, max } = GALLERY.wheel
         energy *= Math.exp((-dt * 1000) / decayMs)
         extra += (energy - extra) * (1 - Math.exp((-dt * 1000) / smoothMs))
         if (hold) {
           energy = 0
           extra = Math.min(extra, rampT)
         }
+        const slow = GALLERY.hover.slow
+        const slowTo = st.hover >= 0 ? slow.factor : 1
+        const tau = (slowTo < hoverK ? slow.inMs : slow.outMs) / 3
+        hoverK += (slowTo - hoverK) * (1 - Math.exp((-dt * 1000) / tau))
         const f = pos - Math.floor(pos)
         const shape = (1 - wave * Math.cos(2 * Math.PI * f)) / Math.sqrt(1 - wave * wave)
-        speed = rate * Math.min(shape * smooth(rampT) + extra, 1 + GALLERY.wheel.max)
+        speed = rate * Math.min(shape * smooth(rampT) * hoverK + extra, 1 + max)
+        rush = clamp(extra / max, 0, 1)
         pos += speed * dt
         // At rest and meant to stay so: no frames until something wakes the travel.
         if (still && rampT === 0 && extra < 1e-4) {
           speed = 0
           extra = 0
           energy = 0
-          again = false
+          rush = 0
+          again = lighting
         }
       }
-      if (pos > N * 1000 || pos < -N * 1000) pos = mod(pos, N)
+      if (pos > N * 1000 || pos < -N * 1000) {
+        pos = mod(pos, N)
+        lastPos = pos
+      }
+      trackDirection(dt)
       layout()
       // Hover follows what is under a still pointer (mouse and pen).
       if (pointer.inside && now >= pollAt && !st.busy) {
@@ -466,18 +567,28 @@ export function DepthGallery() {
       else if (!reduced && !holding() && mode === 'run') wakeAt(holdUntil)
     }
 
+    /** The direction of travel, eased over about 100 ms (a change of direction mid-step turns smoothly). */
+    function trackDirection(dt: number) {
+      const dp = pos - lastPos
+      lastPos = pos
+      if (Math.abs(dp) < 1e-7) return
+      const to = dp > 0 ? 1 : 0
+      left += (to - left) * (1 - Math.exp((-dt * 1000) / 100))
+      if (Math.abs(left - to) < 0.001) left = to
+    }
+
     /** After a hold ends (focus leaves, the press ends, the pause is lifted): the travel ramps in again. */
     const resume = () => {
       if (holding()) return
       kick()
     }
 
-    /** Announces the featured project after an arrow-button step (keyboard steps move focus, which announces itself). */
+    /** Announces the active project after a chevron step (keyboard steps move focus, which announces itself). */
     let announcePending = false
     function announce() {
       if (!announcePending || !liveRef.current) return
       announcePending = false
-      const item = CAROUSEL_ITEMS[mod(Math.round(pos), N)]
+      const item = GALLERY_ITEMS[mod(Math.round(pos), N)]
       liveRef.current.textContent = [item.name, item.subtitle].filter(Boolean).join('. ')
     }
 
@@ -493,17 +604,18 @@ export function DepthGallery() {
       const { outMs, inMs } = GALLERY.reduced
       const from = list ? Number(getComputedStyle(list).opacity) : 1
       fadeAnim?.cancel()
-      fadeAnim = list?.animate([{ opacity: from }, { opacity: 0 }], { duration: outMs * from, easing: 'ease-out', fill: 'forwards' }) ?? null
+      fadeAnim = list?.animate([{ opacity: from }, { opacity: 0 }], { duration: outMs * from, easing: 'cubic-bezier(0.33, 0, 0.25, 1)', fill: 'forwards' }) ?? null
       swapping = true
       fade = window.setTimeout(() => {
         pos = T
+        lastPos = T
         target = T
         swapping = false
         layout()
         save()
         announce()
         fadeAnim?.cancel()
-        fadeAnim = list?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: inMs, easing: 'ease-out' }) ?? null
+        fadeAnim = list?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: inMs, easing: 'cubic-bezier(0.33, 0, 0.25, 1)' }) ?? null
       }, outMs * from)
     }
 
@@ -514,10 +626,11 @@ export function DepthGallery() {
       mode = 'step'
       energy = 0
       extra = 0
+      rush = 0
       kick()
     }
 
-    /** The resting position the gallery is at or heading to (its foremost project). */
+    /** The resting position the gallery is at or heading to (its active project). */
     const heading = () => (reduced ? (swapping ? target : Math.round(pos)) : mode === 'step' ? target : Math.round(pos))
 
     /** One project forward (the next one comes to the front; leftward) or back. Returns the new target. */
@@ -536,8 +649,8 @@ export function DepthGallery() {
     /**
      * Arrow keys on object i: the object beside it (in the key's direction)
      * comes to the front, and the caller moves the focus to it. From the
-     * foremost object this is one ordinary step; from a neighbour it may
-     * mean no movement (the foremost one is beside it) or a longer one.
+     * active object this is one ordinary step; from a neighbour it may
+     * mean no movement (the active one is beside it) or a longer one.
      * Returns the new position.
      */
     const stepFrom = (i: number, dir: 1 | -1) => {
@@ -556,7 +669,7 @@ export function DepthGallery() {
       return T
     }
 
-    /** Brings item i to the front (keyboard focus on an object that is not clearly shown). */
+    /** Brings item i to the front (keyboard focus on an object that is not the active one). */
     const feature = (i: number) => {
       const d = P[i].d
       if (Math.abs(d) < 0.02 && mode !== 'step') return
@@ -590,8 +703,8 @@ export function DepthGallery() {
     if (fading()) appear()
 
     // ------------------------------------------------------------------
-    // Hover (mouse and pen): only an object's silhouette or the shown caption
-    // counts. It never holds the travel; the object glows and lifts a little.
+    // Hover (mouse and pen): only an object's silhouette or its shown label
+    // counts. It never stops the travel; the object glows and lifts a little.
     // ------------------------------------------------------------------
     function indexOf(el: EventTarget | null) {
       if (!(el instanceof Element)) return -1
@@ -606,11 +719,19 @@ export function DepthGallery() {
       st.active = next
       if (next >= 0) root.dataset.hasActive = ''
       else delete root.dataset.hasActive
+      lightChanged()
+    }
+    /** Hover or press light changed: ease it in the frame loop (at once with reduced motion). */
+    function lightChanged() {
+      if (reduced) {
+        easeHover(0)
+        layout()
+      } else kick()
     }
     function setHover(i: number) {
       if (st.hover === i) return
       st.hover = i
-      if (i >= 0) warmProject(CAROUSEL_ITEMS[i].path)
+      if (i >= 0) warmProject(GALLERY_ITEMS[i].path)
       setActive()
     }
     const onMove = (e: PointerEvent) => {
@@ -647,6 +768,7 @@ export function DepthGallery() {
       if (i >= 0 && e.pointerType !== 'touch') {
         st.press = i
         items[i].dataset.pressed = ''
+        lightChanged()
       }
     }
     const endPress = (e: PointerEvent) => {
@@ -657,6 +779,7 @@ export function DepthGallery() {
       window.setTimeout(() => {
         if (!st.busy) delete items[i].dataset.pressed
       }, 0)
+      lightChanged()
       resume()
     }
     root.addEventListener('pointerdown', onPressDown, true)
@@ -664,7 +787,7 @@ export function DepthGallery() {
     window.addEventListener('pointercancel', endPress, true)
 
     const openItem = (i: number) => {
-      const item = CAROUSEL_ITEMS[i]
+      const item = GALLERY_ITEMS[i]
       const source = objects[i]?.querySelector<HTMLElement>('[data-cover-source]') ?? null
       const result = openProject({ path: item.path, source, navigate, onCancel: () => api.current?.resume(i) })
       if (result === 'cover') api.current?.freeze(i)
@@ -683,7 +806,7 @@ export function DepthGallery() {
       // Keyboard activation, assistive technology or a script: the link's own handler opens it.
       if (e.detail === 0 || performance.now() - pr.t > GALLERY.press.ms) return
       const onLink = e.target instanceof Element && e.target.closest('.gobj__link')
-      // Controls (the arrows, the pause control) keep their own clicks.
+      // Controls (the chevrons, the pause control) keep their own clicks.
       if (pr.i < 0 && !onLink) return
       const moved = Math.hypot(e.clientX - pr.x, e.clientY - pr.y) > GALLERY.press.slop
       const own = pr.i >= 0 && links[pr.i].contains(e.target as Node)
@@ -700,8 +823,8 @@ export function DepthGallery() {
     // ------------------------------------------------------------------
     // Keyboard: focus in the gallery holds the travel, so the focused object
     // stays put to be activated. A focused object comes to the front (where
-    // its caption, with the focus ring, shows). Arrows step from the focused
-    // object (stepFrom); Space on an object pauses or resumes the travel.
+    // its label, with the focus ring, shows in full). Arrows step from the
+    // focused object (stepFrom); Space on an object pauses or resumes the travel.
     // ------------------------------------------------------------------
     const onFocusIn = (e: FocusEvent) => {
       const el = e.target instanceof Element ? e.target : null
@@ -736,7 +859,7 @@ export function DepthGallery() {
       const dir = e.key === 'ArrowRight' ? 1 : -1
       const at = onLink ? links.indexOf(onLink as HTMLAnchorElement) : -1
       if (at >= 0) {
-        // From the focused object (not the foremost one): focus never skips an object.
+        // From the focused object (not the active one): focus never skips an object.
         const T = stepFrom(at, dir)
         links[mod(T, N)].focus({ preventScroll: true })
       } else {
@@ -751,6 +874,7 @@ export function DepthGallery() {
     // ------------------------------------------------------------------
     // Wheel and trackpad, anywhere on the homepage (it does not scroll):
     // any direction speeds up the leftward travel, in proportion, capped.
+    // The listener lives only while the homepage is mounted.
     // ------------------------------------------------------------------
     const wheelGesture = { last: -Infinity, acc: 0, stepped: false }
     const onWheel = (e: WheelEvent) => {
@@ -834,6 +958,7 @@ export function DepthGallery() {
             rampT = 0
             energy = 0
             extra = 0
+            rush = 0
           }
         } else if (Math.abs(dy) > slop) {
           drag.id = -1
@@ -901,20 +1026,20 @@ export function DepthGallery() {
         measure()
         layout()
         // Sharper files when the objects grew well beyond what their `sizes` asked for.
-        const want = Array.from(widths, (w) => Math.ceil(w * GALLERY.hover.scale))
+        const want = Array.from(scene.widths, (x) => Math.ceil(x * GALLERY.hover.scale))
         const have = objects.map((o) => parseFloat(o.querySelector('.gobj__art img')?.getAttribute('sizes') ?? '0'))
-        if (want.some((w, i) => w > have[i] * 1.15)) setSizes(want.map((w) => `${w}px`))
+        if (want.some((x, i) => x > have[i] * 1.15)) setSizes(want.map((x) => `${x}px`))
       })
     }
     const ro = new ResizeObserver(onResize)
     ro.observe(stage)
-    const title = root.closest('.home')?.querySelector('.home-id__block')
-    if (title) ro.observe(title)
+    const identity = root.closest('.home')?.querySelector('.home-id')
+    if (identity) ro.observe(identity)
     window.addEventListener('resize', onResize)
     let alive = true
     void document.fonts?.ready.then(() => {
       if (!alive) return
-      // The captions' sizes and the title's box (the objects' room) follow the loaded fonts.
+      // The labels' sizes and the identity block's box (the objects' room) follow the loaded fonts.
       measure()
       layout()
     })
@@ -924,7 +1049,7 @@ export function DepthGallery() {
         announcePending = true
         step(dir)
       },
-      // A project is opening: everything stops where it is; the others dim.
+      // A project is opening: everything stops where it is.
       freeze: (i) => {
         st.busy = true
         root.dataset.leaving = ''
@@ -953,12 +1078,22 @@ export function DepthGallery() {
         pos: () => pos,
         mode: () => mode,
         speed: () => speed,
-        boost: () => ({ energy, boost: extra, run: smooth(rampT) }),
+        boost: () => ({ energy, boost: extra, run: smooth(rampT), rush }),
+        hoverK: () => hoverK,
+        left: () => left,
         state: () => ({ hover: st.hover, focus: st.focus, kbd: st.kbd, press: st.press, touch: st.touch, busy: st.busy, paused: pausedRef.current, featured, holdIn: holdUntil - performance.now(), frame: raf !== 0, wake: wake !== 0 }),
         placements: () => P.map((p) => ({ ...p })),
-        scene: () => ({ ...scene }),
+        labels: () => boxes.map((b) => ({ title: { ...b.title }, sub: { ...b.sub } })),
+        keep: (hover = true) => keepReport(scene, hover),
+        scene: () => {
+          const { slotX: _slots, widths, heights, boost: _boost, ...rest } = scene
+          void _slots
+          void _boost
+          return { ...rest, widths: Array.from(widths), heights: Array.from(heights) }
+        },
         seek: (p, run) => {
           pos = p
+          lastPos = p
           target = Math.round(p)
           vel = 0
           mode = 'run'
@@ -1014,14 +1149,14 @@ export function DepthGallery() {
     if (!isPlainClick(e)) return
     e.preventDefault()
     if (api.current?.dragged()) return
-    const item = CAROUSEL_ITEMS[i]
+    const item = GALLERY_ITEMS[i]
     const source = objectRefs.current[i]?.querySelector<HTMLElement>('[data-cover-source]') ?? null
     const result = openProject({ path: item.path, source, navigate, onCancel: () => api.current?.resume(i) })
     if (result === 'cover') api.current?.freeze(i)
   }
 
   return (
-    <section ref={rootRef} className="gallery" aria-label="Projects and About" data-touch={touch || undefined} data-reduced={reduced || undefined}>
+    <section ref={rootRef} className="gallery" aria-label="Projects" data-touch={touch || undefined} data-reduced={reduced || undefined}>
       {!reduced && (
         <button type="button" className="gallery__pause" data-shown={paused || undefined} onClick={togglePause}>
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
@@ -1032,7 +1167,7 @@ export function DepthGallery() {
       )}
       <div ref={stageRef} className="gallery__stage">
         <ul className="gallery__list" role="list">
-          {CAROUSEL_ITEMS.map((item, i) => (
+          {GALLERY_ITEMS.map((item, i) => (
             <li
               key={item.id}
               ref={(el) => {
@@ -1055,31 +1190,38 @@ export function DepthGallery() {
                 onClick={(e) => onOpen(e, i)}
                 onFocus={() => warmProject(item.path)}
               >
-                <GalleryObject
-                  item={item}
-                  index={i}
-                  onReady={markReady}
-                  sizes={sizes[i]}
-                  priority={i <= 3 || i === N - 1}
-                  objectRef={(el) => {
-                    objectRefs.current[i] = el
-                  }}
-                />
                 <span
                   ref={(el) => {
-                    labelRefs.current[i] = el
+                    unitRefs.current[i] = el
                   }}
-                  className="gobj__label"
+                  className="gobj__unit"
                 >
-                  <span className="gobj__caption" data-hit="">
-                    <span className="gobj__name" id={`gobj-name-${item.id}`}>
-                      {item.name}
-                    </span>
-                    {item.subtitle && (
-                      <span className="gobj__sub" id={`gobj-sub-${item.id}`}>
-                        {item.subtitle}
+                  <GalleryObject
+                    item={item}
+                    index={i}
+                    onReady={markReady}
+                    sizes={sizes[i]}
+                    priority={i <= 2 || i === N - 1}
+                    objectRef={(el) => {
+                      objectRefs.current[i] = el
+                    }}
+                  />
+                  <span
+                    ref={(el) => {
+                      labelRefs.current[i] = el
+                    }}
+                    className="gobj__label"
+                  >
+                    <span className="gobj__caption" data-hit="">
+                      <span className="gobj__name" id={`gobj-name-${item.id}`}>
+                        {item.name}
                       </span>
-                    )}
+                      {item.subtitle && (
+                        <span className="gobj__sub" id={`gobj-sub-${item.id}`}>
+                          {item.subtitle}
+                        </span>
+                      )}
+                    </span>
                   </span>
                 </span>
               </a>
@@ -1087,19 +1229,17 @@ export function DepthGallery() {
           ))}
         </ul>
       </div>
-      <div ref={barRef} className="gallery__bar">
-        <div className="gallery__nav">
-          <button type="button" className="gallery__arrow" aria-label="Previous project" onClick={() => api.current?.step(-1)}>
-            <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false">
-              <path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <button type="button" className="gallery__arrow" aria-label="Next project" onClick={() => api.current?.step(1)}>
-            <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false">
-              <path d="M7.5 4.5 13 10l-5.5 5.5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
+      <div className="gallery__nav">
+        <button type="button" className="gallery__arrow gallery__arrow--prev" aria-label="Previous project" onClick={() => api.current?.step(-1)}>
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+            <path d="M10 3.5 5.5 8l4.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <button type="button" className="gallery__arrow gallery__arrow--next" aria-label="Next project" onClick={() => api.current?.step(1)}>
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+            <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
       <p ref={liveRef} className="visually-hidden" aria-live="polite" />
     </section>

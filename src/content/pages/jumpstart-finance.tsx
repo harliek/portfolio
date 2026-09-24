@@ -46,12 +46,21 @@ export const JUMPSTART_PHONES: GroupPhone[] = [
   { image: 'jf-screen-community', name: 'Community' },
 ]
 
+/** The screen each story section is about (an index into JUMPSTART_PHONES). */
+const PHONE_FOR_SECTION: Record<string, number> = { lessons: 0, progress: 1, community: 2 }
+
 /**
  * The phone that leads for each story position: the opening (-1) and each
- * section in [...sections, outcome] order. The outcome shows the balanced
- * overview of the whole prototype.
+ * section in [...sections, outcome] order (learning → lessons, motivation →
+ * progress, peer support → community). The outcome shows the balanced group of
+ * the whole prototype, and the stage then leaves with it, back to reading.
  */
-export const jumpstartFocus = (active: number): PhoneFocus => (active < 0 ? 0 : active <= 2 ? active : 'all')
+export const jumpstartFocus = (active: number): PhoneFocus => {
+  if (active < 0) return 0
+  // By section id, not by position, so a reordered story still brings the right screen forward.
+  const id = [...JUMPSTART_FINANCE.sections, JUMPSTART_FINANCE.outcome][active]?.id
+  return id !== undefined && id in PHONE_FOR_SECTION ? PHONE_FOR_SECTION[id] : 'all'
+}
 
 export const JUMPSTART_FINANCE = {
   meta: ['Founder and Product Lead · Student venture, Porto', 'June to July 2024 · Prototype and academy pitch'],

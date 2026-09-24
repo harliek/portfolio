@@ -5,142 +5,185 @@ import type { ObjectKind } from '../content/carousel'
  * geometry is in src/components/home/galleryModel.ts; the order, names and
  * subtitles are in src/content/carousel.ts).
  *
- * Model. The seven transparent PNG objects stand on the floor of the room in
- * their fixed circular order. One continuous position `pos` (in items)
- * says which object is in front: item i sits at the offset d = wrap(i − pos)
- * (−3.5 to 3.5). From d the model derives, together and smoothly: depth
- * scale (the featured object substantially closer and larger, its two
- * neighbours about three quarters of that), the base line on the floor
- * (farther objects stand higher, towards the far wall), the horizontal
- * place (a chain of objects with a little overlap, the featured one right of
- * centre, beside and below the title), a turn towards the viewer, stacking
- * order and brightness. `pos` grows continuously, so every object travels
- * leftwards: it approaches from the right, passes through the featured
- * position and recedes to the left, then wraps round while invisible.
+ * Model (plan-v9 decision 4). The six project objects stand on a curved
+ * rail in the room, each one a small object-label sculpture: its
+ * transparent PNG with its own title and subtitle beneath it. One
+ * continuous position `pos` (in items) says which project is active; each
+ * object's signed depth d = wrap(i − pos) (−3 to 3; a = |d|) is the single
+ * value from which everything about it is derived, together: its place on
+ * the rail (x), how far it has risen towards the far wall (y), its scale
+ * (× its own baseScale), its turn away from the active slot, its light (rim
+ * and halo, floor spill, contact shadow, reflection, dimming), its label's
+ * size and opacity, and its stacking order. `pos` grows continuously, so
+ * every object travels leftwards: it approaches from the right, passes
+ * through the active slot and recedes to the left, then wraps round while
+ * out of view.
  *
  * Px values are at the 1440×900 reference and scale with the size factor
- * `u` (see `size`) unless noted.
+ * `u` (see `size`) unless noted. Tables of four values are knots at
+ * a = 0, 1, 2 and 3 (the active slot, the neighbours, the edge objects and
+ * beyond), joined by a smooth monotone curve that is flat through the
+ * active slot.
+ *
+ * Research credits (principles only, no code copied; motion-plan.md P1):
+ * Fancy Components "Marquee along SVG path" (MIT, Daniel Petho): base travel
+ * plus a decaying scroll boost, hover eases the speed but never stops it;
+ * Dither Blur Carousel (MIT, Yousuf Soomro): speed briefly adds depth;
+ * Hyperiux Arc Flow: cushioned input; Viktor Horváth: vertical wheel drives
+ * horizontal travel; Mintform (MIT, Ricky Bharti): the contact shadow
+ * narrows and lightens as the object rises.
  */
 export const GALLERY = {
   /**
-   * The featured size of each object at u = 1 (1440×900): a width for
-   * landscape objects, a height for upright ones. Balanced one by one, so a
-   * camera, monitor, mug, portrait, tablet and phone carry comparable weight
-   * when featured (the wide white screens a little smaller than their
-   * width suggests, the upright objects as tall as the title leaves room
-   * for). Against the previous gallery at 1440×900 (the monitor 553 px
-   * wide): the monitor, laptop, portrait, tablet and phone about 23 to 31%
-   * larger, the mug and camera (small there) about 38% and a third.
+   * Each project's own size when active (critique 23: a per-project
+   * baseScale multiplied by the depth scale). 1 would give every object the
+   * same opaque area, that of a `ref` px square at u = 1; the factors
+   * balance them so a mug, monitor, laptop, tablet, camera and phone feel
+   * equally important in front (upright objects need less area to hold the
+   * eye; the mug is about 15% smaller than in the v8 gallery).
+   * `opaque` is the measured share of each PNG's box that its silhouette
+   * fills, `center` the share of its width at its visual centre (the mug's
+   * body, not its handle), where its label is centred.
    */
-  featured: {
-    headshot: { height: 545 },
-    monitor: { width: 722 },
-    mug: { height: 445 },
-    laptop: { width: 695 },
-    tablet: { height: 520 },
-    camera: { width: 650 },
-    phone: { height: 545 },
-  } as Record<ObjectKind, { width?: number; height?: number }>,
+  ref: 400,
+  baseScale: { headshot: 1, monitor: 1.064, mug: 0.839, laptop: 0.998, tablet: 0.932, camera: 0.922, phone: 0.773 } as Record<ObjectKind, number>,
+  opaque: { headshot: 0.668, monitor: 0.867, mug: 0.721, laptop: 0.845, tablet: 0.94, camera: 0.749, phone: 0.881 } as Record<ObjectKind, number>,
+  center: { headshot: 0.5, monitor: 0.5, mug: 0.4, laptop: 0.5, tablet: 0.5, camera: 0.52, phone: 0.5 } as Record<ObjectKind, number>,
 
   /**
    * Size factor u = clamp(min, min(width / 1440, (height − heightOffset) / heightSpan), max).
-   * Below `fitBelow` px wide the widest featured object also fits within
-   * `fit` of the width (phones and portrait tablets show the featured
-   * object with its neighbours at the edges instead of shrinking everything).
-   * On landscape windows an object whose silhouette would pass closer than
-   * `titleClear` px to a line of the title somewhere round the loop takes a
-   * smaller size of its own (galleryModel.ts, buildScene; in practice the
-   * monitor, a few per cent on laptop screens).
+   * Below `fitBelow` px wide the widest object also fits within `fit` of
+   * the width (tablets and phones show the active object large, with
+   * fewer objects around it, instead of shrinking everything).
+   * `clear`: no object comes closer than this (px) to the identity block or
+   * the portrait anywhere round the loop (else the scene takes a smaller u).
    */
-  size: { min: 0.3, max: 1.3, heightOffset: 120, heightSpan: 780, fitBelow: 1000, fit: { tablet: 0.66, phone: 0.7 }, titleClear: 12 },
+  size: { min: 0.3, max: 1.3, heightOffset: 120, heightSpan: 780, fitBelow: 1000, fit: { tablet: 0.7, phone: 0.78 }, clear: 14 },
   /**
    * Phones: one size factor fits the widest object (the monitor), which
    * leaves the upright objects small. As an object comes to the front it may
    * grow by up to `max`, within `fit` of the width and `height` of the
    * window height (its neighbours keep their size).
    */
-  phoneBoost: { max: 1.6, fit: 0.8, height: 0.44 },
+  phoneBoost: { max: 1.6, fit: 0.74, height: 0.4 },
 
   /** Layout per width class: desktop (≥ 1000px), tablet (600 to 999px), phone (< 600px). */
   layout: {
     desktop: {
-      /** Featured object's centre as a share of the width (right of centre: the title holds the left quarter). */
-      x0: 0.53,
+      /** The active slot's centre as a share of the width. */
+      x0: 0.5,
       /**
-       * Depth: scale s = 1 / (1 + k·(√(d² + c²) − c)) at offset d (in items)
-       * from the front, with `k` on the right (approaching: 0.76 beside the
-       * front, 0.57 next) and `kLeft` on the left (receding: 0.715, then
-       * 0.52). The left neighbour stands under the title on landscape
-       * windows, so its size is what the title leaves room for; a slightly
-       * faster recession there lets the featured object be larger.
+       * Depth scale s = 1 / (1 + k·(√(a² + c²) − c)): 1 in front, 0.67 at
+       * the neighbours, 0.45 two away, 0.34 beyond (rounded through the
+       * front by `c`, so an object passing it never changes size abruptly).
        */
-      k: 0.445,
-      kLeft: 0.562,
-      c: 0.35,
-      /** Largest turn towards the viewer (radians) and how quickly it is reached: turn = −max·tanh(d / reach). */
-      turnMax: 0.3,
-      turnReach: 1.35,
-      /** Gaps between neighbours on the chain, by the inner one's distance (0 = featured, 1, 2, 3); px at u = 1 (negative: overlap). */
-      gaps: [4, -18, -46, -60],
-      /** At rest the featured object's neighbours tuck this far behind it (px at u = 1); none while objects pass. */
-      tuck: 30,
-      /** Spacing on the left (the left neighbour stays clearly visible) × (1 + bias), on the right × (1 − bias). */
-      bias: 0.16,
-      /** Objects fade out between these distances (right, then left), mostly beyond the window's edges. */
-      fade: [2.45, 3.05],
-      fadeLeft: [2.35, 2.95],
+      k: 0.7618,
+      c: 0.45,
+      /** The receding floor: an object rises rise·(1 − s) px (at u = 1): 32 at the neighbours, a further 21 two away. */
+      rise: 96,
+      /**
+       * Turn away from the active slot (degrees, rotateY; left objects face
+       * left, right ones face right, like objects on a curved rail seen
+       * from the front) at a = 0, 1, 2, 3. Between two slots the turn
+       * leads the travel (critique 26): along the travel, it covers
+       * 1 − (1 − q)^lead of the way at progress q (65% at a third).
+       */
+      turn: [0, 12, 23, 30],
+      lead: 2.6,
+      /**
+       * The rail: the neighbours stand `gap` px (u = 1) clear of the active
+       * object; the edge slot (`edge`, 2 away) is set at the window's edges
+       * with `reveal` of the object inside (so the gallery continues beyond
+       * the viewport; perspective enlarges its inner half, so about 30% of
+       * it shows), never closer than `gap2` to the neighbour; beyond it,
+       * `gapOuter`.
+       */
+      gap: 64,
+      gap2: 24,
+      gapOuter: 40,
+      edge: 2,
+      reveal: 0.26,
+      /** Objects fade out between these distances, beyond the window's edges, and wrap round unseen. */
+      fade: [2.35, 2.9],
     },
-    /** Tablets: the featured slot right of centre, so the left neighbour (About Me at the opening) shows whole; the right one enters at the edge. */
-    tablet: { x0: 0.575, k: 0.5, kLeft: 0.5, c: 0.35, turnMax: 0.24, turnReach: 1.35, gaps: [12, -10, -30, -40], tuck: 70, bias: 0, fade: [1.7, 2.3], fadeLeft: [1.7, 2.3] },
-    /** Phones: the featured slot right of centre, so the left neighbour (About Me at the opening) shows; the right one peeks in at the edge. */
-    phone: { x0: 0.6, k: 0.55, kLeft: 0.55, c: 0.35, turnMax: 0.18, turnReach: 1.35, gaps: [8, 0, -10, -20], tuck: 110, bias: 0, fade: [1.6, 2.2], fadeLeft: [1.6, 2.2] },
+    /** Tablets: the neighbours are the edge objects. */
+    tablet: { x0: 0.5, k: 0.7618, c: 0.45, rise: 90, turn: [0, 12, 23, 30], lead: 2.6, gap: 44, gap2: 24, gapOuter: 40, edge: 1, reveal: 0.27, fade: [1.4, 1.95] },
+    /** Phones: the neighbours peek in at the edges. */
+    phone: { x0: 0.5, k: 0.7618, c: 0.45, rise: 70, turn: [0, 12, 23, 30], lead: 2.6, gap: 26, gap2: 16, gapOuter: 30, edge: 1, reveal: 0.26, fade: [1.4, 1.95] },
   },
 
   /**
-   * Floor. The featured object's base sits `bottom` above the window's
-   * bottom edge (room for its caption), and never so low that the tallest
-   * caption would run past the bottom edge (desktop) or into the arrow row
-   * (tablets and phones, where the caption spans most of the width). Bases
-   * of farther objects approach the room's far floor line (where stage.css
-   * draws it: the loop's line at 65% of its frame, object-fit cover at 50%
-   * 55%), minus `horizonLift` of the window height. Phones stand the
-   * objects higher (`phoneBottom`). Portrait windows (tablets, phones) raise
-   * the floor further, until the opening's featured object stands
-   * `portrait.band` of the window height below the identity, but never
-   * closer than `portrait.belowLine` of the height to the far floor line.
+   * Floor. The active object's base sits `bottom` of the window height above
+   * its bottom edge (landscape: the rail sits a little higher than in v8,
+   * with its label below it), never so low that the tallest active label
+   * would come within `labelMargin` px of the bottom edge. Portrait windows
+   * stand the rail at `portrait` of the height.
    */
   floor: {
-    bottom: { share: 0.12, min: 90, max: 140 },
-    phoneBottom: { share: 0.24, min: 96, max: 250 },
-    horizonLift: 0.02,
-    portrait: { band: 0.2, belowLine: 0.025 },
+    bottom: { share: 0.168, min: 110, max: 200 },
+    labelMargin: 26,
+    portrait: { tablet: 0.75, phone: 0.69 },
   },
 
-  /** Brightness by distance (opacity) at distance a: 1 − square·a² (distant objects stay solid; the depth tiers dim them). */
-  dim: { square: 0.022 },
   /** Per-object perspective of the turn (px at u = 1). */
-  perspective: 1500,
-  /**
-   * The caption (live title and subtitle): only the foremost object shows
-   * it, centred beneath the featured slot, `gap` px below the featured
-   * object's base (a fixed line, so nothing shifts). It follows its object
-   * sideways by `follow` of the object's offset from the featured slot and
-   * is fully shown while the object is within `show` of the front, gone at
-   * 0.5 (where the next object becomes the foremost). It stays `edgeMargin`
-   * px inside the window; `bottomMargin` px stay free below the tallest
-   * caption on desktop.
-   */
-  label: { gap: 14, follow: 0.4, show: 0.4, edgeMargin: 16, bottomMargin: 18 },
+  perspective: 780,
 
   /**
-   * Continuous travel to the left: `rate` items per second on average (1.4 ×
-   * the previous drift's 0.0616), a gentle `wave` (a little slower near each
-   * featured position, never stopped, the same average), starting from rest
-   * over `rampMs` and stopping (keyboard focus, the pause control, a press)
-   * over `stopMs`.
+   * Light by depth (plan-v9 decision 7; knots at a = 0, 1, 2, 3):
+   * - glow: the rim and halo layer's opacity (the layer carries the hover
+   *   strength; 0.72 of it is the active object's rim 0.72 and halo 0.56;
+   *   the neighbours have 40% of the active object's, far objects almost none);
+   * - dim: a dark veil on the silhouette (the others dim; never see-through);
+   * - spill: the accent light on the floor beneath;
+   * - shadow: the contact shadow (lighter and softer with distance);
+   * - reflect: the glossy floor's faint, blurred reflection.
+   * Hover or keyboard focus raises glow and spill to full and lifts the
+   * object (the contact shadow narrows and lightens) over `hoverInMs`,
+   * back over `hoverOutMs`.
+   */
+  light: {
+    glow: [0.72, 0.288, 0.04, 0],
+    dim: [0, 0.14, 0.3, 0.42],
+    spill: [1, 0.38, 0.06, 0],
+    shadow: [1, 0.72, 0.46, 0.3],
+    reflect: [1, 0.5, 0.2, 0],
+    hoverInMs: 240,
+    hoverOutMs: 420,
+  },
+
+  /**
+   * Labels (plan-v9 decision 5): every object carries its title (one line)
+   * and subtitle (at most two balanced lines) centred beneath its visual
+   * centre, `gap` px below its base in front, both scaled with the depth
+   * scale (title 19 → 12.7 → 8.6px; subtitle 13.5 → 9px, then gone).
+   * Opacity knots for the title and the subtitle. The label is as wide as
+   * `width.share` of its object in front, within `width.min` and
+   * `width.max` px. Collision control: where two labels come within
+   * `yieldPx` px of each other, the farther one fades out (never two
+   * overlapping). A label mostly outside the window fades out
+   * (`visible`: shown share range). It follows its object's turn only by
+   * `follow` (it stays upright and readable).
+   */
+  label: {
+    gap: 9,
+    title: [1, 0.8, 0.44, 0],
+    sub: [1, 0.42, 0, 0],
+    /** Beyond the neighbours a subtitle would be too small to read: it is gone between these distances. */
+    subUntil: [1.1, 1.4],
+    width: { share: 0.84, min: 396, max: 440 },
+    yieldPx: 18,
+    visible: [0.9, 1],
+    follow: 0.18,
+  },
+
+  /**
+   * Continuous travel to the left: `rate` items per second on average, a
+   * gentle `wave` (a little slower near each active position, never
+   * stopped, the same average), starting from rest over `rampMs` and
+   * stopping (keyboard focus, the pause control, a press) over `stopMs`.
    */
   drift: { rate: 0.0862, wave: 0.2, rampMs: 1500, stopMs: 240 },
-  /** A fresh opening holds still this long first, so the About-left, Merchandising-in-front composition reads. */
+  /** A fresh opening holds still this long first, so the Merchandising-in-front composition reads. */
   openingHoldMs: 1400,
   /** Back from a project: a short calm moment before the travel resumes where it was. */
   returnHoldMs: 700,
@@ -153,9 +196,14 @@ export const GALLERY = {
    * distance / `pxPerBoost` to an energy that decays with `decayMs` (back to
    * the idle speed within about 800 ms of the last event); the extra speed
    * follows that energy with `smoothMs` (no jolt) and is capped at `max`
-   * times the idle speed on top of it (2.5 × idle in all).
+   * times the idle speed on top of it. About 1.85× the v8 gallery's movement
+   * per gesture (critique 25: v8 had 200 px per unit and a cap of 1.5), so
+   * one deliberate swipe visibly carries the next project towards the front.
+   * `depth` (motion-plan P1b): while boosted, the turn grows by up to
+   * `turnGain` and objects two or more away dim by up to `farDim`, easing
+   * back with the boost.
    */
-  wheel: { pxPerBoost: 200, decayMs: 270, smoothMs: 120, max: 1.5, maxEvent: 240 },
+  wheel: { pxPerBoost: 108, decayMs: 270, smoothMs: 120, max: 2.75, maxEvent: 240, depth: { turnGain: 0.25, farDim: 0.1 } },
   /** Settling after an arrow step, a keyboard step or a swipe: a critically damped spring (rad/s); no bounce. */
   settle: { omega: 7.2 },
   /** Touch swipe: one project per this share of the width, flick look-ahead (s), movement before a swipe is recognised (px). */
@@ -166,27 +214,26 @@ export const GALLERY = {
   hover: {
     /**
      * Up (px at u = 1) and +4% about the base (the inner wrapper; the
-     * gallery transform stays on the outer element); the featured object,
-     * the largest, +2.5% (`frontScale`; home.css has the same values).
-     * `scale` is the largest (for image sizes). Beneath the title an object
-     * grows and rises only as far as keeps `clear` px below it (--room).
+     * gallery transform stays on the outer element; home.css has the same
+     * values, and +2.5% for the active object, the largest). `scale` is the
+     * largest, for image sizes and the keep-out check.
      */
     lift: 8,
     scale: 1.04,
-    frontScale: 1.025,
-    clear: 6,
     /** Hover follows what is under a still pointer while the objects travel: checked every this many ms. */
     pollMs: 90,
+    /** Motion-plan P1a: while a fine pointer rests on an object, the idle travel eases to `factor` (never stops); in over `inMs`, back over `outMs`. */
+    slow: { factor: 0.7, inMs: 240, outMs: 420 },
   },
   /** Reduced motion: steps cross-fade (ms out, ms in); a wheel gesture moves one step after this much scrolling (px), one per gesture (`gapMs`). */
-  reduced: { outMs: 110, inMs: 170, wheelPx: 40, gapMs: 220 },
+  reduced: { outMs: 120, inMs: 240, wheelPx: 40, gapMs: 220 },
   /**
-   * An object (with its floor light and name) is never shown before its
+   * An object (with its floor light and label) is never shown before its
    * image has decoded; then it fades in over `ms`, or shows at once when
    * that happens within `instantWithin` ms of the gallery mounting (a
    * cached image, such as on Back).
    */
-  appear: { ms: 200, instantWithin: 150 },
+  appear: { ms: 240, instantWithin: 150 },
   /** Largest frame time used for one step (s), so a stalled frame never produces a jump. */
   maxStep: 0.05,
 } as const

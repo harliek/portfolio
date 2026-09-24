@@ -3,17 +3,20 @@ import type { ImageId } from './media'
 import { projectById, projectPath, type ProjectId } from './projects'
 
 /**
- * The homepage gallery's objects, in their fixed circular order (the
- * latest brief): About Me, Merchandising Platform, CafePress UK,
- * Spreadsheet Agent, AI Leasing Agent, Creative Production, Jumpstart
- * Finance, then About Me again. CafePress separates Merchandising Platform
- * and Spreadsheet Agent, and Jumpstart and About Me meet at the wrap, so
- * the two never neighbour each other. Never sorted by name, route or width.
+ * The homepage's transparent PNG objects (plan-v9 decisions 1 and 2).
  *
- * Each object is one transparent PNG from `final png tiles/`. Every object
- * shows its live name beneath it and, on hover or keyboard focus (and by
- * default for the featured object), its subtitle directly below the name.
- * The link's accessible name is `label`; the subtitle describes it.
+ * - The six project objects form the depth gallery, in this fixed circular
+ *   order: Merchandising Platform, CafePress UK Launch, Spreadsheet Agent,
+ *   AI Leasing Agent, Film and Campaign Work, Student Founder of Fintech
+ *   Venture, then Merchandising Platform again. CafePress separates
+ *   Merchandising Platform and Spreadsheet Agent, and the wrap joins
+ *   Jumpstart and Merchandising. Never sorted by name, route or width.
+ * - The About portrait is not a gallery object: it belongs to the identity
+ *   block, as a small anchor that links to /about (Home.tsx).
+ *
+ * Every project object carries its own label beneath it (its display title
+ * and subtitle, Harlie's label table), which travels, scales and fades with
+ * the object. The link's accessible name is `label`; the subtitle describes it.
  */
 
 /** What the object is, which sets its display size (perceived visual weight, not one shared height). */
@@ -21,9 +24,9 @@ export type ObjectKind = 'headshot' | 'monitor' | 'mug' | 'laptop' | 'tablet' | 
 
 /**
  * Reference size at 1440×900 (CSS px): a width for landscape objects, a
- * height for upright ones. The homepage gallery scales these by depth and
- * viewport (src/config/carousel.ts), and each destination's CoverSlot
- * (coverGeometry.ts) sizes its reserved cover from them.
+ * height for upright ones. Each destination's CoverSlot (coverGeometry.ts)
+ * sizes its reserved cover from these; the homepage gallery has its own
+ * sizes (GALLERY.baseScale in src/config/carousel.ts).
  */
 export const OBJECT_SIZE: Record<ObjectKind, { width?: number; height?: number }> = {
   headshot: { height: 292 },
@@ -39,9 +42,9 @@ export interface CarouselItem {
   id: AccentId
   /** Case study id (absent for About Me). */
   project?: ProjectId
-  /** Display title (matches the PNG's embedded title; Harlie's label table). Shown live only for the foremost object. */
+  /** Display title (matches the PNG's embedded title; Harlie's label table). */
   name: string
-  /** Display subtitle (matches the PNG's embedded subtitle; About Me has none). Shown only for the foremost object. */
+  /** Display subtitle (matches the PNG's embedded subtitle; About Me has none). */
   subtitle: string
   /** Accessible link name. */
   label: string
@@ -55,17 +58,20 @@ const project = (id: ProjectId, accent: AccentId, image: ImageId, kind: ObjectKi
   return { id: accent, project: id, name: p.displayName, subtitle: p.displaySubtitle, label: p.displayName, path: projectPath(p), image, kind }
 }
 
-export const CAROUSEL_ITEMS: CarouselItem[] = [
-  {
-    id: 'about',
-    name: 'About Me',
-    // Harlie's label table: About Me has no subtitle.
-    subtitle: '',
-    label: 'About Me',
-    path: '/about',
-    image: 'obj-about',
-    kind: 'headshot',
-  },
+/** The About portrait: the identity block's small anchor on the homepage (a link to /about, "About Harlie Katz"). */
+export const PORTRAIT_ITEM: CarouselItem = {
+  id: 'about',
+  name: 'About Me',
+  // Harlie's label table: About Me has no subtitle.
+  subtitle: '',
+  label: 'About Harlie Katz',
+  path: '/about',
+  image: 'obj-about',
+  kind: 'headshot',
+}
+
+/** The homepage depth gallery: the six projects in their fixed circular order. */
+export const GALLERY_ITEMS: CarouselItem[] = [
   project('merchandising-platform', 'merchandising-platform', 'obj-merchandising-platform', 'monitor'),
   project('cafepress-uk', 'cafepress-uk', 'obj-cafepress-uk', 'mug'),
   project('spreadsheet-agent', 'spreadsheet-agent', 'obj-spreadsheet-agent', 'laptop'),
@@ -73,3 +79,10 @@ export const CAROUSEL_ITEMS: CarouselItem[] = [
   project('client-work', 'creative-production', 'obj-creative-production', 'camera'),
   project('jumpstart-finance', 'jumpstart-finance', 'obj-jumpstart-finance', 'phone'),
 ]
+
+/**
+ * Every PNG object that can move into a destination's cover slot (the route
+ * transition and CoverSlot look objects up here by id and by path): the
+ * About portrait and the six projects.
+ */
+export const CAROUSEL_ITEMS: CarouselItem[] = [PORTRAIT_ITEM, ...GALLERY_ITEMS]

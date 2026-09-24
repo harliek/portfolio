@@ -130,16 +130,98 @@
   --radius-button: 8px;
   --shadow-media: 0 0 0 1px var(--color-media-edge), 0 18px 40px -24px rgb(0 0 0 / 0.7);
 
-  /* Motion (CSS side; GSAP values live in src/config/motion.ts) */
-  --dur-feedback: 150ms;
-  --dur-route: 180ms;
-  --dur-route-reveal: 260ms;
-  --dur-crossfade: 250ms;
-  --dur-highlight: 220ms;
-  /* Headings and bold phrases easing into the page accent under the pointer (base.css). */
-  --dur-text-hover: 260ms;
-  --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  /*
+   * Motion system (spec/motion-plan.md section 2; the same numbers are
+   * MOTION.t and MOTION.ease in src/config/motion.ts). Four durations:
+   *   --dur-1  120ms  feedback: colour, border and background of links and
+   *                   controls, press scale, the reduced-motion fade-out
+   *   --dur-2  240ms  respond: hover and focus on objects (lift, glow, spill
+   *                   and contact shadow together), text easing into the
+   *                   accent, the nav indicator, the Work shelf
+   *   --dur-3  420ms  move: spatial changes (cover move, page change, phone
+   *                   emphasis, depth-tier light steps)
+   *   --dur-4  800ms  settle: returns to rest (wheel boost, hover slow-down)
+   * Four named curves, none with overshoot (nothing bounces):
+   *   standard  colour, opacity and state changes          (GSAP power1.out)
+   *   respond   hover, focus and press on objects          (power2.out)
+   *   arrive    spatial moves, front-loaded                (power3.out)
+   *   exchange  cross-fades: page change, reduced motion   (power2.inOut-like)
+   * Focus rings never transition: they appear at once.
+   */
+  --dur-1: 120ms;
+  --dur-2: 240ms;
+  --dur-3: 420ms;
+  --dur-4: 800ms;
+  --ease-standard: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-respond: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-arrive: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-exchange: cubic-bezier(0.33, 0, 0.25, 1);
+  /* Older names, kept so every existing rule lands on the scale. */
+  --ease-out: var(--ease-standard);
+  --dur-feedback: var(--dur-1);
+  --dur-text-hover: var(--dur-2);
+  --dur-crossfade: var(--dur-2);
+  --dur-highlight: var(--dur-2);
+  --dur-route: var(--dur-2);
+  --dur-route-reveal: var(--dur-3);
   --press-scale: 0.98;
+
+  /*
+   * One light model for every transparent PNG object (motion-plan section
+   * 2.5, P2): homepage objects (home.css), case covers and next-project
+   * thumbnails (case.css) and the Jumpstart phones. The room lights from
+   * above (cool lavender); each object carries its own accent light:
+   *   edge   a narrow rim on the silhouette, the accent mixed toward white
+   *          (--light-rim-mix), alpha-aware (drop-shadow, never a box)
+   *   halo   a wider, softer glow in the accent
+   *   bright the artwork's brightness
+   *   spill  the accent light on the floor beneath (an opacity factor)
+   *   shadow the dark contact shadow where it meets the floor (opacity)
+   * Four levels (plan-v9 decision 7): feat (the featured or leading
+   * object: the strongest rim and floor light), near (a neighbour: about
+   * 40% of it), far (close to neutral) and active (hover, keyboard focus,
+   * press: stronger again). Contact shadows soften with depth. When an
+   * object lifts, its contact shadow narrows and lightens (Mintform's ratio
+   * scaled to an 8px lift) and its spill rises from the base. Everything
+   * responds over --dur-2 with --ease-respond. Case pages use the same model
+   * at a restrained strength: halo and spill are multiplied by --light-case.
+   */
+  --light-rim-mix: 55%;
+  --light-far-edge-a: 0.14;
+  --light-far-edge-r: 1.25px;
+  --light-far-halo-a: 0.06;
+  --light-far-halo-r: 18px;
+  --light-far-bright: 0.9;
+  --light-far-spill: 0.12;
+  --light-far-shadow: 0.7;
+  --light-near-edge-a: 0.36;
+  --light-near-edge-r: 1.5px;
+  --light-near-halo-a: 0.22;
+  --light-near-halo-r: 24px;
+  --light-near-bright: 0.96;
+  --light-near-spill: 0.45;
+  --light-near-shadow: 0.85;
+  --light-feat-edge-a: 0.85;
+  --light-feat-edge-r: 1.75px;
+  --light-feat-halo-a: 0.56;
+  --light-feat-halo-r: 34px;
+  --light-feat-bright: 1.02;
+  --light-feat-spill: 1.1;
+  --light-feat-shadow: 1;
+  --light-active-edge-a: 1;
+  --light-active-edge-r: 2px;
+  --light-active-halo-a: 0.78;
+  --light-active-halo-r: 46px;
+  --light-active-bright: 1.06;
+  --light-active-spill: 1.4;
+  /* The lift and what it does to the floor (the object rises; its shadow tightens and lightens; its light rises). */
+  --light-lift: 8px;
+  --light-lift-scale: 1.04;
+  --light-lift-shadow-scale: 0.87 1;
+  --light-lift-shadow-o: 0.67;
+  --light-spill-rise: 1.06 1.22;
+  /* Case pages: the same light, restrained (halo and spill). */
+  --light-case: 0.62;
 
   /* Focus */
   --focus-ring: 2px solid var(--color-focus);

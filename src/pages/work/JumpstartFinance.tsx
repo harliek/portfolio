@@ -29,8 +29,9 @@ export default function JumpstartFinance() {
         meta={C.meta}
         summary={C.summary}
         media={media}
-        // A wide box (about the column's width at 1440×900), centred in the visible stage, so the group keeps one
-        // composition from a 1280×720 laptop to a 1920×1080 display.
+        // The stage takes the media column's full width (jumpstart-finance.css); this ratio (about the group's own
+        // proportions) caps its height, so the group is centred in the visible stage and keeps one composition from
+        // a 1280×720 laptop to a 1920×1080 display.
         stage={{ ratio: '8 / 7' }}
         sections={C.sections}
         outcome={C.outcome}

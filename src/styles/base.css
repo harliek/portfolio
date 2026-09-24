@@ -109,8 +109,8 @@ a {
   text-decoration-color: var(--link-underline);
   text-underline-offset: 3px;
   transition:
-    color var(--dur-feedback) var(--ease-out),
-    text-decoration-color var(--dur-feedback) var(--ease-out);
+    color var(--dur-1) var(--ease-standard),
+    text-decoration-color var(--dur-1) var(--ease-standard);
 }
 
 :where(.site-main :is(p, li, dd, blockquote, figcaption) a[href]):hover {
@@ -119,22 +119,25 @@ a {
 }
 
 /*
- * Expressive text hover (brief v8, section 5): headings (h1 to h3) and bold
- * phrases in reading text ease into the page accent under the pointer (a
- * case study's project accent, lavender elsewhere). Colour only: the normal
- * text cursor, no underline, glow, movement or scale, so ordinary text never
+ * Expressive text hover (brief v8 section 5, motion-plan 2.4): headings (h1
+ * to h3) and bold phrases in reading text ease into the page's one accent
+ * under the pointer (a case study's project accent, lavender elsewhere),
+ * over --dur-2 on the standard curve. The accent is mixed with the heading
+ * ivory in OKLCH, so the colour travels perceptually (never through grey)
+ * and stays as light as the text it replaces. Colour only: the normal text
+ * cursor, no underline, glow, movement or scale, so ordinary text never
  * looks clickable. Not inside links and buttons (their own hover and focus
- * states apply), not on the homepage title (home.css colours it), and
- * nothing on touch screens.
+ * states apply: colour plus an underline or edge), not on the homepage
+ * (home.css styles its own text), and nothing on touch screens.
  */
 :where(.site-main) :where(h1, h2, h3, strong, b) {
-  transition: color var(--dur-text-hover) var(--ease-out);
+  transition: color var(--dur-2) var(--ease-standard);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .site-main :is(h1, h2, h3):not(:is(a, button, summary, label, [role='button'], [role='link'], .home) *):hover,
   .site-main :is(p, li, dd, blockquote, figcaption) :is(strong, b):not(:is(a, button, summary, label, [role='button'], [role='link']) *):hover {
-    color: var(--accent, var(--accent-default));
+    color: color-mix(in oklch, var(--accent, var(--accent-default)) 80%, var(--stage-ivory));
   }
 }
 
@@ -150,6 +153,8 @@ a {
 /*
  * The ring follows each element's own radius (never reshapes it on focus).
  * It takes the page's accent where one is set (a case study), else lavender.
+ * It appears at once: outlines are never part of a transition (components
+ * list the properties they ease, never `all`).
  */
 :focus-visible {
   outline: 2px solid var(--accent, var(--color-focus));

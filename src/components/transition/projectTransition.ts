@@ -9,41 +9,53 @@ import { coverItem, coverItemForPath } from './coverGeometry'
 import './transition.css'
 
 /**
- * Opening a project (brief-v8 section 6): never an empty scene.
+ * Opening a project: "move closer" (spec/motion-plan.md P3), never an empty
+ * scene. The chosen PNG advances into its place on the new page while the
+ * rest of the scene steps back, and the new page's heading and opening media
+ * arrive in the same 420ms (MOTION.t.move, arrive curve, no overshoot).
  *
  * 1. Wait. The page being left stays exactly as it is (the caller freezes
  *    the carousel when openProject returns 'cover') while the destination's
- *    code loads and its cover object and opening media decode (usually
- *    already done on hover or focus: warmProject). Nothing fades, nothing is
- *    hidden. A longer wait (a slow connection) shows a thin line in the
- *    destination's accent across the top, so the click is visibly under way.
+ *    code loads and its cover object and opening media (projects.ts `hero`)
+ *    decode, usually already done on hover or focus (warmProject). Nothing
+ *    fades, nothing is hidden. A longer wait (a slow connection) shows a thin
+ *    line in the destination's accent across the top, so the click is
+ *    visibly under way.
  * 2. Change, in one view transition (document.startViewTransition): the
- *    browser keeps a picture of the page being left, the route changes
- *    synchronously underneath it, and then, over TRANSITION.pageMs, the old
- *    page fades out while the new page (its heading and opening media
- *    included, live) fades in. The two fades are complementary and blended
- *    additively, so the background room (the same video on both pages) stays
- *    continuous and the scene never dims towards black.
- * 3. At the same time, from a PNG object marked `data-cover-source="<id>"`
- *    (a gallery object, a next-project thumbnail), the same image moves into
- *    the destination's `[data-cover-slot="<id>"]` (CoverSlot.tsx) over
- *    TRANSITION.coverMs: a copy of the clicked image (its file, glow and
- *    3D turn) stands in for the source in the picture of the old page, and
- *    the browser morphs it to the slot with a uniform scale (both boxes have
- *    the artwork's own proportions, so it is never stretched; a turned object
- *    turns to face the viewer on the way, it never flips). The page does not
- *    wait for the move.
+ *    browser keeps pictures of the page being left, the route changes
+ *    synchronously underneath them, and then, together:
+ *    - the chosen object advances: from a PNG marked
+ *      `data-cover-source="<id>"` (a gallery object, the portrait anchor, a
+ *      next-project thumbnail), a copy of the clicked image (its file, glow,
+ *      3D turn, fade and crop) stands in for it, and the browser moves it
+ *      into the destination's `[data-cover-slot="<id>"]` (CoverSlot.tsx)
+ *      with a uniform scale (both boxes have the artwork's proportions, so it
+ *      is never stretched; a turned object straightens on the way, it never
+ *      flips);
+ *    - the rest of the scene steps back (stepBack): every other PNG object in
+ *      view shrinks towards its floor, rises a little towards the horizon,
+ *      converges slightly on the chosen one and dims away, and the rest of
+ *      the old content eases back and clears;
+ *    - the new page's content (its heading and opening media included, live)
+ *      arrives in front of all that, and behind the header and the moving
+ *      object;
+ *    - the room (the same background video on both pages) cross-fades with
+ *      itself, complementary and blended additively, so it stays whole and
+ *      never dims towards black.
+ *    The page never waits for the move. Focus then lands on the new page's
+ *    H1 (RouteFocus).
  *
- * Without a slot on screen the copy simply fades with the old page. From a
+ * Without a slot on screen the copy simply leaves with the old page. From a
  * text link (the Work shelf) or a source that is not a loaded, visible PNG,
- * only the pages cross-fade. Browsers without view transitions, reduced
- * motion and a failed or very slow chunk get an ordinary navigation (the
- * old page still stays until the new one is ready: react-router keeps it
- * while the lazy route loads). Direct loads are untouched.
+ * nothing advances; the scene still steps back while the new page arrives.
+ * Browsers without view transitions, reduced motion and a failed or very slow
+ * chunk get an ordinary navigation (the old page still stays until the new
+ * one is ready: react-router keeps it while the lazy route loads). Direct
+ * loads are untouched.
  *
  * Rapid clicks are ignored until the change has finished. Back/Forward (or
  * another navigation) while waiting cancels it and restores the source
- * (onCancel lets the carousel resume); during the cross-fade it ends the
+ * (onCancel lets the carousel resume); during the change it ends the
  * animation at once. TRANSITION.hardCapMs ends any animation. Modifier and
  * middle clicks stay native (isPlainClick).
  */
@@ -57,7 +69,7 @@ interface Warm {
   images: HTMLImageElement[]
   /** The cover object at the slot's size, decoded. */
   cover: Promise<void>
-  /** The opening media (TRANSITION.openingMedia, else projects.ts `hero`), decoded. */
+  /** The opening media (projects.ts `hero`, or TRANSITION.openingMedia), decoded. */
   opening: Promise<void>
 }
 
@@ -92,7 +104,7 @@ function warmImage(image: ImageId, sizes: string): { img: HTMLImageElement; read
 /**
  * Prepares a destination ahead of the click (hover, focus, touch start):
  * the route's code, its cover object at the slot's size and its opening
- * media (TRANSITION.openingMedia), fetched and decoded. Idempotent.
+ * media (projects.ts `hero`), fetched and decoded. Idempotent.
  */
 export function warmProject(path: string) {
   prefetchRoute(path)
@@ -107,11 +119,11 @@ export function warmProject(path: string) {
     images.push(warm.img)
     cover = warm.ready
   }
-  const hero = projectForPath(path)?.hero
-  const openings = (TRANSITION.openingMedia[path] ?? (hero ? [hero] : [])).map(({ image, sizes }) => warmImage(image, sizes))
+  // The page's opening media (projects.ts `hero`), only the crops this viewport shows.
+  const opening = TRANSITION.openingMedia[path] ?? projectForPath(path)?.hero ?? []
+  const openings = opening.filter((o) => !o.media || window.matchMedia(o.media).matches).map(({ image, sizes }) => warmImage(image, sizes))
   images.push(...openings.map((w) => w.img))
-  const opening = Promise.all(openings.map((w) => w.ready)).then(() => {})
-  warmed.set(path, { images, cover, opening })
+  warmed.set(path, { images, cover, opening: Promise.all(openings.map((w) => w.ready)).then(() => {}) })
 }
 
 export const isPlainClick = (e: MouseEvent) => !e.defaultPrevented && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey
@@ -154,12 +166,21 @@ interface Run {
   progress: HTMLDivElement | null
   /** The destination element carrying COVER_NAME in the new state. */
   named: HTMLElement | null
+  /** The other objects of the scene being left, each named `hk-back-<n>` while it steps back. */
+  backs: HTMLElement[]
   vt: ViewTransition | null
   timers: number[]
   unsubscribe: (() => void) | null
-  navigate: (path: string) => void
+  navigate: Navigate
   onCancel?: () => void
 }
+
+/**
+ * The caller's navigate (react-router's useNavigate()): the route changes
+ * through the very router the page renders from, with `flushSync` inside the
+ * view transition so the new page is in the DOM when the browser pictures it.
+ */
+type Navigate = (path: string, options?: { flushSync?: boolean }) => void | Promise<void>
 
 let run: Run | null = null
 
@@ -169,6 +190,8 @@ declare global {
     __pageTransitionLog?: [number, string, string?][]
     /** Development only: a slow-motion factor for inspecting the animation frame by frame. */
     __pageTransitionSlow?: number
+    /** Development only: false runs the change without the scene stepping back (for comparisons). */
+    __pageTransitionStepBack?: boolean
   }
 }
 
@@ -529,6 +552,24 @@ function finishEntrance() {
   }
 }
 
+/** The custom properties a change sets on <html> for transition.css. */
+const TRANSITION_PROPS = [
+  '--pt-page-ms',
+  '--pt-cover-ms',
+  '--pt-page-ease',
+  '--pt-cover-ease',
+  '--pt-scene-origin',
+  '--pt-scene-ms',
+  '--pt-scene-scale',
+  '--pt-scene-ease',
+  '--pt-back-ms',
+  '--pt-back-fade-ms',
+  '--pt-back-scale',
+  '--pt-back-rise',
+  '--pt-back-move-ease',
+  '--pt-back-fade-ease',
+]
+
 /** Ends a transition and removes everything it added. */
 function complete(r: Run) {
   if (run !== r) return
@@ -540,13 +581,14 @@ function complete(r: Run) {
   r.progress?.remove()
   r.source?.removeAttribute('data-cover-moving')
   r.named?.style.removeProperty('view-transition-name')
+  releaseScene(r)
   document.querySelectorAll('[data-cover-old]').forEach((el) => el.removeAttribute('data-cover-old'))
   const root = document.documentElement
   if (root.hasAttribute('data-page-transition')) {
     root.removeAttribute('data-page-transition')
     finishEntrance()
   }
-  for (const prop of ['--pt-page-ms', '--pt-cover-ms', '--pt-page-ease', '--pt-cover-ease']) root.style.removeProperty(prop)
+  for (const prop of TRANSITION_PROPS) root.style.removeProperty(prop)
   window.removeEventListener('popstate', onPopState)
   setTarget(null)
 }
@@ -567,7 +609,67 @@ function cancel(r: Run) {
   r.onCancel?.()
 }
 
-/** The copy of the clicked PNG that stands in for it in the picture of the old page (same file, glow, turn and fade). */
+/**
+ * Where the page crops an object inside the viewport (an ancestor that clips
+ * its overflow, such as an anchor partly hidden at the edge of its column),
+ * as a clip-path inset of its box, so the copy is cropped the same way in the
+ * first frame. Crops at or beyond the viewport's edges are left out: nothing
+ * shows there anyway, and the moving copy brings the rest into view.
+ */
+function cropOf(el: HTMLElement, b: Box): string | null {
+  let left = 0
+  let top = 0
+  let right = window.innerWidth
+  let bottom = window.innerHeight
+  for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
+    const cs = getComputedStyle(n)
+    if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue
+    const c = n.getBoundingClientRect()
+    if (cs.overflowX !== 'visible') {
+      left = Math.max(left, c.left)
+      right = Math.min(right, c.right)
+    }
+    if (cs.overflowY !== 'visible') {
+      top = Math.max(top, c.top)
+      bottom = Math.min(bottom, c.bottom)
+    }
+  }
+  const edge = (v: number) => (v > 0.5 ? v : 0)
+  const inset = [edge(top - b.y), edge(b.x + b.w - right), edge(b.y + b.h - bottom), edge(left - b.x)]
+  // Only a crop within the viewport counts (a side cut by the viewport itself reads as 0 above).
+  if (top <= 0.5) inset[0] = 0
+  if (right >= window.innerWidth - 0.5) inset[1] = 0
+  if (bottom >= window.innerHeight - 0.5) inset[2] = 0
+  if (left <= 0.5) inset[3] = 0
+  return inset.some((v) => v > 0) ? `inset(${inset.map((v) => `${v.toFixed(1)}px`).join(' ')})` : null
+}
+
+/**
+ * The fade a source draws with a mask (the portrait's lower edge fading into
+ * the room), carried over to the copy's image exactly: the mask of the
+ * element (or of the image), sized and placed as it is on the page, relative
+ * to the painted image. A mask sized or placed some other way falls back to
+ * the generic lower-edge fade (transition.css `data-fade`).
+ */
+function copyMask(found: NonNullable<ReturnType<typeof coverSource>>, img: HTMLImageElement, clone: HTMLElement) {
+  for (const el of [found.img, found.el]) {
+    const cs = getComputedStyle(el)
+    if (!cs.maskImage || cs.maskImage === 'none') continue
+    const simple = (cs.maskSize === 'auto' || cs.maskSize === 'auto auto') && (cs.maskPosition === '0% 0%' || cs.maskPosition === '0px 0px')
+    if (found.turn || !simple) {
+      clone.dataset.fade = 'bottom'
+      return
+    }
+    const r = el.getBoundingClientRect()
+    img.style.maskImage = cs.maskImage
+    img.style.maskRepeat = 'no-repeat'
+    img.style.maskSize = `${r.width.toFixed(2)}px ${r.height.toFixed(2)}px`
+    img.style.maskPosition = `${(r.left - found.box.x).toFixed(2)}px ${(r.top - found.box.y).toFixed(2)}px`
+    return
+  }
+}
+
+/** The copy of the clicked PNG that stands in for it in the picture of the old page (same file, glow, turn, fade and crop). */
 function placeClone(r: Run, found: NonNullable<ReturnType<typeof coverSource>>) {
   const painted = paintedStyle(found.img, document.getElementById('main'))
   const clone = document.createElement('div')
@@ -579,20 +681,158 @@ function placeClone(r: Run, found: NonNullable<ReturnType<typeof coverSource>>) 
   img.draggable = false
   img.src = found.src
   clone.appendChild(img)
-  // A cut-out shown with a faded lower edge (the headshot) keeps that fade (transition.css).
-  if (getComputedStyle(found.el).maskImage !== 'none' || getComputedStyle(found.img).maskImage !== 'none') clone.dataset.fade = 'bottom'
+  // A cut-out shown with a faded edge (the portrait) keeps that fade.
+  copyMask(found, img, clone)
   const turn = found.turn
   placeBox(clone, turn?.box ?? found.box)
   clone.style.transformOrigin = turn?.origin ?? '50% 50%'
   clone.style.transform = turn ? `perspective(${turn.perspective.toFixed(2)}px) ${turn.rotate}` : 'none'
   clone.style.filter = painted.filter
   clone.style.opacity = String(painted.opacity)
+  // A flat copy is cropped where its scene crops the object (a turned one is not: its box is the unturned one).
+  const crop = turn ? null : cropOf(found.el, found.box)
+  if (crop) img.style.clipPath = crop
   clone.style.setProperty('view-transition-name', COVER_NAME)
   document.body.appendChild(clone)
   found.el.setAttribute('data-cover-moving', '')
   r.clone = clone
   r.source = found.el
   r.coverId = found.id
+}
+
+// ---------------------------------------------------------------------------
+// The rest of the scene steps back
+// ---------------------------------------------------------------------------
+
+/**
+ * View-transition names (transition.css): the content of the page being left
+ * as one layer, the new page's content as another, the header, and each
+ * other object stepping back (`hk-back-0` to `hk-back-<max - 1>`, one rule
+ * each in transition.css).
+ */
+const SCENE_NAME = 'hk-scene'
+const PAGE_NAME = 'hk-page'
+const HEADER_NAME = 'hk-header'
+const BACK_NAME = 'hk-back-'
+
+const area = (b: DOMRect) => b.width * b.height
+
+/**
+ * The element that stands for a scene object as a whole, looking only at
+ * ancestors that hold no other object:
+ * 1. the outermost one its scene places with an inline transform and a real
+ *    box (the gallery's object, with its floor light, reflection, shadow and
+ *    glow inside; not the zero-size point the gallery positions it from);
+ * 2. else its link, if that hugs it (the portrait anchor, a thumbnail);
+ * 3. else the widest wrapper that still hugs it (so a glow drawn by a
+ *    wrapper is part of the picture), never a whole block of the page.
+ */
+function sceneUnit(source: HTMLElement, stop: Element): HTMLElement {
+  const own = area(source.getBoundingClientRect())
+  const chain: HTMLElement[] = []
+  for (let n: HTMLElement | null = source; n && n !== stop && n !== document.body; n = n.parentElement) {
+    if (n !== source && n.querySelectorAll('[data-cover-source]').length > 1) break
+    chain.push(n)
+  }
+  const placed = chain.filter((n) => n.style.transform && n.style.transform !== 'none' && n.offsetWidth >= 2 && n.offsetHeight >= 2).pop()
+  if (placed) return placed
+  const link = chain.find((n) => n.matches('a[href]'))
+  if (link && area(link.getBoundingClientRect()) <= own * 3) return link
+  let unit = source
+  for (const n of chain.slice(1)) {
+    if (area(n.getBoundingClientRect()) > own * 1.5) break
+    unit = n
+  }
+  return unit
+}
+
+/**
+ * The rest of the scene steps back while the chosen object advances (P3,
+ * "move closer"). Just before the browser pictures the page being left:
+ *
+ * - every other PNG object that can be seen (the other gallery objects, the
+ *   portrait anchor, a next-project thumbnail) is named `hk-back-<n>`, so it
+ *   is pictured on its own and recedes the way the gallery shows distance:
+ *   smaller about its floor point, a little higher, dimming away;
+ * - the rest of the page's content (the title, the labels, the text) is
+ *   named `hk-scene`: it eases back a little about the chosen object and
+ *   clears a little sooner than the new page arrives, so old and new text
+ *   barely overlap;
+ * - the header is named `hk-header`, so that layer never paints over it; it
+ *   cross-fades with the pages;
+ * - once the route has changed, the new page's content is named `hk-page`
+ *   (in the change's update), so it arrives in front of everything stepping
+ *   back and behind the header and the advancing object (transition.css
+ *   stacks the layers: room, receding scene, new page, header, cover).
+ *
+ * The room (the background video) stays in the root pictures, whose
+ * complementary cross-fade keeps it whole. The names live only until the
+ * change ends (releaseScene).
+ */
+function stepBack(r: Run, focus: Box | null) {
+  const cfg = TRANSITION.stepBack
+  const main = document.getElementById('main')
+  if (!cfg.enabled || !main || (import.meta.env.DEV && window.__pageTransitionStepBack === false)) return
+  const root = document.documentElement
+  const slow = import.meta.env.DEV ? (window.__pageTransitionSlow ?? 1) : 1
+  const name = (el: HTMLElement, n: string) => {
+    el.style.setProperty('view-transition-name', n)
+    r.backs.push(el)
+  }
+
+  // The page's content as one layer, unless it is still moving by itself (its own entrance).
+  const scene = main.firstElementChild instanceof HTMLElement ? main.firstElementChild : null
+  const sb = scene?.getBoundingClientRect()
+  const still = (t: string) => t === 'none' || new DOMMatrixReadOnly(t).isIdentity
+  if (scene && sb && sb.width > 0 && sb.height > 0 && still(getComputedStyle(scene).transform)) {
+    const cx = focus ? focus.x + focus.w / 2 : window.innerWidth / 2
+    const cy = focus ? focus.y + focus.h / 2 : window.innerHeight / 2
+    root.style.setProperty('--pt-scene-origin', `${(cx - sb.left).toFixed(1)}px ${(cy - sb.top).toFixed(1)}px`)
+    root.style.setProperty('--pt-scene-ms', `${cfg.sceneMs * slow}ms`)
+    root.style.setProperty('--pt-scene-scale', String(cfg.sceneScale))
+    root.style.setProperty('--pt-scene-ease', cfg.sceneEase)
+    name(scene, SCENE_NAME)
+    const header = document.querySelector<HTMLElement>('.site-header')
+    if (header) name(header, HEADER_NAME)
+  }
+
+  // Each other object that can be seen.
+  const units: HTMLElement[] = []
+  for (const el of main.querySelectorAll<HTMLElement>('[data-cover-source]')) {
+    if (units.length >= cfg.max) break
+    if (r.source && (el === r.source || el.contains(r.source) || r.source.contains(el))) continue
+    const unit = sceneUnit(el, main)
+    if (units.some((u) => u === unit || u.contains(unit) || unit.contains(u)) || (r.source && unit.contains(r.source))) continue
+    const b = unit.getBoundingClientRect()
+    if (b.width < 2 || b.height < 2 || b.right <= 0 || b.bottom <= 0 || b.left >= window.innerWidth || b.top >= window.innerHeight) continue
+    if (paintedStyle(unit, main).opacity < 0.03) continue
+    units.push(unit)
+  }
+  // Each converges a little towards the chosen object as it recedes (in its own, depth-scaled units).
+  const vx = focus ? focus.x + focus.w / 2 : window.innerWidth / 2
+  units.forEach((unit, i) => {
+    const b = unit.getBoundingClientRect()
+    const k = unit.offsetWidth ? b.width / unit.offsetWidth : 1
+    const dx = ((vx - (b.left + b.width / 2)) * cfg.converge) / Math.max(0.2, k)
+    root.style.setProperty(`--pt-back-dx-${i}`, `${dx.toFixed(1)}px`)
+    name(unit, `${BACK_NAME}${i}`)
+  })
+  if (units.length) {
+    root.style.setProperty('--pt-back-ms', `${cfg.ms * slow}ms`)
+    root.style.setProperty('--pt-back-fade-ms', `${cfg.fadeMs * slow}ms`)
+    root.style.setProperty('--pt-back-scale', String(cfg.scale))
+    root.style.setProperty('--pt-back-rise', String(cfg.rise))
+    root.style.setProperty('--pt-back-move-ease', cfg.moveEase)
+    root.style.setProperty('--pt-back-fade-ease', cfg.fadeEase)
+  }
+  trace('step back', `${units.length} objects${r.backs.length > units.length ? ' + scene' : ''}`)
+}
+
+/** Takes the step-back names off again (the change has ended or could not start). */
+function releaseScene(r: Run) {
+  r.backs.forEach((el) => el.style.removeProperty('view-transition-name'))
+  r.backs = []
+  for (let i = 0; i < TRANSITION.stepBack.max; i++) document.documentElement.style.removeProperty(`--pt-back-dx-${i}`)
 }
 
 /** The destination's accent ("r g b"), for the slow-wait line. */
@@ -659,6 +899,7 @@ function change(r: Run) {
   const found = r.mode === 'cover' ? coverSource(r.sourceArg) : null
   if (found) placeClone(r, found)
   else r.mode = 'fade'
+  stepBack(r, found ? (found.turn?.box ?? found.box) : null)
 
   const root = document.documentElement
   const slow = import.meta.env.DEV ? (window.__pageTransitionSlow ?? 1) : 1
@@ -682,7 +923,7 @@ function change(r: Run) {
     r.routed = true
     const oldPage = document.getElementById('main')?.firstElementChild ?? null
     try {
-      await router.navigate(r.path, { flushSync: true })
+      await r.navigate(r.path, { flushSync: true })
     } catch {
       /* RouteError shows a failed page */
     }
@@ -690,13 +931,19 @@ function change(r: Run) {
     await pageReplaced(oldPage, TRANSITION.renderWaitMs)
     trace('routed', window.location.pathname)
     if (run !== r || r.cancelled || window.location.pathname !== r.path) return
+    // The new page's content arrives as its own layer, in front of the scene stepping back.
+    const page = document.getElementById('main')?.firstElementChild
+    if (r.backs.length && page instanceof HTMLElement && page !== oldPage && !oldPage?.isConnected) {
+      page.style.setProperty('view-transition-name', PAGE_NAME)
+      r.backs.push(page)
+    }
     // The browser holds the picture of the old page meanwhile: short, capped waits for the slot's file and
     // the opening media (both warmed and normally decoded already), so they appear with the page.
     const dest = destination(r.coverId)
     const media = openingMedia()
     trace('destination', `${dest?.className ?? 'none'}; media ${media?.tagName ?? 'none'}`)
     if (import.meta.env.DEV && media instanceof HTMLImageElement && !warmed.get(r.path)?.images.some((img) => img.currentSrc === media.currentSrc)) {
-      // TRANSITION.openingMedia is out of step with the page: this file loads while the display is held.
+      // projects.ts `hero` (or TRANSITION.openingMedia) is out of step with the page: this file loads while the display is held.
       trace('opening not warmed', media.currentSrc.split('/').pop())
     }
     await Promise.all([
@@ -717,6 +964,7 @@ function change(r: Run) {
     // No view transition after all: change the route the ordinary way.
     r.clone?.remove()
     r.source?.removeAttribute('data-cover-moving')
+    releaseScene(r)
     return plain(r)
   }
   r.vt = vt
@@ -733,7 +981,7 @@ function change(r: Run) {
   later(r, TRANSITION.hardCapMs * slow, () => finish(r))
 }
 
-function start(mode: Mode, path: string, source: HTMLElement | null | undefined, navigate: (path: string) => void, onCancel?: () => void) {
+function start(mode: Mode, path: string, source: HTMLElement | null | undefined, navigate: Navigate, onCancel?: () => void) {
   const r: Run = {
     mode,
     path,
@@ -747,6 +995,7 @@ function start(mode: Mode, path: string, source: HTMLElement | null | undefined,
     clone: null,
     progress: null,
     named: null,
+    backs: [],
     vt: null,
     timers: [],
     unsubscribe: null,
@@ -785,7 +1034,8 @@ export interface OpenProjectOptions {
    * cross-fade.
    */
   source?: HTMLElement | null
-  navigate: (path: string) => void
+  /** react-router's useNavigate() of the calling component. */
+  navigate: Navigate
   /** Called if the transition is cancelled before the route change (Back, another navigation). */
   onCancel?: () => void
 }

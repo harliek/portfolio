@@ -4,81 +4,156 @@ import { useImageDialog } from '../../media/ImageDialog'
 import { ResponsiveImage } from '../../media/ResponsiveImage'
 
 /*
- * PhoneGroup: the Jumpstart Finance stage (CaseScroll `custom` media, brief-v8
- * section 14). Three original 2024 prototype screens (lessons, progress,
- * community) stand together on one floor with modest depth and controlled
- * overlap. The phone that matches the section being read is larger, a little
- * lower (nearer) and in front; the others step back, turn slightly towards it
- * and dim a little, and stay whole enough to recognise. Every change is one CSS
- * transition of position, scale, turn and light (jumpstart-finance.css), so
- * fast or backward scrolling simply retargets it: nothing is replaced, nothing
- * is queued, and there is no blur. Reduced motion: the change is instant.
+ * PhoneGroup: the Jumpstart Finance stage (CaseScroll `custom` media; motion-plan P4, the emphasis stack).
+ * Three original 2024 prototype screens (lessons, progress, community) stand together on one floor, each in
+ * its own place (Lessons left, Progress centre, Community right), so the reader learns where each screen is.
+ * The phone that matches the section being read comes forward (larger, lower on the floor, frontal, in front,
+ * with the page's featured light); the others step back and stay whole and readable behind it (smaller,
+ * higher, turned slightly towards it, with a quieter light). Adapted, as principles only, from Beirne Relay
+ * (https://beirne-websites.vercel.app/work/relay: one item of a visible group comes to the front per story
+ * step, the stage releases into reading at the end, no ghosted large text) and Fancy Stacking Cards
+ * (https://www.fancycomponents.dev/docs/components/blocks/stacking-cards: the others stay visible, reduced a
+ * little; scale and position are the cues, never blur or heavy dimming).
  *
- * Beside the story (sticky) the emphasis follows `focus`; stacked (below
- * 960px) the group sits once after the opening, before the story, so it shows
- * its balanced overview instead.
+ * One depth value drives every phone: d = its index minus the lead's, a = |d|. From it come the scale, the
+ * rise on the floor, the turn (towards the lead), the stacking order and the light level. The horizontal
+ * places follow from the scales: the group is centred and neighbours overlap by a set share of the phone
+ * behind, never more than its bezel and the screen's own white margin, so no screen content is ever covered
+ * (also during a move, since the edges travel with the scales). Positions are in units of the phone's width,
+ * so the composition is the same on every stage size; the phone width is the largest that lets the widest
+ * state fill the stage (--jf-span, jumpstart-finance.css).
  *
- * Each phone is its own enlarge control (a real button over its silhouette):
- * a click or Enter opens the shared image dialog on that screen, with the
- * other two a step away, labelled with the group's label; Escape or Close
- * returns focus to the phone.
+ * Every change is one CSS transition of position, scale, turn, stacking and light together (--dur-3, the
+ * arrive curve; jumpstart-finance.css): fast or backward scrolling simply retargets it, nothing is queued, and
+ * the stacking swaps when the two phones are the same size, halfway through the move. Reduced motion: the
+ * change is instant.
+ *
+ * Beside the story (sticky) the lead follows `focus`; the outcome shows the balanced group (every phone level),
+ * and the stage then leaves with the outcome (CaseScroll), back to normal reading. Stacked (below 960px) the
+ * group sits once after the opening, in natural flow, with a gentler depth; the phone of the section being read
+ * is still indicated (its light, and its name marked in a small index under the phones).
+ *
+ * Each phone is its own enlarge control (a real button over its silhouette): a click or Enter opens the shared
+ * image dialog on that screen, with the other two a step away, labelled with the group's label; Escape or
+ * Close returns focus to the phone. Hover and keyboard focus give a phone the active light only: its place and
+ * size follow the story, not the pointer.
  */
 
 export interface GroupPhone {
   image: ImageId
-  /** Short screen name, for the enlarge control ('Lessons'). */
+  /** Short screen name, for the enlarge control and the stacked index ('Lessons'). */
   name: string
 }
 
-/** Which phone leads: an index into `phones`, or 'all' for the balanced overview. */
+/** Which phone leads: an index into `phones`, or 'all' for the balanced group. */
 export type PhoneFocus = number | 'all'
 
-/** One phone's place: x (centre, % of the group's width), y (% of its height, negative = farther back), scale, turn (deg), stacking, light. */
+type Level = 'lead' | 'near' | 'far' | 'even'
+
+/** One phone's place: x (centre, in phone widths from the stage centre), rise (share of the phone height), scale, turn (deg), stacking, light. */
 interface Pose {
   x: number
-  y: number
+  rise: number
   s: number
   ry: number
   z: number
-  lit: number
+  level: Level
 }
 
-/*
- * Poses for three phones, designed for a phone width of 37% of the group (the
- * CSS caps it there; on a shorter stage the phones are smaller and the gaps a
- * little wider). Overlaps are about 2.5% of the group's width, so each phone
- * behind keeps its screen content in view. The lead phone is in front (z 3), its
- * neighbour next (z 2), a far phone last (z 1).
+/** Depth by level a = |d|: scale, rise (share of the phone height) and turn (deg). */
+interface Depth {
+  s: readonly [number, number, number]
+  rise: readonly [number, number, number]
+  turn: readonly [number, number, number]
+  /**
+   * Overlap between neighbours, as a share of the phone behind (the smaller one). Each canvas has 1.3% of clear
+   * margin per side, so 0.085 covers about 6% of the back phone's body: its bezel and the screen's own white
+   * margin, never content (the screens' content starts 8.4% in at the least, on Community's left side).
+   */
+  overlap: number
+  /** The balanced group: the centre phone, the outer two, their turn. */
+  even: { centre: number; side: number; turn: number; rise: number }
+}
+
+const DEPTH: Record<'sticky' | 'stacked', Depth> = {
+  sticky: {
+    s: [1, 0.82, 0.72],
+    rise: [0, 0.03, 0.055],
+    turn: [0, 8, 12],
+    overlap: 0.085,
+    even: { centre: 0.9, side: 0.86, turn: 6, rise: 0.015 },
+  },
+  // Stacked: gentler depth in the narrow column; the lead is still clearly the larger, frontal, lit one.
+  stacked: {
+    s: [1, 0.88, 0.8],
+    rise: [0, 0.02, 0.035],
+    turn: [0, 6, 9],
+    overlap: 0.085,
+    even: { centre: 0.94, side: 0.9, turn: 5, rise: 0.012 },
+  },
+}
+
+const LEVELS: readonly Level[] = ['lead', 'near', 'far']
+
+/**
+ * Centres for phones of these scales (in phone widths from the stage centre), the group centred, each pair of
+ * neighbours overlapping by `overlap` of the smaller one's width. Both edges of a pair move linearly with the
+ * scales, so the overlap stays within that band during a move too.
  */
-const NEAR = 0.8
-const FAR = 0.7
-const POSES: Record<'0' | '1' | '2' | 'all', Pose[]> = {
-  '0': [
-    { x: 24.75, y: 0, s: 1, ry: 0, z: 3, lit: 1 },
-    { x: 55.55, y: -2, s: NEAR, ry: -9, z: 2, lit: 0 },
-    { x: 80.8, y: -3.5, s: FAR, ry: -13, z: 1, lit: 0 },
-  ],
-  '1': [
-    { x: 19.2, y: -2, s: NEAR, ry: 9, z: 2, lit: 0 },
-    { x: 50, y: 0, s: 1, ry: 0, z: 3, lit: 1 },
-    { x: 80.8, y: -2, s: NEAR, ry: -9, z: 2, lit: 0 },
-  ],
-  '2': [
-    { x: 19.2, y: -3.5, s: FAR, ry: 13, z: 1, lit: 0 },
-    { x: 44.45, y: -2, s: NEAR, ry: 9, z: 2, lit: 0 },
-    { x: 75.25, y: 0, s: 1, ry: 0, z: 3, lit: 1 },
-  ],
-  all: [
-    { x: 20.8, y: -1, s: 0.84, ry: 7, z: 2, lit: 0.6 },
-    { x: 50, y: 0, s: 0.9, ry: 0, z: 3, lit: 0.8 },
-    { x: 79.2, y: -1, s: 0.84, ry: -7, z: 2, lit: 0.6 },
-  ],
+function centres(scales: number[], overlap: number) {
+  const overlaps = scales.slice(1).map((s, i) => overlap * Math.min(s, scales[i]))
+  const span = scales.reduce((sum, s) => sum + s, 0) - overlaps.reduce((sum, o) => sum + o, 0)
+  let edge = -span / 2
+  return scales.map((s, i) => {
+    const x = edge + s / 2
+    edge += s - (overlaps[i] ?? 0)
+    return x
+  })
 }
 
-const poseFor = (focus: PhoneFocus, i: number): Pose => {
-  const key = focus === 'all' ? 'all' : (String(Math.min(2, Math.max(0, focus))) as '0' | '1' | '2')
-  return POSES[key][i] ?? POSES.all[1]
+/** The group's width in phone widths for this state. */
+const spanOf = (poses: Pose[]) => Math.max(...poses.map((p) => p.x + p.s / 2)) - Math.min(...poses.map((p) => p.x - p.s / 2))
+
+function posesFor(focus: PhoneFocus, count: number, layout: 'sticky' | 'stacked'): Pose[] {
+  const D = DEPTH[layout]
+  if (focus === 'all') {
+    const mid = (count - 1) / 2
+    const scales = Array.from({ length: count }, (_, i) => (i === mid ? D.even.centre : D.even.side))
+    const xs = centres(scales, D.overlap)
+    return scales.map((s, i) => ({
+      x: xs[i],
+      rise: i === mid ? 0 : D.even.rise,
+      s,
+      ry: Math.sign(mid - i) * D.even.turn,
+      z: i === mid ? 3 : 2,
+      level: 'even',
+    }))
+  }
+  const lead = Math.min(count - 1, Math.max(0, focus))
+  const depth = Array.from({ length: count }, (_, i) => i - lead)
+  const scales = depth.map((d) => D.s[Math.min(2, Math.abs(d))])
+  const xs = centres(scales, D.overlap)
+  return depth.map((d, i) => {
+    const a = Math.min(2, Math.abs(d))
+    return {
+      x: xs[i],
+      rise: D.rise[a],
+      s: scales[i],
+      // Turned towards the lead: a phone on its right faces left (negative), on its left faces right.
+      ry: -Math.sign(d) * D.turn[a],
+      z: 3 - a,
+      level: LEVELS[a],
+    }
+  })
 }
+
+/** The widest state of a layout (in phone widths): the phone width is sized so that one fits the stage. */
+const SPAN_MAX = {
+  sticky: Math.max(spanOf(posesFor('all', 3, 'sticky')), ...[0, 1, 2].map((f) => spanOf(posesFor(f, 3, 'sticky')))),
+  stacked: Math.max(spanOf(posesFor('all', 3, 'stacked')), ...[0, 1, 2].map((f) => spanOf(posesFor(f, 3, 'stacked')))),
+}
+
+const round = (n: number) => Math.round(n * 1e4) / 1e4
 
 interface PhoneGroupProps {
   /** Exactly three screens, in reading order (lessons, progress, community). */
@@ -89,33 +164,40 @@ interface PhoneGroupProps {
   label: string
 }
 
-/** Each phone's rendered width: 37% of the stage (52% of the 1240px grid on desktop) or of the stacked column. */
-const PHONE_SIZES = '(min-width: 1368px) 240px, (min-width: 960px) 18vw, 37vw'
+/** Each phone's rendered width: about 38% of the stage (the 645px media column on desktop) or of the stacked column. */
+const PHONE_SIZES = '(min-width: 1368px) 250px, (min-width: 960px) 19vw, 37vw'
 
 export function PhoneGroup({ phones, focus, layout, label }: PhoneGroupProps) {
   const dialog = useImageDialog()
   const labelId = useId()
   const descId = useId()
-  const shown: PhoneFocus = layout === 'stacked' ? 'all' : focus
+  // Both layouts follow the section being read (the page maps the opening to the first phone).
+  const poses = posesFor(focus, phones.length, layout)
+  const lead = poses.findIndex((p) => p.level === 'lead')
   const gallery = phones.map((p) => p.image)
-  const lead = shown === 'all' ? -1 : shown
 
   return (
-    <figure className="jf-group" data-layout={layout} data-focus={String(shown)}>
+    <figure
+      className="jf-group"
+      data-layout={layout}
+      data-focus={String(focus)}
+      style={{ '--jf-span': round(SPAN_MAX[layout]) } as CSSProperties}
+    >
       <div className="jf-floor">
         {phones.map((phone, i) => {
-          const pose = poseFor(shown, i)
+          const pose = poses[i]
           const style = {
-            '--x': pose.x,
-            '--y': pose.y,
+            '--x': round(pose.x),
+            '--rise': round(pose.rise),
             '--s': pose.s,
-            '--ry': `${pose.ry}deg`,
-            '--lit': pose.lit,
+            '--ry': `${round(pose.ry)}deg`,
             zIndex: pose.z,
           } as CSSProperties
           const asset = getImage(phone.image)
           return (
-            <div key={phone.image} className="jf-phone" data-lead={i === lead || undefined} style={style}>
+            <div key={phone.image} className="jf-phone" data-level={pose.level} data-lead={i === lead || undefined} style={style}>
+              <span className="jf-phone__spill" aria-hidden="true" />
+              <span className="jf-phone__shadow" aria-hidden="true" />
               <div className="jf-phone__body">
                 <ResponsiveImage image={phone.image} sizes={PHONE_SIZES} fit="contain" decorative priority={i === 0} loading="eager" />
                 <button
@@ -133,6 +215,22 @@ export function PhoneGroup({ phones, focus, layout, label }: PhoneGroupProps) {
             </div>
           )
         })}
+        {layout === 'stacked' && (
+          // The stacked index: each screen's name under its phone, the one being read marked (Beirne's step row).
+          // Decorative for assistive technology: each enlarge control already carries the name.
+          <div className="jf-index" aria-hidden="true">
+            {phones.map((phone, i) => (
+              <span
+                key={phone.image}
+                className="jf-index__name"
+                data-lead={i === lead || undefined}
+                style={{ '--x': round(poses[i].x) } as CSSProperties}
+              >
+                {phone.name}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       <figcaption id={labelId} className="cs-media-label jf-group__label">
         {label}

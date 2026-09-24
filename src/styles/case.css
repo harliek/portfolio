@@ -57,7 +57,7 @@
 .case-prose strong {
   color: var(--stage-ivory);
   font-weight: 620;
-  transition: color 220ms var(--ease-out);
+  transition: color var(--dur-2) var(--ease-standard);
 }
 
 .case-prose ul {
@@ -74,8 +74,8 @@
   text-decoration-color: color-mix(in oklch, currentColor 60%, transparent);
   text-underline-offset: 3px;
   transition:
-    color var(--dur-feedback) var(--ease-out),
-    text-decoration-color var(--dur-feedback) var(--ease-out);
+    color var(--dur-1) var(--ease-standard),
+    text-decoration-color var(--dur-1) var(--ease-standard);
 }
 
 .case-prose a:hover {
@@ -84,14 +84,15 @@
 }
 
 /*
- * Noninteractive text with a mouse: headings and the bold phrase a recruiter should notice take the page accent on
- * hover (a plain colour change: the text cursor, size and underline stay as they are). Nothing on touch.
+ * Noninteractive text with a mouse: headings and the bold phrase a recruiter should notice ease into the page's one
+ * accent on hover, over --dur-2 on the standard curve (the same mix in OKLCH as base.css, so the colour travels
+ * perceptually). A plain colour change: the text cursor, size and underline stay as they are. Nothing on touch.
  */
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .cs-title:hover,
   .cs-heading:hover,
   .case-prose strong:hover {
-    color: color-mix(in oklch, var(--case-accent) 78%, var(--stage-ivory));
+    color: color-mix(in oklch, var(--case-accent) 80%, var(--stage-ivory));
   }
 }
 
@@ -194,7 +195,7 @@
   letter-spacing: -0.03em;
   font-weight: var(--weight-heading);
   text-wrap: balance;
-  transition: color 220ms var(--ease-out);
+  transition: color var(--dur-2) var(--ease-standard);
 }
 
 .cs-title:focus {
@@ -226,9 +227,15 @@
 /*
  * The cover PNG beneath the metadata, about 1.5 times its earlier size (CaseScroll COVER_HEIGHT), scaled down on
  * short windows so the first section stays near the first screen (--cover-hmax), with the discreet "Concept cover"
- * label beside its base (under it when the column is too narrow). The glow follows the artwork's silhouette
- * (alpha-aware drop shadows on the slot, which the route transition's moving copy lands with): a narrow bright
- * edge and a wider soft halo in the accent, a little stronger on hover.
+ * label beside its base (under it when the column is too narrow).
+ *
+ * Light: the homepage's one light model (tokens.css --light-*, motion-plan P2) at case-page strength. The featured
+ * level at rest: an alpha-aware rim on the silhouette (the accent mixed toward white) and a softer halo in the
+ * accent, both on the artwork itself (never a box), a soft contact shadow where it stands, and the accent's light
+ * on the floor beneath it (halo and floor light restrained by --light-case). The cover is not a link, so hover
+ * raises the light only: rim and halo to the active level and the floor light rising from the base, over --dur-2
+ * with the respond curve; no lift, and the shadow stays. The slot carries the route transition's shared name, so the
+ * shadow and floor light land with the moving object (never a floating landing).
  */
 .cs-cover {
   --cover-hmax: clamp(150px, calc(100svh - 500px), 400px);
@@ -241,15 +248,141 @@
 }
 
 .cs-cover .cover-slot {
+  --edge-a: var(--light-feat-edge-a);
+  --edge-r: var(--light-feat-edge-r);
+  --halo-a: var(--light-feat-halo-a);
+  --halo-r: var(--light-feat-halo-r);
+  --bright: 1;
+  --spill-o: var(--light-feat-spill);
+  --shadow-o: var(--light-feat-shadow);
+  --rim: color-mix(in oklch, var(--case-accent) var(--light-rim-mix), white);
   width: min(var(--cover-w), 100%, calc(var(--cover-hmax) * var(--cover-r, 10)));
-  filter: drop-shadow(0 0 1.5px rgb(var(--case-accent-rgb) / 0.75)) drop-shadow(0 0 20px rgb(var(--case-accent-rgb) / 0.3));
-  transition: filter 320ms var(--ease-out);
+  isolation: isolate;
 }
 
 @media (hover: hover) {
   .cs-cover .cover-slot:hover {
-    filter: drop-shadow(0 0 2px rgb(var(--case-accent-rgb) / 0.95)) drop-shadow(0 0 30px rgb(var(--case-accent-rgb) / 0.46));
+    --edge-a: var(--light-active-edge-a);
+    --edge-r: var(--light-active-edge-r);
+    --halo-a: var(--light-active-halo-a);
+    --halo-r: var(--light-active-halo-r);
+    --bright: 1.03;
+    --spill-o: var(--light-active-spill);
   }
+
+  .cs-cover .cover-slot:hover::before {
+    scale: var(--light-spill-rise);
+  }
+}
+
+/*
+ * The light model's layers on a case page's PNG objects (the cover here, the next-project thumbnail below). Each
+ * sets its level (--edge-a/-r, --halo-a/-r, --bright, --spill-o, --shadow-o, as on the homepage objects), its rim
+ * colour (--rim), its accent (--light-rgb), a size factor for the glow radii (--light-k), its footprint and glow
+ * balance (--foot, --foot-x, --kg, by data-kind, the homepage's values) and, where the box is not the object's own
+ * shape, the object's drawn size (--obj-w/-h).
+ *   .picture   rim and halo on the silhouette (drop-shadow on the transparent artwork: alpha-aware, never a box)
+ *   ::before   the accent's light on the floor beneath the object
+ *   ::after    the soft contact shadow where the object stands
+ * All three respond together, over --dur-2 on the respond curve; filters change only on hover or focus.
+ */
+:is(.cs-cover, .next-project__thumb) {
+  --foot: 0.8;
+  --foot-x: 0;
+  --kg: 1;
+}
+
+/* The white screens and the mug take a little less added light, the dark camera more. */
+:is(.cs-cover, .next-project__thumb)[data-kind='monitor'] {
+  --foot: 0.5;
+  --kg: 0.85;
+}
+
+:is(.cs-cover, .next-project__thumb)[data-kind='laptop'] {
+  --foot: 0.98;
+  --kg: 0.85;
+}
+
+/* The handle is on the right: the mug's body, and its footprint, sit left of the box centre. */
+:is(.cs-cover, .next-project__thumb)[data-kind='mug'] {
+  --foot: 0.66;
+  --foot-x: -0.09;
+  --kg: 0.92;
+}
+
+:is(.cs-cover, .next-project__thumb)[data-kind='tablet'] {
+  --foot: 0.9;
+  --kg: 0.95;
+}
+
+/* The phone's artwork has its own saturated green frame: less added light, so it never reads as a neon tube. */
+:is(.cs-cover, .next-project__thumb)[data-kind='phone'] {
+  --foot: 0.84;
+  --kg: 0.72;
+}
+
+:is(.cs-cover, .next-project__thumb)[data-kind='camera'] {
+  --foot: 0.86;
+  --kg: 1.35;
+}
+
+.cs-cover .cover-slot {
+  --light-rgb: var(--case-accent-rgb);
+  --light-k: 0.7;
+}
+
+:is(.cs-cover .cover-slot, .next-project__thumb) .picture {
+  filter: brightness(var(--bright))
+    drop-shadow(0 0 var(--edge-r) color-mix(in oklch, var(--rim) calc(min(1, var(--edge-a) * var(--kg)) * 100%), transparent))
+    drop-shadow(0 0 calc(var(--halo-r) * var(--light-k)) rgb(var(--light-rgb) / calc(var(--halo-a) * var(--kg) * var(--light-case))));
+  transform-origin: 50% 100%;
+  transition:
+    filter var(--dur-2) var(--ease-respond),
+    transform var(--dur-2) var(--ease-respond);
+}
+
+/* The floor light: a broad, soft pool mostly behind the base, so it never reaches the text below. */
+:is(.cs-cover .cover-slot, .next-project__thumb)::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 100%;
+  width: calc(var(--obj-w, 100%) * 1.3);
+  height: calc(var(--obj-h, 100%) * 0.28);
+  translate: -50% -62%;
+  transform-origin: 50% 60%;
+  background: radial-gradient(closest-side, rgb(var(--light-rgb) / 0.36), rgb(var(--light-rgb) / 0.14) 46%, rgb(var(--light-rgb) / 0));
+  opacity: calc(var(--spill-o) * var(--kg) * var(--light-case));
+  pointer-events: none;
+  transition:
+    opacity var(--dur-2) var(--ease-respond),
+    scale var(--dur-2) var(--ease-respond);
+}
+
+/* The contact shadow: dark and tight under the base; it narrows and lightens when the object lifts. */
+:is(.cs-cover .cover-slot, .next-project__thumb)::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: calc(50% + var(--foot-x) * var(--obj-w, 100%));
+  top: 100%;
+  width: calc(var(--obj-w, 100%) * var(--foot));
+  height: max(6px, calc(var(--obj-h, 100%) * 0.07));
+  translate: -50% -56%;
+  background: radial-gradient(closest-side, rgb(1 1 5 / 0.96), rgb(1 1 5 / 0.62) 45%, rgb(1 1 5 / 0));
+  opacity: var(--shadow-o);
+  pointer-events: none;
+  transition:
+    opacity var(--dur-2) var(--ease-respond),
+    scale var(--dur-2) var(--ease-respond);
+}
+
+/* Reduced motion: the light still shows the state, at once. */
+html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb) :is(.picture),
+html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::before,
+html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::after {
+  transition: none !important;
 }
 
 .cs-cover__label {
@@ -320,7 +453,7 @@
   line-height: 1.22;
   letter-spacing: -0.02em;
   font-weight: var(--weight-heading);
-  transition: color 200ms var(--ease-out);
+  transition: color var(--dur-2) var(--ease-standard);
 }
 
 .cs-heading:focus {
@@ -342,8 +475,8 @@
   transform: scaleY(0.4);
   transform-origin: 50% 0;
   transition:
-    opacity 150ms var(--ease-out),
-    transform 200ms var(--ease-out);
+    opacity var(--dur-1) var(--ease-standard),
+    transform var(--dur-2) var(--ease-respond);
 }
 
 .cs[data-layout='sticky'] .cs-section[data-active] > .cs-heading {
@@ -958,18 +1091,26 @@ html[data-motion='reduce'] .cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .c
 }
 
 /* A block box (not a grid: a percentage height inside an auto grid row does not resolve, so tall objects such as the
-   phone overflowed it); the image fills it and is contained, centred. The quiet silhouette glow is the next
-   project's accent. */
+   phone overflowed it); the image fills it, contained and standing on the box's floor (base down, centred across),
+   so its contact shadow meets its base. Lit by the light model (above) in the next project's accent: the neighbour
+   level at rest, the active level with a small lift on hover and focus. */
 .next-project__thumb {
+  --edge-a: var(--light-near-edge-a);
+  --edge-r: 1px;
+  --halo-a: var(--light-near-halo-a);
+  --halo-r: var(--light-near-halo-r);
+  --bright: 0.97;
+  --spill-o: var(--light-near-spill);
+  --shadow-o: var(--light-near-shadow);
+  --rim: color-mix(in oklch, var(--next-accent, #c9b8ff) var(--light-rim-mix), white);
+  --light-rgb: var(--next-accent-rgb, 201 184 255);
+  --light-k: 0.34;
+  position: relative;
+  isolation: isolate;
   flex: none;
   display: block;
   width: var(--thumb-w, 104px);
   height: var(--thumb-h, 84px);
-  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.45)) drop-shadow(0 0 1px rgb(var(--next-accent-rgb, 201 184 255) / 0.6))
-    drop-shadow(0 0 10px rgb(var(--next-accent-rgb, 201 184 255) / 0.22));
-  transition:
-    transform 200ms var(--ease-out),
-    filter 200ms var(--ease-out);
 }
 
 .next-project__thumb .picture,
@@ -977,6 +1118,7 @@ html[data-motion='reduce'] .cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .c
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: 50% 100%;
 }
 
 .next-project__text {
@@ -998,7 +1140,7 @@ html[data-motion='reduce'] .cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .c
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.015em;
-  transition: color 180ms var(--ease-out);
+  transition: color var(--dur-2) var(--ease-standard);
 }
 
 .next-project__tail {
@@ -1009,13 +1151,30 @@ html[data-motion='reduce'] .cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .c
   display: inline-block;
   margin-left: 8px;
   vertical-align: -0.08em;
-  transition: transform 180ms var(--ease-out);
+  transition: transform var(--dur-2) var(--ease-respond);
 }
 
+/* Hover and focus: the object rises a little (a 4% lift) and brightens; its shadow tightens and lightens, its floor light rises. */
 .next-project__link:is(:hover, :focus-visible) .next-project__thumb {
-  transform: scale(1.04);
-  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.45)) drop-shadow(0 0 1.5px rgb(var(--next-accent-rgb, 201 184 255) / 0.9))
-    drop-shadow(0 0 16px rgb(var(--next-accent-rgb, 201 184 255) / 0.45));
+  --edge-a: var(--light-active-edge-a);
+  --edge-r: 1.5px;
+  --halo-a: var(--light-active-halo-a);
+  --halo-r: var(--light-active-halo-r);
+  --bright: 1.04;
+  --spill-o: var(--light-active-spill);
+}
+
+.next-project__link:is(:hover, :focus-visible) .next-project__thumb .picture {
+  transform: translateY(calc(var(--light-lift) * -0.4)) scale(var(--light-lift-scale));
+}
+
+.next-project__link:is(:hover, :focus-visible) .next-project__thumb::after {
+  scale: var(--light-lift-shadow-scale);
+  opacity: calc(var(--shadow-o) * var(--light-lift-shadow-o));
+}
+
+.next-project__link:is(:hover, :focus-visible) .next-project__thumb::before {
+  scale: var(--light-spill-rise);
 }
 
 .next-project__link:is(:hover, :focus-visible) .next-project__name {
@@ -1035,6 +1194,6 @@ html[data-motion='reduce'] :is(.next-project__thumb, .next-project__name, .next-
   transition: none;
 }
 
-html[data-motion='reduce'] .next-project__link:is(:hover, :focus-visible) :is(.next-project__thumb, .next-project__arrow) {
+html[data-motion='reduce'] .next-project__link:is(:hover, :focus-visible) :is(.next-project__thumb .picture, .next-project__arrow) {
   transform: none;
 }

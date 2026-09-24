@@ -113,30 +113,31 @@ html[data-page-transition] .route-reveal {
 }
 
 /*
- * The pages: the browser's picture of the old page fades out while the live
- * new page fades in, with the same duration and curve, blended additively
- * (the browser's default for a pair), so the two always sum to a whole
- * scene: the room behind (the same video on both pages) stays continuous and
- * nothing dims towards black. The new page's heading and opening media are
- * part of it from the first frame.
+ * The root pictures: the room (the same background video on both pages) and
+ * whatever is not pictured on its own below. The old picture fades out while
+ * the live new one fades in, with the same duration and curve, blended
+ * additively (the browser's default for a pair), so the two always sum to
+ * one whole room: it stays continuous and never dims towards black. (When the
+ * scene cannot step back, the pages themselves are part of this pair.)
  */
 :root[data-page-transition]::view-transition-group(root),
 :root[data-page-transition]::view-transition-old(root),
 :root[data-page-transition]::view-transition-new(root) {
-  animation-duration: var(--pt-page-ms, 380ms);
-  animation-timing-function: var(--pt-page-ease, cubic-bezier(0.33, 0, 0.25, 1));
+  animation-duration: var(--pt-page-ms, 420ms);
+  animation-timing-function: var(--pt-page-ease, cubic-bezier(0.215, 0.61, 0.355, 1));
 }
 
 /*
- * The PNG: the group moves and scales from the copy's box to the slot's box
- * (both in the artwork's proportions, so the scale is uniform) while a 3D
- * turn straightens. Inside it the two pictures of the same object hand over
- * without blending (the new, sharper one on top), so its brightness never
- * dips or doubles.
+ * The chosen PNG advances: the group moves and scales from the copy's box to
+ * the slot's box (both in the artwork's proportions, so the scale is
+ * uniform) on the arrive curve (front-loaded: it visibly leaves in the first
+ * frame; no overshoot) while a 3D turn straightens. Inside it the two
+ * pictures of the same object hand over without blending (the new, sharper
+ * one on top), so its brightness never dips or doubles.
  */
 :root[data-page-transition]::view-transition-group(hk-cover) {
   animation-duration: var(--pt-cover-ms, 420ms);
-  animation-timing-function: var(--pt-cover-ease, cubic-bezier(0.3, 0.1, 0.15, 1));
+  animation-timing-function: var(--pt-cover-ease, cubic-bezier(0.215, 0.61, 0.355, 1));
 }
 
 :root[data-page-transition]::view-transition-image-pair(hk-cover) {
@@ -155,7 +156,152 @@ html[data-page-transition] .route-reveal {
 
 /* No slot on screen (a missing or off-screen destination): the copy leaves with the old page. */
 :root[data-page-transition]::view-transition-old(hk-cover):only-child {
-  animation: hk-cover-leave var(--pt-page-ms, 380ms) var(--pt-page-ease, ease-out) both;
+  animation: hk-cover-leave var(--pt-page-ms, 420ms) var(--pt-page-ease, ease-out) both;
+}
+
+/*
+ * The rest of the scene steps back (projectTransition.ts stepBack) while the
+ * chosen object advances.
+ *
+ * The page's content (hk-scene: title, labels, text; without the room and the
+ * header) eases back a little about the chosen object and clears slightly
+ * sooner than the new page arrives, so old and new headings barely overlap.
+ * It is pictured without the objects named below.
+ */
+:root[data-page-transition]::view-transition-old(hk-scene) {
+  transform-origin: var(--pt-scene-origin, 50% 50%);
+  animation: hk-scene-out var(--pt-scene-ms, 360ms) var(--pt-scene-ease, ease-out) both;
+}
+
+/*
+ * The new page's content (hk-page, named once the route has changed) arrives
+ * over the change on the arrive curve, in front of the scene stepping back.
+ * The header, pictured on its own so the content layers never paint over it,
+ * cross-fades with the pages.
+ */
+:root[data-page-transition]::view-transition-new(hk-page),
+:root[data-page-transition]::view-transition-group(hk-header),
+:root[data-page-transition]::view-transition-old(hk-header),
+:root[data-page-transition]::view-transition-new(hk-header) {
+  animation-duration: var(--pt-page-ms, 420ms);
+  animation-timing-function: var(--pt-page-ease, cubic-bezier(0.215, 0.61, 0.355, 1));
+}
+
+/*
+ * The layers, back to front: the room (root), the scene stepping back (the
+ * old content and each receding object), the new page, the header, and the
+ * advancing object. Without an explicit order the browser would stack them
+ * as the page being left painted them, with the receding objects over the
+ * arriving page.
+ */
+:root[data-page-transition]::view-transition-group(hk-scene),
+:root[data-page-transition]::view-transition-group(hk-back-0),
+:root[data-page-transition]::view-transition-group(hk-back-1),
+:root[data-page-transition]::view-transition-group(hk-back-2),
+:root[data-page-transition]::view-transition-group(hk-back-3),
+:root[data-page-transition]::view-transition-group(hk-back-4),
+:root[data-page-transition]::view-transition-group(hk-back-5),
+:root[data-page-transition]::view-transition-group(hk-back-6),
+:root[data-page-transition]::view-transition-group(hk-back-7),
+:root[data-page-transition]::view-transition-group(hk-back-8),
+:root[data-page-transition]::view-transition-group(hk-back-9) {
+  z-index: 1;
+}
+
+:root[data-page-transition]::view-transition-group(hk-page) {
+  z-index: 2;
+}
+
+:root[data-page-transition]::view-transition-group(hk-header) {
+  z-index: 3;
+}
+
+:root[data-page-transition]::view-transition-group(hk-cover) {
+  z-index: 4;
+}
+
+/*
+ * Each other PNG object (hk-back-<n>, at most TRANSITION.stepBack.max = 10)
+ * recedes the way the gallery shows distance: smaller, about its floor
+ * point, and a little higher, towards the horizon (arrive curve), while it
+ * dims away over a shorter time, so the recession reads before it is gone.
+ * It never grows, turns or overshoots.
+ */
+:root[data-page-transition]::view-transition-old(hk-back-0),
+:root[data-page-transition]::view-transition-old(hk-back-1),
+:root[data-page-transition]::view-transition-old(hk-back-2),
+:root[data-page-transition]::view-transition-old(hk-back-3),
+:root[data-page-transition]::view-transition-old(hk-back-4),
+:root[data-page-transition]::view-transition-old(hk-back-5),
+:root[data-page-transition]::view-transition-old(hk-back-6),
+:root[data-page-transition]::view-transition-old(hk-back-7),
+:root[data-page-transition]::view-transition-old(hk-back-8),
+:root[data-page-transition]::view-transition-old(hk-back-9) {
+  --pt-dx: 0px;
+  transform-origin: 50% 100%;
+  animation:
+    hk-back-move var(--pt-back-ms, 420ms) var(--pt-back-move-ease, ease-out) both,
+    hk-back-fade var(--pt-back-fade-ms, 320ms) var(--pt-back-fade-ease, ease-out) both;
+}
+
+/* Each object's own convergence towards the chosen one (projectTransition.ts sets --pt-back-dx-<n>). */
+:root[data-page-transition]::view-transition-old(hk-back-0) {
+  --pt-dx: var(--pt-back-dx-0, 0px);
+}
+
+:root[data-page-transition]::view-transition-old(hk-back-1) {
+  --pt-dx: var(--pt-back-dx-1, 0px);
+}
+
+:root[data-page-transition]::view-transition-old(hk-back-2) {
+  --pt-dx: var(--pt-back-dx-2, 0px);
+}
+
+:root[data-page-transition]::view-transition-old(hk-back-3) {
+  --pt-dx: var(--pt-back-dx-3, 0px);
+}
+
+:root[data-page-transition]::view-transition-old(hk-back-4) {
+  --pt-dx: var(--pt-back-dx-4, 0px);
+}
+
+:root[data-page-transition]::view-transition-old(hk-back-5) {
+  --pt-dx: var(--pt-back-dx-5, 0px);
+}
+
+:root[data-page-transition]::view-transition-old(hk-back-6) {
+  --pt-dx: var(--pt-back-dx-6, 0px);
+}
+
+:root[data-page-transition]::view-transition-old(hk-back-7) {
+  --pt-dx: var(--pt-back-dx-7, 0px);
+}
+
+:root[data-page-transition]::view-transition-old(hk-back-8) {
+  --pt-dx: var(--pt-back-dx-8, 0px);
+}
+
+:root[data-page-transition]::view-transition-old(hk-back-9) {
+  --pt-dx: var(--pt-back-dx-9, 0px);
+}
+
+@keyframes hk-scene-out {
+  to {
+    opacity: 0;
+    transform: scale(var(--pt-scene-scale, 0.985));
+  }
+}
+
+@keyframes hk-back-move {
+  to {
+    transform: translate(var(--pt-dx, 0px), calc(var(--pt-back-rise, 0.07) * -100%)) scale(var(--pt-back-scale, 0.76));
+  }
+}
+
+@keyframes hk-back-fade {
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes hk-cover-old {

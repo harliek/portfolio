@@ -223,6 +223,12 @@ export const IMAGES = {
     source: 'final png tiles/jumpstart.png', role: 'Carousel object, case opening cover, next-project thumbnail',
     crop: 'Trimmed to visible pixels (alpha ≥ 8) plus 16px of transparent margin.',
   }),
+  'film-bg-poster': img({
+    id: 'film-bg-poster', file: 'film-bg-poster', width: 1920, height: 1080, widths: [960, 1280, 1920], fallback: 'jpg',
+    alt: '',
+    provenance: 'personal-work', synthetic: false,
+    source: 'old portfolio/_superseded/dist-old/home-bg.mp4 (frame at 12.5s)', role: 'Homepage film background poster (reduced motion, loading)',
+  }),
   'tile-about': img({
     id: 'tile-about', file: 'tile-about', width: 566, height: 755, widths: [320, 480, 566], fallback: 'jpg',
     alt: 'Portrait of Harlie Katz.',
@@ -1005,6 +1011,17 @@ export const STAGE_MEDIA = {
     desktop: { src: '/media/video/stage-desktop.mp4', width: 1112, height: 834, poster: 'stage-poster-desktop' as const, bytes: 760_000 },
     mobile: { src: '/media/video/stage-mobile.mp4', width: 470, height: 834, poster: 'stage-poster-mobile' as const, bytes: 250_000 },
     source: 'inspiration/working-model-assets/background video.mp4 (1112×834, 24fps, 6.08s; audio removed)',
+  },
+  /**
+   * The original film background of Harlie's first portfolio homepage
+   * (a woman in a black leather corset and red gloves, lit in red and blue),
+   * restored for the professional homepage. Same footage, colours and
+   * framing; audio removed; 30fps H.264.
+   */
+  film: {
+    desktop: { src: '/media/video/film-bg-1920.mp4', width: 1920, height: 1080, poster: 'film-bg-poster' as const, bytes: 2_503_862 },
+    mobile: { src: '/media/video/film-bg-1280.mp4', width: 1280, height: 720, poster: 'film-bg-poster' as const, bytes: 1_160_726 },
+    source: 'old portfolio/_superseded/dist-old/home-bg.mp4 (identical to the live original and public/creative/home-bg.mp4; 1920×1080, 25.4s; audio removed)',
   },
 } as const
 

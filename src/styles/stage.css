@@ -87,9 +87,9 @@
   background: var(--stage-room);
   pointer-events: none;
   transition:
-    --frame-top 280ms var(--ease-out),
-    --frame-bottom 280ms var(--ease-out),
-    --vignette 280ms var(--ease-out);
+    --frame-top var(--dur-2) var(--ease-standard),
+    --frame-bottom var(--dur-2) var(--ease-standard),
+    --vignette var(--dur-2) var(--ease-standard);
 }
 
 /* The portrait loop (chosen below 600px) has its line at about 65.2% of a 470:834 frame. */
@@ -113,7 +113,7 @@
 
 .stage-bg__video {
   opacity: 0;
-  transition: opacity var(--bg-video-fade, 800ms) var(--ease-out);
+  transition: opacity var(--bg-video-fade, var(--dur-4)) var(--ease-standard);
 }
 
 .stage-bg__video[data-playing] {
@@ -140,7 +140,7 @@
   background: var(--stage-room);
   opacity: min(0.94, calc(var(--bg-shade) + var(--bg-phone, 0)));
   /* Short: a route change (header or shelf link) shows the new text at once, over this shade. */
-  transition: opacity 280ms var(--ease-out);
+  transition: opacity var(--dur-2) var(--ease-standard);
 }
 
 /* Homepage: the brightest room. No reading layer; the objects stand on the visible floor line. */
@@ -189,14 +189,14 @@
   height: 40%;
   background: radial-gradient(40% 62% at 50% 0% in oklch, color-mix(in oklch, var(--stage-violet) 18%, transparent), transparent 74%);
   opacity: calc(0.9 - 0.45 * var(--read));
-  transition: opacity 280ms var(--ease-out);
+  transition: opacity var(--dur-2) var(--ease-standard);
 }
 
 /* Reading layer. */
 .stage-bg__read {
   background: var(--read-sides, none), var(--read-fill);
   opacity: var(--read);
-  transition: opacity 280ms var(--ease-out);
+  transition: opacity var(--dur-2) var(--ease-standard);
 }
 
 /*
@@ -232,7 +232,7 @@
   z-index: 1;
   background: radial-gradient(44% 40% at 20% 24% in oklch, rgb(5 6 9 / 0.36), rgb(5 6 9 / 0.18) 55%, rgb(5 6 9 / 0));
   opacity: 0;
-  transition: opacity 280ms var(--ease-out);
+  transition: opacity var(--dur-2) var(--ease-standard);
 }
 
 .stage-bg[data-route='home']::before {
@@ -274,7 +274,7 @@
     rgb(5 6 9 / 0)
   );
   opacity: calc(var(--band-from) + (var(--band-to) - var(--band-from)) * var(--read));
-  transition: opacity 280ms var(--ease-out);
+  transition: opacity var(--dur-2) var(--ease-standard);
 }
 
 @media (min-width: 960px) {

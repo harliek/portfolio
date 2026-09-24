@@ -1,9 +1,19 @@
-/* Homepage: editorial introduction and floating project objects over the original film. */
+/* Homepage: editorial introduction and the project carousel over the original film. */
 
+/*
+ * The first view (brief v13): the introduction at the top left, the
+ * carousel standing low in the window with its labels and controls
+ * (DepthGallery fits the objects into the room left below the introduction,
+ * down to a floor; a short window scrolls instead). Spare height goes above
+ * the carousel, so the objects stay low and the film shows between.
+ */
 .home {
   /* The introduction's left margin: generous, the shell's gutter at least. */
   --home-left: max(var(--gutter), min(6.6vw, 132px));
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - var(--header-height));
 }
 
 /*
@@ -19,13 +29,17 @@
 /* Opening: Harlie Katz / PORTFOLIO / the two supporting lines             */
 /* ======================================================================= */
 
-/* Compact introduction keeps the project objects in the opening view. */
+/*
+ * One group, read top down, every line starting on the same left edge (the
+ * Creative Art page's arrangement): the name as a small letter-spaced
+ * label, PORTFOLIO in the editorial serif, the two roles close beneath it.
+ * The bottom margin is the least space kept above the carousel.
+ */
 .home-intro {
   position: relative;
-  display: flex;
-  align-items: center;
-  min-height: 0;
-  padding: clamp(24px, 3svh, 44px) var(--home-left) clamp(16px, 2svh, 28px);
+  flex: none;
+  padding: clamp(28px, 5svh, 64px) var(--home-left) 0;
+  margin-bottom: clamp(20px, 3svh, 36px);
 }
 
 .home-intro__block {
@@ -40,47 +54,61 @@
   line-height: 1;
 }
 
-/* The name: small, read first. */
+/* The name: small, letter-spaced, after a short neutral rule. */
 .home-intro__name {
   display: flex;
   align-items: center;
-  gap: 18px;
-  margin: 0 0 18px;
+  gap: 14px;
+  margin: 0 0 clamp(12px, 1.8svh, 18px);
   font-family: var(--font-sans);
   font-size: 0.75rem;
-  font-weight: 400;
+  font-weight: 450;
   line-height: 1.3;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: rgb(242 238 255 / 0.92);
+  color: rgb(242 238 255 / 0.88);
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.5);
 }
 
-/* The original portfolio's editorial serif, hosted locally. */
+.home-intro__name::before {
+  content: '';
+  flex: none;
+  width: 36px;
+  height: 1px;
+  background: rgb(242 238 255 / 0.5);
+}
+
+/*
+ * PORTFOLIO: the original portfolio's editorial serif (Playfair Display,
+ * hosted locally) in capitals, confident but smaller than the objects
+ * beneath it: about 88px on a wide window, 58px on a tablet, 40px on a
+ * phone, always one line within the window. The negative margin sets the
+ * P's stem on the name's left edge.
+ */
 .home-intro__word {
   display: block;
-  margin-left: -0.055em;
+  margin-left: -0.045em;
   font-family: var(--font-editorial);
-  font-size: clamp(4rem, 8.8vw, 7.875rem);
+  font-size: clamp(2.5rem, 1.6rem + 4.2vw, 5.5rem);
   font-weight: 400;
   font-optical-sizing: auto;
-  line-height: 0.98;
-  letter-spacing: -0.035em;
+  line-height: 0.94;
+  letter-spacing: 0.012em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: #fff5f1;
+  color: #f8f4f7;
   text-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
 }
 
-/* The two supporting lines: comfortably readable. */
+/* The two supporting lines: comfortably readable, close beneath the title. */
 .home-intro__roles {
   display: grid;
   justify-items: start;
   gap: 2px;
-  margin: clamp(16px, 2svh, 24px) 0 0 0.06em;
+  margin: clamp(14px, 2svh, 22px) 0 0;
   font-size: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.45;
   letter-spacing: 0.012em;
   color: rgb(236 232 250 / 0.9);
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
@@ -94,15 +122,15 @@
 /* The carousel's section                                                   */
 /* ======================================================================= */
 
-/* Objects follow the introduction without a second viewport of spacing. */
 .gallery {
-  --hover-scale: 1.085;
+  /* Hover and keyboard focus: +6% about the visual baseline (GALLERY.hover.scale). */
+  --hover-scale: 1.06;
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  min-height: 0;
-  padding-block: 0 32px;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-bottom: clamp(14px, 2.6svh, 28px);
 }
 
 /*
@@ -126,11 +154,13 @@
 }
 
 /*
- * Readability of the captions over the moving film: a soft, feathered
- * shade across the caption row and the controls beneath it (no box, no
- * edge; the film stays visible through it). DepthGallery sets where the
- * row starts (--caption-top, just above the selected object's bottom edge)
- * and how tall it is (--caption-h).
+ * Readability of the captions over the moving film: a broad, feathered
+ * shade across the caption row, the controls and the position line beneath
+ * them (no box; the film stays visible through it). DepthGallery sets where
+ * it starts (--caption-top, just above the selected object's bottom edge)
+ * and how tall it is (--caption-h: down to the section's bottom edge, the
+ * end of the page, where its last, lighter step meets the window's edge and
+ * never shows as a line).
  */
 .gallery__stage::before {
   content: '';
@@ -142,10 +172,10 @@
   background: linear-gradient(
     to bottom in oklch,
     rgb(3 3 6 / 0),
-    rgb(3 3 6 / 0.34) 22%,
-    rgb(3 3 6 / 0.4) 50%,
-    rgb(3 3 6 / 0.3) 78%,
-    rgb(3 3 6 / 0)
+    rgb(3 3 6 / 0.36) 20%,
+    rgb(3 3 6 / 0.42) 48%,
+    rgb(3 3 6 / 0.4) 80%,
+    rgb(3 3 6 / 0.3)
   );
   mask-image: linear-gradient(to right, rgb(0 0 0 / 0.55), #000 22%, #000 78%, rgb(0 0 0 / 0.55));
   pointer-events: none;
@@ -226,16 +256,20 @@
   transition-property: none;
 }
 
-/* Hover, focus and a press act here (never on the positioned element): +2.5% about the bottom edge, which stays where it is. */
+/*
+ * Hover, keyboard focus and a press act here (never on the positioned
+ * element): the object grows 6% about its visual baseline (the
+ * silhouette's bottom centre), which stays where it is. Not with reduced
+ * motion: there the contour alone marks it.
+ */
 .gobj__lift {
   position: absolute;
   inset: 0;
   transform-origin: calc(var(--ox) * 100%) calc(var(--oy) * 100%);
-  transition: transform var(--dur-2) var(--ease-respond);
+  transition: transform var(--dur-3) var(--ease-respond);
 }
 
-.gobj[data-active] .gobj__lift,
-.gobj[data-pressed] .gobj__lift {
+.gallery:not([data-reduced]) .gobj:is([data-active], [data-pressed]) .gobj__lift {
   transform: scale(var(--hover-scale));
 }
 
@@ -259,6 +293,7 @@
 
 .gobj__art > .picture {
   position: relative;
+  transition: filter var(--dur-2) var(--ease-standard);
 }
 
 /*
@@ -272,10 +307,41 @@
 }
 
 /*
+ * The active object's edge (brief v13): hover, keyboard focus and a press
+ * draw a thin red contour on the artwork only, about 1px and tight to it.
+ * Four zero-blur drop-shadows of the PNG's own alpha, one pixel each way:
+ * the silhouette's outline, never a box, and no blur, glow, halo or spread.
+ * Objects at rest carry no red; the project's accent glow (below) stays
+ * the artwork's light. Not while the object travels into its page
+ * (data-selected: it carries its accent light instead).
+ */
+.gobj:is([data-active], [data-pressed]):not([data-selected]) .gobj__art > .picture {
+  filter: drop-shadow(1px 0 0 var(--red)) drop-shadow(-1px 0 0 var(--red)) drop-shadow(0 1px 0 var(--red))
+    drop-shadow(0 -1px 0 var(--red));
+}
+
+/*
+ * The portrait: its fade moves from the image to the picture while the
+ * contour shows, so the contour is drawn on the unfaded silhouette and
+ * fades out with it (never a red line across the cut, never red seen
+ * through the faded pixels). The same mask, so the portrait looks the same.
+ */
+.gobj[data-kind='headshot']:is([data-active], [data-pressed]):not([data-selected]) .gobj__art > .picture {
+  -webkit-mask-image: linear-gradient(to bottom, #000 83%, rgb(0 0 0 / 0.5) 91.5%, transparent);
+  mask-image: linear-gradient(to bottom, #000 83%, rgb(0 0 0 / 0.5) 91.5%, transparent);
+}
+
+.gobj[data-kind='headshot']:is([data-active], [data-pressed]):not([data-selected]) .gobj__art > .picture > img {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/*
  * The glow: the same image beneath the artwork with a two-layer,
- * alpha-aware light (a narrow rim on the silhouette and a softer halo in the
- * project's accent; never a rectangle). Its opacity is the light by slot
- * (per frame), so no filter changes while the objects move.
+ * alpha-aware light in the project's own accent (a narrow rim on the
+ * silhouette and a softer halo; never a rectangle, never red). Its opacity
+ * is the light by slot (per frame), so no filter changes while the objects
+ * move.
  */
 .gobj__glow {
   /* Room for the halo's reach, so the layer's box never cuts it into a rectangle. */
@@ -342,6 +408,36 @@
 }
 
 /*
+ * Floating (brief v13: only when motion is allowed): each object drifts
+ * 6px up and down on a slow cycle, out of step with its neighbours. The
+ * individual `translate` leaves the carousel's per-frame transform intact.
+ * It holds still on the object under the pointer or keyboard focus, on a
+ * press, while a project opens, during a drag, and whenever the pause
+ * control is set; reduced motion has none.
+ */
+@keyframes object-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -6px;
+  }
+}
+
+.gallery:not([data-reduced]) .gobj__object {
+  animation: object-float 7s ease-in-out infinite;
+  animation-delay: calc(var(--float-phase) * -1s);
+}
+
+.gallery[data-paused] .gobj__object,
+.gobj:is([data-active], [data-pressed], [data-selected]) .gobj__object,
+.gallery__stage[data-dragging] .gobj__object {
+  animation-play-state: paused;
+}
+
+/*
  * The label: the object's title (one line) and description (two lines
  * reserved, balanced), centred beneath it in the same moving unit, flat and
  * upright (a 2D scale only, so the text stays sharp). DepthGallery sets its
@@ -384,9 +480,7 @@
   text-shadow:
     0 1px 2px rgb(0 0 0 / 0.75),
     0 0 14px rgb(0 0 0 / 0.5);
-  transition:
-    color var(--dur-2) var(--ease-standard),
-    text-shadow var(--dur-2) var(--ease-standard);
+  transition: color var(--dur-2) var(--ease-standard);
 }
 
 .gobj__sub {
@@ -395,7 +489,7 @@
   font-size: 1rem;
   line-height: 1.45;
   letter-spacing: 0.004em;
-  color: #dcd7ea;
+  color: #ddd8eb;
   text-wrap: balance;
   text-shadow:
     0 1px 2px rgb(0 0 0 / 0.8),
@@ -407,100 +501,134 @@
   color: #f7f5fd;
 }
 
-/* Hover, keyboard focus and a press: the title brightens (a faint accent light at most). */
-.gobj[data-active] .gobj__name,
-.gobj[data-pressed] .gobj__name {
-  color: var(--accent-default);
-  text-shadow:
-    0 1px 2px rgb(0 0 0 / 0.7),
-    0 0 14px rgb(var(--accent-rgb) / 0.32);
+/* Hover, keyboard focus and a press: the title brightens to white (no colour, no glow). */
+.gobj:is([data-active], [data-pressed]) .gobj__name {
+  color: #fff;
 }
 
+/* Keyboard focus: the red ring around the label (the object has its contour). */
 .gobj__link:focus-visible .gobj__caption {
-  outline: 2px solid var(--accent-default);
+  outline: 2px solid var(--red);
   outline-offset: 4px;
   border-radius: 4px;
 }
 
 /* ======================================================================= */
-/* Beneath the carousel: previous, the position, next                       */
+/* Beneath the carousel: previous, pause or play, next; the position        */
 /* ======================================================================= */
 
 .gallery__nav {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin-top: 10px;
+}
+
+/* The three controls as one group: 44px targets with quieter 36px rings inside them. */
+.gallery__controls {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin-top: 14px;
 }
 
-.gallery__arrow {
+.gallery__arrow,
+.gallery__motion {
   position: relative;
-  display: grid;
-  place-items: center;
-  width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 44px;
   padding: 0;
   border: 0;
-  border-radius: 50%;
   background: transparent;
   color: rgb(240 237 250 / 0.88);
   cursor: pointer;
   transition: color var(--dur-1) var(--ease-standard);
 }
 
-/* A faint ring, always there (the two controls read as a group with the position between them), clearer on hover and focus. */
-.gallery__arrow::before {
+.gallery__arrow {
+  width: 44px;
+  border-radius: 50%;
+}
+
+/* Pause or play: an icon and its word, the same ring as the arrows, as a short pill (4px inside the target all round, like theirs). */
+.gallery__motion {
+  gap: 7px;
+  min-width: 104px;
+  padding: 0 22px 0 19px;
+  border-radius: 22px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.gallery__arrow::before,
+.gallery__motion::before {
   content: '';
   position: absolute;
   inset: 4px;
-  border: 1px solid rgb(255 255 255 / 0.22);
-  border-radius: 50%;
-  background: rgb(10 9 16 / 0.28);
+  border: 1px solid rgb(255 255 255 / 0.24);
+  border-radius: inherit;
+  background: rgb(10 9 16 / 0.32);
   transition:
     border-color var(--dur-1) var(--ease-standard),
     background-color var(--dur-1) var(--ease-standard);
 }
 
-.gallery__arrow svg {
+.gallery__arrow svg,
+.gallery__motion svg,
+.gallery__motion span {
   position: relative;
 }
 
 .gallery__arrow:hover,
-.gallery__arrow:focus-visible {
+.gallery__arrow:focus-visible,
+.gallery__motion:hover,
+.gallery__motion:focus-visible {
   color: #fff;
 }
 
+/* Hover: the ring takes the red edge (a line, no fill, no glow). */
 .gallery__arrow:hover::before,
-.gallery__arrow:focus-visible::before {
-  border-color: var(--accent-default);
-  background: var(--brand-red);
+.gallery__motion:hover::before {
+  border-color: var(--red);
+  background: rgb(16 14 24 / 0.5);
 }
 
-.gallery__arrow:focus-visible {
-  outline: 2px solid var(--accent-default);
+.gallery__arrow:focus-visible,
+.gallery__motion:focus-visible {
+  outline: 2px solid var(--red);
   outline-offset: 0;
 }
 
-.gallery__arrow:active svg {
+.gallery__arrow:active svg,
+.gallery__motion:active svg {
   transform: scale(var(--press-scale));
 }
 
+/*
+ * The position: a quiet line of words ("Project 2 of 6"; About Me by name)
+ * beneath the controls, following the object nearest the front. Never a
+ * fraction, a counter or a bar, so it never reads as a timer.
+ */
 .gallery__count {
-  min-width: 4.25em;
-  font-size: 0.875rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-align: center;
-  color: rgb(240 237 250 / 0.94);
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  color: rgb(232 228 244 / 0.78);
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.7),
+    0 0 10px rgb(0 0 0 / 0.55);
 }
 
 /* ======================================================================= */
 /* Reduced motion: still arrangement; steps cross-fade                      */
 /* ======================================================================= */
 
-html[data-motion='reduce'] .gobj__lift {
+html[data-motion='reduce'] .gobj__lift,
+html[data-motion='reduce'] .gobj__art > .picture {
   transition: none;
 }
 
@@ -508,21 +636,18 @@ html[data-motion='reduce'] .gobj__lift {
 /* Smaller screens                                                           */
 /* ======================================================================= */
 
-@media (min-width: 600px) and (max-width: 999.98px) {
-  .home-intro__word {
-    font-size: clamp(3rem, 8vw, 4.75rem);
-  }
-}
-
 @media (max-width: 599.98px) {
   .home-intro {
-    padding-top: 32px;
-    padding-bottom: 20px;
+    padding-top: clamp(24px, 4svh, 36px);
   }
 
-  .home-intro__word {
-    font-size: clamp(3.5rem, 15vw, 5rem);
-    letter-spacing: -0.035em;
+  .home-intro__name {
+    gap: 12px;
+    letter-spacing: 0.28em;
+  }
+
+  .home-intro__name::before {
+    width: 28px;
   }
 
   .home-intro__roles {
@@ -537,71 +662,4 @@ html[data-motion='reduce'] .gobj__lift {
     margin-top: 5px;
     font-size: 0.9375rem;
   }
-}
-
-/* The old portfolio's red rule anchors the identity. */
-.home-intro__name::before {
-  content: '';
-  width: 44px;
-  height: 2px;
-  background: var(--brand-red);
-}
-
-.home-intro__word {
-  transition: color var(--dur-2) var(--ease-standard);
-}
-.home-intro__word:hover { color: var(--accent-default); }
-
-/* Individual translate leaves the carousel's measured transform intact. */
-@keyframes object-float {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -9px; }
-}
-html:not([data-motion='reduce']) .gobj__object {
-  animation: object-float 6s ease-in-out infinite;
-  animation-delay: calc(var(--float-phase) * -1s);
-}
-.gallery[data-paused] .gobj__object,
-.gallery:focus-within .gobj__object,
-.gobj[data-active] .gobj__object,
-.gobj[data-selected] .gobj__object,
-.gallery__stage[data-dragging] .gobj__object {
-  animation-play-state: paused;
-}
-.gallery__motion {
-  min-height: 44px;
-  padding: 0 14px;
-  margin-left: 12px;
-  border: 1px solid rgb(var(--accent-default-rgb) / 0.5);
-  border-radius: 999px;
-  background: rgb(12 9 12 / 0.6);
-  color: var(--color-text);
-  font-size: 0.75rem;
-  transition: background-color var(--dur-1), border-color var(--dur-1);
-}
-.gallery__motion:is(:hover, :focus-visible) {
-  background: var(--brand-red);
-  border-color: var(--accent-default);
-}
-
-/* The carousel sits lower in the film, with room for the editorial opening. */
-.gallery { margin-top: clamp(48px, 9svh, 100px); }
-.home::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background: radial-gradient(ellipse at 8% 30%, rgb(211 47 47 / 0.14), transparent 48%),
-    radial-gradient(ellipse at 90% 65%, rgb(122 64 174 / 0.12), transparent 50%);
-}
-.gobj[data-active] .gobj__art,
-.gobj[data-pressed] .gobj__art {
-  filter: drop-shadow(1px 0 0 #ef555b) drop-shadow(-1px 0 0 #ef555b)
-    drop-shadow(0 1px 0 #ef555b) drop-shadow(0 -1px 0 #ef555b)
-    drop-shadow(0 0 14px rgb(211 47 47 / 0.3));
-}
-@media (max-width: 599.98px) {
-  .home-intro__word { font-size: clamp(2.5rem, 11.2vw, 4rem); }
-  .gallery { margin-top: 40px; }
 }

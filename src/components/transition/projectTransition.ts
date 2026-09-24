@@ -10,9 +10,11 @@ import './transition.css'
 
 /**
  * Opening a project: "move closer" (spec/motion-plan.md P3), never an empty
- * scene. The chosen PNG advances into its place on the new page while the
- * rest of the scene steps back, and the new page's heading and opening media
- * arrive in the same 420ms (MOTION.t.move, arrive curve, no overshoot).
+ * scene and never a double exposure. The chosen PNG advances into its place
+ * on the new page across the whole 420ms (MOTION.t.move, arrive curve, no
+ * overshoot); in the first part the rest of the page being left steps back
+ * and clears, and only then do the new page's heading and opening media
+ * arrive (TRANSITION.outMs, then the rest).
  *
  * 1. Wait. The page being left stays exactly as it is (the caller freezes
  *    the carousel when openProject returns 'cover') while the destination's
@@ -23,8 +25,8 @@ import './transition.css'
  *    visibly under way.
  * 2. Change, in one view transition (document.startViewTransition): the
  *    browser keeps pictures of the page being left, the route changes
- *    synchronously underneath them, and then, together:
- *    - the chosen object advances: from a PNG marked
+ *    synchronously underneath them, and then:
+ *    - throughout, the chosen object advances: from a PNG marked
  *      `data-cover-source="<id>"` (a gallery object, the portrait anchor, a
  *      next-project thumbnail), a copy of the clicked image (its file, glow,
  *      3D turn, fade and crop) stands in for it, and the browser moves it
@@ -32,22 +34,26 @@ import './transition.css'
  *      with a uniform scale (both boxes have the artwork's proportions, so it
  *      is never stretched; a turned object straightens on the way, it never
  *      flips);
- *    - the rest of the scene steps back (stepBack): every other PNG object in
- *      view shrinks towards its floor, rises a little towards the horizon,
- *      converges slightly on the chosen one and dims away, and the rest of
- *      the old content eases back and clears;
- *    - the new page's content (its heading and opening media included, live)
- *      arrives in front of all that, and behind the header and the moving
- *      object;
- *    - the room (the same background video on both pages) cross-fades with
- *      itself, complementary and blended additively, so it stays whole and
- *      never dims towards black.
+ *    - first (out), the page being left clears (separatePages, stepBack):
+ *      every other PNG object in view shrinks towards its floor, rises a
+ *      little towards the horizon, converges slightly on the chosen one and
+ *      fades, the rest of its content eases back and fades, and its picture
+ *      of the room fades to the live room beneath (the same background set,
+ *      already showing the destination's treatment), so the room never dims
+ *      towards black;
+ *    - then (in), the new page's content (its heading and opening media
+ *      included, live) fades in and rises a few px, behind the header and
+ *      the moving object. Old and new content are pictured apart, so they
+ *      never show at partial opacity over each other;
+ *    - the header, the same on both pages, stays whole; what differs in it
+ *      (the brand, the current link, a closing Work shelf) changes in the
+ *      out part.
  *    The page never waits for the move. Focus then lands on the new page's
  *    H1 (RouteFocus).
  *
  * Without a slot on screen the copy simply leaves with the old page. From a
  * text link (the Work shelf) or a source that is not a loaded, visible PNG,
- * nothing advances; the scene still steps back while the new page arrives.
+ * nothing advances; the old page still clears before the new one arrives.
  * Browsers without view transitions, reduced motion and a failed or very slow
  * chunk get an ordinary navigation (the old page still stays until the new
  * one is ready: react-router keeps it while the lazy route loads). Direct
@@ -210,8 +216,11 @@ export function isTransitionPending(path: string) {
 
 /*
  * The destination of the running transition, for components that should
- * change with the route (StageBackground). Set when the route changes inside
- * the view transition, cleared when it ends. Read with useSyncExternalStore.
+ * change with the route (StageBackground). Set as the change starts, just
+ * before the browser pictures the page being left, so the background set's
+ * quick change (its `data-hurry` pace, while the old route is still current)
+ * is well under way when the animation begins and done before the new page
+ * arrives; cleared when the change ends. Read with useSyncExternalStore.
  */
 const targetListeners = new Set<() => void>()
 let target: string | null = null
@@ -533,7 +542,7 @@ const onPopState = () => {
 
 /**
  * The new page's own short entrance (PageShell's route content rise) is
- * switched off during the cross-fade (transition.css); lifting that would
+ * switched off during the change (transition.css); lifting that would
  * start it from the beginning under the arrived page, so it is finished at
  * once instead.
  */
@@ -555,19 +564,19 @@ function finishEntrance() {
 /** The custom properties a change sets on <html> for transition.css. */
 const TRANSITION_PROPS = [
   '--pt-page-ms',
-  '--pt-cover-ms',
   '--pt-page-ease',
+  '--pt-out-ms',
+  '--pt-out-ease',
+  '--pt-in-ms',
+  '--pt-in-ease',
+  '--pt-in-rise',
+  '--pt-cover-ms',
   '--pt-cover-ease',
   '--pt-scene-origin',
-  '--pt-scene-ms',
   '--pt-scene-scale',
-  '--pt-scene-ease',
-  '--pt-back-ms',
-  '--pt-back-fade-ms',
   '--pt-back-scale',
   '--pt-back-rise',
   '--pt-back-move-ease',
-  '--pt-back-fade-ease',
 ]
 
 /** Ends a transition and removes everything it added. */
@@ -584,6 +593,7 @@ function complete(r: Run) {
   releaseScene(r)
   document.querySelectorAll('[data-cover-old]').forEach((el) => el.removeAttribute('data-cover-old'))
   const root = document.documentElement
+  root.removeAttribute('data-pt-unnamed')
   if (root.hasAttribute('data-page-transition')) {
     root.removeAttribute('data-page-transition')
     finishEntrance()
@@ -701,7 +711,7 @@ function placeClone(r: Run, found: NonNullable<ReturnType<typeof coverSource>>) 
 }
 
 // ---------------------------------------------------------------------------
-// The rest of the scene steps back
+// Old and new pages apart; the rest of the scene steps back
 // ---------------------------------------------------------------------------
 
 /**
@@ -747,54 +757,58 @@ function sceneUnit(source: HTMLElement, stop: Element): HTMLElement {
 }
 
 /**
- * The rest of the scene steps back while the chosen object advances (P3,
- * "move closer"). Just before the browser pictures the page being left:
+ * Old and new pages pictured apart, so they never blend (brief v13). Just
+ * before the browser pictures the page being left:
  *
- * - every other PNG object that can be seen (the other gallery objects, the
- *   portrait anchor, a next-project thumbnail) is named `hk-back-<n>`, so it
- *   is pictured on its own and recedes the way the gallery shows distance:
- *   smaller about its floor point, a little higher, dimming away;
- * - the rest of the page's content (the title, the labels, the text) is
- *   named `hk-scene`: it eases back a little about the chosen object and
- *   clears a little sooner than the new page arrives, so old and new text
- *   barely overlap;
- * - the header is named `hk-header`, so that layer never paints over it; it
- *   cross-fades with the pages;
+ * - the page's content (the title, the labels, the text, everything in the
+ *   route's element not named below) is named `hk-scene`: it eases back a
+ *   little about the chosen object and clears in the out part;
+ * - the header is named `hk-header`, so the content layers never paint over
+ *   it; it cross-fades with itself in the out part (what both share stays
+ *   whole);
  * - once the route has changed, the new page's content is named `hk-page`
- *   (in the change's update), so it arrives in front of everything stepping
- *   back and behind the header and the advancing object (transition.css
- *   stacks the layers: room, receding scene, new page, header, cover).
+ *   (in the change's update), so it arrives on its own, in the in part, in
+ *   front of everything leaving and behind the header and the advancing
+ *   object (transition.css stacks the layers: room, old content and receding
+ *   objects, new page, header, cover).
  *
- * The room (the background video) stays in the root pictures, whose
- * complementary cross-fade keeps it whole. The names live only until the
- * change ends (releaseScene).
+ * The room (the background set) stays in the root pictures: the old one fades
+ * in the out part over the live new one. The names live only until the change
+ * ends (releaseScene).
+ */
+function separatePages(r: Run, focus: Box | null) {
+  const main = document.getElementById('main')
+  const scene = main?.firstElementChild instanceof HTMLElement ? main.firstElementChild : null
+  const sb = scene?.getBoundingClientRect()
+  if (!scene || !sb || sb.width < 1 || sb.height < 1) return
+  const root = document.documentElement
+  const cx = focus ? focus.x + focus.w / 2 : window.innerWidth / 2
+  const cy = focus ? focus.y + focus.h / 2 : window.innerHeight / 2
+  root.style.setProperty('--pt-scene-origin', `${(cx - sb.left).toFixed(1)}px ${(cy - sb.top).toFixed(1)}px`)
+  root.style.setProperty('--pt-scene-scale', String(TRANSITION.stepBack.sceneScale))
+  scene.style.setProperty('view-transition-name', SCENE_NAME)
+  r.backs.push(scene)
+  const header = document.querySelector<HTMLElement>('.site-header')
+  if (header) {
+    header.style.setProperty('view-transition-name', HEADER_NAME)
+    r.backs.push(header)
+  }
+}
+
+/**
+ * The rest of the scene steps back while the chosen object advances (P3,
+ * "move closer"), in the out part: every other PNG object that can be seen
+ * (the other gallery objects, the portrait anchor, a next-project thumbnail)
+ * is named `hk-back-<n>`, so it is pictured on its own and recedes the way
+ * the gallery shows distance: smaller about its floor point, a little
+ * higher, converging slightly on the chosen object, fading. Switched off
+ * (TRANSITION.stepBack.enabled), the objects clear with the page's content.
  */
 function stepBack(r: Run, focus: Box | null) {
   const cfg = TRANSITION.stepBack
   const main = document.getElementById('main')
   if (!cfg.enabled || !main || (import.meta.env.DEV && window.__pageTransitionStepBack === false)) return
   const root = document.documentElement
-  const slow = import.meta.env.DEV ? (window.__pageTransitionSlow ?? 1) : 1
-  const name = (el: HTMLElement, n: string) => {
-    el.style.setProperty('view-transition-name', n)
-    r.backs.push(el)
-  }
-
-  // The page's content as one layer, unless it is still moving by itself (its own entrance).
-  const scene = main.firstElementChild instanceof HTMLElement ? main.firstElementChild : null
-  const sb = scene?.getBoundingClientRect()
-  const still = (t: string) => t === 'none' || new DOMMatrixReadOnly(t).isIdentity
-  if (scene && sb && sb.width > 0 && sb.height > 0 && still(getComputedStyle(scene).transform)) {
-    const cx = focus ? focus.x + focus.w / 2 : window.innerWidth / 2
-    const cy = focus ? focus.y + focus.h / 2 : window.innerHeight / 2
-    root.style.setProperty('--pt-scene-origin', `${(cx - sb.left).toFixed(1)}px ${(cy - sb.top).toFixed(1)}px`)
-    root.style.setProperty('--pt-scene-ms', `${cfg.sceneMs * slow}ms`)
-    root.style.setProperty('--pt-scene-scale', String(cfg.sceneScale))
-    root.style.setProperty('--pt-scene-ease', cfg.sceneEase)
-    name(scene, SCENE_NAME)
-    const header = document.querySelector<HTMLElement>('.site-header')
-    if (header) name(header, HEADER_NAME)
-  }
 
   // Each other object that can be seen.
   const units: HTMLElement[] = []
@@ -815,17 +829,15 @@ function stepBack(r: Run, focus: Box | null) {
     const k = unit.offsetWidth ? b.width / unit.offsetWidth : 1
     const dx = ((vx - (b.left + b.width / 2)) * cfg.converge) / Math.max(0.2, k)
     root.style.setProperty(`--pt-back-dx-${i}`, `${dx.toFixed(1)}px`)
-    name(unit, `${BACK_NAME}${i}`)
+    unit.style.setProperty('view-transition-name', `${BACK_NAME}${i}`)
+    r.backs.push(unit)
   })
   if (units.length) {
-    root.style.setProperty('--pt-back-ms', `${cfg.ms * slow}ms`)
-    root.style.setProperty('--pt-back-fade-ms', `${cfg.fadeMs * slow}ms`)
     root.style.setProperty('--pt-back-scale', String(cfg.scale))
     root.style.setProperty('--pt-back-rise', String(cfg.rise))
     root.style.setProperty('--pt-back-move-ease', cfg.moveEase)
-    root.style.setProperty('--pt-back-fade-ease', cfg.fadeEase)
   }
-  trace('step back', `${units.length} objects${r.backs.length > units.length ? ' + scene' : ''}`)
+  trace('step back', `${units.length} objects`)
 }
 
 /** Takes the step-back names off again (the change has ended or could not start). */
@@ -890,24 +902,35 @@ function plain(r: Run) {
  * Step 2 and 3: one view transition. The old page is captured (with the copy
  * standing in for the clicked object), the route changes synchronously
  * inside the update callback, the slot receives the shared name, and the
- * browser cross-fades the pages while the copy moves into the slot.
+ * old page clears and then the new one arrives (never blended) while the
+ * copy moves into the slot.
  */
 function change(r: Run) {
   if (run !== r || r.phase !== 'wait') return
   if (otherNavigation(r)) return cancel(r)
   r.phase = 'change'
+  const root = document.documentElement
+  // First, so the page being left stops any entrance of its own (transition.css) before it is measured and pictured.
+  root.setAttribute('data-page-transition', r.mode)
   const found = r.mode === 'cover' ? coverSource(r.sourceArg) : null
   if (found) placeClone(r, found)
   else r.mode = 'fade'
-  stepBack(r, found ? (found.turn?.box ?? found.box) : null)
-
-  const root = document.documentElement
-  const slow = import.meta.env.DEV ? (window.__pageTransitionSlow ?? 1) : 1
-  root.style.setProperty('--pt-page-ms', `${TRANSITION.pageMs * slow}ms`)
-  root.style.setProperty('--pt-cover-ms', `${TRANSITION.coverMs * slow}ms`)
-  root.style.setProperty('--pt-page-ease', TRANSITION.pageEase)
-  root.style.setProperty('--pt-cover-ease', TRANSITION.coverEase)
   root.setAttribute('data-page-transition', r.mode)
+  const focus = found ? (found.turn?.box ?? found.box) : null
+  separatePages(r, focus)
+  stepBack(r, focus)
+
+  const slow = import.meta.env.DEV ? (window.__pageTransitionSlow ?? 1) : 1
+  const outMs = Math.min(TRANSITION.outMs, TRANSITION.pageMs)
+  root.style.setProperty('--pt-page-ms', `${TRANSITION.pageMs * slow}ms`)
+  root.style.setProperty('--pt-page-ease', TRANSITION.pageEase)
+  root.style.setProperty('--pt-out-ms', `${outMs * slow}ms`)
+  root.style.setProperty('--pt-out-ease', TRANSITION.outEase)
+  root.style.setProperty('--pt-in-ms', `${(TRANSITION.pageMs - outMs) * slow}ms`)
+  root.style.setProperty('--pt-in-ease', TRANSITION.inEase)
+  root.style.setProperty('--pt-in-rise', `${TRANSITION.inRisePx}px`)
+  root.style.setProperty('--pt-cover-ms', `${TRANSITION.coverMs * slow}ms`)
+  root.style.setProperty('--pt-cover-ease', TRANSITION.coverEase)
   document.querySelectorAll('[data-cover-slot]').forEach((el) => el.setAttribute('data-cover-old', ''))
 
   const update = async () => {
@@ -919,7 +942,6 @@ function change(r: Run) {
     r.progress?.remove()
     r.progress = null
     r.source?.removeAttribute('data-cover-moving')
-    setTarget(r.path)
     r.routed = true
     const oldPage = document.getElementById('main')?.firstElementChild ?? null
     try {
@@ -931,11 +953,15 @@ function change(r: Run) {
     await pageReplaced(oldPage, TRANSITION.renderWaitMs)
     trace('routed', window.location.pathname)
     if (run !== r || r.cancelled || window.location.pathname !== r.path) return
-    // The new page's content arrives as its own layer, in front of the scene stepping back.
+    // The new page's content arrives as its own layer, after the old page has cleared (never blended with it).
     const page = document.getElementById('main')?.firstElementChild
-    if (r.backs.length && page instanceof HTMLElement && page !== oldPage && !oldPage?.isConnected) {
+    if (page instanceof HTMLElement && page !== oldPage && !oldPage?.isConnected) {
       page.style.setProperty('view-transition-name', PAGE_NAME)
       r.backs.push(page)
+    } else {
+      // Not pictured apart (it is in the new root picture): the old room stays whole and the new root arrives over it in the in part.
+      document.documentElement.setAttribute('data-pt-unnamed', '')
+      trace('page not separated')
     }
     // The browser holds the picture of the old page meanwhile: short, capped waits for the slot's file and
     // the opening media (both warmed and normally decoded already), so they appear with the page.
@@ -957,6 +983,8 @@ function change(r: Run) {
     trace('named')
   }
 
+  // The background set starts changing to the destination's treatment now (see setTarget).
+  setTarget(r.path)
   let vt: ViewTransition
   try {
     vt = document.startViewTransition(update)
@@ -1030,8 +1058,8 @@ export interface OpenProjectOptions {
   path: string
   /**
    * The clicked PNG object (`[data-cover-source]`), or an element around or
-   * inside it (e.g. the whole link). Anything else, or null: the pages only
-   * cross-fade.
+   * inside it (e.g. the whole link). Anything else, or null: nothing moves;
+   * the old page clears, then the new one arrives.
    */
   source?: HTMLElement | null
   /** react-router's useNavigate() of the calling component. */
@@ -1043,7 +1071,7 @@ export interface OpenProjectOptions {
 /**
  * Opens a project with the transition described above. Returns 'cover'
  * when the PNG will move (the caller freezes the carousel until the page
- * changes or onCancel is called), 'reveal' for a cross-fade without a
+ * changes or onCancel is called), 'reveal' for the same change without a
  * moving image, 'plain' for an ordinary navigation (reduced motion, no view
  * transitions, the same page), 'ignored' while a transition is still under
  * way (rapid clicks).

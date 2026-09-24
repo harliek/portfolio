@@ -29,11 +29,11 @@ function visibleImagesSettled() {
 }
 
 /**
- * A video file, requested the first time its layer is wanted, once the
- * images the visitor can see have loaded (at most
- * STAGE.background.contentFirstMaxMs later): on a slow connection the
- * content gets the bandwidth before the decorative set. Never with reduced
- * motion (the poster stays).
+ * The film file, requested the first time the film is wanted (the first
+ * visit to the homepage), once the images the visitor can see have loaded
+ * (at most STAGE.background.contentFirstMaxMs later): on a slow connection
+ * the content gets the bandwidth before the decorative film. Never with
+ * reduced motion (the poster stays).
  */
 function useContentFirstSrc(wanted: boolean, src: string, reduced: boolean) {
   const [value, setValue] = useState<string>()
@@ -59,10 +59,10 @@ function useContentFirstSrc(wanted: boolean, src: string, reduced: boolean) {
 }
 
 /**
- * Plays a background video only while its layer is shown (and for
- * `lingerMs` after, while it fades out) and can be seen: the tab is
- * visible, no image dialog or small-screen menu covers the page, nothing is
- * fullscreen. It resumes where it paused (it never restarts).
+ * Plays the film only while it is shown (and for `lingerMs` after, while it
+ * fades out) and can be seen: the tab is visible, no image dialog or
+ * small-screen menu covers the page, nothing is fullscreen. It resumes where
+ * it paused (it never restarts).
  */
 function usePlayWhileShown(ref: RefObject<HTMLVideoElement | null>, src: string | undefined, shown: boolean, lingerMs: number, reduced: boolean) {
   useEffect(() => {
@@ -99,12 +99,14 @@ function usePlayWhileShown(ref: RefObject<HTMLVideoElement | null>, src: string 
 }
 
 /**
- * The persistent set, mounted ONCE in PageShell so the same <video>
- * elements keep playing through route changes and project openings (they
- * never restart), in two layers:
+ * The persistent set, mounted ONCE in PageShell so the same <video> keeps
+ * its place through route changes and project openings (it never
+ * restarts), in two layers:
  *
- * - the room: the architectural video behind every interior page (case
- *   studies, About), with its readability layers (stage.css);
+ * - the ground: a quiet near-black behind every page (stage.css), which is
+ *   all that shows behind case studies, About and the not-found page (plan
+ *   v12 item 10: no architectural walls, reflective floor or reflection
+ *   line, and no architectural video request);
  * - the film: the original film of Harlie's first portfolio homepage,
  *   behind the whole homepage (the opening and the projects), fixed while
  *   the page scrolls, object-fit cover with its original framing (a
@@ -114,24 +116,24 @@ function usePlayWhileShown(ref: RefObject<HTMLVideoElement | null>, src: string 
  *   slightly as the projects enter (scroll-linked, `--film-enter`); the
  *   footage stays clearly visible.
  *
- * The film lies over the room and cross-fades with it when the route
- * changes (STAGE.film.fadeMs; quicker while a project opens from the
- * carousel, `data-hurry`), so the room is always whole beneath it: never a
- * black flash. Each layer's poster is painted first and content never waits
- * for a video; a muted loop fades in over its poster once frames play. Each
- * video is requested only once its layer is first shown, after the images
- * the visitor can see have loaded; the hidden layer's poster loads at low
- * priority, ready for the next route. One file per device class, chosen
- * once.
+ * The film lies over the ground and fades in or out over it when the route
+ * changes (STAGE.film: in over fadeMs, out over the shorter fadeOutMs;
+ * quicker still while a project opens from the carousel, `data-hurry`): one
+ * layer fading over a steady one, so there is never a black flash or two
+ * pictures blended over each other. The film's
+ * poster is painted first (at low priority when the visit starts on another
+ * page, ready for the homepage) and content never waits for it; the muted
+ * loop fades in over its poster once frames play. The film is requested
+ * only once the homepage is first shown, after the images the visitor can
+ * see have loaded. One file per device class, chosen once.
  *
  * While a project opens from the carousel (projectTransition.ts), the set
  * already shows the destination's treatment, quickly (`data-hurry`).
  *
- * Reduced motion (the operating system setting): posters only, no video
- * request. A video plays only while its layer is shown and can be seen: it
- * pauses when the tab is hidden, an image or video is enlarged, the
- * small-screen menu is open, or anything is fullscreen. Decorative:
- * aria-hidden.
+ * Reduced motion (the operating system setting): the poster only, no video
+ * request. The film plays only while it is shown and can be seen: it pauses
+ * when the tab is hidden, an image or video is enlarged, the small-screen
+ * menu is open, or anything is fullscreen. Decorative: aria-hidden.
  */
 export function StageBackground({ route: current }: { route: StageRoute }) {
   const reduced = useReducedMotion()
@@ -141,28 +143,14 @@ export function StageBackground({ route: current }: { route: StageRoute }) {
   const film = route === 'home'
   const [firstRoute] = useState(route)
   const [mobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches)
-  const roomFile = mobile ? STAGE_MEDIA.background.mobile : STAGE_MEDIA.background.desktop
   const filmFile = mobile ? STAGE_MEDIA.film.mobile : STAGE_MEDIA.film.desktop
-  const [roomPlaying, setRoomPlaying] = useState(false)
   const [filmPlaying, setFilmPlaying] = useState(false)
-  const roomRef = useRef<HTMLVideoElement>(null)
   const filmRef = useRef<HTMLVideoElement>(null)
   const filmLayerRef = useRef<HTMLDivElement>(null)
-  const roomSrc = useContentFirstSrc(!film, roomFile.src, reduced)
   const filmSrc = useContentFirstSrc(film, filmFile.src, reduced)
-  const { fadeMs, enterShare } = STAGE.film
+  const { fadeMs, fadeOutMs, enterShare } = STAGE.film
 
-  usePlayWhileShown(roomRef, roomSrc, !film, fadeMs, reduced)
   usePlayWhileShown(filmRef, filmSrc, film, fadeMs, reduced)
-
-  // Calmer set on About: the same element, a slower loop.
-  useEffect(() => {
-    const video = roomRef.current
-    if (!video) return
-    const rate = STAGE.background.rate[route]
-    video.defaultPlaybackRate = rate
-    video.playbackRate = rate
-  }, [route, reduced])
 
   // The film's veil darkens a little as the projects enter (the page's scroll over about one window height).
   useEffect(() => {
@@ -187,10 +175,7 @@ export function StageBackground({ route: current }: { route: StageRoute }) {
     }
   }, [film, enterShare])
 
-  const desktop = getImage(STAGE_MEDIA.background.desktop.poster)
-  const phone = getImage(STAGE_MEDIA.background.mobile.poster)
   const filmPoster = getImage(STAGE_MEDIA.film.desktop.poster)
-  const roomFirst = firstRoute !== 'home'
 
   return (
     <div
@@ -198,41 +183,9 @@ export function StageBackground({ route: current }: { route: StageRoute }) {
       data-route={route}
       data-hurry={hurry || undefined}
       data-file={mobile ? 'mobile' : 'desktop'}
-      style={{ '--film-fade': `${fadeMs}ms` } as CSSProperties}
+      style={{ '--film-fade': `${fadeMs}ms`, '--film-fade-out': `${fadeOutMs}ms` } as CSSProperties}
       aria-hidden="true"
     >
-      <picture className="stage-bg__poster">
-        <source media={MOBILE_QUERY} type="image/avif" srcSet={srcSet(phone, 'avif')} />
-        <source media={MOBILE_QUERY} type="image/webp" srcSet={srcSet(phone, 'webp')} />
-        <source type="image/avif" srcSet={srcSet(desktop, 'avif')} />
-        <source type="image/webp" srcSet={srcSet(desktop, 'webp')} />
-        <img src={fallbackSrc(desktop)} alt="" width={desktop.width} height={desktop.height} decoding="async" fetchPriority={roomFirst ? 'high' : 'low'} />
-      </picture>
-      {!reduced && (
-        <video
-          ref={roomRef}
-          className="stage-bg__video"
-          style={{ '--bg-video-fade': `${STAGE.background.fadeInMs}ms` } as CSSProperties}
-          data-playing={roomPlaying || undefined}
-          data-ambient=""
-          data-stage-background=""
-          src={roomSrc}
-          width={roomFile.width}
-          height={roomFile.height}
-          muted
-          loop
-          playsInline
-          preload="auto"
-          disablePictureInPicture
-          disableRemotePlayback
-          tabIndex={-1}
-          onPlaying={() => setRoomPlaying(true)}
-        />
-      )}
-      <div className="stage-bg__shade" />
-      <div className="stage-bg__reflection" />
-      <div className="stage-bg__read" />
-      <div className="stage-bg__band" />
       <div ref={filmLayerRef} className="stage-film" data-shown={film || undefined}>
         <picture className="stage-film__poster">
           <source type="image/avif" srcSet={srcSet(filmPoster, 'avif')} />
@@ -244,7 +197,7 @@ export function StageBackground({ route: current }: { route: StageRoute }) {
             width={filmPoster.width}
             height={filmPoster.height}
             decoding="async"
-            fetchPriority={roomFirst ? 'low' : 'high'}
+            fetchPriority={firstRoute === 'home' ? 'high' : 'low'}
           />
         </picture>
         {!reduced && (

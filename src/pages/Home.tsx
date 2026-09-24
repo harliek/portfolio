@@ -3,7 +3,11 @@ import { DepthGallery } from '../components/home/DepthGallery'
 import { SITE } from '../content/site'
 import { usePageMeta } from '../hooks/usePageMeta'
 
-/** Editorial opening and floating projects share the original background film. */
+/**
+ * The homepage: the editorial opening (Harlie Katz, PORTFOLIO, the two roles)
+ * and, low in the first view, the slowly rotating project carousel, both over
+ * the original background film (StageBackground).
+ */
 export function Home() {
   usePageMeta(undefined, SITE.description)
 

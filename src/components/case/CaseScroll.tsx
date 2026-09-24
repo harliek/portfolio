@@ -16,10 +16,11 @@
  *   </CaseLayout>
  *
  * Media, in ONE stage beside the story (desktop) or after the opening / beside its section (stacked):
- * - { kind: 'video', video } : the real recording autoplays muted with native controls; the expand
- *   control (in the player's own bar) opens a larger view at the same moment.
+ * - { kind: 'video', video } : the real recording autoplays muted, its picture clean; compact controls
+ *   below it (play or pause, seek, sound, expand; DemoControls) and Expand opens a larger view at the
+ *   same moment.
  * - { kind: 'video', video, preview: { video, label, map? } } : `preview.video` (an edited, accelerated
- *   derivative) plays inline with `label` inside the player (e.g. 'Edited preview · 1.5× speed');
+ *   derivative) plays inline with `label` as the player's caption (e.g. 'Edited preview · 1.5× speed');
  *   expand opens `video`, the complete recording at original speed, labelled as such. `map` lists
  *   matching moments [previewSeconds, fullSeconds] (ascending) so it continues at the same point;
  *   without it the complete recording starts from the beginning and the view says so.
@@ -37,19 +38,22 @@
  * place below 600px). `caption` is DEPRECATED and not rendered (brief-v8 section 8): routine
  * captions are gone; put evidence distinctions in `status` or a `label`.
  *
- * Opening (rendered for you): the H1 (project.name, the accurate case name), the metadata lines, the
- * cover PNG (the carousel transition's landing slot) about 1.5 times its earlier size with the
- * accent silhouette glow and the discreet "Concept cover" label (`coverLabel`, null to omit;
- * `coverSize` scales it, default 1), then the summary and the `status` line. CaseOpening is exported
- * for layouts that share this opening (the Creative Production page).
+ * Opening (rendered for you, brief-v13): the H1 (project.name, the accurate case name), the metadata
+ * lines, the summary and the `status` line on the left, and beside them the concept cover PNG (the
+ * carousel transition's landing slot), lit in the project's own accent, standing on the same floor as
+ * the text: its base and its caption ("Concept cover", `coverLabel`, null to omit; styled like every
+ * media label) end level with the lede's last line, and it fits the height of the text beside it
+ * (`coverSize` scales it, default 1). Phones: one column, the smaller cover between the metadata and
+ * the summary. CaseOpening is exported for layouts that share this opening (the Creative Production page).
  *
  * Desktop (≥960px): a centred grid (the site's 1240px content width), 42% text / 6% gap / 52% media,
- * body 18 to 19px. The media column holds one sticky figure, as large as the column and the visible
- * stage (the viewport below the navigation) allow and centred in that stage (StageConfig `align:
- * 'start'` places it just below the navigation; `fill` caps its height as a share of the stage). It
- * stays through the outcome and is released with the outcome's end, its bottom level with the
- * outcome's, so it leaves beside the outcome and the next-project link below never sits beside an
- * empty media column.
+ * body 18 to 19px. The opening spans both columns (text left, cover right); below it the story and,
+ * in the media column under the cover, one sticky figure whose top is level with the first section
+ * heading, as large as the column and the visible stage (the viewport below the navigation) allow and
+ * centred in that stage once it sticks (StageConfig `align: 'start'` places it just below the
+ * navigation; `fill` caps its height as a share of the stage). It stays through the outcome and is
+ * released with the outcome's end, its bottom level with the outcome's, so it leaves beside the
+ * outcome and the next-project link below never sits beside an empty media column.
  * The document scrolls naturally (no inner scroll boxes). The active section is the last one whose
  * top has passed a line at 40% of the viewport; its heading takes the accent with a short marker.
  * Below 960px: the opening, the media (video and custom after the opening; still-image states after
@@ -149,9 +153,9 @@ export interface CaseScrollProps {
   sections: StorySection[]
   /** The outcome (20 to 40 words); the media stays present beside it. */
   outcome: StorySection
-  /** Scales the opening cover (default 1, already about 1.5 times the earlier cover). */
+  /** Scales the opening cover's greatest size (default 1). */
   coverSize?: number
-  /** The discreet label beside the cover (default 'Concept cover'); null omits it. */
+  /** The caption under the cover (default 'Concept cover'); null omits it. */
   coverLabel?: string | null
   /** @deprecated Ignored: the cover is sized per object (coverSize scales it). */
   coverScale?: number
@@ -166,9 +170,10 @@ const STAGE_SIZES = '(min-width: 1368px) 645px, (min-width: 960px) 47vw, calc(10
 /* ----------------------------------------------------------------------- */
 
 /**
- * The opening cover's height (CSS px on a desktop window) per object: about 1.5 times the earlier
- * covers, balanced by eye so a thin phone and a wide laptop carry comparable weight. Independent of
- * the homepage's object sizes. Short and narrow windows scale it down (case.css --cover-hmax).
+ * The opening cover's greatest height (CSS px) per object, balanced by eye so a thin phone and a wide
+ * laptop carry comparable weight. Independent of the homepage's object sizes. Beside the text it is
+ * also fitted to the height of the title, metadata, summary and status line (case.css .cs-cover);
+ * phones scale it down (--cover-hmax).
  */
 const COVER_HEIGHT: Record<ObjectKind, number> = {
   monitor: 232,
@@ -182,7 +187,10 @@ const COVER_HEIGHT: Record<ObjectKind, number> = {
 
 const asProse = (node: ReactNode) => (typeof node === 'string' ? <p>{node}</p> : node)
 
-/** The cover PNG in its transition slot, with the silhouette glow (case.css) and the discreet label. */
+/**
+ * The cover PNG in its transition slot, lit in the project's own accent (case.css), with its caption directly under
+ * it in the same style as every other media label (e.g. "Concept cover").
+ */
 function CaseCover({ project, size = 1, label }: { project: Project; size?: number; label: string | null }) {
   const item = coverItem(project.accent)
   if (!item) return null
@@ -191,10 +199,10 @@ function CaseCover({ project, size = 1, label }: { project: Project; size?: numb
   const width = COVER_HEIGHT[item.kind] * r * size
   const scale = width / coverSlotWidth(item, 1)
   return (
-    <div className="cs-cover" data-kind={item.kind} style={{ '--cover-r': r } as CSSProperties}>
+    <div className="cs-cover" data-kind={item.kind} style={{ '--cover-r': r, '--cover-max': `${Math.round(width)}px` } as CSSProperties}>
       <CoverSlot id={project.accent} scale={scale} />
       {label && (
-        <span className="cs-cover__label" data-cover-reveal="">
+        <span className="cs-media-label cs-cover__label" data-cover-reveal="">
           {label}
         </span>
       )}
@@ -212,8 +220,10 @@ export interface CaseOpeningProps {
 }
 
 /**
- * The case opening: H1, metadata lines, the cover (beneath the metadata), the summary and the
- * status line. Shared by CaseScroll and any page with its own story layout.
+ * The case opening: H1, metadata lines, the summary and the status line, with the concept cover
+ * beside them (from 700px; on phones, a smaller cover between the metadata and the summary, so the
+ * route transition's object lands in view and the status line leads straight into the media).
+ * Shared by CaseScroll and any page with its own story layout (the Creative Production page).
  */
 export function CaseOpening({ project, meta, summary, status, coverSize, coverLabel = 'Concept cover' }: CaseOpeningProps) {
   return (

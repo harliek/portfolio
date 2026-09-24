@@ -7,7 +7,9 @@
  * stacked project sections that scroll naturally, each pairing its own
  * description with its own film. Desktop (≥960px) uses the CaseScroll grid
  * (42% text, 6% gap, 52% media): the opening's text on the left and the camera
- * cover on the right, then each section with its heading level with the top of
+ * cover on the right (as on every case page, case.css: standing on the same
+ * floor as the status line, its caption level with it), the anchor links
+ * below the text, then each section with its heading level with the top of
  * its film. Every film keeps its own proportions (the Aristocracy film is 4:3)
  * in the case studies' player frame (case.css .cs-player), with the player's
  * own bar below it. Below 960px: heading, film, description.
@@ -22,14 +24,17 @@
 /* ----------------------------------------------------------------------- */
 
 @media (min-width: 960px) {
-  /* The opening's pieces join the page grid: title, metadata, summary, status and the links on the left; the cover on the right. */
+  /*
+   * The opening's pieces join the page grid: title, metadata, summary and status on the left with the cover beside
+   * them (it ends level with the status line), then the links under the text.
+   */
   .page-client-work .cs.fs[data-layout='sticky'] {
     grid-template-columns: minmax(0, 42fr) minmax(0, 52fr);
-    grid-template-rows: auto auto 1fr auto;
+    grid-template-rows: auto auto auto auto;
     grid-template-areas:
       'intro cover'
       'lede cover'
-      'nav cover'
+      'nav .'
       'films films';
   }
 
@@ -45,13 +50,9 @@
     grid-area: lede;
   }
 
-  /* The cover stands in the media column, centred beside the opening text, with its label at its base. */
+  /* The cover stands in the media column beside the opening text (sized and captioned by case.css). */
   .page-client-work .fs[data-layout='sticky'] > .cs-opening > .cs-cover {
     grid-area: cover;
-    align-self: center;
-    justify-content: center;
-    margin-top: 0;
-    padding-block: var(--space-5);
   }
 
   .page-client-work .fs[data-layout='sticky'] > .fs-nav {

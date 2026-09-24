@@ -26,13 +26,17 @@ interface GalleryObjectProps {
  * or backing), standing over the film. No floor: no reflection, no floor
  * light, no contact shadow. In layers:
  *
- * - `lift`: the hover and focus wrapper (+2.5% about the silhouette's bottom
- *   centre, so the bottom edge stays where it is) holding the art:
- *   - the PNG itself (first, so the route transition finds it);
+ * - `lift`: the hover and focus wrapper (+6% about the silhouette's bottom
+ *   centre, its visual baseline, so the bottom edge stays where it is; not
+ *   with reduced motion) holding the art:
+ *   - the PNG itself (first, so the route transition finds it); on hover
+ *     and focus it takes a thin red contour (home.css: zero-blur
+ *     drop-shadows on its own alpha, about 1px, no glow or spread);
  *   - `glow`: the same image beneath it with an alpha-aware rim and halo
- *     in the project's accent (drop-shadows, never a box); its opacity is
- *     the light by slot (strong on the selected object, subtle beside it,
- *     almost none beyond), so no filter changes while objects move;
+ *     in the project's accent (drop-shadows, never a box), the object's own
+ *     light; its opacity is the light by slot (strong on the selected
+ *     object, subtle beside it, almost none beyond), so no filter changes
+ *     while objects move;
  *   - `dim`: a dark veil masked by the silhouette (objects away from the
  *     centre recede a little without turning see-through);
  * - `hit`: the silhouette pointer target, outside the lift.

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type 
 import { flushSync } from 'react-dom'
 import { fallbackSrc, getImage, getVideo, type ImageId, type VideoAsset, type VideoId } from '../../content/media'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
-import { ExpandIcon } from './ExpandIcon'
 import { DemoControls } from './DemoControls'
 import { enterFullscreen, NATIVE_FULLSCREEN } from './fullscreen'
 import { closeOnCancel, closeWithFade } from './dialogExit'
@@ -13,45 +12,47 @@ import { drawUnderlay, onFramePresented, type Underlay } from './videoFrame'
  * DemoVideo: a product recording that plays by itself (CaseScroll `video`
  * media).
  *
- * - Muted, inline, looping, with native controls. It starts when at least
- *   35% of it is visible (IntersectionObserver) and keeps playing while the
- *   text scrolls; scrolling never seeks, scrubs or restarts it.
+ * - Muted, inline, looping. It starts when at least 35% of it is visible
+ *   (IntersectionObserver) and keeps playing while the text scrolls;
+ *   scrolling never seeks, scrubs or restarts it.
+ * - A clean picture (brief-v13): no native controls, timer or timeline over
+ *   the recording. Its compact controls sit BELOW it, inside the player's
+ *   frame (DemoControls: play or pause, a seek slider, sound, expand), and
+ *   read the <video> element itself, so there is one playback state. A click
+ *   on the picture plays or pauses it as well.
  * - Preview and full sources: `video` plays inline; `full` (optional) is the
  *   complete recording the larger view plays. With `full`, the inline copy is
  *   an edited, accelerated preview: its `label` (e.g. "Edited preview · 1.5×
- *   speed") sits inside the player, and the larger view says it shows the
- *   complete recording at original speed. `map` pairs matching moments
- *   [inlineSeconds, fullSeconds], so the larger view continues at the same
- *   point and closing it returns the preview to the matching moment; without
- *   `map` the complete recording starts from the beginning (the view says so)
- *   and the preview resumes where it was.
- * - No caption (brief-v8 section 8). The player's own bar, inside its frame
- *   below the recording, holds the label and the expand control, so neither
- *   covers the recording.
+ *   speed") is the player's caption, directly under the frame, and the larger
+ *   view says it shows the complete recording at original speed. `map` pairs
+ *   matching moments [inlineSeconds, fullSeconds], so the larger view
+ *   continues at the same point and closing it returns the preview to the
+ *   matching moment; without `map` the complete recording starts from the
+ *   beginning (the view says so) and the preview resumes where it was.
  * - Autoplay refused (NotAllowedError, e.g. a browser policy): the poster
- *   stays with one obvious "Play demo" button; native controls appear once
- *   it plays.
+ *   stays with one obvious "Play demo" button; once it plays, focus moves to
+ *   the Pause button below.
  * - Paused when it is completely outside the viewport (or the tab is
  *   hidden), resumed when it returns, unless the visitor paused it: an
  *   explicit pause is never overridden.
  * - Reduced motion: no autoplay; the poster with "Play demo".
  * - A manifest `startAt` is applied once, right before the recording first
- *   plays (by itself, through "Play demo", or in the larger view); the loop
- *   then restarts from 0. Nothing seeks until playback is requested, so the
- *   poster stays for visitors who never start it.
+ *   plays (by itself, through "Play demo" or Play, or in the larger view);
+ *   the loop then restarts from 0. Nothing seeks until playback is requested
+ *   (or the visitor seeks), so the poster stays for visitors who never start
+ *   it.
  * - While "Play demo" is offered, the poster image lies over the player, so a
  *   seek or a closed larger view never replaces it with an arbitrary frame;
  *   likewise while the first seek to the start time is under way.
- * - Expand (a button in the player's bar, always visible, keyboard operable;
- *   the native full screen button is removed so it is the player's one
- *   enlarge control, and full screen stays available inside the larger view):
- *   the inline copy is paused first, so two copies never play. Closing
- *   restores the inline copy, playing if the larger one was playing, paused
- *   (as the visitor's own pause) if it was paused. Focus returns to the
- *   expand button. On a phone or a touch screen, Expand puts the recording
- *   itself in the browser's full screen instead (it can turn to landscape
- *   there); with a separate full recording, the larger view opens and asks
- *   for full screen on that recording.
+ * - Expand (the last control in the bar, keyboard operable): the inline copy
+ *   is paused first, so two copies never play. Closing restores the inline
+ *   copy, playing if the larger one was playing, paused (as the visitor's own
+ *   pause) if it was paused. Focus returns to Expand. On a phone or a touch
+ *   screen, Expand puts the recording itself in the browser's full screen
+ *   instead (it can turn to landscape there, with the browser's own
+ *   controls); with a separate full recording, the larger view opens and asks
+ *   for full screen on that recording. The larger view has the same control
+ *   bar, whose last control is Full screen.
  * - The poster wins the bandwidth: the recording is neither requested in
  *   full nor started until the poster image has loaded, so a slow connection
  *   shows the poster (not an empty frame with a spinner) first.
@@ -141,6 +142,7 @@ export function DemoVideo({ video: id, full: fullId, label, map, poster, sizes, 
   const stageRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const expandRef = useRef<HTMLButtonElement>(null)
+  const playRef = useRef<HTMLButtonElement>(null)
   const [src] = useState(() => pickVariant(asset).src)
   const startAt = asset.startAt ?? 0
   const [status, setStatus] = useState<Status>('idle')
@@ -290,23 +292,39 @@ export function DemoVideo({ video: id, full: fullId, label, map, poster, sizes, 
     const c = ctl.current
     if (c.selfPause) c.selfPause = false
     else if (v && !v.ended && !c.expanded && document.visibilityState !== 'hidden') {
-      // The visitor's own pause (native controls, keyboard, or another film starting): respected.
+      // The visitor's own pause (the bar's Pause, a click on the picture, or another film starting): respected.
       c.userPaused = true
       c.userStarted = false
     }
     setStatus('paused')
   }
 
-  /** "Play demo" (autoplay refused, or reduced motion): a direct gesture, so play() is allowed. */
-  const playNow = () => {
+  /**
+   * Play at the visitor's request ("Play demo", Play in the bar, a click on the picture, Expand on touch): a direct
+   * gesture, so play() is allowed. From "Play demo", focus then moves to the bar's Pause button, since the button
+   * that held it has gone.
+   */
+  const playNow = (focusBar = false) => {
     const v = videoRef.current
     if (!v) return
     ctl.current.userPaused = false
     seekToStart()
     v.play().then(
-      () => v.focus({ preventScroll: true }),
-      () => {},
+      () => {
+        if (focusBar) playRef.current?.focus({ preventScroll: true })
+      },
+      (err: unknown) => {
+        if (err instanceof DOMException && err.name === 'NotAllowedError') setStatus('blocked')
+      },
     )
+  }
+
+  /** Play or pause (the bar's first control and a click on the picture); a pause here is the visitor's own. */
+  const togglePlay = () => {
+    const v = videoRef.current
+    if (!v) return
+    if (v.paused || v.ended) playNow()
+    else v.pause()
   }
 
   const openExpanded = () => {
@@ -404,9 +422,9 @@ export function DemoVideo({ video: id, full: fullId, label, map, poster, sizes, 
             muted
             loop
             playsInline
+            // Nothing over the picture inline (DemoControls below it). The browser's own controls appear only while
+            // the recording itself is in full screen (touch Expand), so it can be left there.
             controls={fullscreen}
-            // One enlarge control per player (R4-01): Expand in the player's bar. The native full screen button
-            // returns only while the recording is in full screen (touch Expand), so it can be left there.
             controlsList={fullscreen ? undefined : 'nofullscreen'}
             preload={!posterReady ? 'none' : reduced ? 'metadata' : 'auto'}
             data-frame={hasFrame || undefined}
@@ -416,37 +434,38 @@ export function DemoVideo({ video: id, full: fullId, label, map, poster, sizes, 
             onSeeked={() => setCovering(false)}
             onPlay={onPlay}
             onPause={onPause}
+            // A pointer shortcut (the bar's Play and Pause button is the keyboard control); in full screen the
+            // browser's own controls handle clicks.
+            onClick={fullscreen ? undefined : togglePlay}
           />
           {showPlay && (
             <span className="cs-demo__playwrap">
-              <button type="button" className="button cs-demo__play" onClick={playNow}>
+              <button type="button" className="button button--secondary cs-demo__play" onClick={() => playNow(true)}>
                 <PlayIcon />
                 Play demo
               </button>
             </span>
           )}
         </div>
-        <DemoControls videoRef={videoRef} />
-        {/* The player's own bar, below the recording inside its frame: the label, then the expand control. */}
-        <div className="cs-player__bar">
-          {label ? (
-            <span id={labelId} className="cs-media-label cs-player__label">
-              {label}
-            </span>
-          ) : (
-            <span />
-          )}
-          <button
-            ref={expandRef}
-            type="button"
-            className="cs-expand cs-player__expand"
-            aria-label={separate ? 'Expand the complete recording' : 'Expand video'}
-            onClick={openExpanded}
-          >
-            <ExpandIcon />
-          </button>
-        </div>
+        {/* The compact controls, below the recording inside its frame. */}
+        <DemoControls
+          videoRef={videoRef}
+          title={asset.title}
+          duration={asset.duration}
+          hasAudio={asset.hasAudio}
+          onTogglePlay={togglePlay}
+          playRef={playRef}
+          onExpand={openExpanded}
+          expandLabel={separate ? 'Expand the complete recording' : 'Expand video'}
+          expandRef={expandRef}
+        />
       </div>
+      {/* The player's caption (e.g. Edited preview · 1.5× speed), directly under its frame like every media label. */}
+      {label && (
+        <figcaption id={labelId} className="cs-media-label cs-demo__caption">
+          {label}
+        </figcaption>
+      )}
       {expanded && (
         <VideoDialog
           asset={fullAsset}
@@ -479,8 +498,9 @@ interface VideoDialogProps {
  * opens on the inline player's frame (or poster), drawn underneath, and its
  * own copy fades in over it once that copy has a frame at the start time
  * (never a black stage, nor the first frame). A complete recording opened
- * from its preview is labelled as such beside the title. It leaves with a
- * short fade (dialogExit.ts). Mounted only while open.
+ * from its preview is labelled as such beside the title. Below the recording,
+ * the same control bar as inline (DemoControls), ending with Full screen. It
+ * leaves with a short fade (dialogExit.ts). Mounted only while open.
  */
 function VideoDialog({ asset, posterSrc, label, start, onClose }: VideoDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -488,9 +508,38 @@ function VideoDialog({ asset, posterSrc, label, start, onClose }: VideoDialogPro
   const closeRef = useRef<HTMLButtonElement>(null)
   const underRef = useRef<HTMLCanvasElement>(null)
   const stopRef = useRef<() => void>(undefined)
+  const fullscreenRef = useRef<HTMLButtonElement>(null)
   const [ready, setReady] = useState(false)
+  /** This copy is in the browser's full screen (from the bar's Full screen control). */
+  const [fullscreen, setFullscreen] = useState(false)
   const titleId = useId()
   const src = asset.variants[asset.variants.length - 1].src
+
+  // Full screen from the bar: the browser's own controls while it lasts; leaving it returns focus to the control.
+  useEffect(() => {
+    const onChange = () => {
+      const on = Boolean(videoRef.current) && document.fullscreenElement === videoRef.current
+      setFullscreen((was) => {
+        if (was && !on) requestAnimationFrame(() => fullscreenRef.current?.focus({ preventScroll: true }))
+        return on
+      })
+    }
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
+
+  const toFullscreen = () => {
+    const v = videoRef.current
+    if (v) enterFullscreen(v)
+  }
+
+  /** A click on the picture plays or pauses it (a pointer shortcut for the bar's first control). */
+  const togglePlay = () => {
+    const v = videoRef.current
+    if (!v) return
+    if (v.paused || v.ended) v.play().catch(() => {})
+    else v.pause()
+  }
 
   // Before the first paint: the inline frame, in place of the larger copy until it has one.
   useLayoutEffect(() => {
@@ -594,26 +643,41 @@ function VideoDialog({ asset, posterSrc, label, start, onClose }: VideoDialogPro
             </button>
           </div>
         </div>
-        <div className="cs-video-dialog__stage">
-          <canvas ref={underRef} className="cs-video-dialog__under" width={asset.width} height={asset.height} aria-hidden="true" />
-          <video
-            ref={videoRef}
-            className="cs-video-dialog__video"
-            data-ready={ready || undefined}
-            src={src}
-            poster={start.time > 0.05 ? undefined : posterSrc}
-            width={asset.width}
-            height={asset.height}
-            controls={start.fullscreen}
-            loop
-            playsInline
-            muted={start.muted}
-            preload="auto"
-            aria-label={asset.title}
-            onLoadedMetadata={onLoadedMetadata}
-          />
+        {/* The recording and its control bar, one frame as wide as the view allows at the recording's ratio. */}
+        <div className="cs-video-dialog__stage cs-video-dialog__stage--player" style={{ '--r': asset.width / asset.height } as CSSProperties}>
+          <div className="cs-player cs-video-dialog__player">
+            <div className="cs-video-dialog__screen">
+              <canvas ref={underRef} className="cs-video-dialog__under" width={asset.width} height={asset.height} aria-hidden="true" />
+              <video
+                ref={videoRef}
+                className="cs-video-dialog__video"
+                data-ready={ready || undefined}
+                src={src}
+                poster={start.time > 0.05 ? undefined : posterSrc}
+                width={asset.width}
+                height={asset.height}
+                // The browser's own controls only in full screen; here the bar below is the player's.
+                controls={start.fullscreen || fullscreen}
+                loop
+                playsInline
+                muted={start.muted}
+                preload="auto"
+                aria-label={asset.title}
+                onLoadedMetadata={onLoadedMetadata}
+                onClick={start.fullscreen || fullscreen ? undefined : togglePlay}
+              />
+            </div>
+            <DemoControls
+              videoRef={videoRef}
+              title={asset.title}
+              duration={asset.duration}
+              hasAudio={asset.hasAudio}
+              onExpand={toFullscreen}
+              expandLabel="Show the recording full screen"
+              expandRef={fullscreenRef}
+            />
+          </div>
         </div>
-        <DemoControls videoRef={videoRef} />
       </div>
     </dialog>
   )

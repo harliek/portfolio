@@ -104,7 +104,7 @@ Scope page CSS under the page class (`.page-<id>`). Shared files (`projects.ts`,
 
 ## Route transitions
 
-`src/components/transition/projectTransition.ts` (`openProject`), used by carousel tiles, the swipe row and next-project links. A flat copy of the clicked cover is laid over it and the route changes at once; the copy stays until the destination's opening image (`[data-case-hero]`, rendered hidden meanwhile) has decoded, then travels into it with a uniform scale (280ms). The copy has dissolved within the first 45% of the move and the opening image appears from 40% on, so a portrait cover and a landscape screenshot are never seen at half opacity together. The new page's content rises 6px from 40% opacity over 260ms (`.route-reveal`), so there is no blank beat and the site never fades to black. Measured total ≈330–390ms. `warmProject(path)` runs on hover, focus and touch-down of a project link: it prefetches the route chunk, loads GSAP on demand (it is not in the entry bundle) and preloads the destination's opening image with the same srcset and sizes (`project.hero` in `projects.ts`). If the destination image is not ready within 1.4s or is off screen, the copy simply fades. Back/Forward cancels it. Reduced motion: ordinary navigation. Shelf and index links are ordinary navigation. `ScrollRestoration` returns Back to the previous position (see Scroll positions).
+`src/components/transition/projectTransition.ts` (`openProject`, settings in `src/config/transition.ts`), used by the homepage carousel's objects, next-project links and the Work shelf. The page being left stays live while the destination's code, cover object and opening media load (warmed on hover, focus and touch-down by `warmProject(path)`). Then one view transition of 420ms in two parts that never overlap, so the old and new pages are never seen at partial opacity over each other: first (170ms) the old page clears (its content eases back and fades, the other objects recede and fade, its picture of the background fades to the live destination background beneath); then (250ms) the new page fades in, rising 6px. Across both, the clicked PNG moves into the destination's cover slot (`CoverSlot.tsx`) with a uniform scale, so no frame is empty; from a text link nothing moves. Back/Forward cancels a waiting transition. Reduced motion or no View Transitions support: an ordinary navigation. `ScrollRestoration` returns Back to the previous position (see Scroll positions).
 
 ## Pointer trail
 
@@ -120,7 +120,7 @@ To fill a slot: add the file to `scripts/prepare-media.mjs`, add an `IMAGES` ent
 
 ## Performance notes
 
-- GSAP is loaded only when a project transition needs it (`import('gsap')` in `projectTransition.ts`); nothing else imports it. The unused `useReveal` hook was removed.
+- The project transition uses the browser's View Transitions and CSS only (no GSAP). The unused `useReveal` hook was removed.
 - Inter is subset to the characters the site uses (112KB instead of 344KB, still preloaded); see `docs/media-plan.md` and `scripts/subset-font.sh`.
 - Work shelf thumbnails load only after interest in Work.
 - Not done: `src/content/media.ts` (≈38KB) is still one module in the entry chunk; splitting the art, film and transcript entries into their routes would shrink it. Run `npm run build` once no other agent is working and record the real chunk sizes (the committed `dist/` is out of date).

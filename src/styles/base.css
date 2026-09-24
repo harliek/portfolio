@@ -141,8 +141,9 @@ a {
   }
 }
 
+/* Text selection: the deep red (tokens.css --red-deep), white text. */
 ::selection {
-  background: var(--brand-red);
+  background: var(--red-deep);
   color: #fff;
 }
 

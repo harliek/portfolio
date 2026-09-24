@@ -33,6 +33,19 @@
 :root {
   color-scheme: dark;
 
+  /*
+   * The one red (brief v13): a precise interaction accent, never an ambient
+   * light. A warm rose red, softer than an alert or error red. Only for the
+   * hovered or focused carousel object's 1px contour, the active navigation
+   * underline, focus rings, small button and selection states, and (as
+   * --red-deep, the same hue deep enough for white text) text selection.
+   * Never a glow, halo, spread or background wash, and never on objects at
+   * rest. Every other red token below points here.
+   */
+  --red: #e66d71;
+  --red-rgb: 230 109 113;
+  --red-deep: #bd4045;
+
   /* Color */
   --color-bg: #090a0f;
   --color-surface: #11131b;
@@ -40,9 +53,9 @@
   --color-text: #f4f5fa;
   --color-muted: #b0b4c3;
   --color-subtle: #858c9f;
-  --color-accent: #f46b70;
+  --color-accent: var(--red);
   /* Warm red connects focus and interactions to the original portfolio. */
-  --color-focus: #f46b70;
+  --color-focus: var(--red);
   --color-line: #303545;
   /* Nearly opaque: text scrolling under the header is not readable through it. */
   --color-header: rgb(9 10 15 / 0.985);
@@ -50,9 +63,10 @@
   /* Opaque: nothing from the page shows around an enlarged image. */
   --color-scrim: rgb(5 6 10);
 
-  /* The dark architectural setting. Violet is the ambient colour of the
-     room; each project has its own accent (src/content/accents.ts), used for
-     glow and interactive states only, never for whole paragraphs. */
+  /* The setting: the film on the homepage, a quiet near-black ground
+     (--stage-room) behind every other page (stage.css). Each project has its
+     own accent (src/content/accents.ts), used for its artwork's glow and
+     interactive states only, never for whole paragraphs. */
   --stage-violet: #a58cf0;
   --stage-green: #5cc98a;
   --stage-coral: #ef8d74;
@@ -74,8 +88,8 @@
    * var(--accent, var(--accent-default)). Rules resolve these on the element
    * itself (never through another :root token), so they follow the page.
    */
-  --accent-default: #f46b70;
-  --accent-default-rgb: 244 107 112;
+  --accent-default: var(--red);
+  --accent-default-rgb: var(--red-rgb);
 
   /*
    * The name "Harlie Katz": a crisp pale core with a subtle lavender to ice
@@ -86,7 +100,8 @@
   --brand-tint: linear-gradient(100deg, #fdfcff 0%, #f1ecff 38%, #e6efff 78%, #dcecff 100%);
   --brand-glow-rgb: 201 184 255;
 
-  --brand-red: #d32f2f;
+  /* Small red fills behind white text (selection, a pressed control): the deep red, never an alert red. */
+  --brand-red: var(--red-deep);
   --font-editorial: 'Playfair Display', Georgia, serif;
 
   /* Typography */
@@ -275,7 +290,8 @@
     --color-text: oklch(0.9708 0.0067 277.16);
     --color-muted: oklch(0.7714 0.0218 273.95);
     --color-subtle: oklch(0.6408 0.0296 269.49);
-    --color-accent: #f46b70;
+    --red: oklch(0.68 0.15 20);
+    --red-deep: oklch(0.55 0.16 22);
     --color-line: oklch(0.3311 0.0292 271.22);
     --stage-violet: oklch(0.72 0.16 295);
     --stage-green: oklch(0.72 0.16 150);

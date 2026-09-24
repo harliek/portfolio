@@ -1,367 +1,45 @@
 /*
  * The settings behind every professional page: the persistent background
- * set (StageBackground, mounted once so its videos never restart), its
- * readability layers, a route-transition helper, and the pointer trail
- * canvas.
+ * set (StageBackground, mounted once so the film never restarts), a
+ * route-transition helper, and the pointer trail canvas.
  *
  * Two layers of the set:
+ * - the ground (`.stage-bg` itself): a quiet near-black behind every page.
+ *   Case studies, About and the not-found page show only this (plan v12
+ *   item 10): no architectural walls, reflective floor or reflection line,
+ *   and no architectural video. A faint cool lift at the top and a soft
+ *   darkening towards the edges keep it from reading as a dead flat black;
+ *   nothing in it has an edge or a line, so text reads over it anywhere;
  * - the film (`.stage-film`, the homepage): the original film of Harlie's
  *   first portfolio homepage behind the opening and the projects, with a
- *   restrained overlay (below); it lies over the room and cross-fades with
- *   it when the route changes, so the room is whole beneath it (never a
- *   black flash);
- * - the room (every interior page): the architectural loop, a dark room,
- *   so its layers are light and its pillars, lit edges and floor line stay
- *   visible (brief v8, section 5). Readability uses broad, smoothly blended
- *   gradients only (no translucent panels with edges):
- *   __shade    a uniform shade per route: About lightest, a little more on
- *              case studies
- *   __read     the reading layer: on case studies strongest behind the text
- *              column, easing off towards the media and the outer margins;
- *              on About a broad, light layer that is a little stronger over
- *              the brighter floor; on wide windows both ease off in the
- *              margins beside the content column
- *   ::after    framing: darker under the header and at the bottom edge, a
- *              light side vignette (per route)
- *   __band     a soft band that dims the bright floor line behind reading
- *              text (strong on case studies, light on About)
- * Text contrast over the room is measured at several loop times
- * (node_modules/.cache-scripts/v8s-contrast.mjs).
+ *   restrained overlay (below). It lies over the ground and cross-fades with
+ *   it when the route changes: one layer fading over a steady one, so there
+ *   is never a black flash or a double exposure of two pictures.
  */
 
 /* ----------------------------------------------------------------------- */
-/* Persistent background set                                                */
+/* Persistent background set: the near-black ground                         */
 /* ----------------------------------------------------------------------- */
 
-/* Registered, so the framing (::after) eases between routes like the other layers. */
-@property --frame-top {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 0.56;
-}
-
-@property --frame-bottom {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 0.5;
-}
-
-@property --vignette {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 0.32;
-}
-
 .stage-bg {
-  /* Per route (below): the uniform shade, the reading layer (0 to 1), the framing and the floor-line band. */
-  --bg-shade: 0.12;
-  --read: 1;
-  /* Framing (::after): top and bottom edge shade, side vignette. */
-  --frame-top: 0.56;
-  --frame-bottom: 0.5;
-  --vignette: 0.32;
-  /* Floor-line band strength with the reading layer off / fully on. */
-  --band-from: 0.2;
-  --band-to: 0.72;
-  --band-above: 120px;
-  --band-below: 170px;
-  /*
-   * Where the bright floor line sits in the viewport. The desktop loop's
-   * line is at 65% of its 4:3 frame, drawn with object-fit: cover and
-   * object-position 50% 55% (below): 65% of the height when the viewport is
-   * narrower than 4:3, else 55% of the height + 7.5% of the width.
-   */
-  --floor-y: max(65%, calc(55% + 7.5vw));
-  /*
-   * Reading layer fill (phones and tablets read across the whole width): a
-   * light layer over the dark walls, a little stronger from just above the
-   * floor line down, where the loop is brightest (floor reflections).
-   */
-  --read-fill: linear-gradient(
-    to bottom in oklch,
-    rgb(5 6 9 / 0.34),
-    rgb(5 6 9 / 0.3) calc(var(--floor-y) - 30%),
-    rgb(5 6 9 / 0.46) calc(var(--floor-y) - 4%),
-    rgb(5 6 9 / 0.46)
-  );
   position: fixed;
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: var(--stage-room);
+  background:
+    radial-gradient(120% 70% at 50% -12% in oklch, rgb(150 138 205 / 0.06), rgb(150 138 205 / 0) 62%),
+    radial-gradient(140% 110% at 50% 40% in oklch, rgb(3 3 6 / 0) 55%, rgb(3 3 6 / 0.55)),
+    var(--stage-room);
   pointer-events: none;
-  transition:
-    --frame-top var(--dur-2) var(--ease-standard),
-    --frame-bottom var(--dur-2) var(--ease-standard),
-    --vignette var(--dur-2) var(--ease-standard);
-}
-
-/* The portrait loop (chosen below 600px) has its line at about 65.2% of a 470:834 frame. */
-.stage-bg[data-file='mobile'] {
-  --floor-y: max(65.2%, calc(55% + 18.1vw));
-  --band-above: 90px;
-  --band-below: 130px;
-}
-
-.stage-bg__poster,
-.stage-bg__poster img,
-.stage-bg__video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  object-fit: cover;
-  object-position: 50% 55%;
-}
-
-.stage-bg__video {
-  opacity: 0;
-  transition: opacity var(--bg-video-fade, var(--dur-4)) var(--ease-standard);
-}
-
-.stage-bg__video[data-playing] {
-  opacity: 1;
-}
-
-.stage-bg__shade,
-.stage-bg__read,
-.stage-bg__reflection,
-.stage-bg__band {
-  position: absolute;
-  left: 0;
-  right: 0;
-}
-
-.stage-bg__shade,
-.stage-bg__read {
-  top: 0;
-  bottom: 0;
-}
-
-/* Uniform shade per route, a little darker on phones. */
-.stage-bg__shade {
-  background: var(--stage-room);
-  opacity: min(0.94, calc(var(--bg-shade) + var(--bg-phone, 0)));
-  /* Short: a route change (header or shelf link) shows the new text at once, over this shade. */
-  transition: opacity var(--dur-2) var(--ease-standard);
-}
-
-/* Case studies: the reading layer does the work behind the text column; the room stays visible around the media. */
-.stage-bg[data-route='case'] {
-  --bg-shade: 0.16;
-  --band-to: 0.9;
-}
-
-/*
- * About (and the not-found page): the lightest room. A light
- * reading layer over the dark walls (the pillars stay in view), a little
- * stronger over the brighter floor, where paragraphs pass as the page scrolls.
- */
-.stage-bg[data-route='about'],
-.stage-bg[data-route='other'] {
-  --bg-shade: 0.08;
-  /* Light at the edges and corners, where no text runs: the lit wall bases stay in view. */
-  --vignette: 0.14;
-  --read-fill: linear-gradient(
-    to bottom in oklch,
-    rgb(5 6 9 / 0.26),
-    rgb(5 6 9 / 0.2) calc(var(--floor-y) - 30%),
-    rgb(5 6 9 / 0.44) calc(var(--floor-y) - 4%),
-    rgb(5 6 9 / 0.44)
-  );
-}
-
-@media (max-width: 767.98px) {
-  .stage-bg {
-    --bg-phone: 0.06;
-  }
-}
-
-/* A restrained violet light on the floor (atmosphere only; nothing aligns to it). */
-.stage-bg__reflection {
-  top: var(--floor-y);
-  height: 40%;
-  background: radial-gradient(40% 62% at 50% 0% in oklch, color-mix(in oklch, var(--stage-violet) 18%, transparent), transparent 74%);
-  opacity: calc(0.9 - 0.45 * var(--read));
-  transition: opacity var(--dur-2) var(--ease-standard);
-}
-
-/* Reading layer. */
-.stage-bg__read {
-  background: var(--read-sides, none), var(--read-fill);
-  opacity: var(--read);
-  transition: opacity var(--dur-2) var(--ease-standard);
-}
-
-/*
- * Tablets (the landscape loop in a narrow window): the room's lit pillar
- * faces fall at the left and right edges, right behind the text, which runs
- * nearly edge to edge here. Darken the two sides; the floor and the room in
- * the middle stay visible.
- */
-@media (min-width: 600px) and (max-width: 959.98px) {
-  .stage-bg[data-file='desktop'] {
-    --read-sides: linear-gradient(
-      to right in oklch,
-      rgb(5 6 9 / 0.72),
-      rgb(5 6 9 / 0.44) 12%,
-      rgb(5 6 9 / 0) 26%,
-      rgb(5 6 9 / 0) 74%,
-      rgb(5 6 9 / 0.44) 88%,
-      rgb(5 6 9 / 0.72)
-    );
-  }
 }
 
 /*
  * A project is opening from the carousel (StageBackground data-hurry): the
- * destination's treatment (the room, with its reading layers) replaces the
- * film quickly, so the new page's text never appears over the film.
+ * destination's ground replaces the film quickly, so the new page's text
+ * never appears over the film.
  */
-.stage-bg[data-hurry],
-.stage-bg[data-hurry] .stage-film,
-.stage-bg[data-hurry] .stage-bg__shade,
-.stage-bg[data-hurry] .stage-bg__read,
-.stage-bg[data-hurry] .stage-bg__band,
-.stage-bg[data-hurry] .stage-bg__reflection {
+.stage-bg[data-hurry] .stage-film {
   transition-duration: 200ms;
-}
-
-/* Floor-line band: darkest exactly on the line, fading out above and below. */
-.stage-bg__band {
-  top: calc(var(--floor-y) - var(--band-above));
-  height: calc(var(--band-above) + var(--band-below));
-  background: linear-gradient(
-    to bottom in oklch,
-    rgb(5 6 9 / 0),
-    rgb(5 6 9 / 0.55) 26%,
-    rgb(5 6 9 / 0.92) calc(var(--band-above) - 8px),
-    rgb(5 6 9 / 0.92) calc(var(--band-above) + 10px),
-    rgb(5 6 9 / 0.5) 72%,
-    rgb(5 6 9 / 0)
-  );
-  opacity: calc(var(--band-from) + (var(--band-to) - var(--band-from)) * var(--read));
-  transition: opacity var(--dur-2) var(--ease-standard);
-}
-
-@media (min-width: 960px) {
-  /*
-   * Case studies: text on the left (42% of the centred content grid, then a
-   * 6% gap and 52% media; case.css). The stops follow that grid at every
-   * width: darkest behind the text column, easing out across the gap, and
-   * light behind and beside the media, so the room stays visible around it
-   * and in the right margin.
-   */
-  .stage-bg[data-route='case'] {
-    --grid: min(var(--content-max), 100% - 2 * var(--gutter));
-    --text-end: calc(50% - var(--grid) / 2 + var(--grid) * 0.42);
-    --media-start: calc(50% - var(--grid) / 2 + var(--grid) * 0.48);
-    --read-fill: linear-gradient(
-      to right in oklch,
-      rgb(5 6 9 / 0.66),
-      rgb(5 6 9 / 0.64) calc(var(--text-end) + 16px),
-      rgb(5 6 9 / 0.28) calc(var(--media-start) + 32px),
-      rgb(5 6 9 / 0.08) calc(var(--media-start) + var(--grid) * 0.22),
-      rgb(5 6 9 / 0.04)
-    );
-  }
-
-  /* The floor-line band is full strength behind the text, lighter behind the media. */
-  .stage-bg[data-route='case'] .stage-bg__band {
-    mask-image: linear-gradient(to right, #000 50%, rgb(0 0 0 / 0.66) 64%, rgb(0 0 0 / 0.56));
-  }
-}
-
-/*
- * Wide windows (1500px and up): the outer margins beside the content column
- * (the same --content-max as the header, case grid and About) never carry
- * text, so the reading layer and the floor-line band ease off there and the
- * room's lit wall bases and floor show at both edges. The easing ends 12px
- * before the column, so every line of text keeps the full reading layer
- * (checked with node_modules/.cache-scripts/v8s2-contrast.mjs at 1600 and
- * 1920 wide). Below 1500px the margins are too narrow to be worth a ramp.
- */
-@media (min-width: 1500px) {
-  .stage-bg {
-    --grid: min(var(--content-max), 100% - 2 * var(--gutter));
-    --col-start: calc(50% - var(--grid) / 2);
-    --col-end: calc(50% + var(--grid) / 2);
-    --margin-mask: linear-gradient(
-      to right,
-      rgb(0 0 0 / 0.4),
-      rgb(0 0 0 / 0.74) calc(var(--col-start) * 0.62),
-      #000 calc(var(--col-start) - 12px),
-      #000 calc(var(--col-end) + 12px),
-      rgb(0 0 0 / 0.74) calc(100% - var(--col-start) * 0.62),
-      rgb(0 0 0 / 0.4)
-    );
-  }
-
-  .stage-bg:is([data-route='about'], [data-route='other']) :is(.stage-bg__read, .stage-bg__band) {
-    mask-image: var(--margin-mask);
-  }
-
-  /*
-   * About: from about 1500px wide the room's brightest lit pillar face (73%
-   * to 82% of the width over the loop, above the floor line) falls where the
-   * Experience dates end, at the right edge of the content column. A soft
-   * extra shade over that face only keeps those small muted lines above
-   * 4.5:1 at every loop time (1920×1200, 2400×1350, 2560×1440 failed
-   * without it); the face stays visible, just calmer.
-   */
-  .stage-bg[data-route='about'] .stage-bg__read::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to right,
-      rgb(5 6 9 / 0) 69%,
-      rgb(5 6 9 / 0.52) 73%,
-      rgb(5 6 9 / 0.52) 82.5%,
-      rgb(5 6 9 / 0) 86.5%
-    );
-    mask-image: linear-gradient(to bottom, #000 calc(var(--floor-y) - 4%), transparent calc(var(--floor-y) + 3%));
-  }
-
-  /* Case studies: the same easing in the left margin (the right side is already light beside the media). */
-  .stage-bg[data-route='case'] {
-    --read-fill: linear-gradient(
-      to right in oklch,
-      rgb(5 6 9 / 0.26),
-      rgb(5 6 9 / 0.49) calc(var(--col-start) * 0.62),
-      rgb(5 6 9 / 0.66) calc(var(--col-start) - 12px),
-      rgb(5 6 9 / 0.64) calc(var(--text-end) + 16px),
-      rgb(5 6 9 / 0.28) calc(var(--media-start) + 32px),
-      rgb(5 6 9 / 0.08) calc(var(--media-start) + var(--grid) * 0.22),
-      rgb(5 6 9 / 0.04)
-    );
-  }
-
-  .stage-bg[data-route='case'] .stage-bg__band {
-    mask-image: linear-gradient(
-      to right,
-      rgb(0 0 0 / 0.4),
-      rgb(0 0 0 / 0.74) calc(var(--col-start) * 0.62),
-      #000 calc(var(--col-start) - 12px),
-      #000 50%,
-      rgb(0 0 0 / 0.66) 64%,
-      rgb(0 0 0 / 0.56)
-    );
-  }
-}
-
-/*
- * Framing light: darker under the header and at the bottom edge, a light
- * side vignette. Per route (--frame-top, --frame-bottom, --vignette).
- */
-.stage-bg::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(to bottom in oklch, rgb(5 6 9 / var(--frame-top)), rgb(5 6 9 / 0) 20%, rgb(5 6 9 / 0) 64%, rgb(5 6 9 / var(--frame-bottom))),
-    radial-gradient(130% 95% at 50% 48% in oklch, rgb(5 6 9 / 0) 58%, rgb(5 6 9 / var(--vignette)));
 }
 
 /* ----------------------------------------------------------------------- */
@@ -369,9 +47,9 @@
 /* ----------------------------------------------------------------------- */
 
 /*
- * Over the room, shown on the homepage only (`data-shown`), cross-fading
- * with the room on a route change (--film-fade; quicker with data-hurry).
- * Its own dark ground, so an unloaded poster never shows the room here.
+ * Over the ground, shown on the homepage only (`data-shown`), cross-fading
+ * with it on a route change (--film-fade; quicker with data-hurry). Its
+ * own dark base, so an unloaded poster reads as the film's darkness.
  * Object-fit cover with the original framing (centred, never stretched);
  * narrow portrait windows crop a little right of centre, where the subject
  * stands and lies.
@@ -389,6 +67,11 @@
 
 .stage-film[data-shown] {
   opacity: 1;
+}
+
+/* Leaving the homepage: out quicker than in, so the next page is not seen over the film for long. */
+.stage-film:not([data-shown]) {
+  transition-duration: var(--film-fade-out, 260ms);
 }
 
 @media (max-aspect-ratio: 4 / 5) {

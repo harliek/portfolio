@@ -5,7 +5,7 @@ import { ACCENTS, accentVars, type AccentId } from '../../content/accents'
 import { GALLERY_ITEMS } from '../../content/carousel'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { isPlainClick, openProject, warmProject } from '../transition/projectTransition'
-import { notePosition, persistPosition, recallPosition } from './carouselMemory'
+import { notePaused, notePosition, persistPosition, recallPaused, recallPosition } from './carouselMemory'
 import { GalleryObject } from './GalleryObject'
 import {
   buildScene,
@@ -49,6 +49,8 @@ interface GalleryDebug {
   /** Moves the carousel to a position at once (no motion). */
   seek: (pos: number) => void
   step: (dir: 1 | -1) => void
+  /** Automatic rotation: its eased speed share (0 to 1), whether it is wanted now, what holds it, and ms until it may resume. */
+  auto: () => { k: number; wanted: boolean; hold: Record<string, boolean>; resumeIn: number }
 }
 declare global {
   interface Window {
@@ -67,6 +69,20 @@ function rimRgb(id: AccentId) {
   const [r, g, b] = ACCENTS[id].rgb.split(' ').map(Number)
   const mix = (v: number, w: number) => Math.round(v * 0.5 + w * 0.5)
   return `${mix(r, 244)} ${mix(g, 240)} ${mix(b, 255)}`
+}
+
+/** The projects among the carousel's objects (About Me is not one). */
+const PROJECT_ITEMS = GALLERY_ITEMS.filter((item) => item.project)
+
+/**
+ * The quiet browse indicator beneath the controls (brief v13): "Project 2
+ * of 6" for a project, the object's name for About Me. Words, not a
+ * fraction, so it never reads as a timer or a loading state.
+ */
+function positionText(i: number) {
+  const item = GALLERY_ITEMS[i]
+  const k = PROJECT_ITEMS.indexOf(item)
+  return k < 0 ? item.name : `Project ${k + 1} of ${PROJECT_ITEMS.length}`
 }
 
 /** The images' `sizes`: each object's largest rendered width at this window size (selected and hovered). */
@@ -121,11 +137,25 @@ function initialScene() {
  * largest, slightly lower and fully lit, and the others step back
  * symmetrically.
  *
- * It sits in the page's normal flow below the introduction: the page
- * scrolls normally, and vertical wheel, trackpad and touch gestures always
- * scroll the page. Objects rotate slowly through the loop and float gently; pause and reduced motion stop automatic movement.
+ * It sits in the page's normal flow below the introduction, low in the
+ * first view with its labels and controls (the objects shrink to fit there,
+ * down to a floor; galleryModel.ts): the page scrolls normally, and
+ * vertical wheel, trackpad and touch gestures always scroll the page.
  *
- * Moving it:
+ * Automatic rotation (GALLERY.auto): the carousel turns slowly and steadily
+ * on its own (one revolution in about 45s; objects also float gently, CSS).
+ * It glides to a stop while the pointer is over the objects, while keyboard
+ * focus is in the carousel (not on the pause control itself), while a drag,
+ * swipe, trackpad gesture, arrow or key step or a press is under way, while
+ * a project opens, while the pause control is set, and while the carousel
+ * is mostly out of view or the tab is hidden. It eases back in from where it
+ * stands, about 3s after manual input or 1.2s after the pointer or focus
+ * leaves, once nothing holds it. The pause control (between the arrows)
+ * shows and announces its state; pausing brings the carousel to rest on the
+ * nearest object and stops the floating too. Reduced motion: it never moves
+ * on its own, and nothing floats.
+ *
+ * Moving it by hand:
  * - the previous and next arrows (and the arrow keys on an object or an
  *   arrow) advance exactly one object in about 500ms, easing out to rest
  *   (no bounce, no overshoot; a further click continues from the current
@@ -138,22 +168,28 @@ function initialScene() {
  * A press picks its object at once: the click that completes it opens that
  * object's page (the shared-element move into its cover slot), whatever has
  * moved under the pointer meanwhile, and a drag never opens anything. Hover
- * (a fine pointer) enlarges an object by 2.5% about its bottom edge and
- * brightens its title and glow.
+ * (a fine pointer) and keyboard focus enlarge an object by 6% about its
+ * visual baseline (the silhouette's bottom centre), draw a thin red contour
+ * on its artwork only (home.css) and brighten its title; the project's own
+ * accent glow stays its light.
  *
- * Reduced motion (the operating system's setting): the same arrangement;
- * steps (arrows, keys, a swipe, one per trackpad gesture) change with a
- * short cross-fade.
+ * Reduced motion (the operating system's setting): the same arrangement,
+ * still; steps (arrows, keys, a swipe, one per trackpad gesture) change
+ * with a short cross-fade; hover and focus mark an object with its contour
+ * without enlarging it.
  *
- * Browser Back restores the selection (carouselMemory.ts); every listener
- * is removed when the homepage unmounts.
+ * Browser Back restores the selection, with the project that was opened in
+ * front (carouselMemory.ts); every listener is removed when the homepage
+ * unmounts.
  */
 export function DepthGallery() {
   const navigate = useNavigate()
   const navigationType = useNavigationType()
   const { key: locationKey } = useLocation()
   const reduced = useReducedMotion()
-  const [paused, setPaused] = useState(false)
+  /** The pause control's state (automatic rotation and floating stopped by the visitor), kept for the visit. */
+  const [paused, setPaused] = useState(recallPaused)
+  const pausedRef = useRef(paused)
   const rootRef = useRef<HTMLElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLDivElement>(null)
@@ -166,7 +202,14 @@ export function DepthGallery() {
   const linkRefs = useRef<Array<HTMLAnchorElement | null>>([])
   /** The position survives effect re-runs within one history entry (the motion setting changed). */
   const kept = useRef<{ key: string; pos: number } | null>(null)
-  const api = useRef<{ step: (dir: 1 | -1) => void; freeze: (i: number) => void; resume: (i: number) => void; dragged: () => boolean; appear: () => void } | null>(null)
+  const api = useRef<{
+    step: (dir: 1 | -1) => void
+    freeze: (i: number) => void
+    resume: (i: number) => void
+    dragged: () => boolean
+    appear: () => void
+    setUserPaused: (paused: boolean) => void
+  } | null>(null)
   // The first scene, for the stage's height and the images' `sizes` before the effect measures.
   const [first] = useState(initialScene)
   const [sizes, setSizes] = useState(() => sizesFor(first))
@@ -255,7 +298,15 @@ export function DepthGallery() {
       const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) || undefined
       const nav = navRef.current
       const navH = nav ? nav.offsetHeight + (parseFloat(getComputedStyle(nav).marginTop) || 0) : undefined
-      return { header, nav: navH }
+      // The first view below the introduction (the content before the carousel, with its bottom margin), less the section's own bottom padding.
+      const before = root.previousElementSibling
+      let room: number | undefined
+      if (before instanceof HTMLElement) {
+        const end = before.getBoundingClientRect().bottom + window.scrollY + (parseFloat(getComputedStyle(before).marginBottom) || 0)
+        // The layout viewport's height (the small viewport on phones: steady while their toolbars slide).
+        room = (document.documentElement.clientHeight || window.innerHeight) - end - (parseFloat(getComputedStyle(root).paddingBottom) || 0)
+      }
+      return { header, nav: navH, room }
     }
 
     const measure = () => {
@@ -270,10 +321,12 @@ export function DepthGallery() {
       root.style.setProperty('--u', scene.u.toFixed(4))
       root.dataset.cls = scene.cls
       stage.style.height = `${scene.stageH.toFixed(1)}px`
-      // The captions' soft shade (home.css): from just above the selected object's bottom edge to below the controls.
+      // The captions' soft shade (home.css): from just above the selected object's bottom edge to the section's
+      // bottom edge (the end of the page, so it never adds scrolling), past the controls and the position line.
       const bandTop = scene.yb0 - 36
       stage.style.setProperty('--caption-top', `${bandTop.toFixed(1)}px`)
-      stage.style.setProperty('--caption-h', `${(scene.stageH - bandTop + (base.nav ?? 58) + 64).toFixed(1)}px`)
+      const below = (base.nav ?? 58) + (parseFloat(getComputedStyle(root).paddingBottom) || 0)
+      stage.style.setProperty('--caption-h', `${(scene.stageH - bandTop + below).toFixed(1)}px`)
       for (let i = 0; i < N; i++) {
         items[i].style.setProperty('--w', `${scene.bw[i].toFixed(2)}px`)
         items[i].style.setProperty('--h', `${scene.bh[i].toFixed(2)}px`)
@@ -330,7 +383,7 @@ export function DepthGallery() {
         sub.r = lx + (L.sw * p.ls) / 2
         sub.t = title.b + L.gap * p.ls
         sub.b = sub.t + L.sh * p.ls
-        // A label mostly outside the window fades out (the object itself may be cut by the edge).
+        // A label reaching past the window edge fades out before it is cut (the object itself may be cut by the edge).
         const l = Math.min(title.l, p.lsub > 0.02 ? sub.l : Infinity)
         const r = Math.max(title.r, p.lsub > 0.02 ? sub.r : -Infinity)
         const inside = r > l ? (Math.min(r, W) - Math.max(l, 0)) / (r - l) : 1
@@ -429,7 +482,7 @@ export function DepthGallery() {
       // The position indicator follows the object the carousel rests on or is heading to.
       const shownIndex = mod(heading(), N)
       if (shownIndex !== counted && countRef.current) {
-        countRef.current.textContent = `${shownIndex + 1} / ${N}`
+        countRef.current.textContent = positionText(shownIndex)
         counted = shownIndex
       }
     }
@@ -446,14 +499,16 @@ export function DepthGallery() {
     let target = pos
     /** Current speed (items per second). */
     let vel = 0
-    const st = { hover: -1, focus: -1, active: -1, press: -1, busy: false, inView: true, visible: document.visibilityState === 'visible' }
+    const st = { hover: -1, focus: -1, active: -1, press: -1, busy: false, onScreen: true, visible: document.visibilityState === 'visible' }
     let raf = 0
     let last = 0
     let fade = 0
     let pollAt = 0
+    /** The project being opened (Back brings it to the front), or -1. */
+    let opened = -1
 
     const save = () => {
-      kept.current = { key: locationKey, pos: mod(Math.round(heading()), N) }
+      kept.current = { key: locationKey, pos: opened >= 0 ? opened : mod(Math.round(heading()), N) }
       notePosition(locationKey, { pos: kept.current.pos })
       persistPosition(locationKey)
     }
@@ -468,10 +523,57 @@ export function DepthGallery() {
     /** Hover follows a still pointer as the objects move beneath it. */
     const pointer = { x: 0, y: 0, inside: false }
 
+    // ------------------------------------------------------------------
+    // Automatic rotation (GALLERY.auto; never with reduced motion)
+    // ------------------------------------------------------------------
+    const AUTO = GALLERY.auto
+    /** Items per second at full pace. */
+    const autoRate = N / AUTO.revolutionS
+    /** What holds it: the pointer over the objects, keyboard focus in the carousel, the pause control, too little of the stage in view. */
+    const hold = { over: false, keys: false, user: pausedRef.current, away: true }
+    /** It may not start before this time (performance.now()): after manual input, or once the pointer or focus has left. */
+    let resumeAt = performance.now() + (restored ? AUTO.afterInputMs : AUTO.startMs)
+    /** Its pace as a share of the full pace (0 to 1, eased in and out). */
+    let autoK = 0
+    let resumeTimer = 0
+    /** Whether it should run now (manual movement, a press or an opening hold it too). */
+    const autoWanted = (now: number) =>
+      !reduced && !hold.user && !hold.over && !hold.keys && !hold.away && st.visible && !st.busy && st.press < 0 && mode === 'rest' && drag.id < 0 && now >= resumeAt
+    const autoPace = () => autoK * autoK * (3 - 2 * autoK)
+    const held = () => reduced || hold.user || hold.over || hold.keys || hold.away
+    /** Sets a timer that starts the frame loop at resumeAt (nothing else holds it). */
+    const armResume = () => {
+      window.clearTimeout(resumeTimer)
+      resumeTimer = 0
+      const wait = resumeAt - performance.now()
+      if (held() || wait <= 0) return
+      resumeTimer = window.setTimeout(() => {
+        resumeTimer = 0
+        kick()
+      }, wait + 20)
+    }
+    /** Something that holds or releases it changed: the loop looks again now, and at resumeAt. */
+    const scheduleAuto = () => {
+      armResume()
+      kick()
+    }
+    /** Manual input: automatic movement stops at once and waits afterInputMs after the latest input. */
+    const input = () => {
+      autoK = 0
+      resumeAt = Math.max(resumeAt, performance.now() + AUTO.afterInputMs)
+      scheduleAuto()
+    }
+    /** A hold ended (the pointer or focus left, the pause control was released): resume after `ms`. */
+    const release = (ms: number) => {
+      resumeAt = Math.max(resumeAt, performance.now() + ms)
+      scheduleAuto()
+    }
+
     function frame(now: number) {
       raf = 0
-      if (st.busy || !st.visible || !st.inView) {
+      if (st.busy || !st.visible || !st.onScreen) {
         last = 0
+        autoK = 0
         return
       }
       const dt = last ? Math.min(now - last, 50) / 1000 : 0
@@ -498,17 +600,21 @@ export function DepthGallery() {
           again = true
         }
       }
-      if (!reduced && mode === 'rest' && !root!.hasAttribute('data-paused') && st.press < 0 && !root!.querySelector(':focus-visible')) {
-        pos = mod(pos + dt * (st.hover >= 0 ? 0.045 : 0.14), N)
-        target = pos
-      }
+      // Automatic rotation: eases in when wanted, glides to a stop when something holds it.
+      if (autoWanted(now)) autoK = Math.min(1, autoK + (dt * 1000) / AUTO.easeInMs)
+      else autoK = mode === 'rest' ? Math.max(0, autoK - (dt * 1000) / AUTO.easeOutMs) : 0
+      if (autoK > 0) {
+        pos = mod(pos + dt * autoRate * autoPace(), N)
+        again = true
+      } else if (autoWanted(now)) again = true
+      else if (now < resumeAt && !resumeTimer) armResume()
       layout()
       // Hover follows what is under a still pointer (mouse and pen) while the objects move.
       if (pointer.inside && now >= pollAt && !st.busy) {
         pollAt = now + GALLERY.hover.pollMs
         setHover(indexOf(document.elementFromPoint(pointer.x, pointer.y)))
       }
-      if (again || !reduced) raf = requestAnimationFrame(frame)
+      if (again) raf = requestAnimationFrame(frame)
     }
 
     /**
@@ -667,8 +773,10 @@ export function DepthGallery() {
 
     // ------------------------------------------------------------------
     // Hover (mouse and pen): only an object's silhouette or its shown label
-    // counts. The object grows 2.5% about its bottom edge; its title and
-    // glow brighten.
+    // counts. The object grows 6% about its visual baseline and takes its
+    // thin red contour (home.css); its title brightens and its own accent
+    // glow rises a little. The pointer anywhere over the objects also holds
+    // automatic rotation still (setOver).
     // ------------------------------------------------------------------
     function indexOf(el: EventTarget | null) {
       if (!(el instanceof Element)) return -1
@@ -696,17 +804,26 @@ export function DepthGallery() {
       if (i >= 0) warmProject(GALLERY_ITEMS[i].path)
       setActive()
     }
+    /** The pointer is over the objects (the stage, not the controls beneath it): automatic rotation holds still. */
+    const setOver = (over: boolean) => {
+      if (over === hold.over) return
+      hold.over = over
+      if (over) kick()
+      else release(AUTO.afterHoverMs)
+    }
     const onMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch' || st.busy) return
       pointer.x = e.clientX
       pointer.y = e.clientY
       pointer.inside = true
+      setOver(e.target instanceof Node && stage.contains(e.target))
       setHover(mode === 'drag' ? -1 : indexOf(e.target))
     }
     // Left the carousel (onto the introduction, the header, or out of the window).
     const onLeave = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return
       pointer.inside = false
+      setOver(false)
       setHover(-1)
     }
     root.addEventListener('pointermove', onMove)
@@ -786,9 +903,16 @@ export function DepthGallery() {
     // the focus ring, shows in full). Arrows step from the focused object
     // (stepFrom) or from an arrow control.
     // ------------------------------------------------------------------
+    // Keyboard focus in the carousel holds automatic rotation still, except on the pause control
+    // itself (pressing Play there should start it at once).
+    const isToggle = (el: Element | null) => Boolean(el?.closest('.gallery__motion'))
     const onFocusIn = (e: FocusEvent) => {
       const el = e.target instanceof Element ? e.target : null
       if (!el || !root.contains(el) || !el.matches(':focus-visible')) return
+      if (!isToggle(el) && !hold.keys) {
+        hold.keys = true
+        kick()
+      }
       const li = el.closest<HTMLElement>('[data-index]')
       st.focus = li ? Number(li.dataset.index) : -1
       setActive()
@@ -796,6 +920,10 @@ export function DepthGallery() {
     }
     const onFocusOut = (e: FocusEvent) => {
       const next = e.relatedTarget instanceof Element ? e.relatedTarget : null
+      if (hold.keys && (!next || !root.contains(next) || isToggle(next))) {
+        hold.keys = false
+        release(AUTO.afterHoverMs)
+      }
       if (next && root.contains(next) && next.closest('[data-index]')) return
       st.focus = -1
       setActive()
@@ -808,6 +936,7 @@ export function DepthGallery() {
       const onArrow = el?.closest('.gallery__arrow')
       if (!onLink && !onArrow) return
       e.preventDefault()
+      input()
       const dir = e.key === 'ArrowRight' ? 1 : -1
       const at = onLink ? links.indexOf(onLink as HTMLAnchorElement) : -1
       if (at >= 0) {
@@ -858,6 +987,7 @@ export function DepthGallery() {
       // Horizontal: never the browser's back and forward swipe.
       e.preventDefault()
       if (st.busy || mode === 'drag') return
+      input()
       const now = performance.now()
       const abs = Math.abs(dx)
       if (reduced) {
@@ -915,6 +1045,8 @@ export function DepthGallery() {
     const drag = { id: -1, x: 0, y: 0, start: 0, active: false, px: 1, lastX: 0, lastT: 0, v: 0, endedAt: -Infinity }
     const onPointerDown = (e: PointerEvent) => {
       if (!e.isPrimary || st.busy || (e.pointerType === 'mouse' && e.button !== 0)) return
+      // A press, a drag or a touch on the objects: automatic movement stops at once.
+      input()
       drag.id = e.pointerId
       drag.x = drag.lastX = e.clientX
       drag.y = e.clientY
@@ -963,6 +1095,8 @@ export function DepthGallery() {
     const onPointerEnd = (e: PointerEvent) => {
       if (e.pointerId !== drag.id) return
       drag.id = -1
+      // Resumes afterInputMs after the finger or button lifts.
+      input()
       if (!drag.active) return
       drag.active = false
       delete stage.dataset.dragging
@@ -991,16 +1125,23 @@ export function DepthGallery() {
     // ------------------------------------------------------------------
     const onVisibility = () => {
       st.visible = document.visibilityState === 'visible'
-      if (!st.visible) save()
-      else kick()
+      if (!st.visible) {
+        autoK = 0
+        save()
+      } else scheduleAuto()
     }
     document.addEventListener('visibilitychange', onVisibility)
-    const visibilityObserver = new IntersectionObserver(([entry]) => {
-      st.inView = entry.isIntersecting
-      if (st.inView) kick()
-    })
-    visibilityObserver.observe(root)
-    if (!reduced) kick()
+    // The frame loop runs only while the stage is on screen; automatic rotation only while enough of it is in view.
+    const inView = new IntersectionObserver(
+      ([entry]) => {
+        st.onScreen = entry.isIntersecting
+        hold.away = entry.intersectionRatio < AUTO.inView - 0.001
+        if (hold.away) autoK = 0
+        if (st.onScreen) scheduleAuto()
+      },
+      { threshold: [0, AUTO.inView] },
+    )
+    inView.observe(stage)
     const onPageHide = () => save()
     window.addEventListener('pagehide', onPageHide)
     let resizeFrame = 0
@@ -1029,27 +1170,48 @@ export function DepthGallery() {
 
     api.current = {
       step: (dir) => {
+        input()
         announcePending = true
         step(dir)
       },
-      // A project is opening: everything stops where it is.
+      // A project is opening: everything stops where it is; Back brings this project to the front.
       freeze: (i) => {
         st.busy = true
+        autoK = 0
+        opened = i
         root.dataset.leaving = ''
         items[i].dataset.selected = ''
         save()
       },
-      // The opening was cancelled (Back, another navigation): carry on.
+      // The opening was cancelled (Back, another navigation): carry on, after the usual pause.
       resume: (i) => {
         if (!root.isConnected) return
         st.busy = false
+        opened = -1
         delete root.dataset.leaving
         delete items[i].dataset.selected
         delete items[i].dataset.pressed
-        kick()
+        input()
       },
       dragged: () => performance.now() - drag.endedAt < 400,
       appear,
+      // The pause control: pausing brings the carousel to rest on the nearest object (ahead of it, unless it has only just passed one).
+      setUserPaused: (paused) => {
+        hold.user = paused
+        if (!paused) {
+          resumeAt = Math.max(resumeAt, performance.now() + 150)
+          scheduleAuto()
+          return
+        }
+        window.clearTimeout(resumeTimer)
+        resumeTimer = 0
+        // Already at rest on an object, or moving by hand (that movement ends on an object anyway).
+        if (reduced || mode !== 'rest' || st.busy || Math.abs(pos - Math.round(pos)) < 1e-3) return
+        const speed = autoRate * autoPace()
+        autoK = 0
+        const T = Math.round(pos + (speed > 0 ? 0.3 : 0))
+        tweenTo(T, settleDuration(T - pos), speed)
+      },
     }
 
     if (import.meta.env.DEV) {
@@ -1077,6 +1239,10 @@ export function DepthGallery() {
           layout()
         },
         step: (dir) => step(dir),
+        auto: () => {
+          const now = performance.now()
+          return { k: autoK, wanted: autoWanted(now), hold: { ...hold, busy: st.busy, press: st.press >= 0, drag: drag.id >= 0, moving: mode !== 'rest' }, resumeIn: Math.round(resumeAt - now) }
+        },
       }
     }
 
@@ -1087,13 +1253,14 @@ export function DepthGallery() {
       cancelAnimationFrame(appearRaf)
       window.clearTimeout(fade)
       window.clearTimeout(wheelTimer)
+      window.clearTimeout(resumeTimer)
       if (swapping) pos = target
       if (mode === 'tween') pos = target
       fadeAnim?.cancel()
       save()
       api.current = null
       ro.disconnect()
-      visibilityObserver.disconnect()
+      inView.disconnect()
       window.removeEventListener('resize', onResize)
       window.removeEventListener('pagehide', onPageHide)
       window.removeEventListener('pointerup', endPress, true)
@@ -1115,6 +1282,16 @@ export function DepthGallery() {
     }
     // A new history entry for / (the home link on the homepage) starts over with the opening.
   }, [locationKey, navigationType, reduced, navigate])
+
+  /** The pause control: stops or restarts automatic rotation (and the floating), shows its state and announces it. */
+  const togglePaused = () => {
+    const next = !pausedRef.current
+    pausedRef.current = next
+    notePaused(next)
+    setPaused(next)
+    api.current?.setUserPaused(next)
+    if (liveRef.current) liveRef.current.textContent = next ? 'Automatic rotation paused' : 'Automatic rotation playing'
+  }
 
   // Keyboard activation (Enter) and assistive technology: the link opens its own page.
   // Pointer clicks are handled when the press starts (the capture listener above).
@@ -1198,24 +1375,39 @@ export function DepthGallery() {
         </ul>
       </div>
       <div ref={navRef} className="gallery__nav">
-        <button type="button" className="gallery__arrow gallery__arrow--prev" aria-label="Previous project" onClick={() => api.current?.step(-1)}>
-          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
-            <path d="M10 3.5 5.5 8l4.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <span ref={countRef} className="gallery__count tabular" aria-hidden="true">
-          {`${OPENING_POS + 1} / ${N}`}
-        </span>
-        <button type="button" className="gallery__arrow gallery__arrow--next" aria-label="Next project" onClick={() => api.current?.step(1)}>
-          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
-            <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        {!reduced && (
-          <button type="button" className="gallery__motion" aria-pressed={paused} onClick={() => setPaused((value) => !value)}>
-            {paused ? 'Resume motion' : 'Pause motion'}
+        <div className="gallery__controls">
+          <button type="button" className="gallery__arrow gallery__arrow--prev" aria-label="Previous project" onClick={() => api.current?.step(-1)}>
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+              <path d="M10 3.5 5.5 8l4.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
-        )}
+          {!reduced && (
+            <button
+              type="button"
+              className="gallery__motion"
+              data-state={paused ? 'paused' : 'playing'}
+              aria-label={paused ? 'Play automatic rotation' : 'Pause automatic rotation'}
+              onClick={togglePaused}
+            >
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+                {paused ? (
+                  <path d="M5 3.4v9.2a.5.5 0 0 0 .76.43l7.3-4.6a.5.5 0 0 0 0-.86l-7.3-4.6A.5.5 0 0 0 5 3.4Z" fill="currentColor" />
+                ) : (
+                  <path d="M5.25 3.5v9M10.75 3.5v9" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                )}
+              </svg>
+              <span>{paused ? 'Play' : 'Pause'}</span>
+            </button>
+          )}
+          <button type="button" className="gallery__arrow gallery__arrow--next" aria-label="Next project" onClick={() => api.current?.step(1)}>
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+              <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+        <span ref={countRef} className="gallery__count" aria-hidden="true">
+          {positionText(OPENING_POS)}
+        </span>
       </div>
       <p ref={liveRef} className="visually-hidden" aria-live="polite" />
     </section>

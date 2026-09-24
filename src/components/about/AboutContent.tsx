@@ -17,11 +17,14 @@ const prefetch = (path: string) => ({
 
 /**
  * Scale of the About object's carousel size (OBJECT_SIZE.headshot) for the
- * portrait: about 340px wide at desktop. CSS narrows the slot on smaller
- * screens (about.css), keeping its aspect ratio.
+ * portrait's slot: an upper bound (about 350px); the portrait's frame sets
+ * the rendered width (about.css --portrait-w: up to 300px from 960px, up to
+ * 260px from 720px, up to 240px below), keeping the artwork's proportions.
+ * Keep PORTRAIT_SIZES in step with those widths and with
+ * TRANSITION.slotSizes['/about'] (the file the transition warms).
  */
 const PORTRAIT_SCALE = 1.45
-const PORTRAIT_SIZES = '(min-width: 720px) 340px, 232px'
+const PORTRAIT_SIZES = '(min-width: 960px) 300px, (min-width: 720px) 260px, 240px'
 
 /**
  * The /about page, reached from the carousel's About Me object and the
@@ -30,25 +33,27 @@ const PORTRAIT_SIZES = '(min-width: 720px) 340px, 232px'
  *
  * 1. Opening. The same headshot PNG as the carousel object, in its
  *    CoverSlot (the route transition moves the carousel image into it),
- *    beside the greeting (the page H1), a lead paragraph and a second one.
- * 2. Education (about 40%) beside Experience (about 60%). Education keeps
- *    the verified degree, minor, certificate, school and dates and two short
- *    paragraphs (no separate coursework list). Each role has one
- *    first-person contribution and, where there is one, a quiet text link to
- *    its case study.
- * 3. Creative work. Two equal cards with the same frame, badge and title:
- *    the Creative Portfolio (its Art tile; opens the original creative
- *    homepage at /creative/, a separate build, so a plain link) and An
- *    Artistic End (its authentic poster; plays the film, with the YouTube
- *    player requested only after that press).
+ *    cropped by a quiet frame that lines up with the greeting (the page
+ *    H1), a lead paragraph and a second one.
+ * 2. Below a full-width divider, Education (about 40%) beside Experience
+ *    (about 60%). Education keeps the verified degree, minor, certificate,
+ *    school and dates and two short paragraphs (no separate coursework
+ *    list). Each role has one first-person contribution and, where there is
+ *    one, a quiet text link to its case study.
+ * 3. Creative work, below another divider. Two equal cards with the same
+ *    frame, badge and title: the Creative Portfolio (its Art tile; opens the
+ *    original creative homepage at /creative/, a separate build, so a plain
+ *    link) and An Artistic End (its authentic poster; plays the film, with
+ *    the YouTube player requested only after that press).
  * 4. Email and LinkedIn as quiet links, with no heading.
  *
  * Behind it all, AboutLight: a slow, soft pool of lavender light that
  * follows the mouse (off for reduced motion and touch).
  *
- * The opening text and everything below it carry `data-cover-reveal`: the
- * route transition keeps them hidden while the portrait travels into place,
- * then fades them in. Direct loads show everything at once.
+ * When the page opens from the carousel, the portrait travels into its slot
+ * while the page arrives around it (projectTransition.ts). The
+ * `data-cover-reveal` markers are not styled today; they mark the text that
+ * arrives after the portrait. Direct loads show everything at once.
  */
 export function AboutContent() {
   const { education: edu } = ABOUT

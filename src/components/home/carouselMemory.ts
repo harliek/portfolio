@@ -2,8 +2,8 @@ import type { NavigationType } from 'react-router-dom'
 
 /**
  * Which object the homepage carousel had selected, per history entry, so
- * browser Back from a project returns to the same selection instead of
- * resetting it (the page's scroll position is restored by the router's
+ * browser Back from a project returns to the same selection (the project
+ * that was opened, in front) instead of resetting it (the page's scroll position is restored by the router's
  * ScrollRestoration). A fresh visit (a link, the address bar, a reload, or
  * an in-app link to /) starts at the intended opening (Merchandising
  * Platform selected, About Me on its left).
@@ -70,4 +70,15 @@ export function persistPosition(key: string) {
   } catch {
     /* Storage unavailable: in-app Back still restores from memory. */
   }
+}
+
+/**
+ * The visitor's explicit pause of the automatic rotation (the pause control),
+ * kept for the rest of the visit: the carousel stays paused when they come
+ * back to the homepage.
+ */
+let userPaused = false
+export const recallPaused = () => userPaused
+export function notePaused(paused: boolean) {
+  userPaused = paused
 }

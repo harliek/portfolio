@@ -279,7 +279,7 @@
   outline-offset: 2px;
 }
 
-/* The current page, and Work while its shelf is open: bright words over a 1.5px accent line. */
+/* The current page, and Work while its shelf is open: bright words over a crisp 1.5px red line (no glow). */
 .site-nav__item[data-active='true'],
 .site-nav__work[aria-expanded='true'] {
   color: rgb(246 246 250 / 0.96);
@@ -288,8 +288,7 @@
 .site-nav__item[data-active='true']::after,
 .site-nav__work[aria-expanded='true']::after {
   height: 1.5px;
-  background: var(--_acc);
-  box-shadow: 0 0 6px rgb(var(--_acc-rgb) / 0.5);
+  background: var(--red);
   opacity: 1;
   transform: none;
 }

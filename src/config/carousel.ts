@@ -3,7 +3,9 @@ import type { ObjectKind } from '../content/carousel'
 /**
  * The homepage project carousel (src/components/home/DepthGallery.tsx; the
  * geometry is in src/components/home/galleryModel.ts; the order, names and
- * subtitles are in src/content/carousel.ts). Plan v11, deliverables 4 to 10.
+ * subtitles are in src/content/carousel.ts). Plan v11, deliverables 4 to 10,
+ * with plan v12 and brief v13 (automatic rotation, the pause control, the
+ * hover contour).
  *
  * Model. The seven objects (About Me and the six projects) stand on one
  * shallow, symmetrical curve, each one an object-label group: its
@@ -17,8 +19,16 @@ import type { ObjectKind } from '../content/carousel'
  *
  * Tables of four values are knots at a = 0, 1, 2 and 3 (the selected slot,
  * the neighbours, the outer objects and beyond), joined by a smooth
- * monotone curve that is flat through the selected slot. The carousel rotates slowly on its own; interaction takes over, and
- * the pause control or reduced-motion preference stops automatic movement.
+ * monotone curve that is flat through the selected slot.
+ *
+ * Motion. The carousel rotates slowly on its own (`auto`): `pos` advances at
+ * a steady pace, so every object in turn comes forward through the centre
+ * and recedes. It pauses while the pointer is over the objects, while
+ * keyboard focus is in the carousel, while a drag, swipe, trackpad gesture,
+ * arrow step or press is under way, while a project opens, while the pause
+ * control is set, and while the carousel is mostly out of view or the tab is
+ * hidden; it eases back in from wherever it stands (never a reset). With
+ * reduced motion it never moves on its own.
  */
 export const GALLERY = {
   /**
@@ -95,6 +105,10 @@ export const GALLERY = {
    * - `sideLabels`: whether the other objects show their labels (tablets
    *   and phones show the selected object's caption only; their neighbours
    *   are glimpses at the edges).
+   * - `u.floor`: the objects, labels and controls also fit the first view
+   *   below the introduction (brief v13: the objects low in the opening,
+   *   with room for their labels and the controls), but never smaller than
+   *   this; a short window keeps them at this size and scrolls instead.
    */
   layout: {
     desktop: {
@@ -105,7 +119,7 @@ export const GALLERY = {
       gapOuter: 0.72,
       edgeRoom: { at1280: 72, perPx: 0.35, min: 64, max: 240 },
       fit: 0,
-      u: { min: 0.66, max: 1.05 },
+      u: { min: 0.66, max: 1.05, floor: 0.84 },
       fade: [2.3, 2.85],
       sideLabels: true,
     },
@@ -117,7 +131,7 @@ export const GALLERY = {
       gapOuter: 0.8,
       edgeRoom: { at1280: 0, perPx: 0, min: 0, max: 0 },
       fit: 0.56,
-      u: { min: 0.6, max: 1.2 },
+      u: { min: 0.6, max: 1.2, floor: 0.84 },
       fade: [1.55, 2.1],
       sideLabels: false,
     },
@@ -129,7 +143,7 @@ export const GALLERY = {
       gapOuter: 1,
       edgeRoom: { at1280: 0, perPx: 0, min: 0, max: 0 },
       fit: 0.74,
-      u: { min: 0.6, max: 1.1 },
+      u: { min: 0.6, max: 1.1, floor: 0.8 },
       fade: [1.4, 1.95],
       sideLabels: false,
     },
@@ -147,10 +161,11 @@ export const GALLERY = {
    * edge of the object inside it would come within `clearObject` px of that
    * object, the outer object moves out (the silhouette gap grows); in
    * between, the farther label yields within `yieldPx` (never two
-   * overlapping). A label mostly outside the window fades out (`visible`:
-   * the share of it inside).
+   * overlapping). A label reaching past the window's edge fades out before
+   * it is cut (`visible`: the share of it inside), so a caption is either
+   * whole or gone, also as the carousel turns.
    */
-  label: { gap: 20, width: { desktop: 440, tablet: 420, phone: 360 }, inset: 16, lines: 2, clear: 18, clearObject: 2, yieldPx: 10, visible: [0.9, 1] },
+  label: { gap: 20, width: { desktop: 440, tablet: 420, phone: 360 }, inset: 16, lines: 2, clear: 18, clearObject: 2, yieldPx: 10, visible: [0.975, 1] },
 
   /** The stage: room above the selected object (for its glow), below the labels, and around the whole carousel in its section (px). */
   stage: { top: 30, bottom: 10, margin: 28 },
@@ -181,14 +196,36 @@ export const GALLERY = {
   press: { ms: 1200, slop: 14 },
 
   hover: {
-    /** Hover and keyboard focus: +8.5% about the visible bottom edge (home.css has the same value). */
-    scale: 1.085,
+    /**
+     * Hover and keyboard focus: +6% about the silhouette's bottom centre, its
+     * visual baseline (home.css --hover-scale has the same value). None with
+     * reduced motion (the red contour alone marks the object).
+     */
+    scale: 1.06,
     /** Hover follows what is under a still pointer while the carousel moves: checked every this many ms. */
     pollMs: 90,
     /** The light eases in and out over these (ms). */
     inMs: 200,
     outMs: 320,
   },
+  /**
+   * Automatic rotation (never with reduced motion).
+   * - `revolutionS`: one full turn of the seven objects (s); a steady pace,
+   *   about 6.4s per object.
+   * - `startMs`: the first movement of a fresh visit, after the carousel is
+   *   in view; Back into the homepage waits `afterInputMs` instead, so the
+   *   project just left stays in front a moment.
+   * - `afterInputMs`: it resumes this long after manual input ends (a drag,
+   *   swipe, trackpad gesture, arrow or key step, a press, a cancelled
+   *   opening); `afterHoverMs`: this long after the pointer leaves the
+   *   objects or keyboard focus leaves the carousel.
+   * - `easeInMs`: it eases in from rest over this long; `easeOutMs`: when a
+   *   pause begins it comes to a stop over this long (a short glide, never a
+   *   jolt).
+   * - `inView`: it runs only while at least this share of the stage is in
+   *   the window.
+   */
+  auto: { revolutionS: 45, startMs: 1600, afterInputMs: 3000, afterHoverMs: 1200, easeInMs: 1800, easeOutMs: 380, inView: 0.4 },
   /** Reduced motion: steps cross-fade (ms out, ms in); a horizontal trackpad gesture moves one step after this much scrolling (px), one per gesture (`gapMs`). */
   reduced: { outMs: 120, inMs: 240, wheelPx: 40, gapMs: 220 },
   /**

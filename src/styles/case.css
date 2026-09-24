@@ -3,27 +3,34 @@
  * Page-specific styles go in src/styles/pages/<id>.css, scoped under the page
  * class.
  *
- * CaseScroll (desktop ≥960px): one grid, max 1240px, 42% text / 6% gap /
- * 52% media. Title 38–46px; metadata 15px lines; body 17–18px / 1.55 at
- * 45–60 characters; section headings 22–26px; captions 14px. The media
- * column holds ONE sticky stage of stable size from the opening through the
- * outcome. Below 960px: stacked in reading order, no sticky.
+ * CaseScroll (desktop ≥960px, brief-v8 section 7): one centred grid at the
+ * site's content width (1240px, the header's edges), 42% text / 6% gap / 52%
+ * media. Title 38–46px; metadata 15px lines; body 18–19px / 1.55 at about 60
+ * characters; section headings 22–26px. The media column holds ONE sticky
+ * stage: the visible area below the navigation, with media shorter than it
+ * centred (or placed at its top, StageConfig align 'start'), through the
+ * outcome; it is released with the outcome's end, before the next-project
+ * link. Below 960px: stacked in reading order, no sticky.
+ *
+ * No captions under media (section 8): a discreet label (media bar, or the
+ * player's own bar for recordings) and the expand control.
  *
  * The accent (--accent / --accent-rgb, set by CaseLayout; --case-accent for
- * older page CSS) appears only on interactive and active things: the active
- * section heading and its marker, highlights, media hover and focus edges,
- * link hover, and the next-project link (in the NEXT project's accent).
+ * older page CSS) appears on the cover's silhouette glow and on interactive
+ * and active things: the active section heading and its marker, heading hover,
+ * highlights, media hover and focus edges, link hover, and the next-project
+ * link (in the NEXT project's accent). Never on whole paragraphs.
  */
 
 .case {
-  --case-max: 1240px;
+  --case-max: var(--content-max, 1240px);
   --case-gap: 6%;
-  /* 17px on phones, 18px on desktop. */
-  --case-body: clamp(1.0625rem, 1.02rem + 0.12vw, 1.125rem);
+  /* 17px on phones, 18 to 19px on desktop windows. */
+  --case-body: clamp(1.0625rem, 0.98rem + 0.2vw, 1.1875rem);
   --case-accent: var(--accent, var(--stage-violet));
   --case-accent-rgb: var(--accent-rgb, 165 140 240);
   /* Desktop: the space between the story and the next-project link. */
-  --case-next-gap: 48px;
+  --case-next-gap: 64px;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -35,8 +42,8 @@
   gap: 0.9em;
 }
 
-/* About 60 characters at 18px. A text-based measure (not the width of '0'), so the stacked layout on tablets keeps
-   the same line length as the narrower desktop column. */
+/* About 60 characters. A text-based measure (not the width of '0'), so the stacked layout on tablets keeps the same
+   line length as the narrower desktop column. */
 .case-prose p,
 .case-prose li {
   max-width: 33rem;
@@ -50,6 +57,7 @@
 .case-prose strong {
   color: var(--stage-ivory);
   font-weight: 620;
+  transition: color 220ms var(--ease-out);
 }
 
 .case-prose ul {
@@ -75,23 +83,43 @@
   text-decoration-color: currentColor;
 }
 
+/*
+ * Noninteractive text with a mouse: headings and the bold phrase a recruiter should notice take the page accent on
+ * hover (a plain colour change: the text cursor, size and underline stay as they are). Nothing on touch.
+ */
+@media (hover: hover) {
+  .cs-title:hover,
+  .cs-heading:hover,
+  .case-prose strong:hover {
+    color: color-mix(in oklch, var(--case-accent) 78%, var(--stage-ivory));
+  }
+}
+
 /* ----------------------------------------------------------------------- */
 /* CaseScroll: grid                                                         */
 /* ----------------------------------------------------------------------- */
 
 .cs {
-  /* Sticky offset: header + 24px. */
-  --cs-top: calc(var(--header-height) + var(--space-5));
-  /*
-   * Desktop: what follows the story at the page end, the gap, the next-project link (100px) and
-   * the compact footer (85px, no top margin on a case page). The stage is capped at the viewport
-   * minus --cs-top, this and its caption, so at the page end it is still pinned in full view below
-   * the header with the last section beside it.
-   */
+  /* The sticky stage's top: the navigation and 16px. */
+  --cs-top: calc(var(--header-height) + var(--space-4));
+  /* The space kept under the stage at the viewport's bottom edge. */
+  --cs-bottom: var(--space-5);
+  /* The visible stage (CaseScroll): the viewport below the navigation, never below 360px. */
+  --cs-view: max(360px, calc(100svh - var(--cs-top) - var(--cs-bottom)));
+  /* The media's greatest height as a share of the visible stage (StageConfig fill, set inline). */
+  --cs-fill: 1;
+  /* The row under an image (label and expand glyph) and the bar inside a recording's player. */
+  --cs-bar: 34px;
+  --cs-pbar: 40px;
+  /* What follows the story at the page end on desktop: the gap, the next-project link and the compact footer. */
   --cs-after: calc(var(--case-next-gap) + 100px + 85px);
-  /* The caption row under the stage: a 12px gap and two reserved lines (the expand control beside them is shorter). */
+  /*
+   * The tallest a sticky figure may be: released with the outcome, its bottom level with the outcome's, it still fits
+   * below the navigation at the page end (a tall phone never slides under the header).
+   */
+  --cs-cap: max(300px, calc(100svh - var(--cs-top) - var(--cs-after)));
+  /* The Creative Production page (FilmScroll, client-work.css) still sizes its player from a caption row. */
   --cs-caption: 54px;
-  /* The stage's greatest height (never below 240px on a very short window). */
   --cs-stage-max: max(240px, calc(100svh - var(--cs-top) - var(--cs-after) - var(--cs-caption)));
   width: 100%;
   max-width: calc(var(--case-max) + 2 * var(--gutter));
@@ -99,9 +127,11 @@
   padding: clamp(var(--space-5), 3.4vw, var(--space-7)) var(--gutter) 0;
 }
 
-/* Touch: the expand control at the end of the caption row is 44px, taller than two caption lines. */
+/* Touch: the expand controls are 44px. */
 @media (hover: none) {
   .cs {
+    --cs-bar: 52px;
+    --cs-pbar: 48px;
     --cs-caption: 56px;
   }
 }
@@ -139,8 +169,23 @@
 }
 
 /* ----------------------------------------------------------------------- */
-/* Opening: title, metadata lines, summary, cover                           */
+/* Opening: title, metadata, cover, summary, status                         */
 /* ----------------------------------------------------------------------- */
+
+.cs-opening {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.cs-opening > * {
+  max-width: 100%;
+}
+
+.cs-intro,
+.cs-lede {
+  width: 100%;
+}
 
 .cs-title {
   color: var(--stage-ivory);
@@ -149,6 +194,7 @@
   letter-spacing: -0.03em;
   font-weight: var(--weight-heading);
   text-wrap: balance;
+  transition: color 220ms var(--ease-out);
 }
 
 .cs-title:focus {
@@ -177,13 +223,76 @@
   color: var(--color-text);
 }
 
-.cs-summary {
+/*
+ * The cover PNG beneath the metadata, about 1.5 times its earlier size (CaseScroll COVER_HEIGHT), scaled down on
+ * short windows so the first section stays near the first screen (--cover-hmax), with the discreet "Concept cover"
+ * label beside its base (under it when the column is too narrow). The glow follows the artwork's silhouette
+ * (alpha-aware drop shadows on the slot, which the route transition's moving copy lands with): a narrow bright
+ * edge and a wider soft halo in the accent, a little stronger on hover.
+ */
+.cs-cover {
+  --cover-hmax: clamp(150px, calc(100svh - 500px), 400px);
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2) var(--space-5);
+  margin-top: clamp(var(--space-5), 3.4svh, var(--space-6));
+}
+
+.cs-cover .cover-slot {
+  width: min(var(--cover-w), 100%, calc(var(--cover-hmax) * var(--cover-r, 10)));
+  filter: drop-shadow(0 0 1.5px rgb(var(--case-accent-rgb) / 0.75)) drop-shadow(0 0 20px rgb(var(--case-accent-rgb) / 0.3));
+  transition: filter 320ms var(--ease-out);
+}
+
+@media (hover: hover) {
+  .cs-cover .cover-slot:hover {
+    filter: drop-shadow(0 0 2px rgb(var(--case-accent-rgb) / 0.95)) drop-shadow(0 0 30px rgb(var(--case-accent-rgb) / 0.46));
+  }
+}
+
+.cs-cover__label {
+  padding-bottom: var(--space-2);
+  color: var(--color-subtle);
+  font-size: 0.75rem;
+  font-weight: var(--weight-label, 500);
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cs-lede {
+  margin-top: clamp(var(--space-5), 3.2svh, var(--space-6));
+}
+
+/* An opening with the summary inside its intro block (the Creative Production page until it uses CaseOpening). */
+.cs-intro > .cs-summary {
   margin-top: var(--space-5);
 }
 
-.cs-cover {
+/* The one project-status line near the introduction (e.g. Working prototype with synthetic data). */
+.cs-status {
   display: flex;
-  margin-top: var(--space-6);
+  align-items: baseline;
+  gap: 10px;
+  max-width: 33rem;
+  margin-top: var(--space-4);
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.cs-status::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--case-accent);
+  box-shadow: 0 0 8px rgb(var(--case-accent-rgb) / 0.6);
+  transform: translateY(-1px);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -191,7 +300,7 @@
 /* ----------------------------------------------------------------------- */
 
 .cs-body {
-  padding-top: clamp(var(--space-7), 5vw, 72px);
+  padding-top: clamp(40px, 4.4vw, 60px);
 }
 
 .cs-section + .cs-section {
@@ -247,12 +356,25 @@
 }
 
 /* ----------------------------------------------------------------------- */
-/* Media column and the stage                                               */
+/* Media column and the sticky stage                                        */
 /* ----------------------------------------------------------------------- */
 
 .cs-media {
-  /* The stage's height is derived from this column's width (100cqi). */
+  /* Stacked media sizes from this column's width (100cqi). */
   container-type: inline-size;
+}
+
+/* The height of the bar that belongs to the media: the row under an image, the player's own bar, nothing for custom. */
+.cs[data-media='states'] {
+  --cs-barh: var(--cs-bar);
+}
+
+.cs[data-media='video'] {
+  --cs-barh: var(--cs-pbar);
+}
+
+.cs[data-media='custom'] {
+  --cs-barh: 0px;
 }
 
 @media (min-width: 960px) {
@@ -260,21 +382,41 @@
     position: sticky;
     top: var(--cs-top);
   }
+
+  /*
+   * CaseScroll's stage (data-stage): the figure itself is sticky. Its media is as large as the column (100cqi, the
+   * media column) and the visible stage (the viewport below the navigation, times StageConfig fill, at most
+   * --cs-cap) allow, and its `top` centres it in that stage (align 'start': just below the navigation), from the
+   * first screen on. Its column ends with the outcome, so it is released with its bottom level with the outcome's
+   * and leaves beside it, before the next-project link.
+   */
+  .cs[data-layout='sticky'][data-stage] .cs-sticky {
+    --cs-mh: calc(min(var(--cs-view) * var(--cs-fill), var(--cs-cap)) - var(--cs-barh));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    top: calc(var(--cs-top) + max(0px, (var(--cs-view) - var(--cs-mh) - var(--cs-barh)) / 2));
+  }
+
+  .cs[data-layout='sticky'][data-stage] .cs-sticky[data-fixed-ratio] {
+    --cs-mh: min(calc(100cqi / var(--stage-r)), calc(min(var(--cs-view) * var(--cs-fill), var(--cs-cap)) - var(--cs-barh)));
+  }
+
+  .cs[data-layout='sticky'][data-stage='start'] .cs-sticky {
+    top: var(--cs-top);
+  }
 }
 
 /*
- * A figure: the media across the full width, then the caption row, the caption and at its right end the expand
- * control (outside the artwork, so it never covers the media's own content). With a mouse the control is a small
- * 24px glyph (a 40px pointer target, .cs-expand::before), so a caption keeps nearly the stage's full width; on touch
- * it is a 44px button. Stacked figures centre the caption and the control on each other; beside the sticky stage
- * the caption keeps its two reserved lines and the control aligns with the first.
+ * A figure: the media, then its bar (a discreet label and, at the right end, the expand glyph; nothing over the
+ * artwork). Beside the story it is as wide as the column allows while the media and its bar fit the visible stage
+ * (StageConfig fill), centred in the stage; stacked, it takes the column's width.
  */
 .cs-figure {
   --cs-expand: 24px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-3) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   min-width: 0;
   margin: 0;
 }
@@ -282,55 +424,11 @@
 @media (hover: none) {
   .cs-figure {
     --cs-expand: 44px;
-    column-gap: var(--space-3);
   }
 }
 
-.cs-figure > .cs-stage {
-  grid-column: 1 / -1;
-}
-
-.cs-figure > .cs-caption {
-  grid-row: 2;
-  grid-column: 1;
-}
-
-.cs-figure > .cs-expand {
-  grid-row: 2;
-  grid-column: 2;
-}
-
-/* A phone crop that reads in place has no expand control: its caption takes the whole row. */
-.cs-figure[data-in-place] > .cs-caption {
-  grid-column: 1 / -1;
-}
-
-/* Beside the story: the caption 12px under the media, the control level with its first line. */
 .cs-figure[data-variant='sticky'] {
-  align-items: start;
-}
-
-/*
- * Beside the story, a stage limited by the window's height is narrower than its column: the figure takes the media's
- * width, so the caption and its control end where the media ends, and it stays at the column's left edge (a constant
- * gap to the text). The stage ratio (--stage-r) is set on the figure.
- */
-.cs-figure[data-variant='sticky']:not([data-portrait]) {
-  width: min(100%, calc(var(--cs-stage-max) * var(--stage-r)));
-}
-
-/* A portrait phone is centred: the caption is centred under it, with the control just to its right. */
-.cs-figure[data-portrait] {
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-}
-
-.cs-figure[data-portrait] > .cs-caption {
-  grid-column: 2;
-}
-
-.cs-figure[data-portrait] > .cs-expand {
-  grid-column: 3;
-  justify-self: start;
+  width: min(100%, calc(var(--cs-mh) * var(--stage-r)));
 }
 
 .cs-stage {
@@ -338,22 +436,36 @@
   width: 100%;
 }
 
-/*
- * States (desktop): ONE stable box for every state. Full column width, the
- * page's frame ratio, never taller than --cs-stage-max. Each image is
- * contained in it (a landscape frame from its left edge, a portrait phone
- * centred with the column's width kept and space beside it), so nothing
- * collapses or jumps.
- */
+/* The row under an image: its label on the left, the expand glyph on the right. */
+.cs-figbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: calc(var(--cs-bar) - var(--space-2));
+  margin-top: var(--space-2);
+}
+
+/* A discreet media label (Illustrative conversation, Original 2024 prototype, Edited preview · 1.5× speed). */
+.cs-media-label {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: var(--weight-label, 500);
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+
+/* States: ONE stable box for every state, at the page's frame ratio; each image is contained in it. */
 .cs-stage[data-kind='states'] {
-  height: min(calc(100cqi / var(--stage-r)), var(--cs-stage-max));
+  aspect-ratio: var(--stage-r);
   container-type: size;
 }
 
-/* Stacked figures: the image's own ratio, bounded by the viewport height. */
+/* Stacked figures: the image's own ratio, bounded by the viewport height (a portrait phone is centred). */
 .cs-stage[data-kind='inline'] {
+  width: min(100%, calc(72svh * var(--stage-r)));
   aspect-ratio: var(--stage-r);
-  max-height: 72svh;
+  margin-inline: auto;
   container-type: size;
 }
 
@@ -447,12 +559,6 @@
   pointer-events: none;
 }
 
-/* A landscape image narrower than its stage starts at the stage's left edge, in line with its caption (as the
-   recordings do); a portrait phone stays centred with its centred caption. */
-.cs-figure[data-variant='sticky']:not([data-portrait]) :is(.cs-layer, .cs-zoomlayer) {
-  justify-items: start;
-}
-
 /* Exactly the shown image's box (same formula as .cs-canvas). */
 .cs-zoom {
   position: relative;
@@ -493,14 +599,15 @@
 }
 
 /*
- * The expand control, at the right end of the caption row (images, recordings and films alike), never on the
- * artwork, and always visible (round 4, R4-01: it is the one enlarge control of a player, so it never waits for
- * hover). With a mouse it is a quiet glyph, in the accent while the media is hovered or focused; on touch it is an
- * outlined 44px button. For images the picture itself is the enlargement control, so this one is a pointer and
- * touch shortcut; for recordings it is the control (their native full screen button is removed, DemoVideo).
+ * The expand control, at the right end of the media bar (images) or of the player's bar (recordings), never on the
+ * artwork, always visible (R4-01). With a mouse it is a quiet glyph (a 40px pointer target), in the accent while the
+ * media is hovered or focused; on touch it is an outlined 44px button. For images the picture itself is the
+ * enlargement control, so this one is a pointer and touch shortcut; for recordings it is the control (their native
+ * full screen button is removed, DemoVideo).
  */
 .cs-expand {
   position: relative;
+  flex: none;
   display: grid;
   place-items: center;
   width: var(--cs-expand);
@@ -516,7 +623,7 @@
     box-shadow var(--dur-feedback) var(--ease-out);
 }
 
-/* A 40px pointer target around the small glyph (into the gap above the caption row, never over the media). */
+/* A 40px pointer target around the small glyph. */
 .cs-expand::before {
   content: '';
   position: absolute;
@@ -525,8 +632,8 @@
 }
 
 .cs-expand:is(:hover, :focus-visible),
-.cs-figure:has(.cs-zoom:is(:hover, :focus-visible)) > .cs-expand,
-.cs-figure:has(> .cs-stage[data-kind='video']:is(:hover, :focus-within)) > .cs-expand {
+.cs-figure:has(.cs-zoom:is(:hover, :focus-visible)) .cs-expand,
+.cs-figure:has(.cs-stage[data-kind='video']:is(:hover, :focus-within)) .cs-expand {
   color: color-mix(in oklch, var(--case-accent) 80%, var(--stage-ivory));
 }
 
@@ -546,31 +653,15 @@
   }
 }
 
-/* --- Caption ------------------------------------------------------------- */
-
+/* The earlier caption row (the Creative Production page's players still use it). */
 .cs-caption {
   max-width: 64ch;
   color: var(--color-muted);
   font-size: var(--text-small);
   line-height: 1.5;
-  /* A caption that wraps breaks into even lines, never a short orphan. */
   text-wrap: balance;
 }
 
-/* Beside the story: the caption spans the stage's width (it ends where the media ends) with two lines reserved, so
-   a shorter caption never moves anything. */
-.cs-figure[data-variant='sticky'] .cs-caption {
-  max-width: none;
-  min-height: 3em;
-}
-
-.cs-figure[data-portrait] .cs-caption {
-  margin-inline: auto;
-  text-align: center;
-}
-
-/* A short label before the caption (e.g. Illustrative conversation), plain and a little heavier, then a middle dot:
-   the same treatment as in the enlarged view. */
 .cs-label {
   color: var(--color-text);
   font-weight: 600;
@@ -582,12 +673,11 @@
 }
 
 /* ----------------------------------------------------------------------- */
-/* Video (DemoVideo)                                                        */
+/* Recordings (DemoVideo)                                                   */
 /* ----------------------------------------------------------------------- */
 
-/* The recording's own ratio; on the sticky stage never taller than --cs-stage-max (the figure's width, above). */
-.cs-stage[data-kind='video'] {
-  aspect-ratio: var(--stage-r);
+/* The player: one rounded frame holding the recording and, below it, the player's own bar (label and expand). */
+.cs-player {
   overflow: hidden;
   border-radius: 10px;
   background: var(--color-surface);
@@ -598,11 +688,50 @@
 }
 
 /* Hover and keyboard focus inside the player: an accent edge (no scale, so the native controls never move). */
-.cs-stage[data-kind='video']:is(:hover, :focus-within) {
+.cs-player:is(:hover, :focus-within) {
   box-shadow:
     0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.7),
     0 0 26px -4px rgb(var(--case-accent-rgb) / 0.35),
     0 28px 56px -30px rgb(0 0 0 / 0.9);
+}
+
+/* The recording's own ratio. */
+.cs-stage[data-kind='video'] {
+  aspect-ratio: var(--stage-r);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.cs-player__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  height: var(--cs-pbar);
+  padding: 0 var(--space-2) 0 var(--space-4);
+  border-top: 1px solid rgb(255 255 255 / 0.07);
+  background: rgb(255 255 255 / 0.025);
+}
+
+/* The label inside the player, with a small accent mark: an edited, accelerated preview says so where it plays. */
+.cs-player__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-player__label::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--case-accent);
 }
 
 .cs-demo__poster,
@@ -628,16 +757,13 @@
   display: block;
   background: transparent;
   object-fit: contain;
+  transition: opacity 120ms linear;
 }
 
 /* Transparent over the poster until the recording has put a frame on screen (DemoVideo, media/videoFrame.ts), then a
    short fade: never the black box of a playing video without a frame, and poster to recording is a dissolve. */
 .cs-demo__video:not([data-frame]) {
   opacity: 0;
-}
-
-.cs-demo__video {
-  transition: opacity 120ms linear;
 }
 
 .cs-demo__video:focus-visible {
@@ -669,7 +795,7 @@
 
 /* The larger view (a native dialog styled like the image dialog, components.css .image-dialog). It opens on the
    inline frame (a canvas of the recording's size, so it takes the same box), and its own copy fades in over it once
-   that copy has a frame at the inline time (DemoVideo VideoDialog, client-work FilmDialog). */
+   that copy has a frame at the start time (DemoVideo VideoDialog, client-work FilmDialog). */
 .cs-video-dialog__stage {
   display: grid;
   place-items: center;
@@ -696,7 +822,8 @@
   transition: opacity 120ms linear;
 }
 
-.cs-video-dialog__video[data-ready] {
+.cs-video-dialog__video[data-ready],
+.cs-video-dialog__video:fullscreen {
   opacity: 1;
 }
 
@@ -723,16 +850,42 @@
 }
 
 /* ----------------------------------------------------------------------- */
+/* Custom stage content (CaseMedia kind 'custom')                           */
+/* ----------------------------------------------------------------------- */
+
+.cs-custom {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Beside the story: the whole visible stage (StageConfig fill), or a box of the given ratio centred in it. */
+.cs-custom[data-variant='sticky'] {
+  height: var(--cs-mh);
+}
+
+.cs-custom[data-variant='sticky'][data-ratio] {
+  width: min(100%, calc(var(--cs-mh) * var(--stage-r)));
+  height: auto;
+  aspect-ratio: var(--stage-r);
+}
+
+.cs-custom[data-variant='stacked'][data-ratio] {
+  aspect-ratio: var(--stage-r);
+}
+
+/* ----------------------------------------------------------------------- */
 /* Stacked (below 960px)                                                    */
 /* ----------------------------------------------------------------------- */
 
+/* A smaller cover on narrow screens: reading comes first. */
 .cs[data-layout='stacked'] .cs-cover {
+  --cover-hmax: min(190px, 26svh);
   margin-top: var(--space-5);
 }
 
-/* A smaller cover on narrow screens (CoverSlot keeps the object's ratio). */
-.cs[data-layout='stacked'] .cs-cover .cover-slot {
-  width: min(calc(var(--cover-w) * 0.8), 72%);
+.cs[data-layout='stacked'] .cs-lede {
+  margin-top: var(--space-5);
 }
 
 .cs[data-layout='stacked'] > .cs-media {
@@ -758,7 +911,8 @@
 /* Every change is instant (the sequencer skips its fades and waits too); the global 1ms reduced-motion
    transition (base.css) would blend two layers for a frame, so it is switched off here. Hover keeps
    its accent edge without the scale. */
-html[data-motion='reduce'] :is(.cs-layer, .cs-hl, .cs-heading, .cs-heading::before, .cs-canvas, .cs-zoom, .cs-expand, .cs-demo__video, .cs-video-dialog__video) {
+html[data-motion='reduce']
+  :is(.cs-layer, .cs-hl, .cs-title, .cs-heading, .cs-heading::before, .cs-canvas, .cs-zoom, .cs-expand, .cs-demo__video, .cs-video-dialog__video, .cover-slot) {
   transition: none !important;
 }
 
@@ -774,12 +928,12 @@ html[data-motion='reduce'] .cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .c
 .next-project {
   width: 100%;
   max-width: calc(var(--case-max) + 2 * var(--gutter));
-  margin: clamp(72px, 8vw, 112px) auto 0;
+  margin: clamp(64px, 7vw, 96px) auto 0;
   padding-inline: var(--gutter);
 }
 
-/* Desktop: a compact end (--cs-after), so the sticky stage fits above it at the page end. The
-   footer follows the link directly on a case page; its own padding and rule separate them. */
+/* Desktop: the stage has left with the outcome; a compact end follows. The footer follows the link directly on a
+   case page; its own padding and rule separate them. */
 @media (min-width: 960px) {
   .next-project {
     margin-top: var(--case-next-gap);
@@ -790,7 +944,7 @@ html[data-motion='reduce'] .cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .c
   }
 }
 
-/* One link: the small PNG, "Next project" and the name. */
+/* One link: the small PNG, "Next project" and the display title with an arrow. */
 .next-project__link {
   display: inline-flex;
   align-items: center;
@@ -803,15 +957,16 @@ html[data-motion='reduce'] .cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .c
   text-decoration: none;
 }
 
-/* A block box (not a grid: a percentage height inside an auto grid row does
-   not resolve, so tall objects such as the phone overflowed it); the image
-   fills it and is contained, centred. */
+/* A block box (not a grid: a percentage height inside an auto grid row does not resolve, so tall objects such as the
+   phone overflowed it); the image fills it and is contained, centred. The quiet silhouette glow is the next
+   project's accent. */
 .next-project__thumb {
   flex: none;
   display: block;
   width: var(--thumb-w, 104px);
   height: var(--thumb-h, 84px);
-  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.45));
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.45)) drop-shadow(0 0 1px rgb(var(--next-accent-rgb, 201 184 255) / 0.6))
+    drop-shadow(0 0 10px rgb(var(--next-accent-rgb, 201 184 255) / 0.22));
   transition:
     transform 200ms var(--ease-out),
     filter 200ms var(--ease-out);
@@ -859,7 +1014,8 @@ html[data-motion='reduce'] .cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .c
 
 .next-project__link:is(:hover, :focus-visible) .next-project__thumb {
   transform: scale(1.04);
-  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.45)) drop-shadow(0 0 12px rgb(var(--next-accent-rgb, 201 184 255) / 0.42));
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.45)) drop-shadow(0 0 1.5px rgb(var(--next-accent-rgb, 201 184 255) / 0.9))
+    drop-shadow(0 0 16px rgb(var(--next-accent-rgb, 201 184 255) / 0.45));
 }
 
 .next-project__link:is(:hover, :focus-visible) .next-project__name {

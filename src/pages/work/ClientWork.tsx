@@ -9,14 +9,14 @@ const project = projectById('client-work')
 
 /**
  * Creative Production (route /work/creative-production; /work/shift
- * redirects here). The case-study opening with the camera cover, then the
- * three client films beside one stable player (FilmScroll), then the next
- * project.
+ * redirects here). The case-study opening with the camera cover and small
+ * anchor links, then three stacked project sections, each with its own
+ * description and film (FilmScroll), then the next project.
  */
 export default function ClientWork() {
   return (
     <CaseLayout project={project} className="page-client-work">
-      <FilmScroll project={project} meta={C.meta} summary={C.summary} films={C.films} />
+      <FilmScroll project={project} meta={C.meta} summary={C.summary} status={C.status} films={C.films} />
       <NextProject current={project.id} />
     </CaseLayout>
   )

@@ -1,11 +1,12 @@
-import type { CaseMedia, StorySection } from '../../components/case/CaseScroll'
+import type { StorySection } from '../../components/case/CaseScroll'
+import type { GroupPhone, PhoneFocus } from '../../components/pages/jumpstart-finance/PhoneGroup'
 
 /**
- * Jumpstart Finance (route /work/jumpstart), CaseScroll with `states` media.
- * Copy is brief-v5 section 21, edited only for the copy rules and the lead
- * decisions: the role is Founder and Product Lead (the pitch's "CEO" and the
- * cover artwork's "CEO" are not used), and the sign-up figure is the one the
- * academy pitch reported.
+ * Jumpstart Finance (route /work/jumpstart), CaseScroll with `custom` media:
+ * a group of three original prototype phones whose emphasis follows the story
+ * (brief-v8 section 14; PhoneGroup.tsx). The role is Founder and Product Lead
+ * (the pitch's and the cover artwork's "CEO" are not used); the result is the
+ * sentence Harlie supplied in brief-v8.
  *
  * Evidence (docs/content-provenance.md, Jumpstart Finance)
  * - Résumé: "Jumpstart Finance | Founder & Product Lead · European Innovation
@@ -13,42 +14,44 @@ import type { CaseMedia, StorySection } from '../../components/case/CaseScroll'
  *   customer discovery to prototype and pitch, driving 150 sign-ups in 24
  *   hours"; "Translated user research into gamified mechanics, personalized
  *   journeys, monetization, and product requirements".
- * - Pitch (JumpStart Finance/jumpstart presentation.pdf.pdf, 12 pp.): p. 5
- *   "Gamified learning leads to increased engagement", "Personalized
- *   education based on experience and goals"; p. 6 forums "as you compete
- *   and learn personal finance"; p. 7 business model; p. 10 "Traction &
- *   Validation, 150 sign-ups in 24 hours". The sign-ups were reported IN the
- *   pitch (they did not follow it), so the result says the pitch reported them.
- *   The problem's second sentence is the p. 5 premise, stated as a premise.
- * - What we built (round 2, R2-02): the positioning decision from the pitch's
- *   competitor comparison (p. 4, JumpStart Finance/competitors.png; the
- *   slide itself is not shown). Of Robinhood, Zogo and Acorn(s), none has a
- *   forum and only Zogo is gamified (Robinhood is not educational either).
- *   The slide spells the brand "Acorn"; the page uses its name, Acorns. The
- *   three features named are the three screens on the stage (lessons, the
- *   profile's level path, the community). The earlier feature list, with the
- *   unshown "personalized learning", and the summary's second sentence (the
- *   metadata's status) were removed.
- * - Prototype screens (JumpStart Finance/proto 1–4.png, cropped to one
- *   600×1210 canvas each in src/content/crops/jumpstart-finance.ts): home
- *   with topics, lessons with Start learning and Start the test, a profile
- *   with a numbered level path, a community with questions, replies and
- *   each member's level. Captions only describe what each screen shows.
+ * - Pitch (JumpStart Finance/jumpstart presentation.pdf.pdf, 12 pp., text
+ *   checked with pdftotext): p. 5 "Gamified learning leads to increased
+ *   engagement"; p. 6 "Build your network through forums as you compete and
+ *   learn personal finance"; p. 10 "Traction & Validation, 150 sign-ups in 24
+ *   hours". The sign-ups were reported in the pitch, so the result says so.
+ * - Competitor slide (p. 4, public/media/img/jumpstart-competitors, not shown on
+ *   the page): Robinhood, Zogo and Acorn(s) have no forum; only Zogo is
+ *   gamified. The slide spells the brand "Acorn"; the page uses its name, Acorns.
+ * - Prototype screens (JumpStart Finance/proto 3, 2, 4.png, each cropped to a
+ *   600×1210 canvas in src/content/crops/jumpstart-finance.ts): lessons with a
+ *   lesson card offering Start learning and Start the test; a profile at Level 1
+ *   above a path of numbered levels; a community thread where members answer a
+ *   question, each shown with their level.
+ * - "I led the product concept, positioning, prototype, and business model"
+ *   and "short lessons" are Harlie's own words (brief-v5 section 21), consistent
+ *   with the résumé's product requirements and gamified mechanics.
  *
  * Harlie's own statement kept as written and reported as not shown by the
  * sources: "young adults" (the pitch's problem slide speaks of adults).
  *
- * No presentation slides (competitors, business model, traction) appear on
- * the page (brief-v5 section 24). The phone PNG in the opening is the
- * redesigned cover artwork; the stage shows only the original 2024 screens,
- * and the opening caption's “Original 2024 prototype” tag says which is which
- * (round 1, R1-04: no second qualification). The role is stated once, in the
- * metadata (R1-01). Round 5 (R5-01, R5-04, R5-11): the summary starts with
- * Harlie's action (the metadata names Porto, the summary the academy), What
- * we built opens with her contribution, “gamified” and “engaged” are no
- * longer repeated, and the community caption no longer names the levels the
- * screen already shows.
+ * The phone PNG in the opening is the redesigned cover artwork (its label says
+ * Concept cover); the group shows only the original 2024 screens, and its one
+ * media label says so. No presentation slides appear on the page.
  */
+
+/** The group, in reading order: learning, motivation, peer support. */
+export const JUMPSTART_PHONES: GroupPhone[] = [
+  { image: 'jf-screen-lessons', name: 'Lessons' },
+  { image: 'jf-screen-progress', name: 'Progress' },
+  { image: 'jf-screen-community', name: 'Community' },
+]
+
+/**
+ * The phone that leads for each story position: the opening (-1) and each
+ * section in [...sections, outcome] order. The outcome shows the balanced
+ * overview of the whole prototype.
+ */
+export const jumpstartFocus = (active: number): PhoneFocus => (active < 0 ? 0 : active <= 2 ? active : 'all')
 
 export const JUMPSTART_FINANCE = {
   meta: ['Founder and Product Lead · Student venture, Porto', 'June to July 2024 · Prototype and academy pitch'],
@@ -57,45 +60,43 @@ export const JUMPSTART_FINANCE = {
       I led a <strong>five&#8209;person team</strong> at the European Innovation Academy building Jumpstart, a financial education app for young adults.
     </p>
   ),
-  media: {
-    kind: 'states',
-    // Every screen is a 600×1210 transparent canvas (the phone plus 8px), so the phone keeps one size.
-    frameRatio: '600 / 1210',
-    opening: {
-      image: 'jf-screen-home',
-      label: 'Original 2024 prototype',
-      caption: 'The home screen.',
-    },
-  } satisfies CaseMedia,
+  /** The group's one media label: the phones are the original screens, the cover above is later artwork. */
+  mediaLabel: 'Original 2024 prototype',
   sections: [
     {
-      id: 'problem',
-      title: 'The problem',
+      id: 'lessons',
+      title: 'Short lessons',
       body: (
-        <p>
-          Many young adults want to understand personal finance but struggle to stay engaged with conventional financial education. Our premise was
-          that gamified learning would hold their attention.
-        </p>
+        <>
+          <p>
+            Many young adults want to understand personal finance but struggle to stay engaged with conventional financial education.
+          </p>
+          <p>
+            I led the product concept, positioning, prototype, and business model. The prototype teaches through <strong>short lessons</strong>, each paired
+            with a test.
+          </p>
+        </>
       ),
-      visual: {
-        image: 'jf-screen-lessons',
-        caption: 'The lessons screen. Each lesson card pairs the reading with a test.',
-      },
     },
     {
-      id: 'built',
-      title: 'What we built',
+      id: 'progress',
+      title: 'Visible progress',
       body: (
         <p>
-          I led the product concept, positioning, prototype, and business model. Our comparison of Robinhood, Zogo, and Acorns found no community forum
-          and only one gamified app, Zogo, so we built the prototype around lessons, a level path, and a community where members answer each other’s
-          questions.
+          Our premise was that gamified learning would hold people’s attention. Each profile places the learner on <strong>a path of numbered levels</strong>,
+          so progress stays visible.
         </p>
       ),
-      visual: {
-        image: 'jf-screen-progress',
-        caption: 'The profile tracks progress along a path of numbered levels.',
-      },
+    },
+    {
+      id: 'community',
+      title: 'Peer support',
+      body: (
+        <p>
+          Our comparison of Robinhood, Zogo, and Acorns found no community forum. We added <strong>a community where members answer each other’s questions</strong>,
+          with each member’s level beside their name.
+        </p>
+      ),
     },
   ] satisfies StorySection[],
   outcome: {
@@ -103,13 +104,8 @@ export const JUMPSTART_FINANCE = {
     title: 'The result',
     body: (
       <p>
-        We pitched Jumpstart at the academy, reporting <strong>150 sign&#8209;ups in 24 hours</strong>. The response gave us an early signal of demand for a more
-        engaging way to learn personal finance.
+        We reported <strong>150 sign&#8209;ups in 24 hours</strong> during the academy pitch. This showed early interest in the concept.
       </p>
     ),
-    visual: {
-      image: 'jf-screen-community',
-      caption: 'The community.',
-    },
   } satisfies StorySection,
 }

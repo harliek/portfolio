@@ -1,78 +1,76 @@
 /*
- * CaseScroll: the case-study layout (brief-v5 sections 13 to 16). Usage for page owners:
+ * CaseScroll: the case-study layout (brief-v8 sections 5, 7 and 8). Usage for page authors:
  *
  *   <CaseLayout project={project} className="page-x">
  *     <CaseScroll
  *       project={project}
- *       meta={['Product design and build · Independent project', '2026 · Working prototype']}   // Role · Organization, Dates · Status; no colons
+ *       meta={['Role · Organization', 'Dates · Scope']}                    // two lines, middle dots, no colons
+ *       status="Working prototype with synthetic data"                     // optional: ONE short evidence line under the summary
  *       summary={<p>First-person opening, 35 to 55 words.</p>}
- *       media={{ kind: 'video', video: 'merch-console' }}                          // autoplaying recording
- *       //  or { kind: 'states', frameRatio: '16 / 9', opening: { image: 'x-full', caption: '…' } }
- *       sections={[                                                               // three, 25 to 45 words each
- *         { id: 'problem', title: 'The problem', body: <p>…</p> },
- *         { id: 'built', title: 'What I built', body: <p>…</p>,
- *           visual: { image: 'x-crop', caption: '…', highlight: { x: 10, y: 20, w: 40, h: 15 }, expandTo: 'x-full' } },
- *       ]}
- *       outcome={{ id: 'result', title: 'The result', body: <p>…</p> }}            // 20 to 40 words
+ *       media={{ kind: 'video', video: 'merch-console' }}                  // one of the four forms below
+ *       stage={{ align: 'center', fill: 1 }}                               // optional, per page (see StageConfig)
+ *       sections={[{ id: 'problem', title: 'The problem', body: <p>…</p> }, …]}
+ *       outcome={{ id: 'result', title: 'The result', body: <p>…</p> }}    // the media stays beside it
  *     />
- *     <NextProject current={project.id} />
+ *     <NextProject current={project.id} />                                 // small PNG, "Next project", displayName, arrow
  *   </CaseLayout>
  *
- * Rendered for you: the H1 (project.name), the metadata lines, the summary, the cover PNG
- * (<CoverSlot id={project.accent} scale={coverScale} />, the landing place of the carousel
- * transition) and ONE media stage. Do not add section links, Play/Return buttons, "Enlarge image"
- * buttons, Results blocks or placeholders; there is no "Context and role" section.
+ * Media, in ONE stage beside the story (desktop) or after the opening / beside its section (stacked):
+ * - { kind: 'video', video } : the real recording autoplays muted with native controls; the expand
+ *   control (in the player's own bar) opens a larger view at the same moment.
+ * - { kind: 'video', video, preview: { video, label, map? } } : `preview.video` (an edited, accelerated
+ *   derivative) plays inline with `label` inside the player (e.g. 'Edited preview · 1.5× speed');
+ *   expand opens `video`, the complete recording at original speed, labelled as such. `map` lists
+ *   matching moments [previewSeconds, fullSeconds] (ascending) so it continues at the same point;
+ *   without it the complete recording starts from the beginning and the view says so.
+ * - { kind: 'states', frameRatio, opening } : the opening Visual, then each section's `visual` while
+ *   that section is active (no `visual` = keep the current one). The same image with a new
+ *   `highlight` only moves the highlight (the image is never replaced). Crops of `frameRatio`.
+ * - { kind: 'custom', render } : your own stage content (e.g. a group of phones) in the same sticky,
+ *   centred stage. `render({ active, layout })`: `active` is the index in [...sections, outcome]
+ *   (-1 while the opening is in view); `layout` is 'sticky' (desktop) or 'stacked' (below 960px,
+ *   rendered once, after the opening). It fills the stage box (StageConfig `ratio` gives it a ratio).
  *
- * - `media.kind: 'video'` (Merchandising Platform, Spreadsheet Agent): the real recording
- *   (DemoVideo) autoplays muted with native controls when 35% visible, keeps playing while the text
- *   scrolls, pauses when fully offscreen, respects a visitor's pause, falls back to the poster with
- *   "Play demo" when autoplay is refused or motion is reduced, and has an expand control at the end
- *   of its caption row. Section `visual`s are ignored in this mode (the recording is the one visual).
- * - `media.kind: 'states'` (CafePress UK, AI Leasing Agent, Jumpstart Finance): the stage shows
- *   `opening`, then each section's `visual` while that section is active (no `visual` = keep the
- *   current one; the outcome may carry one too). `frameRatio` is the stage's ONE stable ratio: use
- *   crops of that ratio; other ratios (a portrait phone) are contained and centred in the same stage.
- * - Visual: `image` (ImageId), `caption` (short, below the stage, no provenance boilerplate),
- *   `highlight` (ONE region in percent of the image: x, y from its top-left), `expandTo` (the image
- *   the click opens, e.g. the full conversation behind a crop; default `image`), `alt` (overrides
- *   the manifest alt), `label` (a short visible tag before the caption, e.g. 'Illustrative
- *   conversation'; state a qualification once). The desktop stage shows the label with every
- *   state; the stacked figures show it only the first time it appears; the enlarged view always.
- *   `phone` (optional): a narrower crop for phones that reads in place (no enlarge control there).
- * - Every stage image is itself the zoom control (hover: 1.5% larger with an accent edge; click or
- *   Enter opens the shared ImageDialog; Escape or Close returns focus). The expand icon sits at the
- *   right end of the caption row, never on the image, always visible. A crop registered in
- *   src/content/crops (CROP_REGIONS) opens its `expandTo` image at actual size, centred on the
- *   crop, with the section's highlight drawn at its place; Fit to screen shows the whole image.
- * - Beside the story, a stage limited by the window's height keeps the media at the column's left
- *   edge, and its caption row takes the media's width (a caption never runs past its media).
- * - Ids: section ids become DOM ids (the h2 is `${id}-title`); keep them unique on the page.
- * - Bold one or two meaningful phrases per paragraph at most. No colons or em dashes in copy.
- * - The accent (CaseLayout sets --accent from project.accent) marks the active section heading,
- *   highlights, media hover and focus edges, and link hover. Body text is never recoloured.
+ * Visual: `image`, `highlight` (ONE region, percent of the image), `expandTo` (what a click opens,
+ * default `image`), `alt`, `label` (a discreet media label such as 'Illustrative conversation', shown
+ * under the image beside the expand control; state it once), `phone` (a narrower crop that reads in
+ * place below 600px). `caption` is DEPRECATED and not rendered (brief-v8 section 8): routine
+ * captions are gone; put evidence distinctions in `status` or a `label`.
  *
- * Desktop (≥960px): grid max 1240px, 42% text / 6% gap / 52% media. Left: title, metadata,
- * summary, cover, then the sections and the outcome (h2 each). Right: one sticky stage (top =
- * header + 24px) of stable size from the opening through the outcome. Its height is capped so the
- * stage and its caption stay pinned in full view down to the page end, above the next-project link
- * and the footer (case.css --cs-after), with the outcome beside it. The document scrolls naturally. The active section is the
- * last one whose top has passed a line at 40% of the viewport (scroll position, rAF-throttled).
- * Below 960px: title, metadata, summary, a smaller cover, then the media next to its text (the
- * recording right after the opening; image states after their sections, only where the image
- * changes: a moved highlight alone would repeat the screenshot), then the outcome. No sticky.
+ * Opening (rendered for you): the H1 (project.name, the accurate case name), the metadata lines, the
+ * cover PNG (the carousel transition's landing slot) about 1.5 times its earlier size with the
+ * accent silhouette glow and the discreet "Concept cover" label (`coverLabel`, null to omit;
+ * `coverSize` scales it, default 1), then the summary and the `status` line. CaseOpening is exported
+ * for layouts that share this opening (the Creative Production page).
  *
- * `data-cover-reveal` marks the opening text, the story and the stage: the carousel transition
- * (components/transition) hides them while the cover PNG travels into its slot, then fades them in.
+ * Desktop (≥960px): a centred grid (the site's 1240px content width), 42% text / 6% gap / 52% media,
+ * body 18 to 19px. The media column holds one sticky figure, as large as the column and the visible
+ * stage (the viewport below the navigation) allow and centred in that stage (StageConfig `align:
+ * 'start'` places it just below the navigation; `fill` caps its height as a share of the stage). It
+ * stays through the outcome and is released with the outcome's end, its bottom level with the
+ * outcome's, so it leaves beside the outcome and the next-project link below never sits beside an
+ * empty media column.
+ * The document scrolls naturally (no inner scroll boxes). The active section is the last one whose
+ * top has passed a line at 40% of the viewport; its heading takes the accent with a short marker.
+ * Below 960px: the opening, the media (video and custom after the opening; still-image states after
+ * the section where the image changes), the story. No sticky.
+ *
+ * Every image is its own zoom control (click or Enter; Escape or Close returns focus); the expand
+ * glyph beside the label is a pointer shortcut. Ids: section ids become DOM ids (h2 `${id}-title`).
+ * Bold one or two meaningful phrases per paragraph at most; no colons or em dashes in copy.
+ * `data-cover-reveal` marks the opening text, the story and the stage for the route transition.
  */
 import '../../styles/case.css'
-import { Fragment, useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
-import type { ImageId, VideoId } from '../../content/media'
+import { Fragment, useCallback, useEffect, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
+import type { ObjectKind } from '../../content/carousel'
+import { getImage, getVideo, type ImageId, type VideoId } from '../../content/media'
 import type { Project } from '../../content/projects'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
-import { DemoVideo } from '../media/DemoVideo'
+import { DemoVideo, type TimeMap } from '../media/DemoVideo'
 import { CoverSlot } from '../transition/CoverSlot'
+import { coverItem, coverSlotWidth } from '../transition/coverGeometry'
 import { metaSegments } from './metaLine'
-import { InlineVisual, StatesStage } from './StatesStage'
+import { InlineVisual, ratioNumber, StatesStage } from './StatesStage'
 import { StoryTracker } from './storyTracker'
 
 /** A region in percent of the image (x, y from its top-left corner). */
@@ -80,13 +78,14 @@ export type Rect = { x: number; y: number; w: number; h: number }
 
 export interface Visual {
   image: ImageId
+  /** @deprecated Not rendered (brief-v8 section 8). Use the page `status` line or a `label`. */
   caption?: ReactNode
   highlight?: Rect
   /** The image a click opens (default: `image`). */
   expandTo?: ImageId
   alt?: string
-  /** A short visible tag before the caption. */
-  label?: 'Illustrative conversation' | string
+  /** A discreet media label under the image (e.g. 'Illustrative conversation'); also shown in the enlarged view. */
+  label?: 'Illustrative conversation' | 'Original 2024 prototype' | 'Concept cover' | string
   /**
    * Phones (below 600px): a narrower crop of the same evidence that reads in place (its text at about 10px or
    * more in the 350px column), with its own highlight in percent of that crop. The stacked figure shows it
@@ -103,38 +102,155 @@ export interface StorySection {
   visual?: Visual
 }
 
+/** An edited, accelerated derivative of a recording for inline playback. */
+export interface VideoPreview {
+  video: VideoId
+  /** Shown inside the player, e.g. 'Edited preview · 1.5× speed' (no colon). */
+  label: string
+  /** Matching moments [previewSeconds, fullSeconds], ascending: expand continues at the same point of the complete recording. */
+  map?: TimeMap
+}
+
+export interface StageContext {
+  /** The active story section, an index in [...sections, outcome]; -1 while the opening is in view. */
+  active: number
+  layout: 'sticky' | 'stacked'
+}
+
 export type CaseMedia =
-  /** Autoplaying muted recording (Merchandising Platform, Spreadsheet Agent). */
-  | { kind: 'video'; video: VideoId; poster?: ImageId }
-  /** Scroll-driven images (CafePress UK, AI Leasing Agent, Jumpstart Finance). */
+  /** The real recording (the complete one when `preview` is given), autoplaying muted inline. */
+  | { kind: 'video'; video: VideoId; poster?: ImageId; preview?: VideoPreview }
+  /** Scroll-driven images (the opening, then each section's visual). */
   | { kind: 'states'; opening: Visual; frameRatio: string }
+  /** The page's own stage content, told which section is active. */
+  | { kind: 'custom'; render: (ctx: StageContext) => ReactNode }
+
+/** Per-page stage configuration (desktop). */
+export interface StageConfig {
+  /** Media shorter than the visible stage: 'center' (default) sits in its middle, 'start' just below the navigation. */
+  align?: 'center' | 'start'
+  /** The media's greatest height as a share of the visible stage, 0.4 to 1 (default 1). */
+  fill?: number
+  /** Custom media only: the stage box's ratio (e.g. '4 / 5'); by default it fills the visible stage. */
+  ratio?: string
+}
 
 export interface CaseScrollProps {
   project: Project
-  /** Two metadata lines, no colons: Role · Organization, then Dates · Status (e.g. ['Leasing and Operations Associate · Valiance Capital', 'October 2024 to June 2025 · Adopted across all 18 properties']). */
+  /** Two metadata lines, no colons: Role · Organization, then Dates · Scope. */
   meta: string[]
   /** First-person opening, 35 to 55 words. */
   summary: ReactNode
+  /** ONE concise project-status line under the summary (e.g. 'Working prototype with synthetic data', 'Original 2024 prototype'). */
+  status?: ReactNode
   media: CaseMedia
+  stage?: StageConfig
   /** Three concise sections (25 to 45 words each). */
   sections: StorySection[]
-  /** The outcome (20 to 40 words); the media stays present through it. */
+  /** The outcome (20 to 40 words); the media stays present beside it. */
   outcome: StorySection
-  /** CoverSlot scale (default 0.72). */
+  /** Scales the opening cover (default 1, already about 1.5 times the earlier cover). */
+  coverSize?: number
+  /** The discreet label beside the cover (default 'Concept cover'); null omits it. */
+  coverLabel?: string | null
+  /** @deprecated Ignored: the cover is sized per object (coverSize scales it). */
   coverScale?: number
 }
 
 const DESKTOP = '(min-width: 960px)'
 /** The stage's rendered width: 52% of the 1240px grid, 52% of the viewport minus gutters, or the stacked column. */
-const STAGE_SIZES = '(min-width: 1280px) 645px, (min-width: 960px) 51vw, calc(100vw - 40px)'
+const STAGE_SIZES = '(min-width: 1368px) 645px, (min-width: 960px) 47vw, calc(100vw - 40px)'
+
+/* ----------------------------------------------------------------------- */
+/* Opening                                                                  */
+/* ----------------------------------------------------------------------- */
+
+/**
+ * The opening cover's height (CSS px on a desktop window) per object: about 1.5 times the earlier
+ * covers, balanced by eye so a thin phone and a wide laptop carry comparable weight. Independent of
+ * the homepage's object sizes. Short and narrow windows scale it down (case.css --cover-hmax).
+ */
+const COVER_HEIGHT: Record<ObjectKind, number> = {
+  monitor: 232,
+  laptop: 232,
+  mug: 236,
+  tablet: 272,
+  camera: 228,
+  phone: 292,
+  headshot: 280,
+}
+
+const asProse = (node: ReactNode) => (typeof node === 'string' ? <p>{node}</p> : node)
+
+/** The cover PNG in its transition slot, with the silhouette glow (case.css) and the discreet label. */
+function CaseCover({ project, size = 1, label }: { project: Project; size?: number; label: string | null }) {
+  const item = coverItem(project.accent)
+  if (!item) return null
+  const image = getImage(item.image)
+  const r = image.width / image.height
+  const width = COVER_HEIGHT[item.kind] * r * size
+  const scale = width / coverSlotWidth(item, 1)
+  return (
+    <div className="cs-cover" data-kind={item.kind} style={{ '--cover-r': r } as CSSProperties}>
+      <CoverSlot id={project.accent} scale={scale} />
+      {label && (
+        <span className="cs-cover__label" data-cover-reveal="">
+          {label}
+        </span>
+      )}
+    </div>
+  )
+}
+
+export interface CaseOpeningProps {
+  project: Project
+  meta: string[]
+  summary: ReactNode
+  status?: ReactNode
+  coverSize?: number
+  coverLabel?: string | null
+}
+
+/**
+ * The case opening: H1, metadata lines, the cover (beneath the metadata), the summary and the
+ * status line. Shared by CaseScroll and any page with its own story layout.
+ */
+export function CaseOpening({ project, meta, summary, status, coverSize, coverLabel = 'Concept cover' }: CaseOpeningProps) {
+  return (
+    <header className="cs-opening">
+      <div className="cs-intro" data-cover-reveal="">
+        <h1 className="cs-title" tabIndex={-1}>
+          {project.name}
+        </h1>
+        {meta.length > 0 && (
+          <p className="cs-meta">
+            {meta.map((line) => (
+              <span key={line} className="cs-meta__line">
+                {metaSegments(line).map((seg, i) => (
+                  <Fragment key={seg}>
+                    {i > 0 && ' '}
+                    <span className="cs-meta__seg">{seg}</span>
+                  </Fragment>
+                ))}
+              </span>
+            ))}
+          </p>
+        )}
+      </div>
+      <CaseCover project={project} size={coverSize} label={coverLabel} />
+      <div className="cs-lede" data-cover-reveal="">
+        <div className="cs-summary case-prose">{asProse(summary)}</div>
+        {status && <p className="cs-status">{status}</p>}
+      </div>
+    </header>
+  )
+}
 
 /* ----------------------------------------------------------------------- */
 /* CaseScroll                                                               */
 /* ----------------------------------------------------------------------- */
 
-const asProse = (node: ReactNode) => (typeof node === 'string' ? <p>{node}</p> : node)
-
-export function CaseScroll({ project, meta, summary, media, sections, outcome, coverScale = 0.72 }: CaseScrollProps) {
+export function CaseScroll({ project, meta, summary, status, media, stage, sections, outcome, coverSize, coverLabel }: CaseScrollProps) {
   const desktop = useMediaQuery(DESKTOP)
   const [tracker] = useState(() => new StoryTracker())
   const active = useSyncExternalStore(tracker.subscribe, tracker.getSnapshot, tracker.getSnapshot)
@@ -167,45 +283,55 @@ export function CaseScroll({ project, meta, summary, media, sections, outcome, c
   }
   const target = active < 0 ? 0 : (sectionState[active] ?? 0)
   const stacked = !desktop
+  const layout = stacked ? 'stacked' : 'sticky'
+  const fill = Math.min(1, Math.max(0.4, stage?.fill ?? 1))
+  const customRatio = media.kind === 'custom' && stage?.ratio ? ratioNumber(stage.ratio) : undefined
+  // The media's ratio, so the sticky stage can centre it in the visible area below the navigation (case.css).
+  const videoAsset = media.kind === 'video' ? getVideo(media.preview?.video ?? media.video) : null
+  const stageR = videoAsset ? videoAsset.width / videoAsset.height : media.kind === 'states' ? ratioNumber(media.frameRatio) : customRatio
+
+  let mediaNode: ReactNode
+  if (media.kind === 'video') {
+    const { preview } = media
+    mediaNode = (
+      <DemoVideo
+        video={preview?.video ?? media.video}
+        full={preview ? media.video : undefined}
+        label={preview?.label}
+        map={preview?.map}
+        poster={media.poster}
+        sizes={STAGE_SIZES}
+        variant={layout}
+      />
+    )
+  } else if (media.kind === 'states') {
+    mediaNode = desktop ? (
+      <StatesStage states={states} target={target} ratio={media.frameRatio} sizes={STAGE_SIZES} />
+    ) : (
+      <InlineVisual visual={media.opening} sizes={STAGE_SIZES} priority />
+    )
+  } else {
+    mediaNode = (
+      <div className="cs-custom" data-variant={layout} data-ratio={customRatio ? '' : undefined} style={customRatio ? ({ '--stage-r': customRatio } as CSSProperties) : undefined}>
+        {media.render({ active, layout })}
+      </div>
+    )
+  }
 
   return (
-    <div className="cs" data-layout={desktop ? 'sticky' : 'stacked'} data-media={media.kind}>
-      <header className="cs-opening">
-        <div className="cs-intro" data-cover-reveal="">
-          <h1 className="cs-title" tabIndex={-1}>
-            {project.name}
-          </h1>
-          {meta.length > 0 && (
-            <p className="cs-meta">
-              {meta.map((line) => (
-                <span key={line} className="cs-meta__line">
-                  {metaSegments(line).map((seg, i) => (
-                    <Fragment key={seg}>
-                      {i > 0 && ' '}
-                      <span className="cs-meta__seg">{seg}</span>
-                    </Fragment>
-                  ))}
-                </span>
-              ))}
-            </p>
-          )}
-          <div className="cs-summary case-prose">{asProse(summary)}</div>
-        </div>
-        <div className="cs-cover">
-          <CoverSlot id={project.accent} scale={coverScale} />
-        </div>
-      </header>
+    <div
+      className="cs"
+      data-layout={layout}
+      data-media={media.kind}
+      data-stage={stage?.align ?? 'center'}
+      style={{ '--cs-fill': fill } as CSSProperties}
+    >
+      <CaseOpening project={project} meta={meta} summary={summary} status={status} coverSize={coverSize} coverLabel={coverLabel} />
 
       {/* The same element in both layouts, so a playing recording is never remounted by a resize. */}
       <div className="cs-media" ref={desktop ? attachMedia : undefined}>
-        <div className="cs-sticky" data-cover-reveal="">
-          {media.kind === 'video' ? (
-            <DemoVideo video={media.video} poster={media.poster} sizes={STAGE_SIZES} variant={stacked ? 'inline' : 'sticky'} />
-          ) : desktop ? (
-            <StatesStage states={states} target={target} ratio={media.frameRatio} sizes={STAGE_SIZES} />
-          ) : (
-            <InlineVisual visual={media.opening} sizes={STAGE_SIZES} priority />
-          )}
+        <div className="cs-sticky" data-cover-reveal="" data-fixed-ratio={stageR ? '' : undefined} style={stageR ? ({ '--stage-r': stageR } as CSSProperties) : undefined}>
+          {mediaNode}
         </div>
       </div>
 

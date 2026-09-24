@@ -3,7 +3,7 @@
  * durations live in src/styles/tokens.css (--dur-*); the carousel's in
  * src/config/carousel.ts; the shared-image route transition's in
  * src/config/transition.ts. Every feature is disabled or made instant when
- * the site-wide motion preference is "reduce" (src/hooks/useMotionPreference.ts).
+ * the operating system asks for reduced motion (src/hooks/useMotionPreference.ts).
  */
 export const MOTION = {
   /** The Work shelf: fades down from the header while its entries arrive from the Work side. */

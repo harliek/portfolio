@@ -1,21 +1,22 @@
 /*
  * The /about page (src/components/about/AboutContent.tsx). Every selector is
- * scoped under .about-content (or .page-about). Text contrast over the fixed
- * video comes from the stage's reading layer (stage.css), not from boxes
- * here.
+ * scoped under .about-content (or .page-about), except the light pool
+ * (.about-light), which AboutLight.tsx appends to <body>. Text contrast
+ * over the fixed video comes from the stage's reading layer (stage.css),
+ * not from boxes here.
  *
  * One grid on wide screens (960px and up): a 40% column and a 60% column
  * (2fr / 3fr) across the site's content width (tokens.css --content-max),
  * so About starts and ends on the same edges as the header, the footer and
  * the case studies.
- *   Opening      portrait (40%)            greeting and paragraphs (60%)
+ *   Opening      portrait (40%)            greeting, lead and paragraph (60%)
  *   Record       Education (40%)           Experience (60%)
- *   Creative     creative portfolio (40%)  An Artistic End (60%)
+ *   Creative     two equal cards (50% / 50%), from 720px
  *   Links        email and LinkedIn
  * Narrow screens stack each block in reading order.
  *
  * The page accent (About's lavender, set on .page-about by About.tsx) marks
- * interactive things only: link hovers, media edges, the portrait's halo.
+ * interactive things, the portrait's light and the pointer's light pool.
  */
 
 .page-about {
@@ -29,13 +30,14 @@
   --about-cols: minmax(0, 2fr) minmax(0, 3fr);
   --about-gap: clamp(40px, 6.5vw, 88px);
   --about-block-gap: clamp(72px, 8vw, 112px);
-  --about-rule: rgb(238 234 226 / 0.12);
+  --about-rule: rgb(238 234 226 / 0.14);
   /*
-   * Three text sizes: primary (the opening, the school and role sentences,
-   * the film note; 18px at desktop), secondary (degrees, role titles,
-   * dates, coursework, links, meta; 15px) and the small uppercase label
-   * (13px). Headings carry the rest of the hierarchy.
+   * Text sizes: the lead (the opening's first paragraph; 21px at desktop),
+   * primary (the second paragraph, the school and role sentences; 18px),
+   * secondary (degrees, role titles, dates, links; 15px). Headings carry
+   * the rest of the hierarchy.
    */
+  --about-lead: clamp(1.1875rem, 1.04rem + 0.42vw, 1.3125rem);
   --about-primary: clamp(1.0625rem, 1rem + 0.25vw, 1.125rem);
   --about-primary-leading: 1.6;
   /* Primary paragraphs keep to about 60 characters a line, whatever their column's width. */
@@ -56,13 +58,18 @@
 /* Type                                                                */
 /* ------------------------------------------------------------------ */
 
-/* The page title: the size of a case-study title (about 36–46px). */
+/*
+ * The page title: larger than a case-study title (about 40–56px), in a pale
+ * lavender ivory with a soft lavender light behind it, echoing the
+ * homepage title without its display face. The letters stay crisp.
+ */
 .about-content .about-heading {
-  color: var(--stage-ivory);
-  font-size: clamp(2.25rem, 1.75rem + 1.5vw, 2.875rem);
+  color: color-mix(in oklch, var(--stage-ivory) 84%, var(--about-accent));
+  font-size: clamp(2.5rem, 1.55rem + 2.5vw, 3.5rem);
   font-weight: var(--weight-heading);
-  line-height: 1.06;
-  letter-spacing: -0.032em;
+  line-height: 1.04;
+  letter-spacing: -0.034em;
+  text-shadow: 0 0 34px rgb(var(--about-accent-rgb) / 0.28);
   text-wrap: balance;
 }
 
@@ -85,15 +92,6 @@
   font-weight: var(--weight-heading);
   line-height: 1.2;
   letter-spacing: -0.02em;
-}
-
-.about-content .about-label {
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-  font-weight: var(--weight-label);
-  letter-spacing: var(--tracking-label);
-  line-height: 1.4;
-  text-transform: uppercase;
 }
 
 /* ------------------------------------------------------------------ */
@@ -122,20 +120,22 @@
 
 /*
  * The headshot cut-out (the carousel's About object) in its CoverSlot: no
- * card or frame. A soft lavender light sits behind it, and the flat lower
- * edge of the cut-out fades into the room (a mask, so nothing is drawn over
- * the background).
+ * card or frame. Its light follows the silhouette (a narrow brighter edge
+ * and a wider soft halo, alpha-aware drop shadows outside the mask, so they
+ * are never cut at the slot's edges), a broad lavender light sits behind
+ * it, and the flat lower edge of the cut-out fades into the room (a mask,
+ * so nothing is drawn over the background).
  */
 .about-content .about-intro__portrait {
   position: relative;
   justify-self: start;
   width: min(232px, 60vw);
   isolation: isolate;
-  /* The alpha-aware halo, outside the mask so it is never cut at the slot's edges. */
-  filter: drop-shadow(0 0 18px rgb(var(--about-accent-rgb) / 0.14));
+  filter: drop-shadow(0 0 1.5px rgb(var(--about-accent-rgb) / 0.3)) drop-shadow(0 0 24px rgb(var(--about-accent-rgb) / 0.24));
 }
 
 .about-content .about-portrait {
+  width: 100%;
   -webkit-mask-image: linear-gradient(to bottom, #000 80%, rgb(0 0 0 / 0.55) 90%, transparent);
   mask-image: linear-gradient(to bottom, #000 80%, rgb(0 0 0 / 0.55) 90%, transparent);
 }
@@ -157,8 +157,8 @@
   content: '';
   position: absolute;
   z-index: -1;
-  inset: 6% -18% -4%;
-  background: radial-gradient(50% 50% at 50% 46%, rgb(var(--about-accent-rgb) / 0.2), rgb(var(--about-accent-rgb) / 0.06) 58%, transparent 74%);
+  inset: 4% -24% -6%;
+  background: radial-gradient(50% 50% at 50% 44% in oklch, rgb(var(--about-accent-rgb) / 0.26), rgb(var(--about-accent-rgb) / 0.08) 58%, transparent 76%);
   pointer-events: none;
   transition: opacity 240ms var(--ease-out);
 }
@@ -168,20 +168,15 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   opacity: 0;
 }
 
-.about-content .about-portrait {
-  width: 100%;
-}
-
-
 .about-content .about-intro__text {
   display: grid;
   align-content: center;
   justify-items: start;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .about-content .about-intro__text .about-heading {
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
 }
 
 .about-content .about-intro__para {
@@ -190,6 +185,15 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   font-size: var(--about-primary);
   line-height: var(--about-primary-leading);
   text-wrap: pretty;
+}
+
+/* The first paragraph leads: larger and a little brighter, on the same measure (about 28em). */
+.about-content .about-intro__lead {
+  max-width: 28em;
+  color: var(--stage-ivory);
+  font-size: var(--about-lead);
+  line-height: 1.5;
+  letter-spacing: -0.006em;
 }
 
 /* ------------------------------------------------------------------ */
@@ -230,6 +234,21 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   gap: var(--space-5);
 }
 
+/*
+ * On desktop screens wide and tall enough to show all of it (its column is
+ * about 400px or more wide, so it is about 560px tall at most), Education
+ * stays beside the roles while Experience scrolls past (it is much
+ * shorter), so the two read as a pair to the end of the list. It stops with
+ * the record's grid row; nothing scrolls inside it. Narrower two-column
+ * widths (960–1199px) wrap it taller, so it scrolls normally there.
+ */
+@media (min-width: 1200px) and (min-height: 700px) {
+  .about-content .about-education {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-6));
+  }
+}
+
 .about-content .about-school {
   display: grid;
   gap: 4px;
@@ -264,45 +283,19 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
 }
 
 .about-content .about-school__text {
-  max-width: 46ch;
+  display: grid;
+  gap: var(--space-4);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--about-rule);
   color: var(--color-text);
   font-size: var(--about-primary);
   line-height: var(--about-primary-leading);
   text-wrap: pretty;
 }
 
-.about-content .about-coursework {
-  display: grid;
-  gap: var(--space-3);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--about-rule);
-}
-
-.about-content .about-coursework__list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px var(--space-5);
-  color: var(--color-muted);
-  font-size: var(--about-secondary);
-  line-height: 1.4;
-  list-style: none;
-}
-
-.about-content .about-coursework__list li {
-  position: relative;
-  padding-left: 14px;
-}
-
-/* A small, still lavender dot: a list marker, not a control. */
-.about-content .about-coursework__list li::before {
-  content: '';
-  position: absolute;
-  top: 0.58em;
-  left: 0;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgb(var(--about-accent-rgb) / 0.55);
+/* The measure is on the paragraphs, so the rule above them spans the column like the others. */
+.about-content .about-school__text p {
+  max-width: var(--about-measure);
 }
 
 .about-content .about-roles {
@@ -427,23 +420,10 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
     margin-top: 2px;
     text-align: left;
   }
-
-  /* The whole poster is the button; the badge only labels it. */
-  .about-content .about-film__badge {
-    gap: 7px;
-    min-height: 36px;
-    padding: 0 14px 0 12px;
-    font-size: 0.875rem;
-  }
-
-  .about-content .about-coursework__list {
-    column-gap: var(--space-4);
-    font-size: 0.875rem;
-  }
 }
 
 /* ------------------------------------------------------------------ */
-/* Creative work: creative portfolio (40%) and An Artistic End (60%)    */
+/* Creative work: two equal cards                                      */
 /* ------------------------------------------------------------------ */
 
 .about-content .about-creative {
@@ -453,170 +433,61 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
 
 .about-content .about-creative__grid {
   display: grid;
-  gap: var(--space-8);
+  gap: var(--space-7);
   align-items: start;
 }
 
-@media (min-width: 960px) {
+/* Two equal columns with aligned tops from 720px; one column (in reading order) below. */
+@media (min-width: 720px) {
   .about-content .about-creative__grid {
-    grid-template-columns: var(--about-cols);
-    column-gap: var(--about-gap);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(24px, 4vw, 56px);
   }
-}
-
-/* The compact preview: one link (the Art tile's silent loop and the label) to /creative/. */
-.about-content .about-portfolio {
-  display: grid;
-  gap: var(--space-2);
-  align-content: start;
-  max-width: 460px;
-}
-
-@media (min-width: 960px) {
-  .about-content .about-portfolio {
-    max-width: none;
-  }
-}
-
-.about-content .about-portfolio__link {
-  display: grid;
-  gap: var(--space-3);
-  justify-items: start;
-  color: var(--stage-ivory);
-  text-decoration: none;
-  border-radius: 14px;
-}
-
-.about-content .about-portfolio__link:focus-visible {
-  outline: none;
-}
-
-.about-content .about-portfolio__frame {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  border-radius: 12px;
-  background: var(--color-surface);
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.08),
-    0 28px 56px -30px rgb(0 0 0 / 0.9);
-  transition:
-    transform 220ms var(--ease-out),
-    box-shadow 220ms var(--ease-out);
-}
-
-.about-content .about-portfolio__frame .picture,
-.about-content .about-portfolio__frame img,
-.about-content .about-portfolio__video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.about-content .about-portfolio__video {
-  opacity: 0;
-  transition: opacity 400ms var(--ease-out);
-}
-
-.about-content .about-portfolio__frame[data-playing] .about-portfolio__video {
-  opacity: 1;
-}
-
-.about-content .about-portfolio__link:hover .about-portfolio__frame,
-.about-content .about-portfolio__link:focus-visible .about-portfolio__frame {
-  transform: scale(1.015);
-  box-shadow:
-    0 0 0 1px rgb(var(--about-accent-rgb) / 0.6),
-    0 0 26px -4px rgb(var(--about-accent-rgb) / 0.32),
-    0 28px 56px -30px rgb(0 0 0 / 0.9);
-}
-
-.about-content .about-portfolio__link:focus-visible .about-portfolio__frame {
-  outline: var(--focus-ring);
-  outline-offset: 4px;
-}
-
-.about-content .about-portfolio__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  font-size: 1.125rem;
-  font-weight: var(--weight-heading);
-  letter-spacing: -0.01em;
-  transition:
-    color var(--dur-feedback) var(--ease-out),
-    text-shadow var(--dur-feedback) var(--ease-out);
-}
-
-.about-content .about-portfolio__arrow {
-  display: inline-block;
-  font-weight: 500;
-  transition: transform var(--dur-feedback) var(--ease-out);
-}
-
-.about-content .about-portfolio__link:hover .about-portfolio__cta,
-.about-content .about-portfolio__link:focus-visible .about-portfolio__cta {
-  color: var(--about-accent);
-  text-shadow: 0 0 14px rgb(var(--about-accent-rgb) / 0.35);
-}
-
-.about-content .about-portfolio__link:hover .about-portfolio__arrow,
-.about-content .about-portfolio__link:focus-visible .about-portfolio__arrow {
-  transform: translate(1px, -1px);
-}
-
-.about-content .about-portfolio__text {
-  max-width: 40ch;
-  margin-top: -6px;
-  color: var(--color-muted);
-  font-size: var(--about-secondary);
-  line-height: 1.55;
-  text-wrap: pretty;
 }
 
 /*
- * An Artistic End: the poster whole and untinted (no overlay, filter or
- * coloured glow). A deep, soft dark surround keeps the room's greys away
- * from its pinks. The whole poster is the play button; the small dark
- * "Play film" badge in its corner says so.
+ * A card: the frame (the whole frame is the one control: a link to the
+ * creative portfolio, or the film's play button), then its title. Both
+ * frames have the film poster's own aspect ratio (1536 × 895), so the
+ * poster is whole; the 16:9 art tile beside it loses about 2% at each side.
+ * A deep, soft dark surround keeps the room's greys away from the pinks.
+ * No overlay, filter or coloured tint on either image.
  */
-.about-content .about-film {
+.about-content .about-work {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-4);
+  align-content: start;
   min-width: 0;
 }
 
-.about-content .about-film__frame {
+.about-content .about-work__frame {
   position: relative;
   aspect-ratio: 1536 / 895;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #050507;
   box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.06),
-    0 0 44px 14px rgb(4 4 6 / 0.62),
-    0 40px 90px -30px rgb(0 0 0 / 0.95);
+    0 0 0 1px rgb(255 255 255 / 0.07),
+    0 0 40px 12px rgb(4 4 6 / 0.55),
+    0 36px 80px -30px rgb(0 0 0 / 0.95);
   transition: box-shadow 220ms var(--ease-out);
 }
 
-.about-content .about-film__frame:has(.about-film__play:hover),
-.about-content .about-film__frame:has(.about-film__play:focus-visible) {
+.about-content .about-work__frame:has(.about-work__hit:hover),
+.about-content .about-work__frame:has(.about-work__hit:focus-visible) {
   box-shadow:
-    0 0 0 1px rgb(var(--about-accent-rgb) / 0.55),
-    0 0 44px 14px rgb(4 4 6 / 0.62),
-    0 40px 90px -30px rgb(0 0 0 / 0.95);
+    0 0 0 1px rgb(var(--about-accent-rgb) / 0.6),
+    0 0 28px -2px rgb(var(--about-accent-rgb) / 0.3),
+    0 0 40px 12px rgb(4 4 6 / 0.55),
+    0 36px 80px -30px rgb(0 0 0 / 0.95);
 }
 
-.about-content .about-film__frame:has(.about-film__play:focus-visible) {
+.about-content .about-work__frame:has(.about-work__hit:focus-visible) {
   outline: var(--focus-ring);
   outline-offset: 4px;
 }
 
-.about-content .about-film__play {
+.about-content .about-work__hit {
   position: absolute;
   inset: 0;
   display: block;
@@ -626,39 +497,57 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   border: 0;
   background: none;
   color: inherit;
+  text-decoration: none;
   cursor: pointer;
 }
 
-.about-content .about-film__play:focus-visible {
+.about-content .about-work__hit:focus-visible {
   outline: none;
 }
 
-.about-content .about-film__poster,
-.about-content .about-film__poster img {
+.about-content .about-work__media,
+.about-content .about-work__image,
+.about-content .about-work__image img,
+.about-content .about-work__video {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.about-content .about-film__poster img {
-  transition: transform 260ms var(--ease-out);
+.about-content .about-work__image img,
+.about-content .about-work__video {
+  transition:
+    transform 260ms var(--ease-out),
+    opacity 400ms var(--ease-out);
 }
 
-.about-content .about-film__play:hover .about-film__poster img,
-.about-content .about-film__play:focus-visible .about-film__poster img {
+/* The creative portfolio's silent loop fades in over its poster while the link is hovered or focused (ArtPreview.tsx). */
+.about-content .about-work__video {
+  opacity: 0;
+}
+
+.about-content .about-work__media[data-playing] .about-work__video {
+  opacity: 1;
+}
+
+.about-content .about-work__hit:hover :is(.about-work__image img, .about-work__video),
+.about-content .about-work__hit:focus-visible :is(.about-work__image img, .about-work__video) {
   transform: scale(1.015);
 }
 
-.about-content .about-film__badge {
+/* The action, in the frame's lower left corner: a small dark badge (the whole frame is the control). */
+.about-content .about-work__badge {
   position: absolute;
-  bottom: clamp(12px, 2.4%, 20px);
-  left: clamp(12px, 2.4%, 20px);
+  bottom: clamp(12px, 2.6%, 18px);
+  left: clamp(12px, 2.6%, 18px);
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   min-height: 44px;
-  padding: 0 18px 0 15px;
+  padding: 0 17px 0 15px;
   border-radius: 999px;
   background: rgb(8 8 12 / 0.74);
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.3);
@@ -666,25 +555,84 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   font-size: 0.9375rem;
   font-weight: var(--control-weight);
   line-height: 1;
+  white-space: nowrap;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   transition:
     background-color var(--dur-feedback) var(--ease-out),
-    box-shadow var(--dur-feedback) var(--ease-out);
+    box-shadow var(--dur-feedback) var(--ease-out),
+    opacity 120ms var(--ease-out);
 }
 
-.about-content .about-film__badge svg {
+.about-content .about-work__badge svg {
   flex: none;
 }
 
-.about-content .about-film__play:hover .about-film__badge,
-.about-content .about-film__play:focus-visible .about-film__badge {
+.about-content .about-work__arrow {
+  display: inline-block;
+  font-weight: 500;
+  transition: transform var(--dur-feedback) var(--ease-out);
+}
+
+.about-content .about-work__hit:hover .about-work__badge,
+.about-content .about-work__hit:focus-visible .about-work__badge {
   background: rgb(8 8 12 / 0.88);
   box-shadow:
     0 0 0 1px rgb(var(--about-accent-rgb) / 0.85),
     0 0 18px rgb(var(--about-accent-rgb) / 0.3);
 }
 
+.about-content .about-work__hit:hover .about-work__arrow,
+.about-content .about-work__hit:focus-visible .about-work__arrow {
+  transform: translate(1px, -1px);
+}
+
+/* The title row under the frame (the film adds its YouTube fallback here once playing). */
+.about-content .about-work__foot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px var(--space-5);
+}
+
+.about-content .about-work__title {
+  color: var(--stage-ivory);
+  font-size: 1.25rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.about-content .about-work__aside {
+  display: inline-block;
+  padding-block: 12px;
+  margin-block: -12px;
+  color: var(--color-muted);
+  font-size: var(--about-secondary);
+  text-decoration: underline;
+  text-decoration-color: rgb(176 180 195 / 0.35);
+  text-underline-offset: 4px;
+  transition:
+    color var(--dur-feedback) var(--ease-out),
+    text-decoration-color var(--dur-feedback) var(--ease-out);
+}
+
+.about-content .about-work__aside:hover,
+.about-content .about-work__aside:focus-visible {
+  color: var(--about-accent);
+  text-decoration-color: currentColor;
+}
+
+.about-content .about-work__aside:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* The film's player, mounted over the poster on Play (FeaturedFilm.tsx); it fades in once loaded. */
 .about-content .about-film__player {
   position: absolute;
   inset: 0;
@@ -697,72 +645,21 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   transition: opacity 200ms var(--ease-out);
 }
 
-/* The player fades in over the poster once it has loaded (FeaturedFilm.tsx); the poster stays until then. */
 .about-content .about-film__frame[data-loaded] .about-film__player {
   opacity: 1;
 }
 
 /* Pressed: the poster waits for the player without its Play badge. */
-.about-content .about-film__frame[data-playing] .about-film__badge {
+.about-content .about-film__frame[data-playing] .about-work__badge {
   opacity: 0;
-  transition: opacity 120ms var(--ease-out);
 }
 
-/*
- * The frames above are positioned, so their soft dark surrounds would paint
- * over the text that follows; the text sits on its own layer above them.
- */
-.about-content .about-film__caption,
-.about-content .about-portfolio__cta,
-.about-content .about-portfolio__text {
-  position: relative;
-  z-index: 1;
-}
-
-.about-content .about-film__caption {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.about-content .about-film__title {
-  color: var(--stage-ivory);
-  font-size: 1.25rem;
-  font-weight: var(--weight-heading);
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-}
-
-.about-content .about-film__note {
-  max-width: var(--about-measure);
-  color: var(--color-text);
-  font-size: var(--about-primary);
-  line-height: var(--about-primary-leading);
-  text-wrap: pretty;
-}
-
-.about-content .about-film__meta {
-  color: var(--color-muted);
-  font-size: var(--about-secondary);
-  line-height: 1.5;
-}
-
-.about-content .about-film__youtube {
-  display: inline-block;
-  padding-block: 12px;
-  margin-block: -12px;
-  color: var(--color-text);
-  text-decoration: underline;
-  text-decoration-color: rgb(244 245 250 / 0.3);
-  text-underline-offset: 4px;
-  transition:
-    color var(--dur-feedback) var(--ease-out),
-    text-decoration-color var(--dur-feedback) var(--ease-out);
-}
-
-.about-content .about-film__youtube:hover,
-.about-content .about-film__youtube:focus-visible {
-  color: var(--about-accent);
-  text-decoration-color: currentColor;
+@media (max-width: 479.98px) {
+  .about-content .about-work__badge {
+    gap: 7px;
+    padding: 0 14px 0 12px;
+    font-size: 0.875rem;
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -817,23 +714,82 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   border-radius: 4px;
 }
 
+/* ------------------------------------------------------------------ */
+/* The pointer's light pool (AboutLight.tsx, appended to <body>)        */
+/* ------------------------------------------------------------------ */
+
+/*
+ * A fixed layer between the background set (z-index 0, earlier in the
+ * document) and the page (z-index 1): one broad radial pool of lavender
+ * light with a faint pink-violet rim, blended with `screen` so it lifts the
+ * room like light rather than laying a tint over it. The pool (about 60%
+ * of the viewport's width) is centred on a point that drifts after the
+ * pointer (a transform, set by AboutLight). It is kept low (about 12% at
+ * its centre) so text contrast barely changes, and it fades in and out.
+ * Only mouse and trackpad users with motion allowed ever get one.
+ */
+.about-light {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  transition: opacity var(--about-light-fade, 700ms) var(--ease-out);
+}
+
+.about-light[data-on] {
+  opacity: 1;
+}
+
+.about-light__pool {
+  --pool: clamp(560px, 60vw, 1080px);
+  position: absolute;
+  top: calc(var(--pool) / -2);
+  left: calc(var(--pool) / -2);
+  width: var(--pool);
+  height: var(--pool);
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side in oklch, rgb(var(--accent-rgb, 201 184 255) / 0.12), rgb(var(--accent-rgb, 201 184 255) / 0.065) 42%, rgb(var(--accent-rgb, 201 184 255) / 0.02) 72%, transparent),
+    radial-gradient(closest-side in oklch, transparent 40%, rgb(214 150 232 / 0.035) 70%, transparent);
+  will-change: transform;
+}
+
+/* Not while anything is fullscreen, and never under reduced motion (AboutLight does not create it then either). */
+html:fullscreen .about-light,
+html[data-motion='reduce'] .about-light {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-light {
+    display: none;
+  }
+}
+
 /* Reduced motion: hover and focus still change colour and edges, without scaling or sliding. */
 @media (prefers-reduced-motion: reduce) {
-  .about-content .about-portfolio__link:hover .about-portfolio__frame,
-  .about-content .about-portfolio__link:focus-visible .about-portfolio__frame,
-  .about-content .about-film__play:hover .about-film__poster img,
-  .about-content .about-film__play:focus-visible .about-film__poster img,
+  .about-content .about-work__hit:hover :is(.about-work__image img, .about-work__video),
+  .about-content .about-work__hit:focus-visible :is(.about-work__image img, .about-work__video),
+  .about-content .about-work__hit:hover .about-work__arrow,
+  .about-content .about-work__hit:focus-visible .about-work__arrow,
   .about-content .about-role__link:hover .about-role__arrow,
-  .about-content .about-portfolio__link:hover .about-portfolio__arrow {
+  .about-content .about-role__link:focus-visible .about-role__arrow,
+  .about-content .about-links__link:hover .about-links__arrow,
+  .about-content .about-links__link:focus-visible .about-links__arrow {
     transform: none;
   }
 }
 
-html[data-motion='reduce'] .about-content .about-portfolio__link:hover .about-portfolio__frame,
-html[data-motion='reduce'] .about-content .about-portfolio__link:focus-visible .about-portfolio__frame,
-html[data-motion='reduce'] .about-content .about-film__play:hover .about-film__poster img,
-html[data-motion='reduce'] .about-content .about-film__play:focus-visible .about-film__poster img,
+html[data-motion='reduce'] .about-content .about-work__hit:hover :is(.about-work__image img, .about-work__video),
+html[data-motion='reduce'] .about-content .about-work__hit:focus-visible :is(.about-work__image img, .about-work__video),
+html[data-motion='reduce'] .about-content .about-work__hit:hover .about-work__arrow,
+html[data-motion='reduce'] .about-content .about-work__hit:focus-visible .about-work__arrow,
 html[data-motion='reduce'] .about-content .about-role__link:hover .about-role__arrow,
-html[data-motion='reduce'] .about-content .about-portfolio__link:hover .about-portfolio__arrow {
+html[data-motion='reduce'] .about-content .about-role__link:focus-visible .about-role__arrow,
+html[data-motion='reduce'] .about-content .about-links__link:hover .about-links__arrow,
+html[data-motion='reduce'] .about-content .about-links__link:focus-visible .about-links__arrow {
   transform: none;
 }

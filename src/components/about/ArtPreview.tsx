@@ -3,28 +3,28 @@ import { getVideo } from '../../content/media'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { ResponsiveImage } from '../media/ResponsiveImage'
+import { CREATIVE_SIZES } from './creativeSizes'
 
 const VIDEO = getVideo('art-portfolio')
-/** The narrow (40%) column of About's grid at desktop, the full width below 960px. */
-const SIZES = '(min-width: 1200px) 460px, (min-width: 960px) 38vw, calc(100vw - 40px)'
 
 /**
- * The original creative homepage's Art tile, inside the About page's "Open
- * creative portfolio" link (AboutContent.tsx): a quiet way into /creative/,
- * so the section's one dominant visual stays An Artistic End beside it.
+ * The original creative homepage's Art tile, filling the frame of the
+ * Creative Portfolio card (the left of About's Creative work pair, the same
+ * size as An Artistic End beside it) inside its link to /creative/.
  *
  * At rest it shows the poster (the loop's first frame). Its silent loop plays
  * only while the enclosing link is hovered or focused, and fades back to the
  * poster when that ends. On devices that hover, the video element is added
  * (metadata only) once the frame nears the viewport, so a hover starts at
  * once; elsewhere it is added on focus, and a tap simply follows the link.
- * Reduced motion (OS setting or the footer toggle): the poster only, and no
- * video request at all.
+ * Reduced motion (the OS setting): the poster only, and no video request at
+ * all. The 16:9 art is drawn with `cover` in the poster-shaped frame, so it
+ * loses about 2% at each side (abstract paint, nothing essential).
  *
- * Decorative (the link's text and the sentence after it carry the meaning),
- * so it is hidden from assistive technology. `data-ambient` keeps it out of
- * the site's one-film-at-a-time rule (useMediaPlayback), so it never pauses
- * a film and a film never counts it.
+ * Decorative (the link's label carries the meaning), so it is hidden from
+ * assistive technology. `data-ambient` keeps it out of the site's
+ * one-film-at-a-time rule (useMediaPlayback), so it never pauses a film and
+ * a film never counts it.
  */
 export function ArtPreview() {
   const reduced = useReducedMotion()
@@ -96,12 +96,12 @@ export function ArtPreview() {
   }, [active, mounted])
 
   return (
-    <div ref={frameRef} className="about-portfolio__frame" aria-hidden="true" data-playing={(playing && active) || undefined}>
-      <ResponsiveImage image={VIDEO.poster} sizes={SIZES} decorative fit="cover" className="about-portfolio__poster" />
+    <div ref={frameRef} className="about-work__media" aria-hidden="true" data-playing={(playing && active) || undefined}>
+      <ResponsiveImage image={VIDEO.poster} sizes={CREATIVE_SIZES} decorative fit="cover" className="about-work__image" />
       {mounted && (
         <video
           ref={videoRef}
-          className="about-portfolio__video"
+          className="about-work__video"
           src={VIDEO.variants[0].src}
           width={VIDEO.width}
           height={VIDEO.height}

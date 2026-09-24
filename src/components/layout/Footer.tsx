@@ -2,16 +2,15 @@ import { useLocation } from 'react-router-dom'
 import { accentVars } from '../../content/accents'
 import { projectForPath } from '../../content/projects'
 import { SITE } from '../../content/site'
-import { MotionToggle } from './MotionToggle'
 
 /**
  * The compact footer at the end of every interior professional page: the
- * copyright line and the quiet, persistent "Reduce motion" setting. No
- * contact block and no résumé link: email and LinkedIn live quietly at the
- * end of About. On a case study it carries the project's accent.
+ * copyright line only. No contact block and no résumé link (email and
+ * LinkedIn live quietly at the end of About), and no motion setting (the
+ * site follows the operating system's reduced-motion preference). On a
+ * case study it carries the project's accent.
  *
- * The homepage is a fixed scene without a footer section; it shows the
- * same Reduce motion setting inside the scene (Home.tsx).
+ * The homepage is a fixed scene without a footer.
  */
 export function Footer() {
   const { pathname } = useLocation()
@@ -25,7 +24,6 @@ export function Footer() {
           <p className="site-footer__copy tabular">
             © {year} {SITE.name}
           </p>
-          <MotionToggle />
         </div>
       </div>
     </footer>

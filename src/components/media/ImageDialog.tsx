@@ -12,10 +12,10 @@ export interface OpenOptions {
    */
   gallery?: ImageId[]
   /**
-   * Caption for the opened image (default: its manifest caption), e.g. the caption shown beside it on the page,
-   * with the visual's own label when it has one (e.g. Illustrative conversation). The dialog adds no label of its own.
+   * A discreet media label for the opened image (e.g. Illustrative conversation), shown in the view's top bar. There is
+   * no caption (brief-v8 section 8): without a label the view shows the image alone.
    */
-  caption?: ReactNode
+  label?: string
   /** Opens in the actual-size view (e.g. a wide image on a phone, where fitting it would make it no larger). */
   detail?: boolean
   /** The actual-size view opens (and reopens after Fit to screen) centred on this region (default: the top left). */
@@ -61,6 +61,8 @@ function galleryFrom(trigger: HTMLElement): ImageId[] {
  * - "Actual size" switches to a scrollable detail view for dense artifacts,
  *   centred on `focus` when given (e.g. the crop the visitor clicked), with
  *   `highlight` marked on the image there; "Fit to screen" shows it whole.
+ * - No caption under the image (brief-v8 section 8); a visual's label (e.g.
+ *   Illustrative conversation) sits in the top bar.
  */
 export function ImageDialogProvider({ children }: { children: ReactNode }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -70,7 +72,7 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   const [index, setIndex] = useState(0)
   const [detail, setDetail] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
-  const [override, setOverride] = useState<{ id: ImageId; caption: ReactNode } | null>(null)
+  const [override, setOverride] = useState<{ id: ImageId; label: string } | null>(null)
   /** Where the actual-size view of image `id` opens, and what it marks (with the page accent from the trigger). */
   const [spot, setSpot] = useState<{ id: ImageId; focus?: Region; highlight?: Region; accent: CSSProperties } | null>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -79,7 +81,7 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   const open = useCallback((id: ImageId, trigger: HTMLElement, options?: OpenOptions) => {
     const list = options?.gallery ?? galleryFrom(trigger)
     triggerRef.current = trigger
-    setOverride(options?.caption ? { id, caption: options.caption } : null)
+    setOverride(options?.label ? { id, label: options.label } : null)
     if (options?.focus || options?.highlight) {
       const css = getComputedStyle(trigger)
       const accent = { '--case-accent': css.getPropertyValue('--case-accent').trim() || undefined, '--case-accent-rgb': css.getPropertyValue('--case-accent-rgb').trim() || undefined } as CSSProperties
@@ -147,8 +149,8 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   )
 
   const api = useMemo(() => ({ open }), [open])
-  // The caption alone: a tag appears only when the visual carries its own label (inside its caption), never a provenance fallback.
-  const ownCaption = current && override && override.id === current.id ? override : null
+  // A label appears only when the visual carries one, never a caption or provenance fallback.
+  const ownLabel = current && override && override.id === current.id ? override.label : null
 
   return (
     <ImageDialogContext.Provider value={api}>
@@ -156,7 +158,8 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
       <dialog
         ref={dialogRef}
         className="image-dialog"
-        aria-labelledby={current ? 'image-dialog-caption' : undefined}
+        aria-labelledby={ownLabel ? 'image-dialog-caption' : undefined}
+        aria-label={ownLabel ? undefined : 'Enlarged image'}
         onClose={onClose}
         onCancel={closeOnCancel}
         onKeyDown={(e) => {
@@ -173,6 +176,12 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
           <div className="image-dialog__panel">
             <div className="image-dialog__bar">
               <p className="image-dialog__count t-small tabular" aria-live="polite">
+                {ownLabel && (
+                  <span id="image-dialog-caption" className="cs-media-label">
+                    {ownLabel}
+                  </span>
+                )}
+                {ownLabel && count > 1 && ' · '}
                 {count > 1 ? `${index + 1} / ${count}` : ''}
               </p>
               <div className="image-dialog__controls">
@@ -239,9 +248,6 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
                 )}
               </div>
             </div>
-            <p id="image-dialog-caption" className="image-dialog__caption t-small">
-              {ownCaption ? ownCaption.caption : (current.caption ?? current.alt)}
-            </p>
           </div>
         )}
       </dialog>

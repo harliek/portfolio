@@ -9,13 +9,13 @@
  * scrolling lands on the same state without a queue.
  *
  * The end of the story (desktop, when the media column is attached): the
- * region's CSS caps its height so that it stays pinned in full view down to
- * the page end, above the content after the story (case.css --cs-after), and
- * the last section ends beside it. Near the end the line moves down
- * gradually (never above 40%, at most to 75% of the viewport), so the last
- * section still becomes active LAST_DWELL of the viewport before the page
- * end (or before the region starts to move, should it ever be taller than
- * the cap allows). The line is a pure function of the scroll position.
+ * sticky region is released when its column ends (CaseScroll: with the
+ * outcome, the figure's bottom level with the outcome's; case.css). Near the
+ * end the line moves down gradually (never above 40%, at most to 75% of the
+ * viewport), so the last section still becomes active LAST_DWELL of the
+ * viewport before the region starts to move with its column (or before the
+ * page end, if that comes first). The line is a pure function of the scroll
+ * position.
  */
 
 /** Share of the viewport height where a section becomes active. */

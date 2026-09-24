@@ -1,71 +1,66 @@
 import type { StorySection } from '../../components/case/CaseScroll'
+import type { TimeMap } from '../../components/media/DemoVideo'
 
 /**
- * Merchandising Platform (CaseScroll, `video` media: the real recording
- * autoplays on the right, so the sections carry no visuals).
+ * Merchandising Platform (CaseScroll `video` media with an edited preview; brief-v8 section 9).
  *
- * Copy is brief-v5 section 18, edited for the copy rules (first person, no
- * colons or em dashes, word targets, the Ask sentence once) and round 1 of the
- * critique (R1-01, R1-03, R1-04, R1-06): the metadata carries role, status and
- * the synthetic-data qualification (stated once, there); "What I built" opens
- * with the reorder calculation instead of repeating the summary's list, and
- * states the Ask design as a choice; the 240-product catalog is named in the
- * recording's caption (src/content/media.ts), next to the evidence. Round 2
- * (R2-04): What I built states the two judgments with their reasons (the
- * quantity shows its working, and the platform stops at an export so the
- * merchandiser decides) instead of a feature list, and The result says what
- * the prototype demonstrates without repeating it. Round 5 (R5-01, R5-03):
- * the summary drops the “independent” the metadata already gives, What I
- * built names Harlie as the one who made each choice and says what Ask is,
- * and The result no longer repeats the metadata's “working prototype”. Word
- * counts: opening 20, The problem 30, What I built 50, The result 20.
+ * The real dashboard recording stays the evidence. Inline, an edited preview at 1.5× plays (VIDEOS
+ * `merch-console-preview`, labelled "Edited preview · 1.5× speed" in the player): the Canyon Pouch drawer with its
+ * quantity and supplier minimum, Show the working held to be read, Inventory with Export order sheet, then Ask with
+ * the query it ran. Expanding plays the complete recording (`merch-console`) at original speed, from the matching
+ * moment (PREVIEW_MAP). The cover keeps its "Concept cover" label (the monitor artwork shows a different catalog scale
+ * and an AI panel; it is not the interface), and the status line carries the one qualification.
  *
- * The recording starts at 11s on its first play (VIDEOS startAt), just before
- * the Canyon Pouch drawer opens with its 200 unit quantity and “Show the
- * working” (about 11.7 to 18s); its poster is that drawer at 12s.
+ * Copy: "What I built" is the three decisions of brief-v8 section 9, verbatim; the outcome is headed "Prototype
+ * outcome" because it describes what the prototype does, not a measured result. Word counts: opening 33, The
+ * problem 30, What I built 45, Prototype outcome 29.
  *
- * Every statement is checked against the recording
- * (PlanetArt/Merchandising Dashboard/Dashboard Video.mov, 57.3s, read frame by
- * frame; the site's encode, merch-console-1600.mp4, matches it at SSIM 0.99+
- * and stops at 56.3s):
- *  - Independent, after the internship, synthetic data. The in-app footer on
- *    every screen reads "Portfolio project. Synthetic catalog, no backend,
- *    nothing leaves your browser."; the header reads "Merch Console · 240
- *    SKUs · demo data" (the "catalog of 240 products"). The internship ran
- *    June to August 2026 (résumé); the recording was made in September 2026.
- *  - "Catalog records, stock levels, and sales history with cost, price,
- *    margin, and profit": the catalog row ("Every SKU with its vendor, unit
- *    economics, stock position and trailing performance on one row"), the
- *    product drawer (on hand, available, velocity, list price, landed cost,
- *    contribution per unit, break-even price, trailing 28 days). "Profit" is
- *    Harlie's word for the contribution figures.
- *  - Reorder quantities, vendor minimums, the calculation: 12 to 18s, the
- *    Canyon Pouch drawer ("Kestrel Goods has a 200 unit minimum, which sets
- *    this quantity"; "Show the working" with the safety stock, reorder point
- *    and order-up-to arithmetic, "floored at the 200 unit MOQ").
- *  - Export: the drawer note "This is a calculation and a CSV export. The
- *    console does not place orders." (the platform stops at an export),
- *    "Export order sheet" (Inventory) and "Export 240 rows" (Catalog). The
- *    Overview lists the products that need a decision ("Raise a purchase
- *    order for ..."). The recording shows CSV only and never runs an export;
- *    "or PDF" is Harlie's wording, kept per lead decision 6 and reported as
- *    not shown (R2-04 asks for Harlie's confirmation).
- *  - Ask: "It matches your question against a fixed set of query shapes and
- *    shows you the query it ran. There is no language model involved."
- *    (41.5 to 46s; eight query shapes).
- *  - During the internship: the internship deck (p. 10) describes the work as
- *    "highly manual and often repeated across spreadsheets and systems" and
- *    "fragmented across multiple disconnected tools".
- * No PlanetArt data, production use, savings or model integration is claimed,
- * and no synthetic figure is presented as a result.
+ * Checked against the recording (PlanetArt/Merchandising Dashboard/Dashboard Video.mov, 57.3s; read frame by frame
+ * through its site encode merch-console-1600.mp4, the same timeline, because the original is an iCloud placeholder
+ * that could not be downloaded here):
+ *  - Synthetic data, independent: the footer on every screen reads "Portfolio project. Synthetic catalog, no backend,
+ *    nothing leaves your browser."; the header "Merch Console · 240 SKUs · demo data". "After my PlanetArt internship"
+ *    is Harlie's statement (brief-v5); the internship ran June to August 2026 (résumé), the recording is from
+ *    September 2026.
+ *  - One workspace for catalog, stock, sales and replenishment: Overview, Catalog, Inventory, Vendors, Promotions and
+ *    Ask in one app; the catalog row and product drawer carry vendor, stock position, trailing sales and unit
+ *    economics.
+ *  - Explain the quantity: the Canyon Pouch drawer (12s) reads "200 units", "Kestrel Goods has a 200 unit minimum,
+ *    which sets this quantity" and "Show the working" (13.7s) opens the arithmetic (lead time demand, safety stock,
+ *    reorder point, order-up-to, "rounded up, floored at the 200 unit MOQ = 200 units"). The Lantern Pouch drawer
+ *    (50s) also has Show the working (not opened); the Vendors screen lists each vendor's MOQ.
+ *  - Keep approval with the merchandiser: the drawer note "This is a calculation and a CSV export. The console does
+ *    not place orders." and "Export order sheet" on Inventory (21s). The recording never runs an export.
+ *  - Make queries inspectable: Ask (40 to 47s) says "It matches your question against a fixed set of query shapes
+ *    and shows you the query it ran. There is no language model involved."; "What is out of stock?" returns the
+ *    query (metric, category, vendor, sort, limit) above the answer (45.8s).
+ *  - The problem: the internship deck (p. 10) calls the work "highly manual and often repeated across spreadsheets
+ *    and systems" and "fragmented across multiple disconnected tools".
+ *  - Prototype outcome: the Overview's "Needs a decision" list ("Raise a purchase order for ..."), the drawers'
+ *    working, and the order sheet export.
+ * Not claimed: PlanetArt data or use, production use, savings, a model connection, PDF export (not in the recording).
  */
 
+/** [previewSeconds, completeSeconds], printed by `node scripts/prepare-media.mjs previews`. */
+export const PREVIEW_MAP: TimeMap = [
+  [0, 12],
+  [2.3, 15.45],
+  [5.05, 15.45],
+  [5.051, 20.45],
+  [5.817, 21.6],
+  [6.867, 21.6],
+  [6.868, 44],
+  [8.467, 46.4],
+  [10.017, 46.4],
+]
+
 export const MERCHANDISING_PLATFORM = {
-  meta: ['Product design and build · Independent project', '2026 · Working prototype on synthetic data'],
+  meta: ['Product design and build · Independent project', '2026 · Catalog, inventory, and replenishment'],
+  status: 'Working prototype with synthetic data',
   summary: (
     <p>
       After my PlanetArt internship, I built a merchandising platform that brings catalog, stock, sales, and replenishment information into{' '}
-      <strong>one workspace</strong>.
+      <strong>one workspace</strong>, so a merchandiser can see what to reorder and why.
     </p>
   ),
   sections: [
@@ -83,20 +78,27 @@ export const MERCHANDISING_PLATFORM = {
       id: 'built',
       title: 'What I built',
       body: (
-        <p>
-          I made each reorder quantity <strong>show its working</strong>, including any vendor minimum that sets it. The platform stops at an exported
-          order sheet rather than placing orders, so the merchandiser makes the call. I limited the Ask feature to fixed query patterns, so every answer
-          shows the query it ran.
-        </p>
+        <>
+          <p>
+            <strong>Explain the quantity.</strong> Each replenishment recommendation shows its calculation and the supplier minimum.
+          </p>
+          <p>
+            <strong>Keep approval with the merchandiser.</strong> The prototype exports an order sheet for review.
+          </p>
+          <p>
+            <strong>Make queries inspectable.</strong> The Ask feature uses fixed query patterns and shows the query behind each answer.
+          </p>
+        </>
       ),
     },
   ] satisfies StorySection[],
   outcome: {
-    id: 'result',
-    title: 'The result',
+    id: 'outcome',
+    title: 'Prototype outcome',
     body: (
       <p>
-        A merchandiser goes from the products that need a decision to a checked order sheet, exported as CSV or PDF.
+        In the prototype, a merchandiser can move from the products that need a decision to an order sheet ready for review, with the reasoning behind
+        each quantity in view.
       </p>
     ),
   } satisfies StorySection,

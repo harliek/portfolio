@@ -9,6 +9,7 @@
  * Usage:
  *   node scripts/prepare-media.mjs            # everything
  *   node scripts/prepare-media.mjs video      # video derivatives only
+ *   node scripts/prepare-media.mjs previews   # edited 1.5× previews of the two product recordings (prints the time maps)
  *   node scripts/prepare-media.mjs images     # frames, PDF excerpts, images, covers
  *   node scripts/prepare-media.mjs stage      # background set video + posters, film stills
  *   node scripts/prepare-media.mjs creative   # Art drawings (all 23), film stills
@@ -87,6 +88,167 @@ function encodeVideo(v) {
     console.log(`encoding ${out}`)
     run('ffmpeg', args)
     report.push(`${out} ${(statSync(out).size / 1e6).toFixed(1)}MB`)
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Edited previews of the product recordings (brief-v8 sections 9, 10)  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Short, edited, accelerated previews for inline playback on the case pages;
+ * expanding a preview plays the complete recording at original speed (the
+ * VIDEOS entries above). Every moving part plays at exactly `speed` (the
+ * player says "Edited preview · 1.5× speed"); the edits are cuts between
+ * screens (a short dissolve), idle stretches left out, and still holds of
+ * the last frame of a segment, which give a meaningful state time to be read.
+ * Holds are pauses in the preview, never presented as waits in the product.
+ * The last frames dissolve into the first, so the loop has no jump.
+ *
+ * `segments` are in seconds of the complete recording (the same timeline as
+ * its site encode). A segment that starts where the previous one ended joins
+ * it without a cut. The task prints the time map ([previewSeconds,
+ * fullSeconds] pairs) that the page passes to DemoVideo, so expanding
+ * continues at the same moment of the complete recording.
+ *
+ * `fallback`: the site's own encode of the same recording (identical
+ * timeline, SSIM 0.99+ against the original), used only when the original
+ * cannot be read (e.g. an iCloud placeholder that is not downloaded).
+ *
+ * Usage: node scripts/prepare-media.mjs previews [id]   (FORCE is implied)
+ */
+const PREVIEW_FPS = 30
+const PREVIEWS = [
+  {
+    id: 'merch-console-preview',
+    src: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov',
+    fallback: 'public/media/video/merch-console-1600.mp4',
+    speed: 1.5,
+    dissolve: 0.25,
+    segments: [
+      // The Canyon Pouch drawer: 200 units, "Kestrel Goods has a 200 unit minimum, which sets this quantity" and the
+      // note "This is a calculation and a CSV export. The console does not place orders."; Show the working opens the
+      // arithmetic (safety stock, reorder point, order-up-to, "floored at the 200 unit MOQ"), held to be read.
+      { from: 12.0, to: 15.45, hold: 3.0 },
+      // Inventory: the replenishment list with Export order sheet, held.
+      { from: 20.45, to: 21.6, hold: 1.3 },
+      // Ask: "What is out of stock?" runs; the query it ran (metric, category, vendor, sort, limit) sits above the answer.
+      { from: 44.0, to: 46.4, hold: 1.8 },
+    ],
+  },
+  {
+    id: 'spreadsheet-agent-preview',
+    src: 'Spreadsheet Agent/Spreadsheet Video.mov',
+    fallback: 'public/media/video/spreadsheet-agent-1600.mp4',
+    speed: 1.5,
+    dissolve: 0.3,
+    segments: [
+      // The request "Compare vendor prices across B2B products" finishes typing (the typing from 4s is left out).
+      { from: 17.0, to: 18.35, hold: 0.3 },
+      // Sent; "Interpreting request"; the build plan (source, filters, columns, sort, row limit, Not used), held with
+      // the pointer on Build sheet.
+      { from: 18.35, to: 21.9, hold: 0.8 },
+      // Build sheet: the sheet is created and fills to 1,200 rows; the reply "Vendor Pricing and Margin is ready", held.
+      { from: 21.9, to: 26.5, hold: 1.2 },
+      // A short scroll through the populated sheet.
+      { from: 26.5, to: 28.75 },
+    ],
+  },
+]
+
+const PREVIEW_VARIANTS = [
+  { suffix: '1600', width: 1600, crf: 23 },
+  { suffix: '960', width: 960, crf: 24 },
+]
+
+/** The readable source: the original, or the site encode when the original cannot be read. */
+function previewSource(p) {
+  try {
+    run('ffprobe', ['-v', 'error', '-read_intervals', '%+0.1', '-show_entries', 'frame=pts', '-of', 'csv', src(p.src)])
+    return { file: src(p.src), note: p.src }
+  } catch {
+    if (!existsSync(src(p.fallback))) throw new Error(`${p.id}: neither ${p.src} nor ${p.fallback} can be read`)
+    return { file: src(p.fallback), note: `${p.fallback} (the original could not be read)` }
+  }
+}
+
+/** Filter graph, output length and time map for one preview at one width. */
+function previewGraph(p, width) {
+  const n = p.segments.length
+  const D = p.dissolve
+  const norm = `fps=${PREVIEW_FPS},scale=${width}:-2:flags=lanczos,setsar=1,format=yuv420p,settb=1/${PREVIEW_FPS}`
+  // Constant frame rate first: a screen recording has no frames while nothing changes, and a part that begins in such
+  // a gap must begin with the frame on screen then (the one before the gap), not the next one.
+  const parts = [`[0:v]fps=60,split=${n + 1}${Array.from({ length: n + 1 }, (_, i) => `[in${i}]`).join('')}`]
+  const lens = []
+  p.segments.forEach((s, i) => {
+    const moving = (s.to - s.from) / p.speed
+    const hold = s.hold ?? 0
+    lens.push(moving + hold)
+    // Exactly `moving` seconds (the last frame extended, then cut at the planned length), so the time map stays exact.
+    parts.push(`[in${i}]trim=start=${s.from}:end=${s.to},setpts=(PTS-STARTPTS)/${p.speed},${norm},tpad=stop_mode=clone:stop_duration=1,trim=duration=${moving.toFixed(4)},setpts=PTS-STARTPTS${hold ? `,tpad=stop_mode=clone:stop_duration=${hold}` : ''}[s${i}]`)
+  })
+  // The loop's end: the first frame, still, for the length of the closing dissolve.
+  const first = p.segments[0].from
+  parts.push(`[in${n}]trim=start=${first},setpts=PTS-STARTPTS,${norm},trim=end_frame=1,tpad=stop_mode=clone:stop_duration=${D}[loop]`)
+
+  const map = []
+  const push = (a, b) => map.push([Math.round(a * 1000) / 1000, Math.round(b * 100) / 100])
+  let cur = 's0'
+  let length = lens[0]
+  let start = 0
+  push(0, p.segments[0].from)
+  for (let i = 0; i < n; i++) {
+    const s = p.segments[i]
+    const moving = (s.to - s.from) / p.speed
+    push(start + moving, s.to)
+    const next = p.segments[i + 1]
+    if (!next) break
+    const join = Math.abs(next.from - s.to) < 1e-6
+    const out = `j${i}`
+    if (join) {
+      if (s.hold) push(length, s.to)
+      parts.push(`[${cur}][s${i + 1}]concat=n=2:v=1:a=0,settb=1/${PREVIEW_FPS}[${out}]`)
+      start = length
+      length += lens[i + 1]
+    } else {
+      // The next screen dissolves in over the end of this segment's hold.
+      const offset = length - D
+      if (s.hold) push(offset, s.to)
+      parts.push(`[${cur}][s${i + 1}]xfade=transition=fade:duration=${D}:offset=${offset.toFixed(3)}[${out}]`)
+      start = offset + 0.001
+      push(start, next.from)
+      start = offset
+      length += lens[i + 1] - D
+    }
+    cur = out
+  }
+  const last = p.segments[n - 1]
+  if (last.hold) push(length - D, last.to)
+  parts.push(`[${cur}][loop]xfade=transition=fade:duration=${D}:offset=${(length - D).toFixed(3)}[out]`)
+  return { graph: parts.join(';'), length, map }
+}
+
+function encodePreviews() {
+  for (const p of PREVIEWS) {
+    if (!only(p.id)) continue
+    const source = previewSource(p)
+    let map
+    for (const v of PREVIEW_VARIANTS) {
+      const out = join(VID, `${p.id}-${v.suffix}.mp4`)
+      const g = previewGraph(p, v.width)
+      map = g.map
+      console.log(`encoding ${out}`)
+      run('ffmpeg', ['-y', '-v', 'error', '-i', source.file, '-filter_complex', g.graph, '-map', '[out]',
+        '-c:v', 'libx264', '-preset', 'slow', '-crf', String(v.crf), '-profile:v', 'high', '-pix_fmt', 'yuv420p',
+        '-g', String(PREVIEW_FPS * 2), '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709',
+        '-an', '-movflags', '+faststart', out])
+      const probe = JSON.parse(run('ffprobe', ['-v', 'error', '-show_entries', 'format=duration:stream=width,height', '-of', 'json', out]).toString())
+      const st = probe.streams[0]
+      report.push(`${out} ${st.width}×${st.height} ${Number(probe.format.duration).toFixed(2)}s ${statSync(out).size} bytes (planned ${g.length.toFixed(2)}s)`)
+    }
+    report.push(`${p.id} source: ${source.note}`)
+    report.push(`${p.id} map: ${JSON.stringify(map)}`)
   }
 }
 
@@ -803,6 +965,7 @@ if (task === 'video' || task === 'all') {
   for (const v of VIDEOS) encodeVideo(v)
   copyNickleby()
 }
+if (task === 'previews' || task === 'all') encodePreviews()
 if (task === 'images' || task === 'all') await images()
 if (task === 'stage' || task === 'all') await workingModel()
 if (task === 'creative' || task === 'all') await creative()

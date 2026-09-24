@@ -16,7 +16,6 @@ export interface FilmState {
 interface FilmDialogProps {
   asset: VideoAsset
   title: string
-  caption: string
   posterSrc: string
   start: FilmState
   onClose: (result: FilmState) => void
@@ -27,12 +26,13 @@ interface FilmDialogProps {
  * Escape and a click on the backdrop close it, page scrolling locked) with
  * the largest variant. It opens on the inline player's frame (or poster),
  * drawn underneath, and its own copy fades in over it once that copy has a
- * frame at the inline time (never a black stage, nor the first frame). It
+ * frame at the inline time (never a black stage, nor the first frame). No
+ * caption (brief-v8 section 8): the film's name in the bar only. It
  * leaves with a short fade (dialogExit.ts). Mounted only while open. Every
  * close path (Close, Escape, backdrop) reports the time, playing and sound
  * state back to the inline player.
  */
-export function FilmDialog({ asset, title, caption, posterSrc, start, onClose }: FilmDialogProps) {
+export function FilmDialog({ asset, title, posterSrc, start, onClose }: FilmDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -127,7 +127,6 @@ export function FilmDialog({ asset, title, caption, posterSrc, start, onClose }:
             onLoadedMetadata={onLoadedMetadata}
           />
         </div>
-        <p className="image-dialog__caption t-small">{caption}</p>
       </div>
     </dialog>
   )

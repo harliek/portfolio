@@ -6,6 +6,7 @@ import { projectById, projectPath } from '../../content/projects'
 import { SITE } from '../../content/site'
 import { prefetchRoute } from '../../routes'
 import { CoverSlot } from '../transition/CoverSlot'
+import { AboutLight } from './AboutLight'
 import { ArtPreview } from './ArtPreview'
 import { FeaturedFilm } from './FeaturedFilm'
 
@@ -29,15 +30,21 @@ const PORTRAIT_SIZES = '(min-width: 720px) 340px, 232px'
  *
  * 1. Opening. The same headshot PNG as the carousel object, in its
  *    CoverSlot (the route transition moves the carousel image into it),
- *    beside the greeting (the page H1) and the two opening paragraphs.
- * 2. Education (about 40%) beside Experience (about 60%). Each role has one
- *    contribution sentence and, where there is one, a quiet text link to
+ *    beside the greeting (the page H1), a lead paragraph and a second one.
+ * 2. Education (about 40%) beside Experience (about 60%). Education keeps
+ *    the verified degree, minor, certificate, school and dates and two short
+ *    paragraphs (no separate coursework list). Each role has one
+ *    first-person contribution and, where there is one, a quiet text link to
  *    its case study.
- * 3. Creative work. A compact preview that opens the original creative
- *    homepage (/creative/, a separate build, so a plain link), and An
- *    Artistic End with its poster and a play button (the YouTube player is
- *    requested only after that click).
+ * 3. Creative work. Two equal cards with the same frame, badge and title:
+ *    the Creative Portfolio (its Art tile; opens the original creative
+ *    homepage at /creative/, a separate build, so a plain link) and An
+ *    Artistic End (its authentic poster; plays the film, with the YouTube
+ *    player requested only after that press).
  * 4. Email and LinkedIn as quiet links, with no heading.
+ *
+ * Behind it all, AboutLight: a slow, soft pool of lavender light that
+ * follows the mouse (off for reduced motion and touch).
  *
  * The opening text and everything below it carry `data-cover-reveal`: the
  * route transition keeps them hidden while the portrait travels into place,
@@ -47,14 +54,15 @@ export function AboutContent() {
   const { education: edu } = ABOUT
   return (
     <div className="about-content">
+      <AboutLight />
       <div className="about-intro">
         <div className="about-intro__portrait" role="img" aria-label={ABOUT.portraitLabel}>
           <CoverSlot id="about" scale={PORTRAIT_SCALE} sizes={PORTRAIT_SIZES} className="about-portrait" />
         </div>
         <div className="about-intro__text" data-cover-reveal="">
           <h1 className="about-heading">{ABOUT.greeting}</h1>
-          {ABOUT.bio.map((p) => (
-            <p key={p} className="about-intro__para">
+          {ABOUT.bio.map((p, i) => (
+            <p key={p} className={i === 0 ? 'about-intro__para about-intro__lead' : 'about-intro__para'}>
               {p}
             </p>
           ))}
@@ -86,16 +94,10 @@ export function AboutContent() {
                 {edu.pace}
               </p>
             </div>
-            <p className="about-school__text">{edu.text}</p>
-            <div className="about-coursework">
-              <h3 className="about-label" id="about-coursework-title">
-                {edu.courseworkTitle}
-              </h3>
-              <ul className="about-coursework__list" role="list" aria-labelledby="about-coursework-title">
-                {edu.coursework.map((c) => (
-                  <li key={c}>{c}</li>
-                ))}
-              </ul>
+            <div className="about-school__text">
+              {edu.text.map((p) => (
+                <p key={p}>{p}</p>
+              ))}
             </div>
           </section>
 
@@ -135,20 +137,20 @@ export function AboutContent() {
             {ABOUT.creativeTitle}
           </h2>
           <div className="about-creative__grid">
-            <div className="about-portfolio">
-              {/* A separate static build outside the router: a plain link and a full page load. */}
-              <a href={ABOUT.portfolio.href} className="about-portfolio__link" aria-describedby="about-portfolio-text">
-                <ArtPreview />
-                <span className="about-portfolio__cta">
-                  {ABOUT.portfolio.cta}
-                  <span className="about-portfolio__arrow" aria-hidden="true">
-                    ↗
+            <div className="about-work about-work--portfolio">
+              <div className="about-work__frame">
+                {/* A separate static build outside the router: a plain link and a full page load. */}
+                <a href={ABOUT.portfolio.href} className="about-work__hit" aria-label={`${ABOUT.portfolio.action}, ${ABOUT.portfolio.title}`}>
+                  <ArtPreview />
+                  <span className="about-work__badge" aria-hidden="true">
+                    {ABOUT.portfolio.action}
+                    <span className="about-work__arrow">↗</span>
                   </span>
-                </span>
-              </a>
-              <p id="about-portfolio-text" className="about-portfolio__text">
-                {ABOUT.portfolio.text}
-              </p>
+                </a>
+              </div>
+              <div className="about-work__foot">
+                <h3 className="about-work__title">{ABOUT.portfolio.title}</h3>
+              </div>
             </div>
             <FeaturedFilm />
           </div>

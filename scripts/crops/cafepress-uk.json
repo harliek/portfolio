@@ -2,6 +2,8 @@
   { "id": "cp-storefront", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 0, "y": 0, "width": 1672, "height": 941 }, "widths": [640, 960, 1280, 1672], "fallback": "jpg" },
   { "id": "cp-header-nav", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 960, "y": 10, "width": 712, "height": 401 }, "widths": [640, 712], "fallback": "jpg" },
   { "id": "cp-header-brand", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 0, "y": 0, "width": 1040, "height": 585 }, "widths": [640, 960, 1040], "fallback": "jpg" },
+  { "id": "cp-products", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 776, "y": 228, "width": 896, "height": 444 }, "widths": [640, 896], "fallback": "jpg" },
   { "id": "cp-phone-nav", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 1040, "y": 60, "width": 632, "height": 168 }, "widths": [632], "fallback": "jpg" },
-  { "id": "cp-phone-headline", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 48, "y": 262, "width": 672, "height": 354 }, "widths": [672], "fallback": "jpg" }
+  { "id": "cp-phone-headline", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 48, "y": 262, "width": 672, "height": 354 }, "widths": [672], "fallback": "jpg" },
+  { "id": "cp-phone-products", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 782, "y": 440, "width": 590, "height": 232 }, "widths": [590], "fallback": "jpg" }
 ]

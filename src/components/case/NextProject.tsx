@@ -9,13 +9,16 @@ import { isPlainClick, openProject, warmProject } from '../transition/projectTra
 const THUMB = { width: 104, height: 84 }
 
 /**
- * The one next-project link after the story (brief-v5 section 30): a small
- * version of the next project's PNG object beside the live text "Next
- * project" and the project's name, all one link. The next projects follow
- * the homepage order (projects.ts `next`; About is not part of it).
+ * The one next-project link after the story (brief-v5 section 30, brief-v8
+ * section 7): a small version of the next project's PNG object beside the
+ * live text "Next project" and the project's display title (`displayName`,
+ * the name on its cover and in the navigation) with an arrow, all one link.
+ * The next projects follow the homepage order (projects.ts `next`; About is
+ * not part of it).
  *
- * Hover and focus: the thumbnail grows 4% with a restrained alpha-aware glow
- * and the name takes the NEXT project's accent (case.css). A plain click or
+ * The thumbnail carries a quiet silhouette glow in the NEXT project's accent.
+ * Hover and focus: it grows 4% with a stronger glow and the name takes that
+ * accent (case.css). A plain click or
  * Enter opens it through openProject with the thumbnail as the source
  * (`data-cover-source`), so the same PNG can move into the destination's
  * cover slot; modifier and middle clicks stay native.
@@ -26,9 +29,11 @@ export function NextProject({ current }: { current: ProjectId }) {
   const next = projectById(projectById(current).next)
   const path = projectPath(next)
   const accent = ACCENTS[next.accent]
-  const split = next.name.lastIndexOf(' ') + 1
-  const head = next.name.slice(0, split)
-  const tail = next.name.slice(split)
+  // The display title, as on the homepage, the Work shelf and the project's cover (brief-v8 section 4).
+  const name = next.displayName
+  const split = name.lastIndexOf(' ') + 1
+  const head = name.slice(0, split)
+  const tail = name.slice(split)
   const style = { '--next-accent': accent.hex, '--next-accent-rgb': accent.rgb, '--thumb-w': `${THUMB.width}px`, '--thumb-h': `${THUMB.height}px` } as CSSProperties
   return (
     <nav className="next-project" aria-label="Next project">

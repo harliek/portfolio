@@ -718,7 +718,7 @@ html[data-cover-transition] .route-reveal {
 }
 
 /* ----------------------------------------------------------------------- */
-/* Footer: compact, the copyright line and the Reduce motion setting        */
+/* Footer: compact, the copyright line                                      */
 /* ----------------------------------------------------------------------- */
 
 /*
@@ -738,96 +738,13 @@ html[data-cover-transition] .route-reveal {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-1) var(--space-5);
+  min-height: 44px;
   padding-top: var(--space-2);
   border-top: 1px solid rgb(238 234 226 / 0.08);
 }
 
 .site-footer__copy {
   color: #b9bccb;
-}
-
-/*
- * The site-wide motion setting: quiet, but clearly a control. An outlined
- * switch whose knob moves across and fills when on (position and fill, not
- * colour alone), with a visible label, an accent hover and a focus ring.
- */
-.motion-toggle {
-  --_acc: var(--accent, var(--accent-default));
-  --_acc-rgb: var(--accent-rgb, var(--accent-default-rgb));
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  margin-inline: -10px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: var(--radius-control);
-  background: none;
-  color: #d4d6e2;
-  font-size: var(--text-small);
-  font-weight: var(--weight-label);
-  transition:
-    background-color var(--dur-feedback) var(--ease-out),
-    color var(--dur-feedback) var(--ease-out);
-}
-
-.motion-toggle:hover,
-.motion-toggle:focus-visible {
-  background: rgb(var(--_acc-rgb) / 0.1);
-  color: #fff;
-}
-
-.motion-toggle:focus-visible {
-  outline: 2px solid var(--_acc);
-  outline-offset: 2px;
-}
-
-.motion-toggle__track {
-  position: relative;
-  flex: none;
-  width: 34px;
-  height: 20px;
-  border: 1.5px solid rgb(255 255 255 / 0.6);
-  border-radius: 999px;
-  background: rgb(10 11 18 / 0.6);
-  transition:
-    background-color var(--dur-feedback) var(--ease-out),
-    border-color var(--dur-feedback) var(--ease-out),
-    box-shadow var(--dur-feedback) var(--ease-out);
-}
-
-.motion-toggle:hover .motion-toggle__track,
-.motion-toggle:focus-visible .motion-toggle__track {
-  border-color: var(--_acc);
-  box-shadow: 0 0 10px -2px rgb(var(--_acc-rgb) / 0.6);
-}
-
-.motion-toggle__knob {
-  position: absolute;
-  top: 50%;
-  left: 3px;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: #d4d6e2;
-  transform: translateY(-50%);
-  transition:
-    transform var(--dur-feedback) var(--ease-out),
-    background-color var(--dur-feedback) var(--ease-out);
-}
-
-.motion-toggle[aria-pressed='true'] {
-  color: var(--color-text);
-}
-
-.motion-toggle[aria-pressed='true'] .motion-toggle__track {
-  border-color: var(--_acc);
-  background: var(--_acc);
-}
-
-.motion-toggle[aria-pressed='true'] .motion-toggle__knob {
-  background: var(--btn-primary-fg);
-  transform: translate(14px, -50%);
 }
 
 /* Not found / route error */

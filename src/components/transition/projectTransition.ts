@@ -1,55 +1,67 @@
 import type { MouseEvent } from 'react'
 import { TRANSITION } from '../../config/transition'
+import { ACCENTS } from '../../content/accents'
 import { fallbackSrc, getImage, srcSet, type ImageId } from '../../content/media'
 import { projectForPath } from '../../content/projects'
 import { prefersReducedMotion } from '../../hooks/useReducedMotion'
 import { prefetchRoute, routeChunks, router } from '../../routes'
-import { coverItem, coverItemForPath, coverSlotWidth } from './coverGeometry'
+import { coverItem, coverItemForPath } from './coverGeometry'
 import './transition.css'
 
 /**
- * Opening a project: the same image moves into the new page.
+ * Opening a project (brief-v8 section 6): never an empty scene.
  *
- * From a PNG object marked `data-cover-source="<id>"` (a carousel object, a
- * next-project thumbnail), when the caller passes it (or an element around
- * or inside it) as `source`:
+ * 1. Wait. The page being left stays exactly as it is (the caller freezes
+ *    the carousel when openProject returns 'cover') while the destination's
+ *    code loads and its cover object and opening media decode (usually
+ *    already done on hover or focus: warmProject). Nothing fades, nothing is
+ *    hidden. A longer wait (a slow connection) shows a thin line in the
+ *    destination's accent across the top, so the click is visibly under way.
+ * 2. Change, in one view transition (document.startViewTransition): the
+ *    browser keeps a picture of the page being left, the route changes
+ *    synchronously underneath it, and then, over TRANSITION.pageMs, the old
+ *    page fades out while the new page (its heading and opening media
+ *    included, live) fades in. The two fades are complementary and blended
+ *    additively, so the background room (the same video on both pages) stays
+ *    continuous and the scene never dims towards black.
+ * 3. At the same time, from a PNG object marked `data-cover-source="<id>"`
+ *    (a gallery object, a next-project thumbnail), the same image moves into
+ *    the destination's `[data-cover-slot="<id>"]` (CoverSlot.tsx) over
+ *    TRANSITION.coverMs: a copy of the clicked image (its file, glow and
+ *    3D turn) stands in for the source in the picture of the old page, and
+ *    the browser morphs it to the slot with a uniform scale (both boxes have
+ *    the artwork's own proportions, so it is never stretched; a turned object
+ *    turns to face the viewer on the way, it never flips). The page does not
+ *    wait for the move.
  *
- * 1. the caller freezes the carousel (openProject returned 'cover'); a copy
- *    of the clicked image (the same file, `currentSrc`, with its glow) takes
- *    its place and comes a little forward, while the page being left fades
- *    out (a copy of an object turned in 3D starts with the same turn and
- *    turns to face the viewer on the way, so nothing flattens in one frame);
- * 2. the route changes once the route's code has loaded and the slot's
- *    image file has decoded (never later than TRANSITION.navigateCapMs; a
- *    failed chunk still navigates and RouteError handles it);
- * 3. the copy travels to the destination's `[data-cover-slot="<id>"]`
- *    (CoverSlot.tsx) with a uniform scale, following the slot if the layout
- *    or scroll shifts. Meanwhile the slot image and every
- *    `[data-cover-reveal]` element of the new page are hidden
- *    (transition.css), so the copy never crosses visible text;
- * 4. on landing, the heading, introduction and media fade in around it;
- *    then the slot image (decoded) replaces the copy in the same frame.
+ * Without a slot on screen the copy simply fades with the old page. From a
+ * text link (the Work shelf) or a source that is not a loaded, visible PNG,
+ * only the pages cross-fade. Browsers without view transitions, reduced
+ * motion and a failed or very slow chunk get an ordinary navigation (the
+ * old page still stays until the new one is ready: react-router keeps it
+ * while the lazy route loads). Direct loads are untouched.
  *
- * From anything else (a text link, a source that is not visible or not
- * loaded): the new page's `[data-cover-reveal]` elements fade in once it
- * has rendered ('reveal').
- *
- * Rapid clicks are ignored until the copy has landed. Back/Forward or
- * another navigation before the route change cancels it and restores the
- * source (onCancel lets the carousel resume); after the route change, Back
- * or Forward removes everything at once. A missing or off-screen slot, or a
- * failed page, fades the copy away. Every wait has a cap and
- * TRANSITION.hardCapMs ends any transition. Direct loads are untouched
- * (nothing is hidden without a running transition). Reduced motion:
- * ordinary navigation. Modifier and middle clicks stay native (isPlainClick).
+ * Rapid clicks are ignored until the change has finished. Back/Forward (or
+ * another navigation) while waiting cancels it and restores the source
+ * (onCancel lets the carousel resume); during the cross-fade it ends the
+ * animation at once. TRANSITION.hardCapMs ends any animation. Modifier and
+ * middle clicks stay native (isPlainClick).
  */
 
 // ---------------------------------------------------------------------------
 // Warming a destination
 // ---------------------------------------------------------------------------
 
-/** Warmed images by path (kept so a detached image is never collected mid-load), and when the cover object is decoded. */
-const warmed = new Map<string, { images: HTMLImageElement[]; cover: Promise<void> }>()
+interface Warm {
+  /** Kept so a detached image is never collected mid-load. */
+  images: HTMLImageElement[]
+  /** The cover object at the slot's size, decoded. */
+  cover: Promise<void>
+  /** The opening media (TRANSITION.openingMedia, else projects.ts `hero`), decoded. */
+  opening: Promise<void>
+}
+
+const warmed = new Map<string, Warm>()
 
 /**
  * Fetches and decodes an image exactly as the page's ResponsiveImage will
@@ -80,7 +92,7 @@ function warmImage(image: ImageId, sizes: string): { img: HTMLImageElement; read
 /**
  * Prepares a destination ahead of the click (hover, focus, touch start):
  * the route's code, its cover object at the slot's size and its opening
- * media image (projects.ts `hero`), fetched and decoded. Idempotent.
+ * media (TRANSITION.openingMedia), fetched and decoded. Idempotent.
  */
 export function warmProject(path: string) {
   prefetchRoute(path)
@@ -89,14 +101,17 @@ export function warmProject(path: string) {
   let cover = Promise.resolve()
   const item = coverItemForPath(path)
   if (item) {
-    const sizes = TRANSITION.slotSizes[path] ?? `${coverSlotWidth(item, TRANSITION.defaultSlotScale)}px`
+    const asset = getImage(item.image)
+    const sizes = TRANSITION.slotSizes[path] ?? `${Math.round((TRANSITION.caseCoverHeights[item.kind] * asset.width) / asset.height)}px`
     const warm = warmImage(item.image, sizes)
     images.push(warm.img)
     cover = warm.ready
   }
   const hero = projectForPath(path)?.hero
-  if (hero) images.push(warmImage(hero.image, hero.sizes).img)
-  warmed.set(path, { images, cover })
+  const openings = (TRANSITION.openingMedia[path] ?? (hero ? [hero] : [])).map(({ image, sizes }) => warmImage(image, sizes))
+  images.push(...openings.map((w) => w.img))
+  const opening = Promise.all(openings.map((w) => w.ready)).then(() => {})
+  warmed.set(path, { images, cover, opening })
 }
 
 export const isPlainClick = (e: MouseEvent) => !e.defaultPrevented && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey
@@ -105,9 +120,12 @@ export const isPlainClick = (e: MouseEvent) => !e.defaultPrevented && e.button =
 // State
 // ---------------------------------------------------------------------------
 
-type Mode = 'cover' | 'reveal'
-/** forward: before the route change · route: waiting for the new page · move: the copy travels · reveal: landed, text fading in. */
-type Phase = 'forward' | 'route' | 'move' | 'reveal'
+/** The view-transition-name shared by the moving copy (old state) and the destination slot (new state). */
+const COVER_NAME = 'hk-cover'
+
+type Mode = 'cover' | 'fade'
+/** wait: the old page stays while the destination loads · change: the view transition runs. */
+type Phase = 'wait' | 'change'
 
 interface Box {
   x: number
@@ -119,41 +137,58 @@ interface Box {
 interface Run {
   mode: Mode
   path: string
-  /** The pathname the transition started from (a different one before the route change means someone navigated elsewhere). */
+  /** The pathname the transition started from (a different one while waiting means someone navigated elsewhere). */
   from: string
   phase: Phase
-  navigatedAt: number
-  /** The route content being left (a child of <main>); once disconnected, the new page has replaced it. */
-  oldPage: Element | null
-  /** The clicked `[data-cover-source]` element (hidden while its copy travels). */
+  /** Set when Back/Forward or another navigation stopped it: the pending route change must not happen. */
+  cancelled: boolean
+  /** The route change has been asked for (inside the view transition). */
+  routed: boolean
+  /** The element passed as the source (measured again when the change starts). */
+  sourceArg: HTMLElement | null
+  /** The `[data-cover-source]` element hidden while its copy stands in for it. */
   source: HTMLElement | null
   coverId: string | null
   clone: HTMLDivElement | null
-  cloneImg: HTMLImageElement | null
-  forward: Animation | null
-  move: Animation | null
-  pageFade: Animation | null
-  slot: HTMLElement | null
-  /** Where the copy is going (viewport px). */
-  target: Box | null
-  chunkFailed: boolean
+  /** The slow-wait line (progressDelayMs), while shown. */
+  progress: HTMLDivElement | null
+  /** The destination element carrying COVER_NAME in the new state. */
+  named: HTMLElement | null
+  vt: ViewTransition | null
   timers: number[]
-  frame: number
+  unsubscribe: (() => void) | null
+  navigate: (path: string) => void
   onCancel?: () => void
 }
 
 let run: Run | null = null
 
-/** True while a transition into `path` has not landed yet (its opening is hidden until then). */
+declare global {
+  interface Window {
+    /** Development only: the steps of recent transitions, for browser checks. */
+    __pageTransitionLog?: [number, string, string?][]
+    /** Development only: a slow-motion factor for inspecting the animation frame by frame. */
+    __pageTransitionSlow?: number
+  }
+}
+
+/** Records a step in development (window.__pageTransitionLog). */
+function trace(step: string, detail?: string) {
+  if (!import.meta.env.DEV) return
+  const log = (window.__pageTransitionLog ??= [])
+  log.push([Math.round(performance.timeOrigin + performance.now()), step, detail])
+  if (log.length > 200) log.splice(0, log.length - 200)
+}
+
+/** True while a transition into `path` is still waiting for its page (the old page is still shown). */
 export function isTransitionPending(path: string) {
-  return run !== null && run.path === path && run.phase !== 'reveal'
+  return run !== null && run.path === path && run.phase === 'wait'
 }
 
 /*
  * The destination of the running transition, for components that should
- * change ahead of the route (StageBackground applies the destination's
- * darker reading shade while the copy comes forward, so it is complete
- * before any destination text appears). Read with useSyncExternalStore.
+ * change with the route (StageBackground). Set when the route changes inside
+ * the view transition, cleared when it ends. Read with useSyncExternalStore.
  */
 const targetListeners = new Set<() => void>()
 let target: string | null = null
@@ -172,14 +207,14 @@ export function subscribeTransitionTarget(listener: () => void) {
   }
 }
 
-/** The pathname a transition is opening (from the click until the reveal ends), or null. */
+/** The pathname a transition is changing to (while its view transition runs), or null. */
 export const transitionTarget = () => target
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const now = () => performance.now()
+const supportsViewTransitions = () => typeof document !== 'undefined' && typeof document.startViewTransition === 'function'
 
 /** A timer that only fires while `r` is still the running transition (all are cleared at the end). */
 function later(r: Run, ms: number, fn: () => void) {
@@ -193,20 +228,10 @@ function later(r: Run, ms: number, fn: () => void) {
   )
 }
 
-const delay = (r: Run, ms: number) =>
+const delay = (ms: number) =>
   new Promise<void>((resolve) => {
-    r.timers.push(window.setTimeout(resolve, Math.max(0, ms)))
+    window.setTimeout(resolve, Math.max(0, ms))
   })
-
-/** Runs `fn` every animation frame while it returns true and `r` is running (one loop per transition at a time). */
-function eachFrame(r: Run, fn: () => boolean) {
-  cancelAnimationFrame(r.frame)
-  const tick = () => {
-    if (run !== r) return
-    if (fn()) r.frame = requestAnimationFrame(tick)
-  }
-  r.frame = requestAnimationFrame(tick)
-}
 
 function objectPosition(value: string, freeX: number, freeY: number): [number, number] {
   const [x, y] = value.trim().split(/\s+/)
@@ -224,8 +249,7 @@ function objectPosition(value: string, freeX: number, freeY: number): [number, n
  * object-position are applied, and a projected (3D-turned, scaled) element
  * is reduced to one uniform scale about its visual centre. `ratio` (the
  * registered artwork's) is preferred to the element's natural size, which
- * srcset density correction rounds to whole pixels (a 160 × 103 file shown
- * at 104px wide reports 104 × 66).
+ * srcset density correction rounds to whole pixels.
  */
 function contentBox(el: Element, img: HTMLImageElement | null, ratio?: number): Box | null {
   const box = (img ?? el) as HTMLElement
@@ -259,8 +283,7 @@ function visibleShare(b: Box) {
   return w <= 0 || h <= 0 ? 0 : (w * h) / (b.w * b.h)
 }
 
-const differs = (a: Box, b: Box | null, px: number) =>
-  !b || Math.abs(a.x - b.x) > px || Math.abs(a.y - b.y) > px || Math.abs(a.w - b.w) > px || Math.abs(a.h - b.h) > px
+const toBox = (d: DOMRect): Box => ({ x: d.left, y: d.top, w: d.width, h: d.height })
 
 /** The filters and opacity painted on `from` by itself and its ancestors up to (not including) `stop`. */
 function paintedStyle(from: Element, stop: Element | null) {
@@ -274,57 +297,6 @@ function paintedStyle(from: Element, stop: Element | null) {
   return { filter: filters.join(' ') || 'none', opacity: Number.isFinite(opacity) ? opacity : 1 }
 }
 
-/** The route content holding `el` (a child of <main>), else the current route content. */
-function pageRootOf(el: Element | null | undefined): Element | null {
-  const main = document.getElementById('main')
-  if (!main) return null
-  for (let n: Element | null = el ?? null; n; n = n.parentElement) if (n.parentElement === main) return n
-  return main.firstElementChild
-}
-
-/**
- * Ends the entrance animations that move the ancestors of `el` (the route
- * content's short rise), so the slot's position is final before the copy
- * heads for it and nothing rises twice.
- */
-function settle(el: Element) {
-  for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
-    for (const a of n.getAnimations()) {
-      if (!(a instanceof CSSAnimation)) continue
-      const frames = (a.effect as KeyframeEffect | null)?.getKeyframes() ?? []
-      if (!frames.some((k) => 'transform' in k || 'translate' in k || 'scale' in k || 'rotate' in k)) continue
-      try {
-        a.finish()
-      } catch {
-        /* an endless animation: leave it */
-      }
-    }
-  }
-}
-
-/**
- * Ends, at once, the CSS entrance animations that (re)start when the
- * transition's hiding ends: a page rule may pause them while
- * `html[data-cover-transition]` is set (the route content's rise), and they
- * would then replay under the landed image. The reveal replaces them.
- * Looks at the route content and the ancestors of the slot.
- */
-function finishRestarted(slot: Element | null) {
-  const main = document.getElementById('main')
-  const els = new Set<Element>(main ? [main, ...Array.from(main.children)] : [])
-  for (let n = slot?.parentElement ?? null; n && n !== document.body; n = n.parentElement) els.add(n)
-  for (const el of els) {
-    for (const a of el.getAnimations()) {
-      if (!(a instanceof CSSAnimation) || Number(a.currentTime ?? 0) > 34) continue
-      try {
-        a.finish()
-      } catch {
-        /* an endless animation: leave it */
-      }
-    }
-  }
-}
-
 /** Resolves when an image has decoded, failed, or is missing. */
 function imageReady(img: HTMLImageElement | null): Promise<void> {
   if (!img) return Promise.resolve()
@@ -333,6 +305,78 @@ function imageReady(img: HTMLImageElement | null): Promise<void> {
     img.addEventListener('load', () => void img.decode().catch(() => {}).then(() => resolve()), { once: true })
     img.addEventListener('error', () => resolve(), { once: true })
   })
+}
+
+/**
+ * Resolves once `old` (the route content being left, a child of <main>) has
+ * been replaced by the new page, or after `ms`. The router's navigate()
+ * settles as soon as its state has changed; React commits the new route a
+ * moment later.
+ */
+function pageReplaced(old: Element | null, ms: number): Promise<void> {
+  const parent = old?.parentElement
+  if (!old || !parent || !old.isConnected) return Promise.resolve()
+  return new Promise((resolve) => {
+    let timer = 0
+    const observer = new MutationObserver(() => {
+      if (!old.isConnected) done()
+    })
+    const done = () => {
+      observer.disconnect()
+      window.clearTimeout(timer)
+      resolve()
+    }
+    observer.observe(parent, { childList: true })
+    timer = window.setTimeout(done, ms)
+  })
+}
+
+/**
+ * The new page's opening media: the largest image or video that can be seen
+ * in the viewport, other than the cover slot (a poster underlay counts).
+ */
+function openingMedia(): HTMLImageElement | HTMLVideoElement | null {
+  const main = document.getElementById('main')
+  if (!main) return null
+  let best: HTMLImageElement | HTMLVideoElement | null = null
+  let bestArea = 0
+  for (const el of main.querySelectorAll<HTMLImageElement | HTMLVideoElement>('img, video')) {
+    if (el.closest('[data-cover-slot]')) continue
+    const b = el.getBoundingClientRect()
+    const w = Math.min(window.innerWidth, b.right) - Math.max(0, b.left)
+    const h = Math.min(window.innerHeight, b.bottom) - Math.max(0, b.top)
+    if (w < 80 || h < 80) continue
+    if (el.checkVisibility && !el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue
+    if (w * h > bestArea) {
+      best = el
+      bestArea = w * h
+    }
+  }
+  return best
+}
+
+/**
+ * Resolves when an image has decoded or a video can show a frame or its
+ * poster (or either failed). Media that only loads once it is painted (a
+ * lazy image, a video that preloads nothing) is not waited for: nothing is
+ * painted while the browser holds the picture of the old page.
+ */
+function mediaReady(el: HTMLImageElement | HTMLVideoElement | null): Promise<void> {
+  if (!el) return Promise.resolve()
+  if (el instanceof HTMLImageElement) return el.loading === 'lazy' && !el.complete ? Promise.resolve() : imageReady(el)
+  if (el.readyState >= 2 || (!el.poster && el.preload === 'none')) return Promise.resolve()
+  const waits: Promise<void>[] = [
+    new Promise((resolve) => {
+      el.addEventListener('loadeddata', () => resolve(), { once: true })
+      el.addEventListener('error', () => resolve(), { once: true })
+    }),
+  ]
+  if (el.poster) {
+    const poster = new Image()
+    poster.src = el.poster
+    waits.push(poster.decode().catch(() => {}))
+  }
+  return Promise.race(waits)
 }
 
 /** The route's code; resolves false on failure (RouteError handles a failed chunk after navigation). */
@@ -345,24 +389,15 @@ function loadChunk(path: string): Promise<boolean> {
   )
 }
 
-/** Another navigation is already under way (a header link clicked while the copy came forward). */
-function otherNavigation(path: string) {
+/** Another navigation is under way or done (a header link, Back): the transition must not change the route. */
+function otherNavigation(r: Run) {
+  if (window.location.pathname !== r.from) return true
   try {
     const nav = router.state.navigation
-    return nav.state !== 'idle' && nav.location?.pathname !== path
+    return nav.state !== 'idle' && nav.location?.pathname !== r.path
   } catch {
     return false
   }
-}
-
-function findSlot(id: string | null): HTMLElement | null {
-  if (!id) return null
-  for (const el of document.querySelectorAll<HTMLElement>(`[data-cover-slot="${CSS.escape(id)}"]`)) {
-    if (el.hasAttribute('data-cover-old')) continue
-    const b = el.getBoundingClientRect()
-    if (b.width > 0 && b.height > 0) return el
-  }
-  return null
 }
 
 /** The registered proportions of a cover object's artwork. */
@@ -373,10 +408,6 @@ function coverRatio(id: string | null | undefined): number | undefined {
   return asset.width / asset.height
 }
 
-function slotBox(r: Run, slot: HTMLElement): Box | null {
-  return contentBox(slot, slot.querySelector('img'), coverRatio(r.coverId))
-}
-
 function placeBox(el: HTMLElement, b: Box) {
   el.style.left = `${b.x}px`
   el.style.top = `${b.y}px`
@@ -384,24 +415,23 @@ function placeBox(el: HTMLElement, b: Box) {
   el.style.height = `${b.h}px`
 }
 
-const toBox = (d: DOMRect): Box => ({ x: d.left, y: d.top, w: d.width, h: d.height })
-
-/** A 3D turn on an ancestor of the source (the gallery's objects are turned towards the viewer): the copy starts turned the same way. */
+/** A 3D turn on an ancestor of the source (the gallery's objects are turned towards the viewer): the copy is turned the same way. */
 interface Turn {
   /** The image's box with the turn taken off (viewport px): the copy's box. */
   box: Box
   /** The turn's origin within that box (px) and its perspective in viewport px. */
   origin: string
   perspective: number
-  /** The ancestor's own rotateY(), verbatim. */
+  /** The ancestor's own rotation functions, verbatim. */
   rotate: string
 }
 
-const TURN = /perspective\(\s*([\d.]+)px\s*\)\s*(rotateY\(\s*-?[\d.e-]+(?:rad|deg|grad|turn)?\s*\))/
+const TURN = /perspective\(\s*([\d.]+)px\s*\)((?:\s*rotate[XYZ]?\(\s*-?[\d.e+-]+(?:rad|deg|grad|turn)?\s*\))+)/
 
 /**
  * The turn of the nearest ancestor of `el` whose inline transform ends in
- * perspective() rotateY() (the depth gallery writes one per object),
+ * perspective() and one or more rotations (the depth gallery writes
+ * perspective() rotateY() per object),
  * measured by taking it off for one synchronous measurement: the image's
  * flat box, the turn's origin and the perspective at the ancestor's scale.
  */
@@ -418,7 +448,7 @@ function turnOf(el: HTMLElement, img: HTMLImageElement, ratio: number | undefine
     const k = n.offsetWidth ? rect.width / n.offsetWidth : 1
     if (!box || !Number.isFinite(ox) || !Number.isFinite(oy)) return null
     const origin = `${(rect.left + ox * k - box.x).toFixed(2)}px ${(rect.top + oy * k - box.y).toFixed(2)}px`
-    return { box, origin, perspective: parseFloat(m[1]) * k, rotate: m[2] }
+    return { box, origin, perspective: parseFloat(m[1]) * k, rotate: m[2].trim() }
   }
   return null
 }
@@ -429,7 +459,7 @@ function turnOf(el: HTMLElement, img: HTMLImageElement, ratio: number | undefine
  * that is loaded and mostly on screen can travel.
  */
 function coverSource(source: HTMLElement | null | undefined) {
-  if (!source) return null
+  if (!source?.isConnected) return null
   const el = source.closest<HTMLElement>('[data-cover-source]') ?? source.querySelector<HTMLElement>('[data-cover-source]')
   if (!el) return null
   const img = el instanceof HTMLImageElement ? el : el.querySelector('img')
@@ -442,305 +472,103 @@ function coverSource(source: HTMLElement | null | undefined) {
   return { el, img, src, box, id, turn: turnOf(el, img, ratio) }
 }
 
+/**
+ * The destination's slot for `id` on the new page, and the element that
+ * carries the shared name: the slot itself, or its immediate wrapper when
+ * that wrapper draws the object's glow (a filter) around a box of the same
+ * size, so the glow travels with the object instead of appearing after it.
+ * Null when the slot is missing or mostly off screen.
+ */
+function destination(id: string | null): HTMLElement | null {
+  if (!id) return null
+  for (const slot of document.querySelectorAll<HTMLElement>(`[data-cover-slot="${CSS.escape(id)}"]`)) {
+    if (slot.hasAttribute('data-cover-old')) continue
+    const box = toBox(slot.getBoundingClientRect())
+    if (box.w < 1 || box.h < 1) continue
+    if (visibleShare(box) < TRANSITION.minSlotVisible) return null
+    const wrap = slot.parentElement
+    if (wrap && wrap !== document.body && getComputedStyle(wrap).filter !== 'none') {
+      const w = wrap.getBoundingClientRect()
+      if (Math.abs(w.width - box.w) < 2 && Math.abs(w.height - box.h) < 2) return wrap
+    }
+    return slot
+  }
+  return null
+}
+
 // ---------------------------------------------------------------------------
 // Running a transition
 // ---------------------------------------------------------------------------
 
-function newRun(mode: Mode, path: string, onCancel?: () => void): Run {
-  return {
-    mode,
-    path,
-    from: window.location.pathname,
-    phase: 'forward',
-    navigatedAt: 0,
-    oldPage: null,
-    source: null,
-    coverId: null,
-    clone: null,
-    cloneImg: null,
-    forward: null,
-    move: null,
-    pageFade: null,
-    slot: null,
-    target: null,
-    chunkFailed: false,
-    timers: [],
-    frame: 0,
-    onCancel,
-  }
-}
-
-/** The page being left is still the one shown (the route has not changed yet). */
-const beforeRouteChange = (r: Run) => r.phase === 'forward' || (r.phase === 'route' && !!r.oldPage?.isConnected && window.location.pathname === r.from)
-
 const onPopState = () => {
   const r = run
   if (!r) return
-  // Before the route change the old page is still shown: restore it (the carousel resumes). After it, Back/Forward leaves at once.
-  if (beforeRouteChange(r)) cancel(r)
-  else complete(r)
+  // Before the route change the old page is still shown: the carousel resumes. After it, the animation ends at once.
+  if (r.routed) finish(r)
+  else cancel(r)
 }
 
-/** Marks the page being left (its reveal and slot elements stay visible) and hides whatever the new page mounts. */
-function begin(r: Run) {
-  run = r
-  document.querySelectorAll('[data-cover-reveal], [data-cover-slot]').forEach((el) => el.setAttribute('data-cover-old', ''))
-  document.documentElement.setAttribute('data-cover-transition', r.mode)
-  window.addEventListener('popstate', onPopState)
-  setTarget(r.path)
-  later(r, TRANSITION.hardCapMs, () => (beforeRouteChange(r) ? cancel(r) : complete(r)))
+/**
+ * The new page's own short entrance (PageShell's route content rise) is
+ * switched off during the cross-fade (transition.css); lifting that would
+ * start it from the beginning under the arrived page, so it is finished at
+ * once instead.
+ */
+function finishEntrance() {
+  const main = document.getElementById('main')
+  if (!main) return
+  for (const el of [main, ...Array.from(main.children)]) {
+    for (const a of el.getAnimations()) {
+      if (!(a instanceof CSSAnimation) || Number(a.currentTime ?? 0) > 50) continue
+      try {
+        a.finish()
+      } catch {
+        /* an endless animation: leave it */
+      }
+    }
+  }
 }
 
-/** Ends a transition and removes everything it added, in one frame (the slot image replaces the copy). */
+/** Ends a transition and removes everything it added. */
 function complete(r: Run) {
   if (run !== r) return
+  trace('complete', r.cancelled ? 'cancelled' : r.path)
   run = null
-  cancelAnimationFrame(r.frame)
   r.timers.forEach((id) => window.clearTimeout(id))
-  r.forward?.cancel()
-  r.move?.cancel()
-  r.pageFade?.cancel()
+  r.unsubscribe?.()
   r.clone?.remove()
+  r.progress?.remove()
   r.source?.removeAttribute('data-cover-moving')
+  r.named?.style.removeProperty('view-transition-name')
+  document.querySelectorAll('[data-cover-old]').forEach((el) => el.removeAttribute('data-cover-old'))
   const root = document.documentElement
-  if (root.hasAttribute('data-cover-transition')) {
-    root.removeAttribute('data-cover-transition')
-    finishRestarted(r.slot?.isConnected ? r.slot : null)
+  if (root.hasAttribute('data-page-transition')) {
+    root.removeAttribute('data-page-transition')
+    finishEntrance()
   }
-  for (const name of ['data-cover-old', 'data-cover-hold', 'data-transition-pending']) {
-    document.querySelectorAll(`[${name}]`).forEach((el) => el.removeAttribute(name))
-  }
+  for (const prop of ['--pt-page-ms', '--pt-cover-ms', '--pt-page-ease', '--pt-cover-ease']) root.style.removeProperty(prop)
   window.removeEventListener('popstate', onPopState)
   setTarget(null)
 }
 
-/** Stops a transition before the route change: the source and the page are restored, the caller resumes. */
+/** Ends a running view transition at once and removes everything (a pending route change no longer happens). */
+function finish(r: Run) {
+  if (run !== r) return
+  r.cancelled = true
+  r.vt?.skipTransition()
+  complete(r)
+}
+
+/** Stops a transition that has not changed the route: the source and the page are restored, the caller resumes. */
 function cancel(r: Run) {
   if (run !== r) return
-  complete(r)
+  trace('cancel')
+  finish(r)
   r.onCancel?.()
 }
 
-/**
- * Shows the new page: removes the hiding and fades in its opening
- * (`[data-cover-reveal]`, and legacy `[data-transition-pending]` frames)
- * where it is on screen, with a short rise, except the element holding the
- * landed image, which only fades (the copy above it never moves).
- */
-function revealPage(r: Run, ms: number) {
-  const els = new Set<HTMLElement>()
-  document.querySelectorAll<HTMLElement>('[data-cover-reveal]:not([data-cover-old]), [data-transition-pending]').forEach((el) => els.add(el))
-  // Slots outside every reveal element (their image was hidden too).
-  document.querySelectorAll<HTMLElement>('[data-cover-slot]:not([data-cover-old]):not([data-cover-hold])').forEach((el) => {
-    if (!el.closest('[data-cover-reveal]')) els.add(el)
-  })
-  document.documentElement.removeAttribute('data-cover-transition')
-  document.querySelectorAll('[data-transition-pending]').forEach((el) => el.removeAttribute('data-transition-pending'))
-  finishRestarted(r.slot)
-  for (const el of els) {
-    if (!el.isConnected) continue
-    const b = el.getBoundingClientRect()
-    if (b.bottom < 0 || b.top > window.innerHeight || b.width === 0) continue
-    const still = r.slot ? el.contains(r.slot) : false
-    const rise = still ? 0 : TRANSITION.revealRise
-    el.animate(
-      [
-        { opacity: 0, translate: `0 ${rise}px` },
-        { opacity: 1, translate: '0 0' },
-      ],
-      { duration: ms, easing: TRANSITION.revealEase, fill: 'backwards' },
-    )
-  }
-}
-
-/** The copy travels from `from` to `to` (viewport px) with a uniform scale; its box is the destination's, so the last frame is exact. */
-function flyTo(r: Run, from: Box, fromFilter: string, fromOpacity: string, to: Box, duration: number, easing: string) {
-  const clone = r.clone
-  if (!clone || !r.slot) return
-  const toFilter = paintedStyle(r.slot.querySelector('img') ?? r.slot, r.slot.parentElement).filter
-  placeBox(clone, to)
-  clone.style.transformOrigin = '0 0'
-  clone.style.transform = 'none'
-  clone.style.filter = toFilter
-  clone.style.opacity = '1'
-  const s = from.w / to.w
-  const tx = from.x + from.w / 2 - (to.x + (to.w * s) / 2)
-  const ty = from.y + from.h / 2 - (to.y + (to.h * s) / 2)
-  const first: Keyframe = { transform: `translate(${tx}px, ${ty}px) scale(${s})`, opacity: fromOpacity }
-  const last: Keyframe = { transform: 'translate(0px, 0px) scale(1)', opacity: 1 }
-  if (fromFilter !== 'none' || toFilter !== 'none') {
-    first.filter = fromFilter
-    last.filter = toFilter
-  }
-  const anim = clone.animate([first, last], { duration, easing, fill: 'both' })
-  r.move = anim
-  r.target = to
-  anim.finished.then(
-    () => {
-      if (r.move === anim) land(r)
-    },
-    () => {},
-  )
-}
-
-/** Step 3: the new page has its slot; the copy heads for it (or fades away if it cannot be reached). */
-function startMove(r: Run, slot: HTMLElement) {
-  const clone = r.clone
-  if (!clone) return abort(r)
-  r.slot = slot
-  settle(slot)
-  const to = slotBox(r, slot)
-  if (!to || visibleShare(to) < TRANSITION.minSlotVisible) return abort(r)
-  r.phase = 'move'
-  const from = toBox(clone.getBoundingClientRect())
-  const cs = getComputedStyle(clone)
-  const fromFilter = cs.filter
-  const fromOpacity = cs.opacity
-  r.forward?.cancel()
-  r.forward = null
-  flyTo(r, from, fromFilter, fromOpacity, to, TRANSITION.moveMs, TRANSITION.moveEase)
-
-  // A small source (a next-project thumbnail): continue with the slot's larger file once decoded.
-  const slotImg = slot.querySelector('img')
-  if (r.cloneImg && slotImg?.currentSrc && slotImg.complete && slotImg.naturalWidth > r.cloneImg.naturalWidth * 1.2) {
-    const hi = new Image()
-    hi.src = slotImg.currentSrc
-    hi.decode().then(
-      () => {
-        if (run === r && r.cloneImg) r.cloneImg.src = hi.src
-      },
-      () => {},
-    )
-  }
-
-  // Follow the slot if it shifts (a late layout change, a scroll) while the copy travels.
-  eachFrame(r, () => {
-    if (r.phase !== 'move') return false
-    if (!slot.isConnected) {
-      abort(r)
-      return false
-    }
-    const live = slotBox(r, slot)
-    if (live && differs(live, r.target, 2) && r.move) {
-      const elapsed = Number(r.move.currentTime ?? 0)
-      const here = toBox(clone.getBoundingClientRect())
-      const style = getComputedStyle(clone)
-      const old = r.move
-      r.move = null
-      old.cancel()
-      flyTo(r, here, style.filter, style.opacity, live, Math.max(90, TRANSITION.moveMs - elapsed), 'cubic-bezier(0.25, 0.6, 0.3, 1)')
-    }
-    return true
-  })
-}
-
-/** Step 4: landed. The opening fades in around the copy; then the decoded slot image replaces it. */
-function land(r: Run) {
-  if (run !== r || r.phase !== 'move' || !r.slot || !r.clone) return
-  r.phase = 'reveal'
-  const slot = r.slot
-  const clone = r.clone
-  const settled = r.move
-  r.move = null
-  settled?.cancel()
-  // From here the copy takes the slot image's own box (object-fit contain, as
-  // the slot draws it) and, once the slot has it, the same file, so the
-  // frame in which the slot image replaces it changes nothing.
-  const slotImg = slot.querySelector('img')
-  const exact = () => (slotImg?.isConnected ? toBox(slotImg.getBoundingClientRect()) : slotBox(r, slot))
-  const match = () => {
-    const src = slotImg?.currentSrc
-    if (slotImg && r.cloneImg && src && slotImg.complete && slotImg.naturalWidth && r.cloneImg.src !== src) r.cloneImg.src = src
-  }
-  const follow = () => {
-    const b = exact()
-    if (b && differs(b, r.target, 0.25)) {
-      placeBox(clone, b)
-      r.target = b
-    }
-  }
-  r.target = null
-  follow()
-  match()
-  slot.setAttribute('data-cover-hold', '')
-  revealPage(r, TRANSITION.revealMs)
-  // Keep the copy on the slot (a scroll during the fade).
-  eachFrame(r, () => {
-    follow()
-    return true
-  })
-  const imageDecoded = Promise.race([imageReady(slotImg), delay(r, TRANSITION.slotImageWaitMs)])
-  void Promise.all([imageDecoded, delay(r, TRANSITION.revealMs)]).then(() => {
-    match()
-    // One frame with the matched file before the swap.
-    requestAnimationFrame(() => complete(r))
-  })
-}
-
-/** The copy cannot reach a slot (missing, off screen, failed page): it fades away and the page is shown. */
-function abort(r: Run) {
-  if (run !== r) return
-  r.phase = 'reveal'
-  r.move?.cancel()
-  r.move = null
-  if (r.oldPage?.isConnected && window.location.pathname !== r.path) {
-    // The route has not changed (still loading): show the old page again meanwhile, and let the carousel move.
-    r.pageFade?.cancel()
-    r.pageFade = null
-    r.source?.removeAttribute('data-cover-moving')
-    r.onCancel?.()
-  }
-  revealPage(r, TRANSITION.plainRevealMs)
-  const clone = r.clone
-  if (clone) {
-    clone.animate([{ opacity: getComputedStyle(clone).opacity }, { opacity: 0 }], { duration: TRANSITION.abortFadeMs, easing: 'ease-out', fill: 'forwards' })
-  }
-  later(r, Math.max(TRANSITION.abortFadeMs, TRANSITION.plainRevealMs), () => complete(r))
-}
-
-/** Step 2: the route changes (unless someone navigated elsewhere meanwhile), then the new page is awaited. */
-function changeRoute(r: Run, navigate: (path: string) => void) {
-  if (run !== r || r.phase !== 'forward') return
-  if (window.location.pathname !== r.from || otherNavigation(r.path)) return cancel(r)
-  r.phase = 'route'
-  r.navigatedAt = now()
-  navigate(r.path)
-  let mountedAt = 0
-  eachFrame(r, () => {
-    const t = now()
-    const arrived = window.location.pathname === r.path
-    const replaced = arrived && !r.oldPage?.isConnected
-    if (replaced) {
-      // The new page is in: stop fading the (now new) route content.
-      r.pageFade?.cancel()
-      r.pageFade = null
-      if (!mountedAt) mountedAt = t
-    }
-    if (arrived) {
-      const slot = findSlot(r.coverId)
-      if (slot) {
-        startMove(r, slot)
-        return false
-      }
-    }
-    // A page that hides nothing (no reveal elements) does not take part: the copy leaves at once, never over its text.
-    const bystander = mountedAt > 0 && t - mountedAt > 20 && !document.querySelector('[data-cover-reveal]:not([data-cover-old])')
-    // Someone navigated elsewhere after the route change began (a header link): the copy leaves.
-    const elsewhere = window.location.pathname !== r.path && window.location.pathname !== r.from
-    if ((replaced && r.chunkFailed) || bystander || elsewhere || (mountedAt && t - mountedAt > TRANSITION.slotGraceMs) || t - r.navigatedAt > TRANSITION.slotWaitMs) {
-      abort(r)
-      return false
-    }
-    return true
-  })
-}
-
-function startCover(path: string, found: NonNullable<ReturnType<typeof coverSource>>, navigate: (path: string) => void, onCancel?: () => void) {
-  const r = newRun('cover', path, onCancel)
-  r.source = found.el
-  r.coverId = found.id
-  r.oldPage = pageRootOf(found.el)
-
+/** The copy of the clicked PNG that stands in for it in the picture of the old page (same file, glow, turn and fade). */
+function placeClone(r: Run, found: NonNullable<ReturnType<typeof coverSource>>) {
   const painted = paintedStyle(found.img, document.getElementById('main'))
   const clone = document.createElement('div')
   clone.className = 'cover-clone'
@@ -751,74 +579,201 @@ function startCover(path: string, found: NonNullable<ReturnType<typeof coverSour
   img.draggable = false
   img.src = found.src
   clone.appendChild(img)
-  // A cut-out shown with a faded lower edge (the headshot) keeps that fade in flight (transition.css).
+  // A cut-out shown with a faded lower edge (the headshot) keeps that fade (transition.css).
   if (getComputedStyle(found.el).maskImage !== 'none' || getComputedStyle(found.img).maskImage !== 'none') clone.dataset.fade = 'bottom'
-  // A turned object's copy starts turned as it stands (flat box, the same origin and perspective).
   const turn = found.turn
   placeBox(clone, turn?.box ?? found.box)
   clone.style.transformOrigin = turn?.origin ?? '50% 50%'
+  clone.style.transform = turn ? `perspective(${turn.perspective.toFixed(2)}px) ${turn.rotate}` : 'none'
   clone.style.filter = painted.filter
   clone.style.opacity = String(painted.opacity)
+  clone.style.setProperty('view-transition-name', COVER_NAME)
   document.body.appendChild(clone)
-  r.clone = clone
-  r.cloneImg = img
   found.el.setAttribute('data-cover-moving', '')
-  begin(r)
-
-  // Step 1: forward (a turned object turns to face the viewer on the way), while the page being left fades out.
-  const { forwardMs, forwardScale, forwardLift } = TRANSITION
-  const from = turn ? `translateY(0px) scale(1) perspective(${turn.perspective.toFixed(2)}px) ${turn.rotate}` : 'none'
-  const to = turn
-    ? `translateY(${-forwardLift}px) scale(${forwardScale}) perspective(${turn.perspective.toFixed(2)}px) rotateY(0rad)`
-    : `translateY(${-forwardLift}px) scale(${forwardScale})`
-  clone.style.transform = from
-  r.forward = clone.animate([{ transform: from }, { transform: to }], {
-    duration: forwardMs,
-    easing: TRANSITION.forwardEase,
-    fill: 'forwards',
-  })
-  r.pageFade = r.oldPage?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: TRANSITION.pageFadeMs, easing: 'ease-out', fill: 'forwards' }) ?? null
-
-  const forwardDone = r.forward.finished.then(
-    () => undefined,
-    () => undefined,
-  )
-  const chunk = loadChunk(path).then((ok) => {
-    r.chunkFailed = !ok
-  })
-  // The slot's image file, decoded, so it can replace the copy the moment it lands.
-  const cover = warmed.get(path)?.cover ?? Promise.resolve()
-  void Promise.all([forwardDone, chunk, cover]).then(() => changeRoute(r, navigate))
-  later(r, TRANSITION.navigateCapMs, () => changeRoute(r, navigate))
+  r.clone = clone
+  r.source = found.el
+  r.coverId = found.id
 }
 
-function startReveal(path: string, source: HTMLElement | null | undefined, navigate: (path: string) => void) {
-  const r = newRun('reveal', path)
-  r.oldPage = pageRootOf(source)
-  begin(r)
-  r.phase = 'route'
-  r.navigatedAt = now()
+/** The destination's accent ("r g b"), for the slow-wait line. */
+function accentRgb(path: string): string {
+  const id = coverItemForPath(path)?.id
+  return id && id in ACCENTS ? ACCENTS[id as keyof typeof ACCENTS].rgb : ACCENTS.about.rgb
+}
+
+/**
+ * Step 1 is taking longer than progressDelayMs (a slow connection): a thin
+ * line in the destination's accent runs across the top of the viewport, so
+ * the click is visibly under way while the old page stays. Decorative (the
+ * link keeps its focus and name); it leaves with the old page.
+ */
+function showProgress(r: Run) {
+  if (run !== r || r.progress || r.phase !== 'wait') return
+  const bar = document.createElement('div')
+  bar.className = 'pt-progress'
+  bar.setAttribute('aria-hidden', 'true')
+  bar.style.setProperty('--pt-accent-rgb', accentRgb(r.path))
+  document.body.appendChild(bar)
+  r.progress = bar
+  trace('progress')
+}
+
+/** After an ordinary navigation takes over (plain), the line stays until the router has the new page (or progressHoldMs). */
+function holdProgress(bar: HTMLDivElement, path: string) {
+  let timer = 0
+  let unsubscribe = () => {}
+  const done = () => {
+    unsubscribe()
+    window.clearTimeout(timer)
+    bar.remove()
+  }
+  timer = window.setTimeout(done, TRANSITION.progressHoldMs)
+  unsubscribe = router.subscribe((state) => {
+    if (state.navigation.state === 'idle') done()
+  })
+  if (router.state.navigation.state === 'idle' && window.location.pathname === path) done()
+}
+
+/** Falls back to an ordinary navigation (the old page stays until react-router has the new one). */
+function plain(r: Run) {
+  if (run !== r) return
+  trace('plain')
+  const { navigate, path } = r
+  const bar = r.progress
+  r.progress = null
+  complete(r)
   navigate(path)
-  let mountedAt = 0
-  eachFrame(r, () => {
-    const t = now()
-    if (window.location.pathname === r.path && !r.oldPage?.isConnected) {
-      if (!mountedAt) mountedAt = t
-      const fresh = document.querySelector('[data-cover-reveal]:not([data-cover-old]), [data-cover-slot]:not([data-cover-old])')
-      if (fresh || t - mountedAt > TRANSITION.slotGraceMs) {
-        if (fresh) settle(fresh)
-        r.phase = 'reveal'
-        revealPage(r, TRANSITION.plainRevealMs)
-        later(r, TRANSITION.plainRevealMs, () => complete(r))
-        return false
-      }
+  if (bar) holdProgress(bar, path)
+}
+
+/**
+ * Step 2 and 3: one view transition. The old page is captured (with the copy
+ * standing in for the clicked object), the route changes synchronously
+ * inside the update callback, the slot receives the shared name, and the
+ * browser cross-fades the pages while the copy moves into the slot.
+ */
+function change(r: Run) {
+  if (run !== r || r.phase !== 'wait') return
+  if (otherNavigation(r)) return cancel(r)
+  r.phase = 'change'
+  const found = r.mode === 'cover' ? coverSource(r.sourceArg) : null
+  if (found) placeClone(r, found)
+  else r.mode = 'fade'
+
+  const root = document.documentElement
+  const slow = import.meta.env.DEV ? (window.__pageTransitionSlow ?? 1) : 1
+  root.style.setProperty('--pt-page-ms', `${TRANSITION.pageMs * slow}ms`)
+  root.style.setProperty('--pt-cover-ms', `${TRANSITION.coverMs * slow}ms`)
+  root.style.setProperty('--pt-page-ease', TRANSITION.pageEase)
+  root.style.setProperty('--pt-cover-ease', TRANSITION.coverEase)
+  root.setAttribute('data-page-transition', r.mode)
+  document.querySelectorAll('[data-cover-slot]').forEach((el) => el.setAttribute('data-cover-old', ''))
+
+  const update = async () => {
+    trace('update', r.cancelled ? 'cancelled' : r.mode)
+    if (run !== r || r.cancelled) return
+    // The new state has no copy (the slot takes the name) or wait line (it leaves with the old page),
+    // and nothing of the old page stays hidden.
+    r.clone?.remove()
+    r.progress?.remove()
+    r.progress = null
+    r.source?.removeAttribute('data-cover-moving')
+    setTarget(r.path)
+    r.routed = true
+    const oldPage = document.getElementById('main')?.firstElementChild ?? null
+    try {
+      await router.navigate(r.path, { flushSync: true })
+    } catch {
+      /* RouteError shows a failed page */
     }
-    const elsewhere = window.location.pathname !== r.path && window.location.pathname !== r.from
-    if (elsewhere || t - r.navigatedAt > TRANSITION.navigateCapMs + TRANSITION.slotWaitMs) {
-      complete(r)
-      return false
+    trace('navigated')
+    await pageReplaced(oldPage, TRANSITION.renderWaitMs)
+    trace('routed', window.location.pathname)
+    if (run !== r || r.cancelled || window.location.pathname !== r.path) return
+    // The browser holds the picture of the old page meanwhile: short, capped waits for the slot's file and
+    // the opening media (both warmed and normally decoded already), so they appear with the page.
+    const dest = destination(r.coverId)
+    const media = openingMedia()
+    trace('destination', `${dest?.className ?? 'none'}; media ${media?.tagName ?? 'none'}`)
+    if (import.meta.env.DEV && media instanceof HTMLImageElement && !warmed.get(r.path)?.images.some((img) => img.currentSrc === media.currentSrc)) {
+      // TRANSITION.openingMedia is out of step with the page: this file loads while the display is held.
+      trace('opening not warmed', media.currentSrc.split('/').pop())
     }
-    return true
+    await Promise.all([
+      Promise.race([imageReady(dest?.querySelector('img') ?? null), delay(TRANSITION.slotDecodeMs)]),
+      Promise.race([mediaReady(media), delay(TRANSITION.openingMediaWaitMs)]),
+    ])
+    trace('media ready')
+    if (!dest || run !== r || r.cancelled || !dest.isConnected) return
+    dest.style.setProperty('view-transition-name', COVER_NAME)
+    r.named = dest
+    trace('named')
+  }
+
+  let vt: ViewTransition
+  try {
+    vt = document.startViewTransition(update)
+  } catch {
+    // No view transition after all: change the route the ordinary way.
+    r.clone?.remove()
+    r.source?.removeAttribute('data-cover-moving')
+    return plain(r)
+  }
+  r.vt = vt
+  trace('start', r.mode)
+  vt.ready.then(
+    () => trace('ready'),
+    (e: unknown) => trace('ready failed', String(e)),
+  )
+  vt.updateCallbackDone.catch(() => {})
+  vt.finished.then(
+    () => complete(r),
+    () => complete(r),
+  )
+  later(r, TRANSITION.hardCapMs * slow, () => finish(r))
+}
+
+function start(mode: Mode, path: string, source: HTMLElement | null | undefined, navigate: (path: string) => void, onCancel?: () => void) {
+  const r: Run = {
+    mode,
+    path,
+    from: window.location.pathname,
+    phase: 'wait',
+    cancelled: false,
+    routed: false,
+    sourceArg: source ?? null,
+    source: null,
+    coverId: null,
+    clone: null,
+    progress: null,
+    named: null,
+    vt: null,
+    timers: [],
+    unsubscribe: null,
+    navigate,
+    onCancel,
+  }
+  run = r
+  trace('open', `${mode} ${path}`)
+  window.addEventListener('popstate', onPopState)
+  // Another navigation while waiting (a header link, Back handled by the router) cancels this one.
+  r.unsubscribe = router.subscribe(() => {
+    if (run === r && r.phase === 'wait' && otherNavigation(r)) cancel(r)
+  })
+
+  // Step 1: the old page stays while the destination gets ready.
+  const warm = warmed.get(path)
+  const media = Promise.race([Promise.all([warm?.cover, warm?.opening]), delay(TRANSITION.mediaWaitMs)])
+  void Promise.all([loadChunk(path), media]).then(([ok]) => {
+    if (run !== r || r.phase !== 'wait') return
+    if (!ok) return plain(r)
+    change(r)
+  })
+  // A slow connection: the thin accent line shows the click is under way.
+  later(r, TRANSITION.progressDelayMs, () => showProgress(r))
+  // A chunk that takes too long: an ordinary navigation (react-router keeps the old page until it arrives).
+  later(r, TRANSITION.chunkWaitMs, () => {
+    if (r.phase === 'wait') plain(r)
   })
 }
 
@@ -826,37 +781,33 @@ export interface OpenProjectOptions {
   path: string
   /**
    * The clicked PNG object (`[data-cover-source]`), or an element around or
-   * inside it (e.g. the whole link). Anything else, or null: a plain reveal.
+   * inside it (e.g. the whole link). Anything else, or null: the pages only
+   * cross-fade.
    */
   source?: HTMLElement | null
   navigate: (path: string) => void
-  /** Called if a cover transition is cancelled before the route change (Back, another navigation). */
+  /** Called if the transition is cancelled before the route change (Back, another navigation). */
   onCancel?: () => void
 }
 
 /**
  * Opens a project with the transition described above. Returns 'cover'
- * when the image sequence started (the caller freezes the carousel),
- * 'reveal' for a plain reveal of the new page, 'plain' for an ordinary
- * navigation (reduced motion, same page), 'ignored' while a transition is
- * still under way (rapid clicks).
+ * when the PNG will move (the caller freezes the carousel until the page
+ * changes or onCancel is called), 'reveal' for a cross-fade without a
+ * moving image, 'plain' for an ordinary navigation (reduced motion, no view
+ * transitions, the same page), 'ignored' while a transition is still under
+ * way (rapid clicks).
  */
 export function openProject({ path, source, navigate, onCancel }: OpenProjectOptions): 'cover' | 'reveal' | 'plain' | 'ignored' {
-  if (run && run.phase !== 'reveal') return 'ignored'
-  // A reveal still fading on the current page completes at once.
-  if (run) complete(run)
+  if (run) return 'ignored'
   warmProject(path)
 
-  if (prefersReducedMotion() || path === window.location.pathname) {
+  if (prefersReducedMotion() || path === window.location.pathname || !supportsViewTransitions()) {
     navigate(path)
     return 'plain'
   }
 
-  const found = coverSource(source)
-  if (found) {
-    startCover(path, found, navigate, onCancel)
-    return 'cover'
-  }
-  startReveal(path, source, navigate)
-  return 'reveal'
+  const cover = coverSource(source) !== null
+  start(cover ? 'cover' : 'fade', path, source, navigate, onCancel)
+  return cover ? 'cover' : 'reveal'
 }

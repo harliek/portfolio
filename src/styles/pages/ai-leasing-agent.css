@@ -1,14 +1,161 @@
 /*
  * AI Leasing Agent page (src/pages/work/AILeasingAgent.tsx). Scope every
- * selector under .page-ai-leasing-agent. The layout, stage, highlights and
- * label come from the shared case styles (case.css).
+ * selector under .page-ai-leasing-agent. The layout, the media bar, the zoom
+ * control and its hover edge come from the shared case styles (case.css); this
+ * file places the conversation in the stage and draws its moments
+ * (components/pages/ai-leasing-agent/ConversationStage.tsx).
  */
 
 .page-ai-leasing-agent {
-  /* The illustration's own page colour behind its images, so a loading layer never shows a dark box. */
+  /* The illustration's own page colour behind its images, so a loading image never shows a dark box. */
   --conv-paper: #fbfbf9;
+  /* The frame's line: the page's pale gold deepened so it reads on the white conversation. */
+  --ala-edge: color-mix(in oklch, var(--case-accent) 72%, #7a5a12);
+  /* The veil over the rest of the exchange: it softens the other messages, which stay readable. */
+  --ala-veil: rgb(251 251 249 / 0.58);
+  --ala-glide: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .page-ai-leasing-agent .cs-layer:not([data-transparent]) .cs-canvas {
   background: var(--conv-paper);
+}
+
+/* ----------------------------------------------------------------------- */
+/* The conversation beside the story (desktop) and stacked (tablets)        */
+/* ----------------------------------------------------------------------- */
+
+/* Beside the story the custom box is the visible stage; the conversation and its bar sit in its middle. */
+.page-ai-leasing-agent .cs-custom[data-variant='sticky'] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* As wide as the column allows while the conversation and the bar under it fit the stage. */
+.page-ai-leasing-agent .ala-conv[data-variant='sticky'] {
+  width: min(100%, calc((var(--cs-mh) - var(--cs-bar)) * var(--stage-r)));
+}
+
+/* Stacked (tablets): the column's width, bounded by the viewport height. */
+.page-ai-leasing-agent .ala-conv[data-variant='inline'] {
+  width: min(100%, calc(72svh * var(--stage-r)));
+  margin-inline: auto;
+}
+
+.page-ai-leasing-agent .ala-conv__stage {
+  aspect-ratio: var(--stage-r);
+  container-type: size;
+}
+
+/*
+ * The emphasised message: an accent frame, a soft glow, and a light veil over everything outside it (the canvas clips
+ * it to the conversation). It glides from one message to the next, so the conversation itself never changes.
+ */
+.page-ai-leasing-agent .ala-frame {
+  position: absolute;
+  z-index: 1;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 2px var(--ala-edge),
+    0 0 20px 2px rgb(var(--case-accent-rgb) / 0.55),
+    0 0 0 200vmax var(--ala-veil);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    left 520ms var(--ala-glide),
+    top 520ms var(--ala-glide),
+    width 520ms var(--ala-glide),
+    height 520ms var(--ala-glide),
+    opacity 260ms linear;
+}
+
+.page-ai-leasing-agent .ala-frame[data-on] {
+  opacity: 1;
+}
+
+/* A role tag on a message's name row, at the right end of its bubble: dark, so it reads as a note on the illustration. */
+.page-ai-leasing-agent .ala-tag {
+  display: inline-block;
+  padding: 3px 10px 4px;
+  border-radius: 999px;
+  background: rgb(24 30 26 / 0.92);
+  box-shadow: inset 0 0 0 1px rgb(var(--case-accent-rgb) / 0.4);
+  color: var(--case-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.page-ai-leasing-agent .ala-conv .ala-tag {
+  position: absolute;
+  z-index: 2;
+  /* Smaller on a small stage, so it stays within the name row. */
+  font-size: clamp(0.6875rem, 1.9cqw, 0.78rem);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(4px);
+  transition:
+    opacity 240ms var(--ease-out),
+    transform 240ms var(--ease-out);
+}
+
+.page-ai-leasing-agent .ala-conv .ala-tag[data-on] {
+  opacity: 1;
+  transform: translateY(-50%);
+}
+
+/* ----------------------------------------------------------------------- */
+/* Phones: the three messages' text, one after another                      */
+/* ----------------------------------------------------------------------- */
+
+.page-ai-leasing-agent .ala-strips__list {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.page-ai-leasing-agent .ala-strip {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.page-ai-leasing-agent .ala-strip__text {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  /* The bubble's own colour around the crop, so its text never touches the edge. */
+  padding: 6px 4px 6px 8px;
+  border-radius: 12px;
+  background: var(--paper, var(--conv-paper));
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+.page-ai-leasing-agent .ala-strip__text .picture,
+.page-ai-leasing-agent .ala-strip__text img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* On phones the enlarge control is a visible 44px button (there is no image button over the messages). */
+.page-ai-leasing-agent .ala-strips {
+  --cs-expand: 44px;
+}
+
+.page-ai-leasing-agent .ala-strips .cs-expand {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22);
+  color: var(--color-text);
+}
+
+/* ----------------------------------------------------------------------- */
+/* Reduced motion: the emphasis moves at once                               */
+/* ----------------------------------------------------------------------- */
+
+html[data-motion='reduce'] .page-ai-leasing-agent :is(.ala-frame, .ala-tag) {
+  transition: none !important;
 }

@@ -1,16 +1,14 @@
 /* ----------------------------------------------------------------------- */
-/* Shared-image route transition (projectTransition.ts, CoverSlot.tsx)      */
+/* Project route transition (projectTransition.ts, CoverSlot.tsx)           */
 /* ----------------------------------------------------------------------- */
 
 /*
- * The moving copy of the clicked PNG object: the same image file, fixed to
- * the viewport, above the page and the header, below the pointer trail.
- * Its box always has the image's own proportions; only a uniform scale and
- * a translation animate (never a stretch), after a copy of a turned gallery
- * object has turned to face the viewer while coming forward. Never interactive.
- * No will-change: the running animations are composited anyway, and without
- * it the landed copy is drawn at its final size, exactly as sharp as the
- * slot image that replaces it.
+ * The copy of the clicked PNG object that stands in for it in the browser's
+ * picture of the page being left (it carries view-transition-name: hk-cover;
+ * the destination slot takes the name in the new state). It exists for one
+ * frame before the view transition starts and sits exactly over the object:
+ * the same file, glow and 3D turn. Its box always has the artwork's own
+ * proportions. Never interactive.
  */
 .cover-clone {
   position: fixed;
@@ -34,36 +32,156 @@
 
 /*
  * The headshot is a bust cut straight across: in the gallery and in the
- * About page's slot its lower edge fades into the room, so the copy in
- * flight fades the same way (on the image, inside the copy's glow filter,
- * so the glow follows the faded edge and is never clipped).
+ * About page's slot its lower edge fades into the room, so the copy fades
+ * the same way (on the image, inside the copy's glow filter, so the glow
+ * follows the faded edge and is never clipped).
  */
 .cover-clone[data-fade='bottom'] img {
   -webkit-mask-image: linear-gradient(to bottom, #000 83%, rgb(0 0 0 / 0.5) 91.5%, transparent);
   mask-image: linear-gradient(to bottom, #000 83%, rgb(0 0 0 / 0.5) 91.5%, transparent);
 }
 
-/*
- * The clicked object while its copy is in flight (opacity, not visibility,
- * so its link keeps keyboard focus and the carousel's own styles are untouched).
- */
+/* The clicked object while its copy stands in for it (opacity, so its link keeps keyboard focus). */
 [data-cover-source][data-cover-moving] {
   opacity: 0 !important;
 }
 
 /*
- * The destination while the copy travels: its slot image and every element
- * marked data-cover-reveal (the opening's text and media) are hidden, so the
- * copy never crosses visible text. Only elements mounted during the
- * transition are affected: those of the page being left carry
- * data-cover-old. `!important` wins over the page's own entrance
- * animations; the reveal removes the attribute and fades them in.
- * Without a running transition (a direct load, a reload, Back) nothing is
- * hidden. The script removes the attribute at the latest after
- * TRANSITION.hardCapMs.
+ * A slow wait (projectTransition.ts, TRANSITION.progressDelayMs): a thin
+ * line in the destination's accent runs across the top of the viewport
+ * while the old page stays, so the click is visibly under way. It fades in,
+ * never covers content (2px, above the header's edge), and leaves with the
+ * old page in the cross-fade.
  */
-html[data-cover-transition] [data-cover-reveal]:not([data-cover-old]),
-html[data-cover-transition] [data-cover-slot]:not([data-cover-old]) > *,
-[data-cover-slot][data-cover-hold] > * {
-  opacity: 0 !important;
+.pt-progress {
+  position: fixed;
+  z-index: 70;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  animation: pt-progress-in 220ms ease-out forwards;
+}
+
+.pt-progress::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 40%;
+  background: linear-gradient(90deg, rgb(var(--pt-accent-rgb, 201 184 255) / 0), rgb(var(--pt-accent-rgb, 201 184 255) / 0.95) 70%, rgb(var(--pt-accent-rgb, 201 184 255) / 0));
+  box-shadow: 0 0 10px rgb(var(--pt-accent-rgb, 201 184 255) / 0.55);
+  content: '';
+  animation: pt-progress-run 1.2s cubic-bezier(0.45, 0, 0.3, 1) infinite;
+}
+
+@keyframes pt-progress-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pt-progress-run {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-progress {
+    animation: none;
+    opacity: 1;
+  }
+
+  .pt-progress::before {
+    width: 100%;
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* The new page arrives through the cross-fade, not with its own short rise. */
+html[data-page-transition] .route-reveal {
+  animation: none;
+}
+
+/*
+ * The pages: the browser's picture of the old page fades out while the live
+ * new page fades in, with the same duration and curve, blended additively
+ * (the browser's default for a pair), so the two always sum to a whole
+ * scene: the room behind (the same video on both pages) stays continuous and
+ * nothing dims towards black. The new page's heading and opening media are
+ * part of it from the first frame.
+ */
+:root[data-page-transition]::view-transition-group(root),
+:root[data-page-transition]::view-transition-old(root),
+:root[data-page-transition]::view-transition-new(root) {
+  animation-duration: var(--pt-page-ms, 380ms);
+  animation-timing-function: var(--pt-page-ease, cubic-bezier(0.33, 0, 0.25, 1));
+}
+
+/*
+ * The PNG: the group moves and scales from the copy's box to the slot's box
+ * (both in the artwork's proportions, so the scale is uniform) while a 3D
+ * turn straightens. Inside it the two pictures of the same object hand over
+ * without blending (the new, sharper one on top), so its brightness never
+ * dips or doubles.
+ */
+:root[data-page-transition]::view-transition-group(hk-cover) {
+  animation-duration: var(--pt-cover-ms, 420ms);
+  animation-timing-function: var(--pt-cover-ease, cubic-bezier(0.3, 0.1, 0.15, 1));
+}
+
+:root[data-page-transition]::view-transition-image-pair(hk-cover) {
+  isolation: auto;
+}
+
+:root[data-page-transition]::view-transition-old(hk-cover) {
+  mix-blend-mode: normal;
+  animation: hk-cover-old var(--pt-cover-ms, 420ms) linear both;
+}
+
+:root[data-page-transition]::view-transition-new(hk-cover) {
+  mix-blend-mode: normal;
+  animation: hk-cover-new var(--pt-cover-ms, 420ms) linear both;
+}
+
+/* No slot on screen (a missing or off-screen destination): the copy leaves with the old page. */
+:root[data-page-transition]::view-transition-old(hk-cover):only-child {
+  animation: hk-cover-leave var(--pt-page-ms, 380ms) var(--pt-page-ease, ease-out) both;
+}
+
+@keyframes hk-cover-old {
+  0%,
+  40% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes hk-cover-new {
+  0% {
+    opacity: 0;
+  }
+
+  40%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes hk-cover-leave {
+  to {
+    opacity: 0;
+  }
 }

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { ImageId } from '../media'
 import type { ProjectId } from '../projects'
 
@@ -5,36 +6,46 @@ import type { ProjectId } from '../projects'
  * Copy of the /about page (src/components/about/AboutContent.tsx).
  *
  * Sources (see docs/content-provenance.md):
- * - Greeting and the two opening paragraphs: Harlie's wording, verbatim
- *   (brief v5, section 25).
+ * - Greeting and the two opening paragraphs: Harlie's draft (brief v8,
+ *   section 15), kept almost word for word; it already reads naturally and
+ *   claims nothing beyond her degree and her roles.
  * - Education: the résumé (public/resume/harlie-katz-resume.pdf). School,
- *   degree, minor, certificate and Sutardja Center, "Aug 2023 - May 2026",
- *   "Completed in 3 years", and the coursework list exactly as the résumé
- *   names it (topic labels, not official course titles). GPA is left out on
- *   purpose. The paragraph is the brief's suggested wording (section 26).
+ *   degree, minor, certificate and Sutardja Center, "Aug 2023 - May 2026"
+ *   and "Completed in 3 years". GPA is left out on purpose. The two
+ *   paragraphs are Harlie's (brief v8, section 15) with one accuracy edit:
+ *   "psychology" is dropped from the subjects, because the résumé's
+ *   coursework (Artificial Intelligence, Large Language Models, Machine
+ *   Learning, Computational Cognitive Modeling, Data Analytics, AI
+ *   Governance, Human Behavior, Computer Science, User Experience, Economic
+ *   Systems) does not name it. Machine learning, data science (the minor and
+ *   Data Analytics), computer science, user experience and human cognition
+ *   (the Cognitive Science degree, Computational Cognitive Modeling) are all
+ *   supported. The separate coursework list is gone (brief v8: no duplicate
+ *   list of the same subjects).
  * - Experience: organizations, titles and dates exactly as on the résumé
  *   ("&" written as "and"; Jumpstart is "Founder and Product Lead" per the
- *   brief). One contribution sentence each, drawn from the résumé and the
- *   brief's own case-study copy, with no metrics:
+ *   brief). One first-person contribution, drawn from the résumé and the
+ *   case-study copy:
  *   PlanetArt: résumé "Led UK pricing, competitor, and vendor research to
- *   shape CafePress's launch strategy and prototype e-commerce site" and
- *   brief section 23 ("coded a localized CafePress storefront prototype").
- *   Shift Content: brief section 22 (lighting, interview audio, camera,
- *   B-roll, editing, working directly with the founder).
- *   The Artesian Network: the brief's sentence (section 27); the résumé's
- *   "Produced 4 executive white papers" supports "wrote" (no number used).
- *   Valiance Capital: brief section 20 (proposed the agent, wrote its
- *   requirements, developed test cases for its rollout).
+ *   shape CafePress's launch strategy and prototype e-commerce site".
+ *   Shift Content: the Creative Production case study (lighting, interview
+ *   audio, camera, B-roll, editing, working directly with the founder).
+ *   The Artesian Network: the brief's sentence (v5 section 27, v8 section
+ *   15); the résumé's "Produced 4 executive white papers" supports "wrote"
+ *   (no number used).
+ *   Valiance Capital: the AI Leasing Agent case study (proposed the agent,
+ *   wrote its requirements, developed test cases for its rollout) and the
+ *   résumé ("AI leasing agent adopted across 18 properties"), the one
+ *   verified outcome, in bold.
  *   Jumpstart Finance: résumé "Led a 5-person international team from
- *   customer discovery to prototype and pitch" (the sign-up figure is left
- *   out here; it is on the case study with its qualification).
+ *   customer discovery to prototype and pitch" (the sign-up figure stays on
+ *   the case study with its qualification).
  *   PlanetArt links only to its internship work (CafePress UK); the
  *   Merchandising Platform is an independent project.
- * - Creative work: the original creative portfolio has Film and Art (charcoal
- *   drawings) sections; An Artistic End's poster, YouTube id, description and
- *   upload month come from the original portfolio and YouTube (the same data
- *   as src/content/creative.ts, kept here so About does not depend on it).
- *   Role credits are not shown (unverified).
+ * - Creative work: the original creative portfolio (/creative/) and An
+ *   Artistic End, with its authentic poster and YouTube id from the
+ *   original portfolio. Titles and actions only (brief v8, section 16: no
+ *   publication metadata or repetitive captions).
  *
  * Authored copy uses no colons and no em dashes.
  */
@@ -43,8 +54,8 @@ export interface Role {
   org: string
   role: string
   dates: string
-  /** One concise contribution sentence. */
-  contribution: string
+  /** One concise first-person contribution (a verified outcome may be bold). */
+  contribution: ReactNode
   /** The related case study, where there is one. */
   project?: ProjectId
 }
@@ -54,9 +65,10 @@ const FILM_POSTER: ImageId = 'film-artistic-end'
 
 export const ABOUT = {
   greeting: 'Hi, I’m Harlie.',
+  /** The first paragraph is set as the lead. */
   bio: [
-    'I studied cognitive science and data science at UC Berkeley. My work connects research, product development, and applied AI. I’m interested in how people make decisions and how software can support them.',
-    'I have worked across product operations, enterprise AI research, leasing, and creative production. Those experiences shape how I approach problems and test ideas.',
+    'I’m deeply invested in the future of applied AI and in building products that make it useful in everyday work. My background in cognitive science and data science shapes how I understand people, evaluate technology, and develop ideas.',
+    'I want to work where research becomes a product decision, a working prototype, or a better way to operate. My experience spans product operations, enterprise AI research, leasing, and creative production.',
   ],
   portraitLabel: 'Portrait of Harlie Katz',
 
@@ -68,19 +80,9 @@ export const ABOUT = {
     certificateSource: 'Sutardja Center',
     dates: 'August 2023 to May 2026',
     pace: 'Completed in three years',
-    text: 'Cognitive science informs how I think about attention, learning, and decision-making. Data science gives me methods for examining evidence and testing ideas.',
-    courseworkTitle: 'Relevant coursework',
-    coursework: [
-      'Artificial Intelligence',
-      'Large Language Models',
-      'Machine Learning',
-      'Computational Cognitive Modeling',
-      'Data Analytics',
-      'AI Governance',
-      'Human Behavior',
-      'Computer Science',
-      'User Experience',
-      'Economic Systems',
+    text: [
+      'I studied intelligence across cognitive and computational systems, with coursework spanning machine learning, data science, computer science, user experience, and human cognition.',
+      'This gave me an interdisciplinary foundation for understanding how people think, how intelligent systems are built, and how technology can be designed around human behavior.',
     ],
   },
 
@@ -90,34 +92,38 @@ export const ABOUT = {
       org: 'PlanetArt',
       role: 'Product Operations and Merchandising Intern',
       dates: 'June to August 2026',
-      contribution: 'Led UK pricing, competitor, and vendor research for CafePress and coded a localized storefront prototype.',
+      contribution: 'I led UK pricing, competitor, and vendor research for CafePress and coded a localized storefront prototype.',
       project: 'cafepress-uk',
     },
     {
       org: 'Shift Content',
       role: 'Creative Strategy and Client Solutions Intern',
       dates: 'January to May 2026',
-      contribution: 'Worked with the founder on client films, from lighting and interview audio to camera work and editing.',
+      contribution: 'I worked with the founder on client films, from lighting and interview audio to camera work and editing.',
       project: 'client-work',
     },
     {
       org: 'The Artesian Network',
       role: 'Enterprise AI Research Associate',
       dates: 'June 2025 to January 2026',
-      contribution: 'Researched enterprise AI applications and wrote white papers on adoption and implementation.',
+      contribution: 'I researched enterprise AI applications and wrote white papers on adoption and implementation.',
     },
     {
       org: 'Valiance Capital',
       role: 'Leasing and Operations Associate',
       dates: 'October 2024 to June 2025',
-      contribution: 'Proposed an AI leasing agent, wrote its requirements, and developed test cases for its rollout.',
+      contribution: (
+        <>
+          I proposed an AI leasing agent, wrote its requirements, and developed test cases for its rollout. The agent was <strong>adopted across 18 properties</strong>.
+        </>
+      ),
       project: 'ai-leasing-agent',
     },
     {
       org: 'Jumpstart Finance',
       role: 'Founder and Product Lead',
       dates: 'June to July 2024',
-      contribution: 'Led a five-person team at the European Innovation Academy in Porto from customer discovery to prototype and pitch.',
+      contribution: 'I led a five-person team at the European Innovation Academy in Porto from customer discovery to prototype and pitch.',
       project: 'jumpstart-finance',
     },
   ] satisfies Role[],
@@ -127,16 +133,15 @@ export const ABOUT = {
   portfolio: {
     /** The restored original creative homepage (a separate static build, outside the router). */
     href: '/creative/',
-    cta: 'Open creative portfolio',
-    text: 'Short films and charcoal drawings.',
+    title: 'Creative Portfolio',
+    action: 'Open portfolio',
   },
   film: {
     title: 'An Artistic End',
-    note: 'An experimental short film about self-objectification, artistic identity, and existential isolation.',
-    meta: 'Published on YouTube · January 2026',
     youtubeId: 'a2Vm1LFB_68',
     poster: FILM_POSTER,
-    play: 'Play film',
+    action: 'Play film',
+    /** A fallback once the player is mounted (in case the embed is blocked). */
     youtube: 'Watch on YouTube',
   },
 

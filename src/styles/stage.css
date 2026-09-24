@@ -1,32 +1,64 @@
 /*
- * The dark architectural setting behind every professional page: the
+ * The architectural setting behind every professional page: the
  * persistent background set (StageBackground, mounted once so it never
  * restarts), its readability layers, a route-transition helper, and the
  * pointer trail canvas.
  *
- * Readability uses broad, smoothly blended gradients only (no translucent
- * panels with edges):
- *   __shade    a uniform shade per route: lightest on the homepage (the
- *              room frames the carousel), stronger on interior pages
- *   __read     the reading layer (interior pages): strongest behind the
- *              case-study text column, easing off towards the media and
- *              the outer margins; a broad, even layer on About
- *   ::before   homepage only: a soft pool of shade behind the identity
- *   __band     a soft band that dims the bright floor line, so it never cuts
- *              through paragraphs, rows, captions or controls
- * The room stays visible around media and in the outer margins.
+ * The loop itself is a dark room, so the layers are light: the room's
+ * pillars, lit edges, floor reflections and floor line stay visible, most
+ * of all on the homepage and About (brief v8, section 5). Readability uses
+ * broad, smoothly blended gradients only (no translucent panels with edges):
+ *   __shade    a uniform shade per route: lightest on the homepage, then
+ *              About, a little more on case studies
+ *   __read     the reading layer (interior pages): on case studies strongest
+ *              behind the text column, easing off towards the media and the
+ *              outer margins; on About a broad, light layer that is a little
+ *              stronger over the brighter floor; on wide windows both ease
+ *              off in the margins beside the content column
+ *   ::before   homepage only: a faint pool of shade behind the identity
+ *   ::after    framing: darker under the header and at the bottom edge, a
+ *              light side vignette (per route, lightest on the homepage)
+ *   __band     a soft band that dims the bright floor line behind reading
+ *              text (strong on case studies, light on About, faint on the
+ *              homepage, where the objects stand on that line)
+ * Text contrast over the video is measured at several loop times
+ * (node_modules/.cache-scripts/v8s-contrast.mjs).
  */
 
 /* ----------------------------------------------------------------------- */
 /* Persistent background set                                                */
 /* ----------------------------------------------------------------------- */
 
+/* Registered, so the framing (::after) eases between routes like the other layers. */
+@property --frame-top {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0.56;
+}
+
+@property --frame-bottom {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0.5;
+}
+
+@property --vignette {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0.32;
+}
+
 .stage-bg {
-  --bg-shade: 0.5;
+  /* Per route (below): the uniform shade, the reading layer (0 to 1), the framing and the floor-line band. */
+  --bg-shade: 0.12;
   --read: 1;
+  /* Framing (::after): top and bottom edge shade, side vignette. */
+  --frame-top: 0.56;
+  --frame-bottom: 0.5;
+  --vignette: 0.32;
   /* Floor-line band strength with the reading layer off / fully on. */
-  --band-from: 0.55;
-  --band-to: 0.9;
+  --band-from: 0.2;
+  --band-to: 0.72;
   --band-above: 120px;
   --band-below: 170px;
   /*
@@ -36,14 +68,28 @@
    * narrower than 4:3, else 55% of the height + 7.5% of the width.
    */
   --floor-y: max(65%, calc(55% + 7.5vw));
-  /* Reading layer fill: phones and tablets read across the whole width. */
-  --read-fill: rgb(5 6 9 / 0.48);
+  /*
+   * Reading layer fill (phones and tablets read across the whole width): a
+   * light layer over the dark walls, a little stronger from just above the
+   * floor line down, where the loop is brightest (floor reflections).
+   */
+  --read-fill: linear-gradient(
+    to bottom in oklch,
+    rgb(5 6 9 / 0.34),
+    rgb(5 6 9 / 0.3) calc(var(--floor-y) - 30%),
+    rgb(5 6 9 / 0.46) calc(var(--floor-y) - 4%),
+    rgb(5 6 9 / 0.46)
+  );
   position: fixed;
   inset: 0;
   z-index: 0;
   overflow: hidden;
   background: var(--stage-room);
   pointer-events: none;
+  transition:
+    --frame-top 280ms var(--ease-out),
+    --frame-bottom 280ms var(--ease-out),
+    --vignette 280ms var(--ease-out);
 }
 
 /* The portrait loop (chosen below 600px) has its line at about 65.2% of a 470:834 frame. */
@@ -97,24 +143,43 @@
   transition: opacity 280ms var(--ease-out);
 }
 
+/* Homepage: the brightest room. No reading layer; the objects stand on the visible floor line. */
 .stage-bg[data-route='home'] {
-  --bg-shade: 0.34;
+  --bg-shade: 0.04;
   --read: 0;
+  --frame-top: 0.42;
+  --frame-bottom: 0.34;
+  --vignette: 0.16;
 }
 
-/* Case studies: a lighter uniform shade than before; the reading layer does the work behind the text. */
+/* Case studies: the reading layer does the work behind the text column; the room stays visible around the media. */
 .stage-bg[data-route='case'] {
-  --bg-shade: 0.38;
+  --bg-shade: 0.16;
+  --band-to: 0.9;
 }
 
+/*
+ * About (and the not-found page): almost as bright as the homepage. A light
+ * reading layer over the dark walls (the pillars stay in view), a little
+ * stronger over the brighter floor, where paragraphs pass as the page scrolls.
+ */
 .stage-bg[data-route='about'],
 .stage-bg[data-route='other'] {
-  --bg-shade: 0.5;
+  --bg-shade: 0.08;
+  /* Light at the edges and corners, where no text runs: the lit wall bases stay in view. */
+  --vignette: 0.14;
+  --read-fill: linear-gradient(
+    to bottom in oklch,
+    rgb(5 6 9 / 0.26),
+    rgb(5 6 9 / 0.2) calc(var(--floor-y) - 30%),
+    rgb(5 6 9 / 0.44) calc(var(--floor-y) - 4%),
+    rgb(5 6 9 / 0.44)
+  );
 }
 
 @media (max-width: 767.98px) {
   .stage-bg {
-    --bg-phone: 0.1;
+    --bg-phone: 0.06;
   }
 }
 
@@ -122,29 +187,50 @@
 .stage-bg__reflection {
   top: var(--floor-y);
   height: 40%;
-  background: radial-gradient(40% 62% at 50% 0% in oklch, color-mix(in oklch, var(--stage-violet) 16%, transparent), transparent 74%);
-  opacity: calc(0.8 - 0.5 * var(--read));
+  background: radial-gradient(40% 62% at 50% 0% in oklch, color-mix(in oklch, var(--stage-violet) 18%, transparent), transparent 74%);
+  opacity: calc(0.9 - 0.45 * var(--read));
+  transition: opacity 280ms var(--ease-out);
 }
 
 /* Reading layer. */
 .stage-bg__read {
-  background: var(--read-fill);
+  background: var(--read-sides, none), var(--read-fill);
   opacity: var(--read);
   transition: opacity 280ms var(--ease-out);
 }
 
 /*
- * Homepage: a soft pool of shade behind the identity block in the upper
- * left (name, "Professional portfolio", the positioning sentence), so the
- * sentence reads over any frame of the loop. No edge; the carousel below it
- * keeps the lighter room.
+ * Tablets (the landscape loop in a narrow window): the room's lit pillar
+ * faces fall at the left and right edges, right behind the text, which runs
+ * nearly edge to edge here. Darken the two sides; the floor and the room in
+ * the middle stay visible.
+ */
+@media (min-width: 600px) and (max-width: 959.98px) {
+  .stage-bg[data-file='desktop'] {
+    --read-sides: linear-gradient(
+      to right in oklch,
+      rgb(5 6 9 / 0.72),
+      rgb(5 6 9 / 0.44) 12%,
+      rgb(5 6 9 / 0) 26%,
+      rgb(5 6 9 / 0) 74%,
+      rgb(5 6 9 / 0.44) 88%,
+      rgb(5 6 9 / 0.72)
+    );
+  }
+}
+
+/*
+ * Homepage: a faint pool of shade behind the identity block in the upper
+ * left (the lit pillar edges there never compete with the title). No edge;
+ * the gallery below it keeps the bright room. The homepage adds its own
+ * pool (home.css .home::before).
  */
 .stage-bg::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: radial-gradient(48% 36% at 22% 17% in oklch, rgb(5 6 9 / 0.52), rgb(5 6 9 / 0.3) 55%, rgb(5 6 9 / 0));
+  background: radial-gradient(44% 40% at 20% 24% in oklch, rgb(5 6 9 / 0.36), rgb(5 6 9 / 0.18) 55%, rgb(5 6 9 / 0));
   opacity: 0;
   transition: opacity 280ms var(--ease-out);
 }
@@ -155,7 +241,7 @@
 
 @media (max-width: 767.98px) {
   .stage-bg::before {
-    background: radial-gradient(95% 30% at 30% 14% in oklch, rgb(5 6 9 / 0.5), rgb(5 6 9 / 0.26) 55%, rgb(5 6 9 / 0));
+    background: radial-gradient(95% 30% at 30% 14% in oklch, rgb(5 6 9 / 0.4), rgb(5 6 9 / 0.2) 55%, rgb(5 6 9 / 0));
   }
 }
 
@@ -165,6 +251,7 @@
  * and is complete before the route changes, so the new page's text never
  * appears over the lighter home room or its bright floor line.
  */
+.stage-bg[data-hurry],
 .stage-bg[data-hurry]::before,
 .stage-bg[data-hurry] .stage-bg__shade,
 .stage-bg[data-hurry] .stage-bg__read,
@@ -204,39 +291,110 @@
     --media-start: calc(50% - var(--grid) / 2 + var(--grid) * 0.48);
     --read-fill: linear-gradient(
       to right in oklch,
-      rgb(5 6 9 / 0.7),
-      rgb(5 6 9 / 0.68) calc(var(--text-end) + 16px),
-      rgb(5 6 9 / 0.34) calc(var(--media-start) + 32px),
-      rgb(5 6 9 / 0.12) calc(var(--media-start) + var(--grid) * 0.22),
-      rgb(5 6 9 / 0.06)
+      rgb(5 6 9 / 0.66),
+      rgb(5 6 9 / 0.64) calc(var(--text-end) + 16px),
+      rgb(5 6 9 / 0.28) calc(var(--media-start) + 32px),
+      rgb(5 6 9 / 0.08) calc(var(--media-start) + var(--grid) * 0.22),
+      rgb(5 6 9 / 0.04)
     );
   }
 
-  /* The floor-line band is full strength behind the text, lighter behind the media (whose caption it still dims). */
+  /* The floor-line band is full strength behind the text, lighter behind the media. */
   .stage-bg[data-route='case'] .stage-bg__band {
-    mask-image: linear-gradient(to right, #000 50%, rgb(0 0 0 / 0.72) 64%, rgb(0 0 0 / 0.66));
+    mask-image: linear-gradient(to right, #000 50%, rgb(0 0 0 / 0.66) 64%, rgb(0 0 0 / 0.56));
+  }
+}
+
+/*
+ * Wide windows (1500px and up): the outer margins beside the content column
+ * (the same --content-max as the header, case grid and About) never carry
+ * text, so the reading layer and the floor-line band ease off there and the
+ * room's lit wall bases and floor show at both edges. The easing ends 12px
+ * before the column, so every line of text keeps the full reading layer
+ * (checked with node_modules/.cache-scripts/v8s2-contrast.mjs at 1600 and
+ * 1920 wide). Below 1500px the margins are too narrow to be worth a ramp.
+ */
+@media (min-width: 1500px) {
+  .stage-bg {
+    --grid: min(var(--content-max), 100% - 2 * var(--gutter));
+    --col-start: calc(50% - var(--grid) / 2);
+    --col-end: calc(50% + var(--grid) / 2);
+    --margin-mask: linear-gradient(
+      to right,
+      rgb(0 0 0 / 0.4),
+      rgb(0 0 0 / 0.74) calc(var(--col-start) * 0.62),
+      #000 calc(var(--col-start) - 12px),
+      #000 calc(var(--col-end) + 12px),
+      rgb(0 0 0 / 0.74) calc(100% - var(--col-start) * 0.62),
+      rgb(0 0 0 / 0.4)
+    );
   }
 
-  /* About and other pages: content on both sides; lighter towards the outer margins. */
-  .stage-bg[data-route='about'],
-  .stage-bg[data-route='other'] {
-    --read-fill: radial-gradient(
-      120% 90% at 50% 50% in oklch,
-      rgb(5 6 9 / 0.54),
-      rgb(5 6 9 / 0.48) 55%,
-      rgb(5 6 9 / 0.26)
+  .stage-bg:is([data-route='about'], [data-route='other']) :is(.stage-bg__read, .stage-bg__band) {
+    mask-image: var(--margin-mask);
+  }
+
+  /*
+   * About: from about 1500px wide the room's brightest lit pillar face (73%
+   * to 82% of the width over the loop, above the floor line) falls where the
+   * Experience dates end, at the right edge of the content column. A soft
+   * extra shade over that face only keeps those small muted lines above
+   * 4.5:1 at every loop time (1920×1200, 2400×1350, 2560×1440 failed
+   * without it); the face stays visible, just calmer.
+   */
+  .stage-bg[data-route='about'] .stage-bg__read::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to right,
+      rgb(5 6 9 / 0) 69%,
+      rgb(5 6 9 / 0.52) 73%,
+      rgb(5 6 9 / 0.52) 82.5%,
+      rgb(5 6 9 / 0) 86.5%
+    );
+    mask-image: linear-gradient(to bottom, #000 calc(var(--floor-y) - 4%), transparent calc(var(--floor-y) + 3%));
+  }
+
+  /* Case studies: the same easing in the left margin (the right side is already light beside the media). */
+  .stage-bg[data-route='case'] {
+    --read-fill: linear-gradient(
+      to right in oklch,
+      rgb(5 6 9 / 0.26),
+      rgb(5 6 9 / 0.49) calc(var(--col-start) * 0.62),
+      rgb(5 6 9 / 0.66) calc(var(--col-start) - 12px),
+      rgb(5 6 9 / 0.64) calc(var(--text-end) + 16px),
+      rgb(5 6 9 / 0.28) calc(var(--media-start) + 32px),
+      rgb(5 6 9 / 0.08) calc(var(--media-start) + var(--grid) * 0.22),
+      rgb(5 6 9 / 0.04)
+    );
+  }
+
+  .stage-bg[data-route='case'] .stage-bg__band {
+    mask-image: linear-gradient(
+      to right,
+      rgb(0 0 0 / 0.4),
+      rgb(0 0 0 / 0.74) calc(var(--col-start) * 0.62),
+      #000 calc(var(--col-start) - 12px),
+      #000 50%,
+      rgb(0 0 0 / 0.66) 64%,
+      rgb(0 0 0 / 0.56)
     );
   }
 }
 
-/* Framing light: darker at the header and at the bottom, a light side vignette (the room stays visible in the margins). */
+/*
+ * Framing light: darker under the header and at the bottom edge, a light
+ * side vignette. Per route (--frame-top, --frame-bottom, --vignette): the
+ * homepage keeps its pillars and floor in view.
+ */
 .stage-bg::after {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.66), rgb(5 6 9 / 0) 22%, rgb(5 6 9 / 0) 62%, rgb(5 6 9 / 0.6)),
-    radial-gradient(130% 95% at 50% 48% in oklch, rgb(5 6 9 / 0) 58%, rgb(5 6 9 / 0.5));
+    linear-gradient(to bottom in oklch, rgb(5 6 9 / var(--frame-top)), rgb(5 6 9 / 0) 20%, rgb(5 6 9 / 0) 64%, rgb(5 6 9 / var(--frame-bottom))),
+    radial-gradient(130% 95% at 50% 48% in oklch, rgb(5 6 9 / 0) 58%, rgb(5 6 9 / var(--vignette)));
 }
 
 /* ----------------------------------------------------------------------- */

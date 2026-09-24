@@ -11,15 +11,18 @@ import type { NavigationType } from 'react-router-dom'
  * into a reloaded document, e.g. from the creative portfolio, which is a
  * separate page load). The gallery stores its position in items (0 to 7),
  * so it survives a different window size.
+ *
+ * The visitor's own pause (the gallery's keyboard-revealed "Pause motion"
+ * control) lasts for the session: the gallery stays still on every return
+ * to the homepage until they resume it.
  */
 export interface SavedPosition {
-  /** Gallery position in items (the featured object's index when settled). */
+  /** Gallery position in items. */
   pos?: number
-  /** The visitor had stepped to it (arrows, keys, swipe): it holds on return instead of drifting. */
-  manual?: boolean
 }
 
 const STORAGE_KEY = 'hk-home-gallery'
+const PAUSE_KEY = 'hk-home-gallery-paused'
 const memory = new Map<string, SavedPosition>()
 
 /** How this document was loaded ('navigate', 'reload', 'back_forward'). */
@@ -48,7 +51,8 @@ export function recallPosition(key: string, navigationType: NavigationType): Sav
   if (inMemory) return inMemory
   // The first render of a document: only a Back/Forward load restores (a reload or a new visit starts fresh).
   if (documentNavigation() !== 'back_forward') return null
-  return readStorage()[key] ?? null
+  const stored = readStorage()[key]
+  return stored && typeof stored.pos === 'number' && Number.isFinite(stored.pos) ? stored : null
 }
 
 /** Remembers the position in memory (cheap; call as often as needed). */
@@ -69,5 +73,30 @@ export function persistPosition(key: string) {
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(all))
   } catch {
     /* Storage unavailable: in-app Back still restores from memory. */
+  }
+}
+
+let paused: boolean | null = null
+
+/** Whether the visitor paused the gallery's travel (this session). */
+export function recallPaused(): boolean {
+  if (paused === null) {
+    try {
+      paused = window.sessionStorage.getItem(PAUSE_KEY) === '1'
+    } catch {
+      paused = false
+    }
+  }
+  return paused
+}
+
+/** Remembers the visitor's pause for the session. */
+export function notePaused(value: boolean) {
+  paused = value
+  try {
+    if (value) window.sessionStorage.setItem(PAUSE_KEY, '1')
+    else window.sessionStorage.removeItem(PAUSE_KEY)
+  } catch {
+    /* Storage unavailable: the pause lasts while this document does. */
   }
 }

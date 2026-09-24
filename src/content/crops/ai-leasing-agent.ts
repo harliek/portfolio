@@ -2,29 +2,29 @@ import type { ImageAsset } from '../media'
 import type { CropRegion } from '.'
 
 /**
- * Focused crops for the AI Leasing Agent page (scripts/crops/ai-leasing-agent.json →
+ * Crops for the AI Leasing Agent page (scripts/crops/ai-leasing-agent.json →
  * node scripts/prepare-media.mjs crops ai-leasing-agent). Keys are image ids; each entry
  * is a full ImageAsset (type: 'image') with the dimensions the task prints.
  *
- * All three are readable views of one illustrative conversation
- * (Valiance Capital/messages.png, 1672×941, invented names and data; its own
- * footer reads “Reconstruction · Invented data”). The page labels every view
- * “Illustrative conversation”, and a click opens the whole illustration
- * (valiance-messages). All three are 16:10, the page's one stage ratio, cut in
- * the white space between messages and panels so no line of text is split.
- * At the 645px desktop stage the chat text is about 14px (0.75×) and the
- * panel text about 17px (1.09×).
+ * All are views of one illustrative conversation (Valiance Capital/messages.png,
+ * 1672×941, invented names and data; its own footer reads “Reconstruction ·
+ * Invented data”). The page labels it “Illustrative conversation” once, and the
+ * enlarged view opens the whole illustration (valiance-messages).
  *
- * Phones (round 4, R4-06): the stacked figures below 600px use narrower crops
- * of just the message or panel column (ala-phone-*), cut between lines so no
- * line is split. At a 350px column the 18px chat text shows at about 9 to 10px
- * (0.52× to 0.55×; the longest chat lines are 640px wide, so a whole line
- * cannot be larger) and the panel text at about 11.5px (0.72×). They read in
- * place, so these figures have no enlarge control.
+ * - ala-conversation: the three messages with their avatars, names and times
+ *   (Jordan, the prospective renter; Oski, the assistant; Sam, from the leasing
+ *   team), cut in the white space above Jordan and above the message field, so
+ *   no line of text is split. It is the ONE image of the desktop and tablet
+ *   stage (brief-v8 section 11): the page emphasises one message after another
+ *   over it instead of replacing it. At the 645px desktop stage the 18px chat
+ *   text shows at about 14px (0.78×).
+ * - ala-phone-*: phones (below 600px), the text of each message alone, cut
+ *   inside its bubble at one shared width (x 376 to 1036), so the three read in
+ *   order at the same scale in the 350px column (the 18px text at about 9.5px,
+ *   0.53×; the longest chat lines are 640px wide, so a line cannot be larger).
  *
- * AI_LEASING_AGENT_REGIONS: where each desktop crop sits in the whole
- * illustration (source pixels, from scripts/crops/ai-leasing-agent.json), so
- * the larger view opens at actual size on the clicked detail.
+ * AI_LEASING_AGENT_REGIONS: where ala-conversation sits in the whole
+ * illustration (source pixels), so the enlarged view opens at actual size on it.
  */
 const conversation = (a: Omit<ImageAsset, 'type' | 'file' | 'fallback' | 'provenance' | 'synthetic' | 'source'>): ImageAsset => ({
   type: 'image',
@@ -37,71 +37,45 @@ const conversation = (a: Omit<ImageAsset, 'type' | 'file' | 'fallback' | 'proven
 })
 
 export const AI_LEASING_AGENT_CROPS = {
-  'ala-chat-request': conversation({
-    id: 'ala-chat-request',
-    width: 856,
-    height: 535,
-    widths: [640, 856],
-    alt: 'Illustrative web chat for Maple Court. Jordan asks for a two-bedroom under $2,600 near campus for August, mentions one cat and an August 15 move-in, and asks whether the application fee can be waived and unit 2B held. The assistant, Oski, offers general information about floor plans, pet policies, and the application process, and says the fee waiver and unit hold need review by leasing staff.',
-    caption: 'Jordan’s request and the assistant’s reply.',
-    role: 'AI Leasing Agent stage (opening, the request, the answer)',
-    crop: 'x 264–1120, y 102–637 of messages.png (chat header, Jordan and Oski)',
+  'ala-conversation': conversation({
+    id: 'ala-conversation',
+    width: 831,
+    height: 640,
+    widths: [640, 831],
+    alt: 'Illustrative web chat for Maple Court apartments. Jordan, a prospective renter, asks for a two-bedroom under $2,600 near campus for August, mentions one cat and an August 15 move-in, and asks whether the application fee can be waived and unit 2B held. The assistant, Oski, offers general information about floor plans, pet policies, and the application process, and says the fee waiver and unit hold need review by leasing staff, who it will connect. Sam, from the Maple Court leasing team, takes over, offering to help with the fee waiver request and unit hold, and asks for an email or phone number.',
+    role: 'AI Leasing Agent stage (desktop and tablet): the whole exchange, with each message emphasised in turn',
+    crop: 'x 262–1093, y 208–848 of messages.png (the three messages, without the chat header and the message field)',
   }),
-  'ala-live-check': conversation({
-    id: 'ala-live-check',
-    width: 594,
-    height: 371,
-    widths: [594],
-    alt: 'Illustrative Behind the scenes panel beside the chat. Live data required, current pricing and availability are checked for the preferred dates, floor plan, and pet policy. Human approval, requests to waive the application fee or hold a specific unit need review and approval from leasing staff.',
-    caption: 'The panel beside the chat, with the live data check and the approval step.',
-    role: 'AI Leasing Agent stage (live information check)',
-    crop: 'x 1078–1672, y 364–735 of messages.png (the Behind the scenes panel)',
+  'ala-phone-renter': conversation({
+    id: 'ala-phone-renter',
+    width: 660,
+    height: 134,
+    widths: [660],
+    alt: 'Jordan writes that they are looking for a two-bedroom under $2,600 near campus for August, have one cat, and hope to move in on August 15, and asks whether the application fee can be waived and unit 2B held.',
+    role: 'AI Leasing Agent stage on phones (the renter’s question)',
+    crop: 'x 376–1036, y 262–396 of messages.png (the text of Jordan’s message, inside its bubble)',
   }),
-  'ala-chat-handoff': conversation({
-    id: 'ala-chat-handoff',
-    width: 856,
-    height: 535,
-    widths: [640, 856],
-    alt: 'Illustrative web chat. Oski says requests to waive the application fee or hold a specific unit need review by leasing staff and connects Jordan with a team member. Sam, from the Maple Court leasing team, offers to help with the fee waiver request and unit hold and asks for an email or phone number.',
-    caption: 'The assistant refers the request to staff, and a team member replies.',
-    role: 'AI Leasing Agent stage (staff handoff)',
-    crop: 'x 268–1124, y 406–941 of messages.png (Oski, Sam and the message field)',
+  'ala-phone-assistant': conversation({
+    id: 'ala-phone-assistant',
+    width: 660,
+    height: 150,
+    widths: [660],
+    alt: 'The assistant replies that it can help with general information about floor plans, pet policies, and the application process, and that requests to waive the application fee or hold a specific unit need review by the leasing staff, so it will connect Jordan with a team member.',
+    role: 'AI Leasing Agent stage on phones (the assistant’s answer)',
+    crop: 'x 376–1036, y 470–620 of messages.png (the text of Oski’s message, inside its bubble)',
   }),
-  'ala-phone-request': conversation({
-    id: 'ala-phone-request',
-    width: 638,
-    height: 308,
-    widths: [638],
-    alt: 'Illustrative web chat. Jordan asks for a two-bedroom under $2,600 near campus for August, mentions one cat and an August 15 move-in, and asks whether the application fee can be waived and unit 2B held. The assistant, Oski, offers general information about floor plans, pet policies, and the application process.',
-    caption: 'Jordan’s request and the start of the assistant’s reply.',
-    role: 'AI Leasing Agent stacked figure on phones (opening)',
-    crop: 'x 358–996, y 222–530 of messages.png (Jordan’s message and Oski’s first paragraph, the message column only)',
-  }),
-  'ala-phone-panel': conversation({
-    id: 'ala-phone-panel',
-    width: 489,
-    height: 396,
-    widths: [489],
-    alt: 'Illustrative Behind the scenes panel. Live data required, current pricing and availability are checked for the preferred dates, floor plan, and pet policy. Human approval, requests to waive the application fee or hold a specific unit need review and approval from leasing staff.',
-    caption: 'The panel beside the chat, with the live data check and the approval step.',
-    role: 'AI Leasing Agent stacked figure on phones (live information check)',
-    crop: 'x 1164–1653, y 348–744 of messages.png (the Behind the scenes panel only)',
-  }),
-  'ala-phone-handoff': conversation({
-    id: 'ala-phone-handoff',
-    width: 676,
-    height: 306,
-    widths: [676],
-    alt: 'Illustrative web chat. The assistant says requests to waive the application fee or hold a specific unit need review by leasing staff and connects Jordan with a team member. Sam, from the Maple Court leasing team, offers to help with the fee waiver request and unit hold and asks for an email or phone number.',
-    caption: 'The assistant refers the request to staff, and a team member replies.',
-    role: 'AI Leasing Agent stacked figure on phones (staff handoff)',
-    crop: 'x 358–1034, y 532–838 of messages.png (Oski’s referral and Sam’s reply, the message column only)',
+  'ala-phone-staff': conversation({
+    id: 'ala-phone-staff',
+    width: 660,
+    height: 124,
+    widths: [660],
+    alt: 'Sam, from the Maple Court leasing team, takes over, offering to help with the fee waiver request and unit hold, and asks for the best email or phone number.',
+    role: 'AI Leasing Agent stage on phones (the staff handoff)',
+    crop: 'x 376–1036, y 699–823 of messages.png (the text of Sam’s message, inside its bubble)',
   }),
 } satisfies Record<string, ImageAsset>
 
-/** Each desktop crop's rectangle in the whole illustration (source pixels). */
+/** Where the stage's conversation sits in the whole illustration (source pixels). */
 export const AI_LEASING_AGENT_REGIONS = {
-  'ala-chat-request': { of: 'valiance-messages', x: 264, y: 102, w: 856, h: 535 },
-  'ala-live-check': { of: 'valiance-messages', x: 1078, y: 364, w: 594, h: 371 },
-  'ala-chat-handoff': { of: 'valiance-messages', x: 268, y: 406, w: 856, h: 535 },
+  'ala-conversation': { of: 'valiance-messages', x: 262, y: 208, w: 831, h: 640 },
 } satisfies Record<string, CropRegion>

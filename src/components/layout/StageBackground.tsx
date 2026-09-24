@@ -40,18 +40,19 @@ function visibleImagesSettled() {
  * class, chosen once.
  *
  * Readability (src/styles/stage.css): broad, smoothly blended gradients
- * only, no boxes. A base shade per route (lightest on the homepage, where
- * the room frames the carousel); on interior pages a reading layer that is
- * strongest behind the text column and eases off towards the media and the
- * outer margins; a soft pool behind the homepage identity; and a band that
- * dims the bright floor line wherever it sits in the viewport.
+ * only, no boxes, kept light so the room's pillars, floor and floor line
+ * stay visible. A base shade per route (lightest on the homepage, then
+ * About); on case studies a reading layer that is strongest behind the text
+ * column and eases off towards the media and the outer margins (a light,
+ * even one on About); a faint pool behind the homepage identity; and a band
+ * that dims the bright floor line behind reading text.
  *
  * While a project opens from the carousel (projectTransition.ts), the set
  * already shows the destination's treatment, quickly (`data-hurry`), so the
  * darker interior shade is complete before the new page's text appears and
  * the bright floor line never crosses it.
  *
- * Reduced motion (OS or the footer's "Reduce motion"): poster only, no video
+ * Reduced motion (the operating system setting): poster only, no video
  * request. The video pauses whenever it cannot be seen or is covered: the
  * tab is hidden, an image or video is enlarged, the small-screen menu is
  * open, or anything is fullscreen. Decorative: aria-hidden.

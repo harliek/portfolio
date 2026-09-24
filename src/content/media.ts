@@ -920,6 +920,37 @@ export const VIDEOS = {
     source: 'PlanetArt/Spreadsheet Agent/Spreadsheet Video.mov (2940×1486, 60fps timebase, 37.8s)',
     notes: 'Silent screen recording (variable frame rate, 60fps timebase) encoded at 30fps and trimmed at 36.4s, before the macOS capture toolbar appears. The first play starts at 16.5s (the request almost typed): the build plan is on screen from 19.5 to 22.5s and the saved sheet from 25.3s.',
   }),
+  /*
+   * Edited, accelerated previews of the two recordings above (scripts/prepare-media.mjs, task `previews`), played
+   * inline on the case pages with the label "Edited preview · 1.5× speed"; expanding plays the complete recording at
+   * original speed, at the matching moment (the page's time map). Every moving part plays at exactly 1.5×; the edits
+   * are cuts between screens (short dissolves), idle stretches left out, and still holds that give a state time to be
+   * read. Neither implies how fast the product responds. No startAt: each begins on its strongest moment.
+   */
+  'merch-console-preview': v({
+    id: 'merch-console-preview', title: 'Merchandising Platform walkthrough', width: 1600, height: 808, duration: 10.33,
+    variants: [
+      { src: '/media/video/merch-console-preview-960.mp4', width: 960, height: 484, maxViewport: 899, bytes: 404_235 },
+      { src: '/media/video/merch-console-preview-1600.mp4', width: 1600, height: 808, bytes: 855_664 },
+    ],
+    poster: 'merch-replenish', posterTimestamp: 0, hasAudio: false,
+    caption: 'Edited preview at 1.5× speed of the dashboard recording.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'Edited from PlanetArt/Merchandising Dashboard/Dashboard Video.mov (through its site encode, merch-console-1600.mp4, because the original is an iCloud placeholder that could not be downloaded; same timeline)',
+    notes: 'Three parts of the complete recording at 1.5×: the Canyon Pouch drawer from 12.0s (200 units, the Kestrel Goods 200 unit minimum, the note that the console makes a calculation and a CSV export and does not place orders) with Show the working opened and held 3s; Inventory with Export order sheet (20.45 to 21.6s, held 1.3s); Ask running “What is out of stock?” with the query it ran above the answer (44.0 to 46.4s, held 1.8s). 0.25s dissolves between parts and back to the first frame. The poster (merch-replenish, 12.0s) is the first frame.',
+  }),
+  'spreadsheet-agent-preview': v({
+    id: 'spreadsheet-agent-preview', title: 'Spreadsheet Agent walkthrough', width: 1600, height: 808, duration: 10.17,
+    variants: [
+      { src: '/media/video/spreadsheet-agent-preview-960.mp4', width: 960, height: 486, maxViewport: 899, bytes: 469_056 },
+      { src: '/media/video/spreadsheet-agent-preview-1600.mp4', width: 1600, height: 808, bytes: 987_436 },
+    ],
+    poster: 'spreadsheet-agent-poster', posterTimestamp: 2.97, hasAudio: false,
+    caption: 'Edited preview at 1.5× speed of the spreadsheet recording.',
+    provenance: 'prototype-recording', synthetic: true,
+    source: 'Edited from Spreadsheet Agent/Spreadsheet Video.mov (2940×1486)',
+    notes: 'One continuous stretch of the complete recording, 17.0 to 28.75s, at 1.5× (the sheet list and most of the typing, 0 to 17s, are left out): the request finishes (held 0.3s), the build plan appears at 1.8s (held 0.8s with the pointer on Build sheet), the sheet is created and fills to 1,200 rows from 5.8s, the reply that it is ready (held 1.2s), then a short scroll; a 0.3s dissolve back to the first frame. The poster is the build plan (21.0s of the recording, 2.97s here), so reduced motion and a refused autoplay still show the review step.',
+  }),
   aristocracy: v({
     id: 'aristocracy', title: 'Aristocracy', width: 1440, height: 1080, duration: 87.6,
     variants: [

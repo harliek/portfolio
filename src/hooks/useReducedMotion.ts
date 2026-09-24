@@ -1,9 +1,6 @@
 import { motionReduced, useMotionPreference } from './useMotionPreference'
 
-/**
- * Reduced motion as decided by the site-wide preference (the OS setting,
- * or the footer's "Reduce motion" toggle when the visitor has used it).
- */
+/** Reduced motion as set in the operating system (followed live). */
 export function useReducedMotion(): boolean {
   return useMotionPreference().reduced
 }

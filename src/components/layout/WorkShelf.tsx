@@ -20,7 +20,9 @@ export function ExternalMark() {
 
 /**
  * One project entry: one ordinary link with a small thumbnail of the
- * project's PNG object (whole, never cropped), the project name and its
+ * project's PNG object (whole, never cropped), the project's display title
+ * (`displayName`, the title on its cover PNG and the homepage label, e.g.
+ * "Film and Campaign Work" for the Creative Production case study) and its
  * one-line context (employer or independent work), the same in the shelf
  * and the small-screen menu. Hover and focus use the project's own accent
  * and prepare the destination (code, cover, opening image). A plain click
@@ -42,7 +44,7 @@ function ProjectLink({ project, current, thumbs, className, onNavigate }: { proj
         {thumbs && <ResponsiveImage image={project.cover} sizes={THUMB_SIZES} decorative fit="contain" />}
       </span>
       <span className="shelf-item__text">
-        <span className="shelf-item__name">{project.name}</span>
+        <span className="shelf-item__name">{project.displayName}</span>
         <span className="shelf-item__meta">{current ? 'Current page' : project.category}</span>
       </span>
     </>

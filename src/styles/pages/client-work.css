@@ -3,33 +3,69 @@
  * FilmPlayer.tsx). Every selector is scoped under .page-client-work; warm
  * amber is the page accent (--accent from CaseLayout).
  *
- * The page uses the CaseScroll grid and opening (.cs, case.css): 42% text,
- * 6% gap, 52% media on desktop. The media column holds ONE sticky region:
- * the project navigation above a stable 16:9 player and its caption. Every
- * film keeps its proportions inside the frame (the 4:3 Aristocracy film is
- * shown whole with dark side space). Below 960px each project has its own
- * player under its heading.
+ * brief-v8 section 13: the case opening, small anchor links, then three
+ * stacked project sections that scroll naturally, each pairing its own
+ * description with its own film. Desktop (≥960px) uses the CaseScroll grid
+ * (42% text, 6% gap, 52% media): the opening's text on the left and the camera
+ * cover on the right, then each section with its heading level with the top of
+ * its film. Every film keeps its own proportions (the Aristocracy film is 4:3)
+ * in the case studies' player frame (case.css .cs-player), with the player's
+ * own bar below it. Below 960px: heading, film, description.
  */
 
 .page-client-work {
   --fp-fade: 120ms;
-  --fp-radius: 12px;
-  /* Room in the sticky region for the navigation row and its gap, and for the caption row under the frame (one
-     caption line beside the 24px expand control) and its gap. */
-  --fp-nav-h: 58px;
-  --fp-caption: 36px;
 }
 
-/* Touch: the expand control is 44px. */
-@media (hover: none) {
-  .page-client-work {
-    --fp-caption: 56px;
+/* ----------------------------------------------------------------------- */
+/* Opening and anchor links                                                 */
+/* ----------------------------------------------------------------------- */
+
+@media (min-width: 960px) {
+  /* The opening's pieces join the page grid: title, metadata, summary, status and the links on the left; the cover on the right. */
+  .page-client-work .cs.fs[data-layout='sticky'] {
+    grid-template-columns: minmax(0, 42fr) minmax(0, 52fr);
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-areas:
+      'intro cover'
+      'lede cover'
+      'nav cover'
+      'films films';
+  }
+
+  .page-client-work .fs[data-layout='sticky'] > .cs-opening {
+    display: contents;
+  }
+
+  .page-client-work .fs[data-layout='sticky'] > .cs-opening > .cs-intro {
+    grid-area: intro;
+  }
+
+  .page-client-work .fs[data-layout='sticky'] > .cs-opening > .cs-lede {
+    grid-area: lede;
+  }
+
+  /* The cover stands in the media column, centred beside the opening text, with its label at its base. */
+  .page-client-work .fs[data-layout='sticky'] > .cs-opening > .cs-cover {
+    grid-area: cover;
+    align-self: center;
+    justify-content: center;
+    margin-top: 0;
+    padding-block: var(--space-5);
+  }
+
+  .page-client-work .fs[data-layout='sticky'] > .fs-nav {
+    grid-area: nav;
+  }
+
+  .page-client-work .fs[data-layout='sticky'] > .fs-films {
+    grid-area: films;
   }
 }
 
-/* ----------------------------------------------------------------------- */
-/* Project navigation                                                       */
-/* ----------------------------------------------------------------------- */
+.page-client-work .fs-nav {
+  margin-top: var(--space-5);
+}
 
 .page-client-work .fs-nav ul {
   display: flex;
@@ -38,23 +74,103 @@
   list-style: none;
 }
 
-.page-client-work .fs-sticky {
+/* Small anchor links (the site's jump chips, compact): one row beside the cover on laptops, with a 44px target each. */
+.page-client-work .fs-nav__chip {
+  position: relative;
+  min-height: 34px;
+  padding: 0 13px;
+  font-size: 0.8125rem;
+}
+
+.page-client-work .fs-nav__chip::before {
+  content: '';
+  position: absolute;
+  inset: -5px 0;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Project sections                                                         */
+/* ----------------------------------------------------------------------- */
+
+.page-client-work .fs-films {
   display: grid;
-  gap: var(--space-4);
+  gap: clamp(64px, 7vw, 104px);
+  padding-top: clamp(48px, 5vw, 80px);
+}
+
+/* Added to the root's scroll-padding-top: an anchor link lands with the heading and the film's top clear of the header. */
+.page-client-work .fs-film {
+  scroll-margin-top: var(--space-5);
+}
+
+@media (min-width: 960px) {
+  /* Heading and description on the left, the film on the right, their tops level; the next section starts below both. */
+  .page-client-work .fs[data-layout='sticky'] .fs-film {
+    display: grid;
+    grid-template-columns: minmax(0, 42fr) minmax(0, 52fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'head media'
+      'body media';
+    column-gap: var(--case-gap);
+    align-items: start;
+  }
+
+  .page-client-work .fs[data-layout='sticky'] .fs-film__head {
+    grid-area: head;
+  }
+
+  .page-client-work .fs[data-layout='sticky'] .fs-film__media {
+    grid-area: media;
+  }
+
+  .page-client-work .fs[data-layout='sticky'] .fs-film__body {
+    grid-area: body;
+  }
+
+  /* The heading's capitals level with the film's top edge (its half-leading above them). */
+  .page-client-work .fs[data-layout='sticky'] .fs-film__title {
+    margin-top: -0.24em;
+  }
+}
+
+.page-client-work .fs-film__title {
+  margin-bottom: var(--space-1);
+}
+
+.page-client-work .fs-film__meta {
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.page-client-work .fs-film__body {
+  margin-top: var(--space-4);
+}
+
+/* Stacked: heading, then the film (never taller than most of the screen), then the description. */
+.page-client-work .fs[data-layout='stacked'] .fs-film__media {
+  margin-top: var(--space-4);
+}
+
+.page-client-work .fs[data-layout='stacked'] .fp {
+  width: min(100%, calc(72svh * var(--film-r)));
+  margin-inline: auto;
+}
+
+.page-client-work .fs[data-layout='stacked'] .fs-film__body {
+  margin-top: var(--space-5);
 }
 
 /* ----------------------------------------------------------------------- */
 /* Player                                                                   */
 /* ----------------------------------------------------------------------- */
 
-/* The frame across the full width, then the caption row: the caption, and the expand control at its right end
-   (the same control as the case figures, case.css .cs-expand). */
 .page-client-work .fp {
+  /* The expand control (case.css .cs-expand): a quiet 24px glyph with a 40px pointer target, a 44px button on touch. */
   --cs-expand: 24px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-3) var(--space-2);
+  position: relative;
+  isolation: isolate;
   min-width: 0;
   margin: 0;
 }
@@ -62,60 +178,20 @@
 @media (hover: none) {
   .page-client-work .fp {
     --cs-expand: 44px;
-    column-gap: var(--space-3);
   }
 }
 
-/* Beside the story: the caption 12px under the frame, the control level with it (as case.css sticky figures). */
-.page-client-work .fp[data-variant='sticky'] {
-  align-items: start;
-}
-
-.page-client-work .fp > .fp-frame {
-  grid-column: 1 / -1;
-}
-
-.page-client-work .fp > .fp-caption {
-  grid-row: 2;
-  grid-column: 1;
-}
-
-.page-client-work .fp > .fp-expand {
-  grid-row: 2;
-  grid-column: 2;
-}
-
-.page-client-work .fp-frame {
-  position: relative;
-  isolation: isolate;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--fp-radius);
-  background: #040405;
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.08),
-    0 28px 56px -30px rgb(0 0 0 / 0.9);
-  transition: box-shadow 200ms var(--ease-out);
-}
-
-/* The sticky region (navigation, frame, caption) stays pinned in full view down to the page end,
-   above the next-project link and the footer (case.css --cs-after); never below 240px tall. The
-   player takes the frame's width, at the column's left edge, so the caption row ends where the film
-   ends. */
-.page-client-work .fp[data-variant='sticky'] {
-  width: min(100%, calc(max(240px, 100svh - var(--cs-top) - var(--fp-nav-h) - var(--cs-after) - var(--fp-caption)) * 16 / 9));
-}
-
-/* Hover and keyboard focus inside the player: an accent edge (no scale, so the native controls never move). */
-.page-client-work .fp-frame:is(:hover, :focus-within) {
-  box-shadow:
-    0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.7),
-    0 0 26px -4px rgb(var(--case-accent-rgb) / 0.35),
-    0 28px 56px -30px rgb(0 0 0 / 0.9);
+/*
+ * Beside its text: as wide as the column, never taller than the view below the navigation (with its bar). A film
+ * narrower than 16:9 (Aristocracy, 4:3) is no taller than 1.15 times a 16:9 film in the same column, so its section
+ * keeps the rhythm of the others and its text column is not left with a tall empty space beside it.
+ */
+.page-client-work .fs[data-layout='sticky'] .fp {
+  width: min(100%, calc(100% * 9 / 16 * 1.15 * var(--film-r)), calc((100svh - var(--cs-top) - var(--space-6) - var(--cs-pbar)) * var(--film-r)));
 }
 
 /* A faint pool of warm light beneath the player. */
-.page-client-work .fp-frame::after {
+.page-client-work .fp::after {
   content: '';
   position: absolute;
   z-index: -1;
@@ -127,34 +203,19 @@
   pointer-events: none;
 }
 
+.page-client-work .fp-frame {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  aspect-ratio: var(--film-r);
+  overflow: hidden;
+  background: #040405;
+}
+
 .page-client-work .fp-poster {
   position: absolute;
   inset: 0;
   z-index: 0;
-  overflow: hidden;
-  border-radius: var(--fp-radius);
-  opacity: 0;
-  visibility: hidden;
-}
-
-/* The new poster fades in on top; the previous one stays fully visible underneath until it has. */
-.page-client-work .fp-poster[data-state='shown'] {
-  z-index: 2;
-  opacity: 1;
-  visibility: visible;
-  animation: fp-poster-in var(--fp-fade) linear;
-}
-
-.page-client-work .fp-poster[data-state='under'] {
-  z-index: 1;
-  opacity: 1;
-  visibility: visible;
-}
-
-@keyframes fp-poster-in {
-  from {
-    opacity: 0;
-  }
 }
 
 .page-client-work .fp-poster .picture,
@@ -167,20 +228,18 @@
 .page-client-work .fp-video {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: var(--fp-radius);
   background: transparent;
   object-fit: contain;
   opacity: 0;
   transition: opacity var(--fp-fade) linear;
 }
 
-/* Transparent over the poster until the recording has put a frame on screen (FilmPlayer data-has-frame), then the
-   same short fade as a poster change: never the black box of a playing video without a frame, and poster to film is
-   a dissolve rather than a cut. */
+/* Transparent over the poster until the recording has put a frame on screen (FilmPlayer data-has-frame), then a short
+   fade: never the black box of a playing video without a frame, and poster to film is a dissolve rather than a cut. */
 .page-client-work .fp-frame[data-has-frame] > .fp-video {
   opacity: 1;
 }
@@ -190,19 +249,18 @@
   outline-offset: -2px;
 }
 
-/* One enlarge control per player (R4-01, as case.css .cs-demo__video): no greyed full screen button in Chromium. */
+/* One enlarge control per player (as case.css .cs-demo__video): no greyed full screen button in Chromium. */
 .page-client-work .fp-video:not(:fullscreen)::-webkit-media-controls-fullscreen-button {
   display: none;
 }
 
-/* Poster only: one obvious Watch film action. */
+/* Poster: one obvious Watch film action. */
 .page-client-work .fp-center {
   position: absolute;
   inset: 0;
-  z-index: 4;
+  z-index: 2;
   display: grid;
   place-items: center;
-  border-radius: var(--fp-radius);
   background: radial-gradient(closest-side, rgb(5 6 9 / 0.5), rgb(5 6 9 / 0));
   pointer-events: none;
 }
@@ -211,24 +269,24 @@
   pointer-events: auto;
 }
 
-/* Watch with sound: inside the frame, top left, clear of the native control bar. */
+/* The player's own bar (case.css .cs-player__bar): Watch with sound while the film previews, then Expand. */
+.page-client-work .fp-bar {
+  padding-left: var(--space-2);
+}
+
 .page-client-work .fp-sound {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 5;
+  position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  min-height: 40px;
-  padding: 0 14px 0 12px;
+  min-height: 30px;
+  padding: 0 12px 0 10px;
   border: 0;
   border-radius: 999px;
-  background: rgb(9 10 15 / 0.8);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.22);
+  background: rgb(255 255 255 / 0.06);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
   color: var(--color-text);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: var(--control-weight);
   line-height: 1.2;
   white-space: nowrap;
@@ -236,15 +294,22 @@
   transition:
     background-color var(--dur-feedback) var(--ease-out),
     box-shadow var(--dur-feedback) var(--ease-out),
-    transform var(--dur-feedback) var(--ease-out);
+    color var(--dur-feedback) var(--ease-out);
+}
+
+/* A 44px target around the compact pill. */
+.page-client-work .fp-sound::before {
+  content: '';
+  position: absolute;
+  inset: -7px -2px;
 }
 
 .page-client-work .fp-sound:is(:hover, :focus-visible) {
-  background: rgb(22 24 34 / 0.92);
+  background: rgb(var(--case-accent-rgb) / 0.14);
   box-shadow:
-    0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.9),
-    0 0 16px rgb(var(--case-accent-rgb) / 0.35);
-  transform: scale(1.04);
+    inset 0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.85),
+    0 0 14px rgb(var(--case-accent-rgb) / 0.3);
+  color: color-mix(in oklch, var(--case-accent) 55%, var(--stage-ivory));
 }
 
 .page-client-work .fp-sound:focus-visible {
@@ -254,45 +319,26 @@
 
 @media (hover: none) {
   .page-client-work .fp-sound {
-    min-height: 44px;
+    min-height: 40px;
   }
 }
 
-/* Expand (case.css .cs-expand): always visible (R4-01), in the accent while the film is hovered or focused. Dimmed
-   and inert for the moment a new film's recording is being attached (a film change while previewing). */
-.page-client-work .fp:has(> .fp-frame:is(:hover, :focus-within)) > .fp-expand {
+/* Expand takes the accent while the film is hovered or focused (as case.css does for the other players). */
+.page-client-work .fp-player:is(:hover, :focus-within) .fp-expand {
   color: color-mix(in oklch, var(--case-accent) 80%, var(--stage-ivory));
 }
 
-.page-client-work .fp-expand:disabled {
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-.page-client-work .fp-caption {
-  max-width: 64ch;
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  line-height: 1.5;
-  text-wrap: balance;
-}
-
 /* ----------------------------------------------------------------------- */
-/* Sections                                                                 */
+/* Transcript                                                               */
 /* ----------------------------------------------------------------------- */
-
-.page-client-work .fs-inline {
-  margin-bottom: var(--space-5);
-}
 
 .page-client-work .fs-transcript {
   margin-top: var(--space-4);
 }
 
 /*
- * The transcript disclosure: quiet text, like the case-study links on About (a chevron and an underlined
- * 15px/500 label, no box), with a 44px target (the negative margins keep it from adding space). On hover and
- * focus it takes the page accent.
+ * The transcript disclosure: quiet text (a chevron and an underlined 15px/500 label, no box), with a 44px target
+ * (the negative margins keep it from adding space). On hover and focus it takes the page accent.
  */
 .page-client-work .fs-transcript__summary {
   display: flex;
@@ -376,11 +422,7 @@
   text-transform: uppercase;
 }
 
-html[data-motion='reduce'] .page-client-work :is(.fp-poster, .fp-frame, .fp-video, .fp-sound, .fp-expand, .fs-transcript__summary, .fs-transcript__chevron) {
+html[data-motion='reduce'] .page-client-work :is(.fp-video, .fp-sound, .fp-expand, .fs-transcript__summary, .fs-transcript__chevron) {
   animation: none !important;
   transition: none !important;
-}
-
-html[data-motion='reduce'] .page-client-work .fp-sound:is(:hover, :focus-visible) {
-  transform: none;
 }

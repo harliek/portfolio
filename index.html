@@ -24,6 +24,19 @@
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      // Homepage only: the "Portfolio" title's display face (src/styles/home.css) is requested
+      // with the document instead of after the app code, so the title is not held back waiting for it.
+      if (location.pathname === '/') {
+        var font = document.createElement('link')
+        font.rel = 'preload'
+        font.as = 'font'
+        font.type = 'font/woff2'
+        font.href = '/fonts/FrauncesSoft.woff2'
+        font.crossOrigin = 'anonymous'
+        document.head.appendChild(font)
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

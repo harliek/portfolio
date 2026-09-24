@@ -5,12 +5,12 @@ import type { Project } from '../../content/projects'
 import { usePageMeta } from '../../hooks/usePageMeta'
 
 /*
- * The shared case-study page (brief-v5 sections 13 to 16 and 30):
+ * The shared case-study page (brief-v5 sections 13 to 16 and 30, brief-v8 section 7):
  *
  *   <CaseLayout project className="page-x">   article, page meta, the project's accent
  *     <CaseScroll … />                         opening, cover, story and outcome beside ONE
  *                                              media stage (see the note in CaseScroll.tsx)
- *     <NextProject current={project.id} />     small next-project PNG + "Next project" + name
+ *     <NextProject current={project.id} />     small next-project PNG + "Next project" + display title + arrow
  *   </CaseLayout>
  *
  * The accent (--accent, --accent-rgb; --case-accent for older page CSS) is

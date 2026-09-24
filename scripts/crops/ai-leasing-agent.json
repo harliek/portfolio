@@ -1,8 +1,6 @@
 [
-  { "id": "ala-chat-request", "source": "Valiance Capital/messages.png", "rect": { "x": 264, "y": 102, "width": 856, "height": 535 }, "widths": [640, 856], "fallback": "jpg" },
-  { "id": "ala-live-check", "source": "Valiance Capital/messages.png", "rect": { "x": 1078, "y": 364, "width": 594, "height": 371 }, "widths": [594], "fallback": "jpg" },
-  { "id": "ala-chat-handoff", "source": "Valiance Capital/messages.png", "rect": { "x": 268, "y": 406, "width": 856, "height": 535 }, "widths": [640, 856], "fallback": "jpg" },
-  { "id": "ala-phone-request", "source": "Valiance Capital/messages.png", "rect": { "x": 358, "y": 222, "width": 638, "height": 308 }, "widths": [638], "fallback": "jpg" },
-  { "id": "ala-phone-panel", "source": "Valiance Capital/messages.png", "rect": { "x": 1164, "y": 348, "width": 489, "height": 396 }, "widths": [489], "fallback": "jpg" },
-  { "id": "ala-phone-handoff", "source": "Valiance Capital/messages.png", "rect": { "x": 358, "y": 532, "width": 676, "height": 306 }, "widths": [676], "fallback": "jpg" }
+  { "id": "ala-conversation", "source": "Valiance Capital/messages.png", "rect": { "x": 262, "y": 208, "width": 831, "height": 640 }, "widths": [640, 831], "fallback": "jpg" },
+  { "id": "ala-phone-renter", "source": "Valiance Capital/messages.png", "rect": { "x": 376, "y": 262, "width": 660, "height": 134 }, "widths": [660], "fallback": "jpg" },
+  { "id": "ala-phone-assistant", "source": "Valiance Capital/messages.png", "rect": { "x": 376, "y": 470, "width": 660, "height": 150 }, "widths": [660], "fallback": "jpg" },
+  { "id": "ala-phone-staff", "source": "Valiance Capital/messages.png", "rect": { "x": 376, "y": 699, "width": 660, "height": 124 }, "widths": [660], "fallback": "jpg" }
 ]

@@ -15,8 +15,8 @@ import { StageBackground } from './StageBackground'
  * playing across every navigation), skip link, header (no brand on the
  * homepage) with the Work shelf, main (the new page rises 6px as it
  * settles; no blank beat; no rise while a carousel object travels into it),
- * the compact footer (copyright and the "Reduce motion" setting), and the
- * pointer trail. The restored creative portfolio is a separate static
+ * the compact footer (the copyright line), and the pointer trail. Motion
+ * follows the operating system's reduced-motion preference only. The restored creative portfolio is a separate static
  * build at /creative/, outside this shell.
  */
 export function PageShell() {

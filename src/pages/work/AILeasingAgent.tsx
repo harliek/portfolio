@@ -7,7 +7,10 @@ import { projectById } from '../../content/projects'
 
 const project = projectById('ai-leasing-agent')
 
-/** AI Leasing Agent (route /work/valiance): readable crops of the illustrative conversation beside the story (CaseScroll states media). */
+/**
+ * AI Leasing Agent (route /work/valiance): one illustrative conversation beside the story, its renter, assistant and
+ * staff moments brought forward in turn (CaseScroll custom media, components/pages/ai-leasing-agent/ConversationStage).
+ */
 export default function AILeasingAgent() {
   return (
     <CaseLayout project={project} className="page-ai-leasing-agent">

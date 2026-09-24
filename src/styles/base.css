@@ -96,6 +96,48 @@ a {
   color: inherit;
 }
 
+/*
+ * Links inside reading text (paragraphs, list items, definitions): always
+ * underlined, so colour is never the only clue; on hover the underline
+ * turns solid and the text takes the page accent; keyboard focus adds the
+ * ring (below). Zero specificity: component and page rules (e.g. case.css
+ * .case-prose a) refine them.
+ */
+:where(.site-main :is(p, li, dd, blockquote, figcaption) a[href]) {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--link-underline);
+  text-underline-offset: 3px;
+  transition:
+    color var(--dur-feedback) var(--ease-out),
+    text-decoration-color var(--dur-feedback) var(--ease-out);
+}
+
+:where(.site-main :is(p, li, dd, blockquote, figcaption) a[href]):hover {
+  color: var(--accent, var(--accent-default));
+  text-decoration-color: currentColor;
+}
+
+/*
+ * Expressive text hover (brief v8, section 5): headings (h1 to h3) and bold
+ * phrases in reading text ease into the page accent under the pointer (a
+ * case study's project accent, lavender elsewhere). Colour only: the normal
+ * text cursor, no underline, glow, movement or scale, so ordinary text never
+ * looks clickable. Not inside links and buttons (their own hover and focus
+ * states apply), not on the homepage title (home.css colours it), and
+ * nothing on touch screens.
+ */
+:where(.site-main) :where(h1, h2, h3, strong, b) {
+  transition: color var(--dur-text-hover) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .site-main :is(h1, h2, h3):not(:is(a, button, summary, label, [role='button'], [role='link'], .home) *):hover,
+  .site-main :is(p, li, dd, blockquote, figcaption) :is(strong, b):not(:is(a, button, summary, label, [role='button'], [role='link']) *):hover {
+    color: var(--accent, var(--accent-default));
+  }
+}
+
 ::selection {
   background: rgb(var(--accent-rgb, var(--accent-default-rgb)) / 0.34);
   color: var(--color-text);
@@ -158,8 +200,8 @@ a {
 }
 
 /*
- * Reduced motion follows the site-wide preference (the OS setting, or the
- * footer's Reduce motion toggle), mirrored on <html data-motion>.
+ * Reduced motion follows the operating system setting, mirrored on
+ * <html data-motion> (src/hooks/useMotionPreference.ts).
  */
 html[data-motion='reduce'],
 html[data-motion='reduce'] *,

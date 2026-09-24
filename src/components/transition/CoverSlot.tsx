@@ -22,13 +22,12 @@ interface CoverSlotProps {
 
 /**
  * The reserved place of a carousel object on its destination page (the case
- * opening's left column, the About portrait). Its box has the object's exact
+ * opening's cover, the About portrait). Its box has the object's exact
  * aspect ratio and a fixed width, so the page never shifts and the route
  * transition (projectTransition.ts) can move the same PNG from the carousel
- * into this box. `data-cover-slot` names the object; while the moving copy
- * travels, the slot's own image is hidden (transition.css), and it replaces
- * the copy in the frame the copy is removed. Direct loads simply render the
- * PNG in place (nothing is hidden without a running transition).
+ * into this box: `data-cover-slot` names the object, and during the view
+ * transition the slot (or its glow wrapper) carries the shared
+ * view-transition-name. Direct loads simply render the PNG in place.
  */
 export function CoverSlot({ id, scale = 0.72, sizes, priority = true, className }: CoverSlotProps) {
   const item = coverItem(id)

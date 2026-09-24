@@ -1,81 +1,59 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import type { ClientFilm } from '../../../content/pages/client-work'
 import { fallbackSrc, getImage, getVideo, type VideoAsset } from '../../../content/media'
 import { useReducedMotion } from '../../../hooks/useReducedMotion'
 import { ExpandIcon } from '../../media/ExpandIcon'
 import { enterFullscreen, NATIVE_FULLSCREEN } from '../../media/fullscreen'
 import { ResponsiveImage } from '../../media/ResponsiveImage'
-import { shortDuration, spokenDuration } from '../../media/duration'
+import { spokenDuration } from '../../media/duration'
 import { onFramePresented } from '../../media/videoFrame'
 import { FilmDialog, type FilmState } from './FilmDialog'
 
 /*
- * FilmPlayer: one stable 16:9 frame for the Creative Production films.
+ * FilmPlayer: one Creative Production film in its own section (brief-v8
+ * section 13), at the film's own proportions, in the case studies' player
+ * frame (case.css .cs-player): the film, then the player's own bar below it
+ * (Watch with sound while it previews, and Expand). No caption.
  *
- * Two modes, decided by the parent (FilmScroll):
- * - Preview: the film plays muted, looping, with native controls, when at
- *   least 35% of the frame is visible (only where `preview` allows it: the
- *   sticky player, and the first stacked player). The parent may change the
- *   film while it only previews (scrolling); the new poster is decoded before
- *   it replaces the old one, and the new recording is attached only once the
- *   film has stayed for SETTLE ms, so fast scrolling loads nothing in passing.
- *   A visitor's pause stops the previews until they start a film.
+ * Modes (the page, FilmScroll, coordinates the three players):
+ * - Poster: never played. The poster with one obvious Watch film button (a
+ *   direct gesture, so it plays from the start with sound).
+ * - Preview: while `preview` is true (this film is the one most in view,
+ *   nothing plays with sound, no reduced motion, the visitor has not paused a
+ *   preview) it plays muted and looping with native controls; when `preview`
+ *   turns false it pauses where it is. Watch with sound (in the bar) starts it
+ *   properly from the beginning.
  * - Opened: the visitor pressed Watch film or Watch with sound, unmuted,
- *   played, scrubbed, went full screen, or expanded the film. The player
- *   reports it (onOpen) and the parent keeps this film in place while the
- *   page scrolls. It no longer loops and is never restarted by scrolling:
- *   when it leaves the viewport it pauses and stays paused (nothing plays
- *   sound because of scrolling).
+ *   played, scrubbed, went full screen or expanded it. It is theirs: it no
+ *   longer loops, nothing restarts or switches it, and its position is kept.
+ *   Like every film here it pauses once it is completely out of view (and
+ *   stays paused there; nothing plays sound because of scrolling).
+ * The page is told when the film plays with sound (`onSound`), so no preview
+ * starts beside it, and when the visitor pauses a preview (`onPreviewPause`),
+ * which stops the previews on the page. One film with sound at a time is the
+ * site-wide media policy (useMediaPlayback).
  *
- * Autoplay refused, reduced motion, a player without previews, or a paused
- * preview: the poster with one obvious Watch film button (a direct gesture,
- * so it plays with sound). `silenced` (another film was opened) pauses this
- * one. Expand (at the right end of the caption row, never on the film) opens a
- * larger view from the same time and pauses this copy; closing it restores
- * the time and state here. On a phone or a touch screen, Expand puts this
- * film itself in the browser's full screen instead (a dialog would be no
- * larger than the frame). The site-wide media policy (useMediaPlayback)
- * treats the muted preview as ambient (`data-ambient`).
+ * Expand opens a larger view at the same moment and pauses this copy; closing
+ * it restores the time and state here and returns focus to Expand. On a phone
+ * or a touch screen, Expand puts this film itself in the browser's full screen
+ * (a dialog would be no larger than the frame).
  *
- * The poster wins the bandwidth: a preview's recording is neither loaded in
- * full nor started until the shown film's poster has loaded, so a slow
- * connection shows the poster (not a dark frame with a spinner) first. The
- * video's own poster reuses the file the picture loaded (no second download).
- * The recording stays transparent over the poster until it has put a frame on
- * screen (`data-has-frame`), then fades in (client-work.css .fp-video; at once
- * under reduced motion): no black frame when a preview starts, and poster to
- * film is a short dissolve rather than a cut.
+ * The poster wins the bandwidth: the recording loads only once the poster has
+ * loaded and the film is about to preview or play. The recording stays
+ * transparent over the poster until it has put a frame on screen, then fades
+ * in (client-work.css .fp-video; at once under reduced motion).
  */
-
-/** Share of the frame that must be visible before a preview starts. */
-const PLAY_RATIO = 0.35
-/** A preview's film must stay this long (ms) before its recording is attached. */
-const SETTLE = 280
-/** Poster change (ms): the new poster fades in over the old one. */
-const POSTER_FADE = 120
 
 type FilmId = ClientFilm['id']
 
-/** The smallest variant that fills the frame sharply (the film contained in a 16:9 box, at most 2× density). */
+/** The fixed navigation's height (tokens.css --header-height): what lies under it is out of view. */
+export const headerHeight = () => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) || 0
+
+/** The smallest variant that fills the frame sharply (at most 2× density). */
 function pickVariant(video: VideoAsset, frameWidth: number): VideoAsset['variants'][number] {
-  const ratio = video.width / video.height
-  const shown = Math.min(frameWidth, ((frameWidth * 9) / 16) * ratio)
-  const need = shown * Math.min(window.devicePixelRatio || 1, 2) * 0.95
+  const need = frameWidth * Math.min(window.devicePixelRatio || 1, 2) * 0.95
   return video.variants.find((v) => v.width >= need) ?? video.variants[video.variants.length - 1]
 }
-
-/** Resolves when an image has decoded (or failed, or is missing). */
-function whenDecoded(img: HTMLImageElement | null | undefined): Promise<void> {
-  if (!img) return Promise.resolve()
-  if (img.complete) return img.naturalWidth ? img.decode().catch(() => {}) : Promise.resolve()
-  return new Promise((resolve) => {
-    img.addEventListener('load', () => void img.decode().catch(() => {}).then(() => resolve()), { once: true })
-    img.addEventListener('error', () => resolve(), { once: true })
-  })
-}
-
-/** "Interview film for Nickleby Capital by Shift Content · 1 min 40 s". */
-export const filmCaption = (film: ClientFilm) => `${film.kind} for ${film.client} by Shift Content · ${shortDuration(getVideo(film.video).duration)}`
 
 function PlayIcon() {
   return (
@@ -95,108 +73,48 @@ function SoundIcon() {
 }
 
 interface FilmPlayerProps {
-  /** The films whose posters this frame holds (the sticky player: all; a stacked player: its own). */
-  films: ClientFilm[]
-  /** The film to show. */
   film: ClientFilm
-  variant: 'sticky' | 'inline'
-  /** May play a muted preview by itself. */
+  /** This film may play its muted preview now (decided by the page). */
   preview: boolean
-  /** The visitor opened this film (parent state): it stays in place and is never restarted by scrolling. */
+  /** The visitor opened this film (page state). */
   opened: boolean
-  /** Another film was opened: stop this one. */
-  silenced: boolean
   onOpen: (id: FilmId) => void
-  /** `sizes` of the posters. */
+  /** Whether this film is playing with sound. */
+  onSound: (id: FilmId, audible: boolean) => void
+  /** The visitor paused this film's preview. */
+  onPreviewPause: () => void
+  /** 'sticky': beside its text (desktop); 'stacked': the column's width. */
+  layout: 'sticky' | 'stacked'
+  /** `sizes` of the poster. */
   sizes: string
   priority?: boolean
 }
 
-export function FilmPlayer({ films, film, variant, preview, opened, silenced, onOpen, sizes, priority = false }: FilmPlayerProps) {
+export function FilmPlayer({ film, preview, opened, onOpen, onSound, onPreviewPause, layout, sizes, priority = false }: FilmPlayerProps) {
   const reduced = useReducedMotion()
-  const captionId = useId()
+  const asset = getVideo(film.video)
+  const posterAsset = getImage(asset.poster)
   const frameRef = useRef<HTMLDivElement>(null)
-  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const expandRef = useRef<HTMLButtonElement>(null)
-  const target = Math.max(0, films.findIndex((f) => f.id === film.id))
-  /** The poster shown (`front`), the one fading out underneath (`prev`). */
-  const [view, setView] = useState({ front: target, prev: -1 })
-  /** The film whose recording is attached (its index), or -1. */
-  const [attached, setAttached] = useState(target)
+  // The frame's width, estimated from the layout (beside the text: the 52% media column, at most 645px).
+  const [src] = useState(() => pickVariant(asset, layout === 'sticky' ? Math.min(645, window.innerWidth * 0.5) : window.innerWidth).src)
+  /** The poster file the picture loaded (undefined until then; '' if it failed). */
+  const [posterSrc, setPosterSrc] = useState<string>()
+  const posterReady = posterSrc !== undefined
   const [playing, setPlaying] = useState(false)
-  const [blocked, setBlocked] = useState(false)
-  const [previewsStopped, setPreviewsStopped] = useState(false)
-  /** The attached recording has put a frame on screen (it is shown from then on, over the poster). */
+  /** It has played at least once (its paused frame now stands for it, with native controls). */
+  const [started, setStarted] = useState(false)
+  /** The recording has put a frame on screen (it is shown from then on, over the poster). */
   const [hasFrame, setHasFrame] = useState(false)
   const [expanded, setExpanded] = useState<FilmState | null>(null)
-  /** Each film's loaded poster file, by index ('' if it failed); a film is missing until its poster has loaded. */
-  const [posterFiles, setPosterFiles] = useState<Record<number, string>>({})
-  const posterFile = posterFiles[view.front]
-  const posterReady = posterFile !== undefined
-  // The first film's poster first: the other posters are requested once it has loaded, or at once when the film
-  // changes (in the same render, so the poster change always finds the image it waits for).
-  const [firstFilm] = useState(target)
-  const loadAllPosters = firstFilm in posterFiles || target !== firstFilm || opened
+  /** This film itself is in full screen (touch Expand): its native full screen button returns, so it can be left. */
+  const [fullscreen, setFullscreen] = useState(false)
   /** Imperative state read by media event handlers (never rendered). */
-  const ctl = useRef({ inView: false, autoStart: false, selfPause: false, selfMute: false, selfSeek: false, expanded: false, pendingPlay: false, opened, silenced, preview, reduced, previewsStopped, posterReady })
+  const ctl = useRef({ autoStart: false, selfPause: false, selfMute: false, selfSeek: false, expanded: false, blocked: false, opened, preview, reduced, posterReady })
   useLayoutEffect(() => {
-    Object.assign(ctl.current, { opened, silenced, preview, reduced, previewsStopped, posterReady })
+    Object.assign(ctl.current, { opened, preview, reduced, posterReady })
   })
-
-  // Note each poster's file once its picture has loaded (lazy stacked posters included).
-  useEffect(() => {
-    const frame = frameRef.current
-    if (!frame) return
-    const cleanups: Array<() => void> = []
-    frame.querySelectorAll<HTMLElement>('[data-poster]').forEach((el) => {
-      const index = Number(el.dataset.poster)
-      const img = el.querySelector('img')
-      const done = () => setPosterFiles((m) => (index in m ? m : { ...m, [index]: img?.naturalWidth ? img.currentSrc || img.src : '' }))
-      if (!img || img.complete) {
-        done()
-        return
-      }
-      img.addEventListener('load', done)
-      img.addEventListener('error', done)
-      cleanups.push(() => {
-        img.removeEventListener('load', done)
-        img.removeEventListener('error', done)
-      })
-    })
-    return () => cleanups.forEach((cleanup) => cleanup())
-  }, [films, loadAllPosters])
-
-  const front = films[view.front] ?? films[0]
-  const asset = getVideo(front.video)
-  const posterAsset = getImage(asset.poster)
-  const isAttached = attached === view.front
-
-  // A new film: wait for its poster, then fade it in over the current one.
-  useEffect(() => {
-    if (target === view.front) return
-    let cancelled = false
-    const img = frameRef.current?.querySelector<HTMLImageElement>(`[data-poster="${target}"] img`)
-    void whenDecoded(img).then(() => {
-      if (!cancelled) setView((v) => ({ front: target, prev: v.front }))
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [target, view.front])
-
-  // The previous poster hides once the new one has fully appeared.
-  useEffect(() => {
-    if (view.prev < 0) return
-    const id = window.setTimeout(() => setView((v) => ({ ...v, prev: -1 })), reduced ? 0 : POSTER_FADE + 40)
-    return () => window.clearTimeout(id)
-  }, [view.prev, reduced])
-
-  // Attach the shown film's recording once it has stayed (at once when opened).
-  useEffect(() => {
-    if (attached === view.front) return
-    const id = window.setTimeout(() => setAttached(view.front), opened ? 0 : SETTLE)
-    return () => window.clearTimeout(id)
-  }, [attached, view.front, opened])
 
   /** Pauses without counting as the visitor's pause. */
   const autoPause = useCallback(() => {
@@ -210,12 +128,12 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
   const tryPreview = useCallback(() => {
     const v = videoRef.current
     const c = ctl.current
-    if (!v || !v.paused || !c.posterReady || !c.preview || c.opened || c.silenced || c.reduced || c.previewsStopped || c.expanded || !c.inView) return
-    if (document.visibilityState === 'hidden') return
+    if (!v || !v.paused || !c.preview || c.opened || c.reduced || c.expanded || c.blocked || !c.posterReady || document.visibilityState === 'hidden') return
     if (!v.muted) {
       c.selfMute = true
       v.muted = true
     }
+    v.loop = true
     c.autoStart = true
     v.play().then(
       () => {
@@ -223,34 +141,64 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
       },
       (err: unknown) => {
         c.autoStart = false
-        // AbortError: interrupted (the film changed or scrolled away); not a refusal.
-        if (err instanceof DOMException && err.name === 'NotAllowedError') setBlocked(true)
+        // Autoplay refused (a browser policy): the poster with Watch film stays. AbortError (it lost the preview, or
+        // scrolled away) is not a refusal.
+        if (err instanceof DOMException && err.name === 'NotAllowedError') c.blocked = true
       },
     )
   }, [])
 
-  const open = useCallback(() => {
-    ctl.current.opened = true
-    onOpen(front.id)
-  }, [onOpen, front.id])
+  const report = useCallback(() => {
+    const v = videoRef.current
+    if (v) onSound(film.id, !v.paused && !v.muted && v.volume > 0)
+  }, [onSound, film.id])
 
-  // Visibility: a preview starts at 35% visible; any playback pauses once the frame is out of view.
+  const open = useCallback(() => {
+    const c = ctl.current
+    const v = videoRef.current
+    if (v) v.loop = false
+    if (c.opened) return
+    c.opened = true
+    onOpen(film.id)
+  }, [onOpen, film.id])
+
+  // The poster first: note the file it loaded, then the recording may load and preview.
+  useEffect(() => {
+    const img = frameRef.current?.querySelector<HTMLImageElement>('.fp-poster img')
+    if (!img) {
+      setPosterSrc('')
+      return
+    }
+    const done = () => setPosterSrc(img.naturalWidth ? img.currentSrc || img.src : '')
+    if (img.complete) {
+      done()
+      return
+    }
+    img.addEventListener('load', done)
+    img.addEventListener('error', done)
+    return () => {
+      img.removeEventListener('load', done)
+      img.removeEventListener('error', done)
+    }
+  }, [])
+
+  // The page's decision (and the preference): preview, or pause a preview where it is. An opened film is the visitor's.
+  useEffect(() => {
+    if (opened) return
+    if (preview && !reduced) tryPreview()
+    else autoPause()
+  }, [preview, opened, reduced, posterReady, tryPreview, autoPause])
+
+  // Any film pauses once it is completely out of view, the part under the navigation included (not while it is in full
+  // screen, where the page is not what is watched).
   useEffect(() => {
     const frame = frameRef.current
     if (!frame) return
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (!entry) return
-        if (entry.intersectionRatio >= PLAY_RATIO) {
-          ctl.current.inView = true
-          tryPreview()
-        } else if (!entry.isIntersecting && !document.fullscreenElement) {
-          // (In full screen the page behind is not what the visitor is watching.)
-          ctl.current.inView = false
-          autoPause()
-        }
+        if (entry && !entry.isIntersecting && !document.fullscreenElement) autoPause()
       },
-      { threshold: [0, PLAY_RATIO] },
+      { rootMargin: `-${headerHeight()}px 0px 0px 0px` },
     )
     io.observe(frame)
     const onVisibility = () => {
@@ -263,74 +211,60 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
     }
   }, [tryPreview, autoPause])
 
-  // State changes from the parent or the preference: stop what may no longer play, start what may.
+  // The recording appears once it has a frame of its own (never the black box of a playing video without one).
   useEffect(() => {
     const v = videoRef.current
     if (!v) return
-    if (silenced || (reduced && !opened)) autoPause()
-    else if (!opened) {
-      // Back to previewing (the visitor picked another film): silent first, then the preview rules apply.
-      if (!v.muted) {
-        ctl.current.selfMute = true
-        v.muted = true
-      }
-      tryPreview()
-    }
-  }, [silenced, reduced, opened, preview, previewsStopped, isAttached, posterReady, autoPause, tryPreview])
+    return onFramePresented(v, () => setHasFrame(true))
+  }, [])
 
-  // A newly attached recording: a clean state, then the preview if allowed. It appears once it has a frame.
-  const attachVideo = useCallback(
-    (el: HTMLVideoElement | null) => {
-      videoRef.current = el
-      if (!el) return
-      const c = ctl.current
-      el.muted = !c.opened
-      el.defaultMuted = el.muted
-      const stop = onFramePresented(el, () => {
-        if (videoRef.current === el) setHasFrame(true)
-      })
-      // Watch film was pressed before this recording was attached: play it now (still within the gesture's activation).
-      if (c.pendingPlay) {
-        c.pendingPlay = false
-        el.muted = false
-        el.play().catch(() => {})
-      }
-      return () => {
-        stop()
-        if (videoRef.current === el) videoRef.current = null
-      }
-    },
-    [],
-  )
+  // Full screen (touch Expand, or a double click on the film) counts as opening the film.
+  useEffect(() => {
+    const onChange = () => {
+      const own = Boolean(videoRef.current) && document.fullscreenElement === videoRef.current
+      setFullscreen(own)
+      if (own) open()
+    }
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [open])
+
+  // Leaving the page always stops playback.
+  useEffect(() => {
+    const v = videoRef.current
+    return () => {
+      v?.pause()
+    }
+  }, [])
 
   const onPlay = () => {
     const c = ctl.current
     setPlaying(true)
-    setBlocked(false)
+    setStarted(true)
     // Started from the native controls or the keyboard (not by the preview): the visitor opened the film.
-    if (!c.autoStart && !c.opened) open()
+    if (!c.autoStart) open()
+    report()
   }
 
   const onPause = () => {
     const v = videoRef.current
     const c = ctl.current
     setPlaying(false)
+    report()
     if (c.selfPause) {
       c.selfPause = false
       return
     }
-    // The visitor paused a preview: no more previews until they start a film.
-    if (v && !v.ended && !c.expanded && !c.opened && document.visibilityState !== 'hidden') setPreviewsStopped(true)
+    // The visitor paused a preview: no more previews on the page until they start a film.
+    if (v && !v.ended && !c.expanded && !c.opened && document.visibilityState !== 'hidden') onPreviewPause()
   }
 
   const onVolumeChange = () => {
     const v = videoRef.current
     const c = ctl.current
-    if (c.selfMute) {
-      c.selfMute = false
-      return
-    }
-    if (v && !v.muted && !c.opened) open()
+    if (c.selfMute) c.selfMute = false
+    else if (v && !v.muted) open()
+    report()
   }
 
   const onSeeking = () => {
@@ -344,34 +278,17 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
     if (v && !c.opened && !(v.loop && v.currentTime < 0.3)) open()
   }
 
-  // This film itself in full screen (touch Expand): its native full screen button returns, so it can be left there.
-  const [fullscreen, setFullscreen] = useState(false)
-  // Full screen (touch Expand, or a double click on the film) counts as opening the film.
-  useEffect(() => {
-    const onFullscreen = () => {
-      const own = Boolean(document.fullscreenElement) && document.fullscreenElement === videoRef.current
-      setFullscreen(own)
-      if (own && !ctl.current.opened) open()
-    }
-    document.addEventListener('fullscreenchange', onFullscreen)
-    return () => document.removeEventListener('fullscreenchange', onFullscreen)
-  }, [open])
-
   /** Watch film / Watch with sound: from the start, with sound (a direct gesture). */
   const watch = () => {
     const v = videoRef.current
     const c = ctl.current
-    setPreviewsStopped(false)
+    if (!v) return
     open()
-    if (!v) {
-      c.pendingPlay = true
-      return
-    }
     if (v.currentTime > 0.05) {
       c.selfSeek = true
       v.currentTime = 0
     }
-    v.loop = false
+    if (v.muted) c.selfMute = true
     v.muted = false
     v.play().then(
       () => v.focus({ preventScroll: true }),
@@ -384,10 +301,10 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
     if (!v) return
     const c = ctl.current
     const wasPreview = !c.opened
-    const play = (!v.paused && !v.ended) || !c.opened
+    // From the poster or a preview the visitor asked to watch, so it plays (with sound); a paused film stays paused.
+    const play = (!v.paused && !v.ended) || wasPreview
     if (window.matchMedia(NATIVE_FULLSCREEN).matches) {
-      // This film itself in full screen; from a preview the visitor asked to watch, so it continues with sound
-      // (started within the gesture). Without full screen support, the dialog below takes over.
+      // This film itself in full screen (started within the gesture). Without full screen support, the dialog below takes over.
       open()
       if (wasPreview && v.muted) {
         c.selfMute = true
@@ -399,9 +316,8 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
     c.expanded = true
     open()
     autoPause()
-    // The larger view opens on what is on screen here (this frame, or the poster); from a preview the visitor asked
-    // to watch, so it plays with sound.
-    const from = hasFrame ? v : (frameRef.current?.querySelector<HTMLImageElement>(`[data-poster="${view.front}"] img`) ?? null)
+    // The larger view opens on what is on screen here (this frame, or the poster).
+    const from = hasFrame ? v : (frameRef.current?.querySelector<HTMLImageElement>('.fp-poster img') ?? null)
     setExpanded({ time: v.currentTime, play, muted: wasPreview ? false : v.muted, volume: v.volume, from })
   }
 
@@ -420,106 +336,74 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
       v.volume = result.volume
       if (result.play) v.play().catch(() => {})
     }
-    expandRef.current?.focus({ preventScroll: true })
+    const back = () => expandRef.current?.focus({ preventScroll: true })
+    back()
+    // Leaving full screen inside the view can drop focus to the page after this runs: return it once more.
+    requestAnimationFrame(() => {
+      if (!document.activeElement || document.activeElement === document.body) back()
+    })
   }
 
-  // Another recording (or none, while a new film settles): no frame and no playback yet (the poster stays underneath).
-  const videoKey = isAttached ? front.id : ''
-  const [stateFor, setStateFor] = useState(videoKey)
-  if (stateFor !== videoKey) {
-    setStateFor(videoKey)
-    setHasFrame(false)
-    setPlaying(false)
-  }
-
-  // Poster only (one obvious Watch film): no preview here, reduced motion, autoplay refused, or another film opened.
-  const posterOnly = !opened && !playing && (!preview || reduced || blocked || silenced)
-  // A preview (playing, or paused by the visitor): Watch with sound starts the film properly.
-  const showSound = !opened && !posterOnly && (playing || previewsStopped)
-  // The frame's width, estimated from the layout (sticky: the 52% media column, at most 645px).
-  const frameWidth = variant === 'sticky' ? Math.min(645, window.innerWidth * 0.5) : window.innerWidth
-  const src = pickVariant(asset, frameWidth).src
-  const name = front.name
+  // Poster: one obvious Watch film. Preview (playing, or paused where it was): Watch with sound in the bar.
+  const posterMode = !opened && !playing && !started
+  const showSound = !opened && started
+  const ratio = asset.width / asset.height
+  const mode = opened ? 'opened' : playing ? 'preview' : started ? 'paused' : 'poster'
 
   return (
-    <figure className="fp" data-variant={variant}>
-      <div
-        ref={frameRef}
-        className="fp-frame"
-        data-film={front.id}
-        data-mode={opened ? 'opened' : playing ? 'preview' : 'poster'}
-        data-has-frame={(isAttached && hasFrame) || undefined}
-      >
-        {films.map((f, i) => (
-          <div key={f.id} className="fp-poster" data-poster={i} data-state={i === view.front ? 'shown' : i === view.prev ? 'under' : 'hidden'} aria-hidden="true">
-            {(i === firstFilm || loadAllPosters) && (
-              <ResponsiveImage
-                image={getVideo(f.video).poster}
-                sizes={sizes}
-                decorative
-                fit="contain"
-                priority={priority && i === 0}
-                loading={priority && i === 0 ? undefined : variant === 'sticky' ? 'eager' : 'lazy'}
-                fetchPriority={priority && i === 0 ? undefined : variant === 'sticky' ? 'low' : 'auto'}
-              />
-            )}
+    <figure className="fp" data-mode={mode} data-layout={layout} style={{ '--film-r': ratio } as CSSProperties}>
+      <div className="cs-player fp-player">
+        <div ref={frameRef} className="fp-frame" data-has-frame={hasFrame || undefined}>
+          <div className="fp-poster" aria-hidden="true">
+            <ResponsiveImage image={asset.poster} sizes={sizes} decorative fit="contain" priority={priority} />
           </div>
-        ))}
-        {posterOnly && (
-          <span className="fp-center">
-            <button type="button" className="button fp-watch" onClick={watch}>
-              <PlayIcon />
-              Watch film
-              <span className="visually-hidden">
-                , {name}, {spokenDuration(asset.duration)}, with sound
-              </span>
-            </button>
-          </span>
-        )}
-        {showSound && (
-          <button type="button" className="fp-sound" onClick={watch}>
-            <SoundIcon />
-            <span aria-hidden="true">Watch with sound</span>
-            <span className="visually-hidden">Watch {name} from the start with sound</span>
-          </button>
-        )}
-        {/* After the frame controls in the DOM, so Tab reaches Watch before the native controls. */}
-        {isAttached && (
           <video
-            key={front.id}
-            ref={attachVideo}
+            ref={videoRef}
             className="fp-video"
             src={src}
-            poster={posterFile || undefined}
+            poster={posterSrc || undefined}
             width={asset.width}
             height={asset.height}
-            loop={!opened}
             playsInline
-            controls={!posterOnly}
-            // One enlarge control per player (R4-01): Expand below the film; no native full screen button beside it.
+            controls={!posterMode || fullscreen}
+            // One enlarge control per player: Expand in the bar; the native full screen button returns only in full screen.
             controlsList={fullscreen ? undefined : 'nofullscreen'}
-            preload={opened || (preview && !reduced && posterReady) ? 'auto' : 'none'}
-            data-ambient={opened ? undefined : ''}
-            aria-label={`${name} film`}
-            aria-describedby={captionId}
-            onLoadedData={tryPreview}
+            preload={opened || started || (preview && posterReady && !reduced) ? 'auto' : 'none'}
+            aria-label={`${film.name} film`}
             onPlay={onPlay}
             onPause={onPause}
             onVolumeChange={onVolumeChange}
             onSeeking={onSeeking}
           />
-        )}
+          {posterMode && (
+            <span className="fp-center">
+              <button type="button" className="button fp-watch" onClick={watch}>
+                <PlayIcon />
+                Watch film
+                <span className="visually-hidden">
+                  , {film.name}, {spokenDuration(asset.duration)}, with sound
+                </span>
+              </button>
+            </span>
+          )}
+        </div>
+        {/* The player's own bar, below the film inside its frame: Watch with sound while it previews, then Expand. */}
+        <div className="cs-player__bar fp-bar">
+          {showSound ? (
+            <button type="button" className="fp-sound" onClick={watch}>
+              <SoundIcon />
+              Watch with sound
+              <span className="visually-hidden">, {film.name}, from the start</span>
+            </button>
+          ) : (
+            <span />
+          )}
+          <button ref={expandRef} type="button" className="cs-expand cs-player__expand fp-expand" aria-label={`Expand film, ${film.name}`} onClick={openExpanded}>
+            <ExpandIcon />
+          </button>
+        </div>
       </div>
-      {/* At the right end of the caption row, off the film (case.css .cs-expand, client-work.css). */}
-      <button ref={expandRef} type="button" className="cs-expand fp-expand" aria-label={`Expand ${name} film`} onClick={openExpanded} disabled={!isAttached}>
-        <ExpandIcon />
-      </button>
-      <figcaption id={captionId} className="fp-caption">
-        {filmCaption(front)}
-      </figcaption>
-      {expanded && (
-        <FilmDialog asset={asset} title={name} caption={filmCaption(front)} posterSrc={fallbackSrc(posterAsset, 1600)} start={expanded} onClose={closeExpanded} />
-      )}
+      {expanded && <FilmDialog asset={asset} title={film.name} posterSrc={fallbackSrc(posterAsset, 1600)} start={expanded} onClose={closeExpanded} />}
     </figure>
   )
 }

@@ -1,6 +1,7 @@
 import { createReadStream, existsSync } from 'node:fs'
 import { extname, join, resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig, type Connect, type Plugin } from 'vite'
 
 /**
@@ -89,7 +90,8 @@ function creativeSite(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), creativeSite()],
+  plugins: [react(), tailwindcss(), creativeSite()],
+  resolve: { alias: { '@': resolve(import.meta.dirname, 'src') } },
   server: {
     // Media working files (frames, renders, transcript work) are large and
     // irrelevant to the app; keep the dev watcher away from them.

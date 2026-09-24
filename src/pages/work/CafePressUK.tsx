@@ -7,11 +7,14 @@ import { projectById } from '../../content/projects'
 
 const project = projectById('cafepress-uk')
 
-/** CafePress UK (also served at the legacy /work/planetart): the storefront and focused crops beside the story (CaseScroll states media). */
+/**
+ * CafePress UK (also served at the legacy /work/planetart): readable pieces of the storefront prototype beside the
+ * findings they show, ending with the complete storefront (CaseScroll states media).
+ */
 export default function CafePressUK() {
   return (
     <CaseLayout project={project} className="page-cafepress-uk">
-      <CaseScroll project={project} meta={C.meta} summary={C.summary} media={C.media} sections={C.sections} outcome={C.outcome} />
+      <CaseScroll project={project} meta={C.meta} summary={C.summary} status={C.status} media={C.media} sections={C.sections} outcome={C.outcome} />
       <NextProject current={project.id} />
     </CaseLayout>
   )

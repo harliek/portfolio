@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type Ref, type RefObject } from 'react'
+import { useId, useLayoutEffect, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode, type Ref, type RefObject } from 'react'
 import { CROP_REGIONS } from '../../content/crops'
 import { getImage, type ImageId } from '../../content/media'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
@@ -15,6 +15,10 @@ import type { Rect, Visual } from './CaseScroll'
  * or Enter on the image itself (a real button with the image's exact bounds),
  * never a detached "Enlarge image" button. On phones a visual's `phone` crop
  * reads in place instead, without an enlarge control.
+ *
+ * No captions (brief-v8 section 8): under the image there is only the media
+ * bar, a discreet label when the visual has one (e.g. "Illustrative
+ * conversation") and the expand glyph at its right end.
  */
 
 /** Phones: a zoom opens the tapped image itself (ZoomButton); a visual's `phone` crop replaces its figure. */
@@ -56,7 +60,7 @@ function whenDecoded(layer: Element | null): Promise<void> {
 /* Sequencer: decode first, one highlight, only the latest target           */
 /* ----------------------------------------------------------------------- */
 
-/** What React renders from the sequencer: the shown state (caption, alt, zoom target) and whose highlight is mounted. */
+/** What React renders from the sequencer: the shown state (label, alt, zoom target) and whose highlight is mounted. */
 interface View {
   front: number
   hl: number
@@ -74,7 +78,7 @@ interface SequencerConfig {
  * (`data-on`) are set here directly on the DOM, and every fade is an awaited
  * Web Animation, so the old layer is hidden only after the new one has fully
  * appeared (CSS transitions can start late or end early during fast
- * scrolling). React renders the layers once and re-renders only the caption,
+ * scrolling). React renders the layers once and re-renders only the label,
  * alt text and zoom target from `view`.
  *
  * A change: wait until the target image has decoded (the current one stays
@@ -251,19 +255,22 @@ function HighlightBox({ rect, dim, on }: { rect: Rect; dim: boolean; on?: boolea
   return <span className="cs-hl" data-dim={dim || undefined} data-on={on ? '' : undefined} style={style} aria-hidden="true" />
 }
 
-/** The caption line: an optional label (e.g. "Illustrative conversation") and a middle dot, then the caption. */
-function Caption({ visual, showLabel = true }: { visual: Visual; showLabel?: boolean }) {
+/**
+ * The row under an image: its discreet label (when it has one) and, at the right end, the expand glyph (outside the
+ * artwork, so it never covers the media's content).
+ */
+function MediaBar({ label, labelId, children }: { label?: string; labelId: string; children?: ReactNode }) {
   return (
-    <>
-      {showLabel && visual.label && (
-        <>
-          <span className="cs-label">{visual.label}</span>
-          {/* A no-break space before the dot, so the dot never starts a line. */}
-          <span className="cs-label__sep">{' · '}</span>
-        </>
+    <div className="cs-figbar">
+      {label ? (
+        <span id={labelId} className="cs-media-label">
+          {label}
+        </span>
+      ) : (
+        <span />
       )}
-      {visual.caption}
-    </>
+      {children}
+    </div>
   )
 }
 
@@ -291,32 +298,33 @@ function spotIn(visual: Visual, target: ImageId): { focus: Region; highlight?: R
  * screen shows the whole image), so the view enlarges what was clicked. On a
  * phone that whole image would fit the screen smaller than the crop the
  * visitor tapped, so there the tapped image itself opens, a wide one at actual
- * size from its centre. Focus returns to `trigger`.
+ * size from its centre. Focus returns to `trigger`. The enlarged view shows the
+ * visual's label (e.g. Illustrative conversation), never a caption.
  */
 function useZoom(visual: Visual) {
   const dialog = useImageDialog()
   const target = expandTarget(visual)
   return (trigger: HTMLElement) => {
-    const caption = visual.caption ? <Caption visual={visual} /> : undefined
+    const label = visual.label || undefined
     if (window.matchMedia(PHONE).matches) {
       const id = visual.image
       const { width, height } = getImage(id)
       const detail = width > height && width > window.innerWidth
-      dialog.open(id, trigger, { gallery: [id], caption, detail, focus: detail ? WHOLE : undefined })
+      dialog.open(id, trigger, { gallery: [id], label, detail, focus: detail ? WHOLE : undefined })
       return
     }
     const spot = spotIn(visual, target)
-    dialog.open(target, trigger, { gallery: [target], caption, ...(spot && { detail: true, focus: spot.focus, highlight: spot.highlight }) })
+    dialog.open(target, trigger, { gallery: [target], label, ...(spot && { detail: true, focus: spot.focus, highlight: spot.highlight }) })
   }
 }
 
 /**
  * The image's own zoom control: a real button laid exactly over the shown
  * image (same box as its canvas), labelled "Enlarge image" and described by
- * the caption. Hover and focus scale the image 1.5% and give it an accent
- * edge (case.css). Nothing is drawn on the image itself.
+ * the media label when there is one. Hover and focus scale the image 1.5% and
+ * give it an accent edge (case.css). Nothing is drawn on the image itself.
  */
-function ZoomButton({ visual, captionId, open, ref }: { visual: Visual; captionId?: string; open: (trigger: HTMLElement) => void; ref: Ref<HTMLButtonElement> }) {
+function ZoomButton({ visual, labelId, open, ref }: { visual: Visual; labelId?: string; open: (trigger: HTMLElement) => void; ref: Ref<HTMLButtonElement> }) {
   return (
     <span className="cs-zoomlayer">
       <button
@@ -326,7 +334,7 @@ function ZoomButton({ visual, captionId, open, ref }: { visual: Visual; captionI
         style={{ '--r': imageRatio(visual) } as CSSProperties}
         data-zoom-id={expandTarget(visual)}
         aria-label="Enlarge image"
-        aria-describedby={captionId}
+        aria-describedby={labelId}
         onClick={(e) => open(e.currentTarget)}
       />
     </span>
@@ -334,9 +342,9 @@ function ZoomButton({ visual, captionId, open, ref }: { visual: Visual; captionI
 }
 
 /**
- * The visible expand icon at the right end of the caption row, outside the
- * artwork (case.css .cs-expand): shown on hover and keyboard focus with a
- * mouse, always on touch (44px). The image above is the accessible control,
+ * The visible expand icon at the right end of the media bar, outside the
+ * artwork (case.css .cs-expand): a quiet glyph with a mouse, a 44px button on
+ * touch. The image above is the accessible control,
  * so this pointer and touch shortcut stays out of the tab order and the
  * accessibility tree, and focus returns to the image when the view closes.
  */
@@ -373,13 +381,14 @@ interface StatesStageProps {
  * at high priority; the others at low priority once the opening image has
  * loaded, so on a slow connection the opening gets the bandwidth first, or at
  * once when the visitor has already moved on), the sequencer decides which is
- * shown, at most one highlight exists, and the caption below has a reserved
- * height, so neither the stage nor anything under it moves.
+ * shown, at most one highlight exists, and the media bar below keeps one
+ * height, so neither the stage nor anything under it moves. The figure is as
+ * wide as the column allows and no taller than the visible stage (case.css).
  */
 export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) {
   const reduced = useReducedMotion()
   const stageRef = useRef<HTMLDivElement>(null)
-  const captionId = useId()
+  const labelId = useId()
   const [sequencer] = useState(() => new FrameSequencer())
   const view = useSyncExternalStore(sequencer.subscribe, sequencer.getSnapshot, sequencer.getSnapshot)
 
@@ -457,12 +466,11 @@ export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) 
             </div>
           )
         })}
-        <ZoomButton ref={zoomRef} visual={front} captionId={captionId} open={open} />
+        <ZoomButton ref={zoomRef} visual={front} labelId={front.label ? labelId : undefined} open={open} />
       </div>
-      <ExpandShortcut open={open} zoomRef={zoomRef} />
-      <figcaption id={captionId} className="cs-caption" aria-live="polite">
-        <Caption visual={front} />
-      </figcaption>
+      <MediaBar label={front.label} labelId={labelId}>
+        <ExpandShortcut open={open} zoomRef={zoomRef} />
+      </MediaBar>
     </figure>
   )
 }
@@ -474,16 +482,16 @@ export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) 
 /**
  * A stacked figure in reading order: the image at its own ratio (bounded by
  * the viewport height, so phones never fill the screen), its highlight shown
- * at once, the caption below, and the same direct zoom. On a phone, a visual
- * with a `phone` crop shows that narrower crop, which reads in place, with no
- * enlarge control.
+ * at once, the media bar below (label and expand), and the same direct zoom.
+ * On a phone, a visual with a `phone` crop shows that narrower crop, which
+ * reads in place, with no enlarge control.
  *
  * `showLabel={false}`: the label (e.g. "Illustrative conversation") has
- * already appeared in an earlier figure on the page, so this caption leaves it
+ * already appeared in an earlier figure on the page, so this figure leaves it
  * out (a qualification is stated once). The enlarged view still carries it.
  */
 export function InlineVisual({ visual, sizes, priority = false, showLabel = true }: { visual: Visual; sizes: string; priority?: boolean; showLabel?: boolean }) {
-  const captionId = useId()
+  const labelId = useId()
   const zoomRef = useRef<HTMLButtonElement>(null)
   const open = useZoom(visual)
   const inPlace = useMediaQuery(PHONE) ? (visual.phone ?? null) : null
@@ -491,7 +499,7 @@ export function InlineVisual({ visual, sizes, priority = false, showLabel = true
   const highlight = inPlace ? inPlace.highlight : visual.highlight
   const transparent = Boolean(getImage(image).transparent)
   const r = ratioOf(image)
-  const hasCaption = Boolean(visual.caption || (showLabel && visual.label))
+  const label = showLabel ? visual.label : undefined
   return (
     <figure className="cs-figure" data-variant="inline" data-in-place={inPlace ? '' : undefined} style={{ '--stage-r': r } as CSSProperties}>
       <div className="cs-stage" data-kind="inline">
@@ -502,13 +510,12 @@ export function InlineVisual({ visual, sizes, priority = false, showLabel = true
             {highlight && <HighlightBox rect={highlight} dim={!transparent} on />}
           </div>
         </div>
-        {!inPlace && <ZoomButton ref={zoomRef} visual={visual} captionId={hasCaption ? captionId : undefined} open={open} />}
+        {!inPlace && <ZoomButton ref={zoomRef} visual={visual} labelId={label ? labelId : undefined} open={open} />}
       </div>
-      {!inPlace && <ExpandShortcut open={open} zoomRef={zoomRef} />}
-      {hasCaption && (
-        <figcaption id={captionId} className="cs-caption">
-          <Caption visual={visual} showLabel={showLabel} />
-        </figcaption>
+      {(label || !inPlace) && (
+        <MediaBar label={label} labelId={labelId}>
+          {!inPlace && <ExpandShortcut open={open} zoomRef={zoomRef} />}
+        </MediaBar>
       )}
     </figure>
   )

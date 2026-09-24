@@ -34,7 +34,7 @@ interface Point {
  * a mouse button is held, e.g. during a selection). Nothing in React
  * re-renders on movement; one animation-frame loop runs only while the
  * trail is visible. Off for touch and coarse pointers, under reduced motion
- * (OS or the footer's "Reduce motion"), and while anything is fullscreen.
+ * (the operating system setting), and while anything is fullscreen.
  * It is never the only sign that something is clickable.
  */
 export function PointerTrail() {

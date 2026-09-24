@@ -1,56 +1,79 @@
-import type { CaseMedia, Rect, StorySection, Visual } from '../../components/case/CaseScroll'
+import type { CaseMedia, StageContext, StorySection } from '../../components/case/CaseScroll'
+import { ConversationStage, type ConversationFocus, type ConversationMoment } from '../../components/pages/ai-leasing-agent/ConversationStage'
 
 /**
- * AI Leasing Agent (route /work/valiance, CaseScroll states media).
+ * AI Leasing Agent (route /work/valiance, CaseScroll custom media).
  *
- * Copy is brief-v5 section 20 under the copy rules and lead decision 5 (one
- * qualification, once, in My contribution: the production assistant ran on a
- * third-party platform). The brief's “My contribution” is split in two
- * (“My contribution” and “Testing and rollout”) so the story has three
- * sections of 25 to 45 words and each of the three highlights the brief asks
- * for (the answer, the live-information check, the staff handoff) follows the
- * text that describes it. No other wording is changed. Round 5 (R5-01): the
- * summary starts with Harlie's action; the metadata names Valiance Capital.
+ * brief-v8 section 11: one large, legible conversation with three identifiable
+ * moments (a prospective renter asks, the assistant says what it can answer
+ * and what needs staff, a member of the leasing staff takes over), each brought
+ * forward as the section about it is read, with the rest of the exchange in
+ * view. The story follows those moments. The problem (the renter's question),
+ * My contribution (what the assistant could answer and check), Handoff to staff
+ * (when a person takes over), then the whole exchange beside the result. The
+ * brief-v5 copy is kept, with its testing sentence in My contribution and its
+ * rollout sentence in Handoff to staff; one qualification, once, in My
+ * contribution (the production assistant ran on a third-party platform, lead
+ * decision 1).
  *
- * Sources: the résumé (Valiance Capital, Leasing & Operations Associate,
- * Oct 2024 to Jun 2025; “Managed CRM and leasing operations for a 1,000+
- * tenant portfolio”, the problem's opening clause since round 2, R2-08, so
- * the reader sees where and at what scale she saw the problem; “Defined
- * development requirements for AI leasing agent adopted across 18
- * properties”). The proposal, the workflow
- * documentation, the test cases, the API check, the phased rollout, the
- * third-party platform and the effect on the team's time are Harlie's own
- * statements (no file in the project documents them). No response-time or
- * conversion figure is published.
+ * Sources: the résumé (Valiance Capital, Berkeley, California; Leasing &
+ * Operations Associate, Oct 2024 to Jun 2025; “Managed CRM and leasing
+ * operations for a 1,000+ tenant portfolio”; “Defined development requirements
+ * for AI leasing agent adopted across 18 properties”). The résumé says 18
+ * properties, not all 18, so the page does too. The proposal, the workflow
+ * documentation, the test cases, the API check, the handoff rules, the phased
+ * rollout and the third-party platform are Harlie's own statements (no file in
+ * the project documents them). The effect on the team's time is stated as what
+ * the agent was designed to do, not as a measured result (brief-v8: benefits
+ * only as observed findings with evidence; there is none in the project). No
+ * response-time or conversion figure is published.
+ *
+ * Berkeley and Valiance (brief-v8 section 11, lead decision 3): the metadata
+ * gives the role's location, Berkeley (résumé), which is why the concept cover
+ * and the illustration are Berkeley-themed; the page names Valiance Capital as
+ * the employer and nothing else. The cover's “The Berkeley Group” branding
+ * awaits Harlie's confirmation in docs/asset-checklist.md.
  *
  * The only image is an illustrative conversation with invented names and data
  * (Valiance Capital/messages.png; its footer reads “Reconstruction · Invented
- * data”), shown as readable crops (src/content/crops/ai-leasing-agent.ts), each
- * labelled “Illustrative conversation”. A click opens the whole illustration
- * at actual size on the clicked detail. Highlights are percentages of each crop.
- * Phones show narrower crops of just the message or panel column (`phone`,
- * round 4, R4-06), which read in place; the request and the handoff crops are
- * themselves the detail, so they carry no highlight there.
+ * data”), labelled “Illustrative conversation” once. It is not presented as a
+ * production screenshot. Rectangles are percentages of ala-conversation
+ * (src/content/crops/ai-leasing-agent.ts, 831×640 from x 262, y 208).
  */
 
-/** Jordan's message (availability, a cat, a fee waiver, a unit hold), in ala-chat-request. */
-const REQUEST: Rect = { x: 11.3, y: 27.9, w: 81.5, h: 28.6 }
-/** Oski's first paragraph, the general information it can give, in ala-chat-request. */
-const ANSWER: Rect = { x: 13.2, y: 68.4, w: 72.3, h: 10.8 }
-/** The Live data required card, in ala-live-check. */
-const LIVE_CHECK: Rect = { x: 18.5, y: 19.7, w: 74.7, h: 39.1 }
-/** Oski's referral to staff and Sam's reply, in ala-chat-handoff. */
-const HANDOFF: Rect = { x: 10.9, y: 24.1, w: 84, h: 55.5 }
-/** The Live data required card in the phone crop ala-phone-panel (source x 1188–1632, y 437–582, as LIVE_CHECK). */
-const LIVE_CHECK_PHONE: Rect = { x: 4.91, y: 22.47, w: 90.8, h: 36.62 }
+/** The three moments, in the order of the conversation. */
+const MOMENTS: ConversationMoment[] = [
+  {
+    // Jordan: avatar, name row and message (source x 272–1066, y 220–410).
+    tag: 'Prospective renter',
+    rect: { x: 1.2, y: 1.88, w: 95.55, h: 29.69 },
+    tagAt: { y: 4.84, right: 4.57 },
+    phone: 'ala-phone-renter',
+    paper: 'rgb(238 240 236)',
+  },
+  {
+    // Oski: avatar, name row and reply (source x 272–1086, y 420–634).
+    tag: 'AI assistant',
+    rect: { x: 1.2, y: 33.13, w: 97.95, h: 33.44 },
+    tagAt: { y: 36.41, right: 2.05 },
+    phone: 'ala-phone-assistant',
+    paper: 'rgb(254 253 252)',
+  },
+  {
+    // Sam: avatar, name row and reply (source x 272–1086, y 654–838).
+    tag: 'Leasing staff',
+    rect: { x: 1.2, y: 69.69, w: 97.95, h: 28.75 },
+    tagAt: { y: 72.81, right: 2.05 },
+    phone: 'ala-phone-staff',
+    paper: 'rgb(254 253 252)',
+  },
+]
 
-const FULL = 'valiance-messages' as const
-const LABEL = 'Illustrative conversation'
-
-const view = (v: Omit<Visual, 'label' | 'expandTo'>): Visual => ({ ...v, label: LABEL, expandTo: FULL })
+/** The story's sections, in order, bring the renter, the assistant and the staff member forward; the opening and the result show the whole exchange. */
+const focusFor = (active: number): ConversationFocus => (active >= 0 && active < MOMENTS.length ? active : 'all')
 
 export const AI_LEASING_AGENT = {
-  meta: ['Leasing and Operations Associate · Valiance Capital', 'October 2024 to June 2025 · Adopted across all 18 properties'],
+  meta: ['Leasing and Operations Associate · Valiance Capital, Berkeley', 'October 2024 to June 2025 · Adopted across 18 properties'],
   summary: (
     <p>
       I <strong>proposed an AI leasing agent</strong>, wrote its requirements and workflow documentation, and developed test cases for its rollout across the
@@ -58,10 +81,10 @@ export const AI_LEASING_AGENT = {
     </p>
   ),
   media: {
-    kind: 'states',
-    // All three crops are 16:10.
-    frameRatio: '16 / 10',
-    opening: view({ image: 'ala-chat-request', caption: 'A prospective resident writes to the property’s web chat.', phone: { image: 'ala-phone-request' } }),
+    kind: 'custom',
+    render: ({ active, layout }: StageContext) => (
+      <ConversationStage image="ala-conversation" full="valiance-messages" moments={MOMENTS} focus={focusFor(active)} layout={layout} label="Illustrative conversation" />
+    ),
   } satisfies CaseMedia,
   sections: [
     {
@@ -73,34 +96,26 @@ export const AI_LEASING_AGENT = {
           and conversations that needed personal attention. Some answers depended on live property information, and others required a decision from staff.
         </p>
       ),
-      visual: view({ image: 'ala-chat-request', caption: 'One message asks about availability and a pet, and asks for a fee waiver and a unit hold.', highlight: REQUEST }),
     },
     {
       id: 'contribution',
       title: 'My contribution',
       body: (
         <p>
-          I defined what the assistant could answer, when it needed to check property data through the API, and when it should hand a
-          conversation to the team. The production assistant ran on a third-party platform.
+          I defined <strong>what the assistant could answer</strong> and when it needed to check property data through the API. I tested it with questions about
+          availability, pricing, tours, application status, and leasing policies. The production assistant ran on a third-party platform.
         </p>
       ),
-      visual: view({ image: 'ala-chat-request', caption: 'The assistant answers the general questions about floor plans, pets, and applications.', highlight: ANSWER }),
     },
     {
-      id: 'testing',
-      title: 'Testing and rollout',
+      id: 'handoff',
+      title: 'Handoff to staff',
       body: (
         <p>
-          I tested questions about availability, pricing, tours, application status, and leasing policies. We introduced it in lower-risk
-          scenarios, then expanded its use.
+          I also defined when it should hand a conversation to the leasing team, so a request that needed a staff decision reached a person. We introduced the
+          assistant in lower-risk scenarios, then expanded its use.
         </p>
       ),
-      visual: view({
-        image: 'ala-live-check',
-        caption: 'Current pricing and availability come from a live data check.',
-        highlight: LIVE_CHECK,
-        phone: { image: 'ala-phone-panel', highlight: LIVE_CHECK_PHONE },
-      }),
     },
   ] satisfies StorySection[],
   outcome: {
@@ -108,15 +123,9 @@ export const AI_LEASING_AGENT = {
     title: 'The result',
     body: (
       <p>
-        The agent was <strong>adopted across all 18 properties</strong>. By handling recurring inquiries, it gave the leasing team more time to pursue leads and
-        focus on resident and prospect interactions that needed a person.
+        The agent was <strong>adopted across 18 properties</strong>. It was designed to handle recurring inquiries so the leasing team could spend more time on
+        leads and on conversations that needed a person.
       </p>
     ),
-    visual: view({
-      image: 'ala-chat-handoff',
-      caption: 'The fee waiver and unit hold go to a member of the leasing team.',
-      highlight: HANDOFF,
-      phone: { image: 'ala-phone-handoff' },
-    }),
   } satisfies StorySection,
 }

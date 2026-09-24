@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { flushSync } from 'react-dom'
 import { fallbackSrc, getImage, getVideo, type ImageId, type VideoAsset, type VideoId } from '../../content/media'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { ExpandIcon } from './ExpandIcon'
@@ -14,6 +15,18 @@ import { drawUnderlay, onFramePresented, type Underlay } from './videoFrame'
  * - Muted, inline, looping, with native controls. It starts when at least
  *   35% of it is visible (IntersectionObserver) and keeps playing while the
  *   text scrolls; scrolling never seeks, scrubs or restarts it.
+ * - Preview and full sources: `video` plays inline; `full` (optional) is the
+ *   complete recording the larger view plays. With `full`, the inline copy is
+ *   an edited, accelerated preview: its `label` (e.g. "Edited preview · 1.5×
+ *   speed") sits inside the player, and the larger view says it shows the
+ *   complete recording at original speed. `map` pairs matching moments
+ *   [inlineSeconds, fullSeconds], so the larger view continues at the same
+ *   point and closing it returns the preview to the matching moment; without
+ *   `map` the complete recording starts from the beginning (the view says so)
+ *   and the preview resumes where it was.
+ * - No caption (brief-v8 section 8). The player's own bar, inside its frame
+ *   below the recording, holds the label and the expand control, so neither
+ *   covers the recording.
  * - Autoplay refused (NotAllowedError, e.g. a browser policy): the poster
  *   stays with one obvious "Play demo" button; native controls appear once
  *   it plays.
@@ -21,24 +34,23 @@ import { drawUnderlay, onFramePresented, type Underlay } from './videoFrame'
  *   hidden), resumed when it returns, unless the visitor paused it: an
  *   explicit pause is never overridden.
  * - Reduced motion: no autoplay; the poster with "Play demo".
- * - A manifest `startAt` (e.g. the Spreadsheet Agent's 16.5s, just before its
- *   build plan appears) is applied once, right before the recording first
+ * - A manifest `startAt` is applied once, right before the recording first
  *   plays (by itself, through "Play demo", or in the larger view); the loop
  *   then restarts from 0. Nothing seeks until playback is requested, so the
  *   poster stays for visitors who never start it.
  * - While "Play demo" is offered, the poster image lies over the player, so a
  *   seek or a closed larger view never replaces it with an arbitrary frame;
  *   likewise while the first seek to the start time is under way.
- * - Expand (a small button at the right end of the caption row, never on the
- *   recording, always visible; the native full screen button is removed so
- *   it is the player's one enlarge control, and full screen stays available
- *   inside the larger view): a larger view continues from the same time; the inline copy
- *   is paused first, so two copies never play. Closing restores the inline
- *   copy at the expanded view's time, playing if the expanded one was
- *   playing, paused (as the visitor's own pause) if it was paused. Focus
- *   returns to the expand button. On a phone or a touch screen, Expand puts
- *   the recording itself in the browser's full screen instead (it can turn
- *   to landscape there; a dialog would be no larger than the inline player).
+ * - Expand (a button in the player's bar, always visible, keyboard operable;
+ *   the native full screen button is removed so it is the player's one
+ *   enlarge control, and full screen stays available inside the larger view):
+ *   the inline copy is paused first, so two copies never play. Closing
+ *   restores the inline copy, playing if the larger one was playing, paused
+ *   (as the visitor's own pause) if it was paused. Focus returns to the
+ *   expand button. On a phone or a touch screen, Expand puts the recording
+ *   itself in the browser's full screen instead (it can turn to landscape
+ *   there); with a separate full recording, the larger view opens and asks
+ *   for full screen on that recording.
  * - The poster wins the bandwidth: the recording is neither requested in
  *   full nor started until the poster image has loaded, so a slow connection
  *   shows the poster (not an empty frame with a spinner) first.
@@ -55,6 +67,26 @@ const PLAY_RATIO = 0.35
 
 type Status = 'idle' | 'playing' | 'paused' | 'blocked'
 
+/** Matching moments [inlineSeconds, fullSeconds], ascending in both. */
+export type TimeMap = ReadonlyArray<readonly [number, number]>
+
+/** Piecewise-linear lookup in a TimeMap (`from` 0: inline to full; 1: full to inline); one to one beyond either end. */
+function mapTime(map: TimeMap, t: number, from: 0 | 1 = 0): number {
+  const to = from === 0 ? 1 : 0
+  if (!map.length || !Number.isFinite(t)) return t
+  if (t <= map[0][from]) return map[0][to] + Math.min(0, t - map[0][from])
+  for (let i = 1; i < map.length; i++) {
+    const a = map[i - 1]
+    const b = map[i]
+    if (t <= b[from]) {
+      const span = b[from] - a[from]
+      return span > 0 ? a[to] + ((t - a[from]) / span) * (b[to] - a[to]) : b[to]
+    }
+  }
+  const last = map[map.length - 1]
+  return last[to] + (t - last[from])
+}
+
 /** The smallest variant suited to the current viewport. */
 function pickVariant(video: VideoAsset) {
   const vw = window.innerWidth
@@ -70,15 +102,20 @@ function PlayIcon() {
 }
 
 interface DemoVideoProps {
+  /** The recording played inline (an edited preview when `full` is given). */
   video: VideoId
-  /** A representative frame; defaults to the recording's manifest poster. */
+  /** The complete recording the larger view plays (default: `video`). */
+  full?: VideoId
+  /** A discreet label inside the player (e.g. 'Edited preview · 1.5× speed'). */
+  label?: string
+  /** Matching moments [inlineSeconds, fullSeconds] between `video` and `full`. */
+  map?: TimeMap
+  /** A representative frame; defaults to the inline recording's manifest poster. */
   poster?: ImageId
   /** `sizes` for the poster image. */
   sizes: string
-  /** 'sticky': bounded by the viewport height beside the story; 'inline': the stacked layout. */
-  variant: 'sticky' | 'inline'
-  /** Caption under the player; defaults to the manifest caption. */
-  caption?: string
+  /** 'sticky': bounded by the visible stage beside the story; 'stacked': the stacked layout. */
+  variant: 'sticky' | 'stacked' | 'inline'
 }
 
 interface Expanded {
@@ -88,14 +125,18 @@ interface Expanded {
   volume: number
   /** What the inline player shows as the larger view opens (its frame, or the poster): drawn there until its own copy has a frame. */
   from: Underlay | null
+  /** Ask for full screen on the larger copy as soon as it can (touch Expand with a separate full recording). */
+  fullscreen: boolean
 }
 
-export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVideoProps) {
+export function DemoVideo({ video: id, full: fullId, label, map, poster, sizes, variant }: DemoVideoProps) {
   const asset = getVideo(id)
+  const fullAsset = getVideo(fullId ?? id)
+  /** The larger view plays a different, complete recording (the inline copy is its edited preview). */
+  const separate = fullAsset !== asset
   const posterId = poster ?? asset.poster
-  const posterAsset = getImage(posterId)
   const reduced = useReducedMotion()
-  const captionId = useId()
+  const labelId = useId()
   const stageRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const expandRef = useRef<HTMLButtonElement>(null)
@@ -113,7 +154,7 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
   const [covering, setCovering] = useState(false)
   const posterReady = posterSrc !== undefined
   /** Imperative state read by event handlers (never rendered). */
-  const ctl = useRef({ inView: false, userPaused: false, selfPause: false, autoStart: false, userStarted: false, expanded: false, reduced, posterReady, startDone: !(startAt > 0) })
+  const ctl = useRef({ inView: false, userPaused: false, selfPause: false, autoStart: false, userStarted: false, expanded: false, expandedFrom: 0, reduced, posterReady, startDone: !(startAt > 0) })
 
   /** The manifest's start time, once, when playback is about to begin (needs the recording's metadata; see onLoadedMetadata). */
   const seekToStart = useCallback(() => {
@@ -275,20 +316,31 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
     // recording stays paused.
     const play = playing || status === 'blocked' || (status === 'idle' && !reduced)
     const c = ctl.current
-    if (window.matchMedia(NATIVE_FULLSCREEN).matches) {
+    const touch = window.matchMedia(NATIVE_FULLSCREEN).matches
+    if (touch && !separate) {
       // The same element in full screen: it simply continues (started first, within the gesture, if the visitor
       // asked to watch). Without full screen support, the dialog below takes over.
       if (play && !playing) playNow()
       if (enterFullscreen(v)) return
     }
     // Never played yet and about to play: the larger view begins where the first play would.
-    const time = !c.startDone && play ? startAt : v.currentTime
+    const inlineTime = !c.startDone && play ? startAt : v.currentTime
     if (play) c.startDone = true
+    // The complete recording: at the matching moment, or from its beginning when the preview has no map.
+    const time = separate ? (map?.length ? Math.max(0, mapTime(map, inlineTime)) : 0) : inlineTime
     c.expanded = true
+    c.expandedFrom = inlineTime
     autoPause()
-    // The larger view opens on what is on screen here: this frame, or the poster.
-    const from = hasFrame && !showPlay && !covering ? v : (stageRef.current?.querySelector<HTMLImageElement>('.cs-demo__poster img') ?? null)
-    setExpanded({ time, play, muted: v.muted, volume: v.volume, from })
+    // The larger view opens on what is on screen here (this frame, or the poster), when it shows the same moment.
+    const same = !separate || Boolean(map?.length)
+    const from = !same ? null : hasFrame && !showPlay && !covering ? v : (stageRef.current?.querySelector<HTMLImageElement>('.cs-demo__poster img') ?? null)
+    const next = { time, play, muted: v.muted, volume: v.volume, from, fullscreen: touch && separate }
+    if (next.fullscreen) {
+      // Mounted within the gesture, so the larger copy may ask for full screen at once (VideoDialog).
+      flushSync(() => setExpanded(next))
+      return
+    }
+    setExpanded(next)
   }
 
   const closeExpanded = (result: { time: number; playing: boolean; muted: boolean; volume: number }) => {
@@ -297,7 +349,9 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
     setExpanded(null)
     c.expanded = false
     if (v) {
-      if (Number.isFinite(result.time)) v.currentTime = result.time
+      // Back in the preview: the matching moment, or where it was when the complete recording had no map.
+      const time = separate ? (map?.length ? mapTime(map, result.time, 1) : c.expandedFrom) : result.time
+      if (Number.isFinite(time)) v.currentTime = Math.max(0, Math.min(time, Number.isFinite(v.duration) ? v.duration - 0.05 : time))
       v.muted = result.muted
       v.volume = result.volume
       if (result.playing) {
@@ -309,12 +363,17 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
         c.userPaused = true
       }
     }
-    expandRef.current?.focus({ preventScroll: true })
+    const back = () => expandRef.current?.focus({ preventScroll: true })
+    back()
+    // Leaving full screen can drop focus to the page after this runs: return it once more if nothing holds it.
+    requestAnimationFrame(() => {
+      if (!document.activeElement || document.activeElement === document.body) back()
+    })
   }
 
   const ratio = asset.width / asset.height
   const showPlay = status === 'blocked' || (status === 'idle' && reduced)
-  const label = caption ?? asset.caption
+  const fullLabel = separate ? (map?.length ? 'Complete recording · original speed' : 'Complete recording from the start · original speed') : undefined
 
   const onLoadedMetadata = () => {
     // Playback was requested before the metadata arrived: begin at the start time, before the first frame shows.
@@ -322,57 +381,79 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
   }
 
   return (
-    <figure className="cs-figure cs-demo" data-variant={variant} style={{ '--stage-r': ratio } as CSSProperties}>
-      <div ref={stageRef} className="cs-stage" data-kind="video" data-status={status}>
-        {/* Underneath (the stage is never empty, and the recording fades in over it), and over it while "Play demo" is offered. */}
-        <ResponsiveImage
-          image={posterId}
-          sizes={sizes}
-          decorative
-          fit="contain"
-          priority
-          className={showPlay || covering ? 'cs-demo__poster cs-demo__poster--over' : 'cs-demo__poster'}
-        />
-        <video
-          ref={videoRef}
-          className="cs-demo__video"
-          src={src}
-          poster={posterSrc || undefined}
-          width={asset.width}
-          height={asset.height}
-          muted
-          loop
-          playsInline
-          controls={!showPlay || fullscreen}
-          // One enlarge control per player (R4-01): Expand below the recording. The native full screen button
-          // returns only while the recording is in full screen (touch Expand), so it can be left there.
-          controlsList={fullscreen ? undefined : 'nofullscreen'}
-          preload={!posterReady ? 'none' : reduced ? 'metadata' : 'auto'}
-          data-frame={hasFrame || undefined}
-          aria-label={asset.title}
-          aria-describedby={captionId}
-          onLoadedMetadata={onLoadedMetadata}
-          onSeeked={() => setCovering(false)}
-          onPlay={onPlay}
-          onPause={onPause}
-        />
-        {showPlay && (
-          <span className="cs-demo__playwrap">
-            <button type="button" className="button cs-demo__play" onClick={playNow}>
-              <PlayIcon />
-              Play demo
-            </button>
-          </span>
-        )}
+    <figure className="cs-figure cs-demo" data-variant={variant === 'sticky' ? 'sticky' : 'inline'} style={{ '--stage-r': ratio } as CSSProperties}>
+      <div className="cs-player">
+        <div ref={stageRef} className="cs-stage" data-kind="video" data-status={status}>
+          {/* Underneath (the stage is never empty, and the recording fades in over it), and over it while "Play demo" is offered. */}
+          <ResponsiveImage
+            image={posterId}
+            sizes={sizes}
+            decorative
+            fit="contain"
+            priority
+            className={showPlay || covering ? 'cs-demo__poster cs-demo__poster--over' : 'cs-demo__poster'}
+          />
+          <video
+            ref={videoRef}
+            className="cs-demo__video"
+            src={src}
+            poster={posterSrc || undefined}
+            width={asset.width}
+            height={asset.height}
+            muted
+            loop
+            playsInline
+            controls={!showPlay || fullscreen}
+            // One enlarge control per player (R4-01): Expand in the player's bar. The native full screen button
+            // returns only while the recording is in full screen (touch Expand), so it can be left there.
+            controlsList={fullscreen ? undefined : 'nofullscreen'}
+            preload={!posterReady ? 'none' : reduced ? 'metadata' : 'auto'}
+            data-frame={hasFrame || undefined}
+            aria-label={asset.title}
+            aria-describedby={label ? labelId : undefined}
+            onLoadedMetadata={onLoadedMetadata}
+            onSeeked={() => setCovering(false)}
+            onPlay={onPlay}
+            onPause={onPause}
+          />
+          {showPlay && (
+            <span className="cs-demo__playwrap">
+              <button type="button" className="button cs-demo__play" onClick={playNow}>
+                <PlayIcon />
+                Play demo
+              </button>
+            </span>
+          )}
+        </div>
+        {/* The player's own bar, below the recording inside its frame: the label, then the expand control. */}
+        <div className="cs-player__bar">
+          {label ? (
+            <span id={labelId} className="cs-media-label cs-player__label">
+              {label}
+            </span>
+          ) : (
+            <span />
+          )}
+          <button
+            ref={expandRef}
+            type="button"
+            className="cs-expand cs-player__expand"
+            aria-label={separate ? 'Expand the complete recording' : 'Expand video'}
+            onClick={openExpanded}
+          >
+            <ExpandIcon />
+          </button>
+        </div>
       </div>
-      {/* At the right end of the caption row, off the recording (case.css .cs-expand). */}
-      <button ref={expandRef} type="button" className="cs-expand" aria-label="Expand video" onClick={openExpanded}>
-        <ExpandIcon />
-      </button>
-      <figcaption id={captionId} className="cs-caption">
-        {label}
-      </figcaption>
-      {expanded && <VideoDialog asset={asset} posterSrc={fallbackSrc(posterAsset, 1600)} caption={label} start={expanded} onClose={closeExpanded} />}
+      {expanded && (
+        <VideoDialog
+          asset={fullAsset}
+          posterSrc={fallbackSrc(getImage(separate ? fullAsset.poster : posterId), 1600)}
+          label={fullLabel}
+          start={expanded}
+          onClose={closeExpanded}
+        />
+      )}
     </figure>
   )
 }
@@ -384,7 +465,8 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
 interface VideoDialogProps {
   asset: VideoAsset
   posterSrc: string
-  caption: string
+  /** A label beside the title (e.g. 'Complete recording · original speed'). */
+  label?: string
   start: Expanded
   onClose: (result: { time: number; playing: boolean; muted: boolean; volume: number }) => void
 }
@@ -393,11 +475,12 @@ interface VideoDialogProps {
  * A native modal <dialog> (focus contained, Escape and a click on the
  * backdrop close it, page scrolling locked) with the largest variant. It
  * opens on the inline player's frame (or poster), drawn underneath, and its
- * own copy fades in over it once that copy has a frame at the inline time
- * (never a black stage, nor the first frame). It leaves with a short fade
- * (dialogExit.ts). Mounted only while open.
+ * own copy fades in over it once that copy has a frame at the start time
+ * (never a black stage, nor the first frame). A complete recording opened
+ * from its preview is labelled as such beside the title. It leaves with a
+ * short fade (dialogExit.ts). Mounted only while open.
  */
-function VideoDialog({ asset, posterSrc, caption, start, onClose }: VideoDialogProps) {
+function VideoDialog({ asset, posterSrc, label, start, onClose }: VideoDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -413,16 +496,40 @@ function VideoDialog({ asset, posterSrc, caption, start, onClose }: VideoDialogP
   }, [start.from])
   useEffect(() => () => stopRef.current?.(), [])
 
-  useEffect(() => {
+  // Open before the first paint. Touch Expand with a separate complete recording also asks for that recording's own
+  // full screen here, within the visitor's gesture (the Expand handler mounts this view synchronously); leaving full
+  // screen then closes the view as well. Otherwise focus goes to Close.
+  useLayoutEffect(() => {
     const dialog = dialogRef.current
-    if (!dialog) return
+    const v = videoRef.current
+    if (!dialog || !v) return
     if (!dialog.open) dialog.showModal()
     document.documentElement.classList.add('is-dialog-open')
-    closeRef.current?.focus()
+    let detach = () => {}
+    if (start.fullscreen) {
+      if (start.play) v.play().catch(() => {})
+      if (enterFullscreen(v)) {
+        let entered = false
+        const onChange = () => {
+          if (document.fullscreenElement === v) entered = true
+          else if (entered) closeWithFade(dialogRef.current)
+        }
+        const onEnd = () => closeWithFade(dialogRef.current)
+        document.addEventListener('fullscreenchange', onChange)
+        v.addEventListener('webkitendfullscreen', onEnd)
+        detach = () => {
+          document.removeEventListener('fullscreenchange', onChange)
+          v.removeEventListener('webkitendfullscreen', onEnd)
+        }
+      } else closeRef.current?.focus()
+    } else closeRef.current?.focus()
     // No dialog.close() here: that would fire 'close' (and restore the inline copy) when React re-runs this
     // effect in development; unmounting removes the dialog from the top layer anyway.
-    return () => document.documentElement.classList.remove('is-dialog-open')
-  }, [])
+    return () => {
+      detach()
+      document.documentElement.classList.remove('is-dialog-open')
+    }
+  }, [start])
 
   // Shown once its frame at the inline time is on screen: after the seek (then it plays, if the inline copy was
   // playing), or after play() when there is nothing to seek. Paused at the start: its own poster, at once.
@@ -469,6 +576,12 @@ function VideoDialog({ asset, posterSrc, caption, start, onClose }: VideoDialogP
         <div className="image-dialog__bar">
           <p id={titleId} className="image-dialog__count t-small">
             {asset.title}
+            {label && (
+              <>
+                <span className="cs-label__sep">{' · '}</span>
+                <span className="cs-media-label">{label}</span>
+              </>
+            )}
           </p>
           <div className="image-dialog__controls">
             <button ref={closeRef} type="button" className="button button--small" onClick={() => closeWithFade(dialogRef.current)}>
@@ -498,7 +611,6 @@ function VideoDialog({ asset, posterSrc, caption, start, onClose }: VideoDialogP
             onLoadedMetadata={onLoadedMetadata}
           />
         </div>
-        <p className="image-dialog__caption t-small">{caption}</p>
       </div>
     </dialog>
   )

@@ -1,7 +1,7 @@
 import { useId, useLayoutEffect, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react'
 import { getImage } from '../../content/media'
 import { prefersReducedMotion, useReducedMotion } from '../../hooks/useReducedMotion'
-import { ExpandIcon } from '../media/Figure'
+import { ExpandIcon } from '../media/ExpandIcon'
 import { useImageDialog } from '../media/ImageDialog'
 import { ResponsiveImage } from '../media/ResponsiveImage'
 import type { Rect, Visual } from './CaseScroll'
@@ -14,6 +14,8 @@ import type { Rect, Visual } from './CaseScroll'
  * never a detached "Enlarge image" button.
  */
 
+/** Phones: a zoom opens the tapped image itself (ZoomButton). */
+const PHONE = '(max-width: 599.98px)'
 /** Frame change timings (ms): highlight out, layer in, settle, same-image pause, highlight in. */
 const T = { hlOut: 60, layerIn: 120, settle: 30, sameLayer: 60, hlIn: 150 }
 
@@ -243,11 +245,15 @@ function HighlightBox({ rect, dim, on }: { rect: Rect; dim: boolean; on?: boolea
   return <span className="cs-hl" data-dim={dim || undefined} data-on={on ? '' : undefined} style={style} aria-hidden="true" />
 }
 
-/** The caption line: an optional label (e.g. "Illustrative conversation"), then the caption. */
+/** The caption line: an optional label (e.g. "Illustrative conversation"), a space, then the caption. */
 function Caption({ visual }: { visual: Visual }) {
   return (
     <>
-      {visual.label && <span className="cs-label">{visual.label}</span>}
+      {visual.label && (
+        <>
+          <span className="cs-label">{visual.label}</span>{' '}
+        </>
+      )}
       {visual.caption}
     </>
   )
@@ -257,11 +263,26 @@ function Caption({ visual }: { visual: Visual }) {
  * The image's own zoom control: a real button laid exactly over the shown
  * image (same box as its canvas), labelled "Enlarge image" and described by
  * the caption. Hover and focus scale the image 1.5% and give it an accent
- * edge (case.css); a small expand icon appears in its corner (always on touch).
+ * edge (case.css); a small expand icon appears in its top corner (always on touch).
+ *
+ * It opens `expandTo` (e.g. the whole conversation behind a crop). On a phone
+ * that whole image would fit the screen smaller than the crop the visitor
+ * tapped, so there the tapped image itself opens, a wide one at actual size.
  */
 function ZoomButton({ visual, captionId }: { visual: Visual; captionId?: string }) {
   const dialog = useImageDialog()
   const target = expandTarget(visual)
+  const open = (trigger: HTMLElement) => {
+    const phone = window.matchMedia(PHONE).matches
+    const id = phone ? visual.image : target
+    const { width, height } = getImage(id)
+    dialog.open(id, trigger, {
+      gallery: [id],
+      caption: visual.caption ? <Caption visual={visual} /> : undefined,
+      labelled: Boolean(visual.label),
+      detail: phone && width > height && width > window.innerWidth,
+    })
+  }
   return (
     <span className="cs-zoomlayer">
       <button
@@ -271,7 +292,7 @@ function ZoomButton({ visual, captionId }: { visual: Visual; captionId?: string 
         data-zoom-id={target}
         aria-label="Enlarge image"
         aria-describedby={captionId}
-        onClick={(e) => dialog.open(target, e.currentTarget, { gallery: [target], caption: visual.caption ? <Caption visual={visual} /> : undefined })}
+        onClick={(e) => open(e.currentTarget)}
       >
         <span className="cs-zoom__icon" aria-hidden="true">
           <ExpandIcon />
@@ -296,10 +317,12 @@ interface StatesStageProps {
 }
 
 /**
- * The stable stage: every distinct image is mounted as a layer (they preload
- * at low priority, the opening at high priority), the sequencer decides which
- * is shown, at most one highlight exists, and the caption below has a
- * reserved height, so neither the stage nor anything under it moves.
+ * The stable stage: every distinct image is mounted as a layer (the opening
+ * at high priority; the others at low priority once the opening image has
+ * loaded, so on a slow connection the opening gets the bandwidth first, or at
+ * once when the visitor has already moved on), the sequencer decides which is
+ * shown, at most one highlight exists, and the caption below has a reserved
+ * height, so neither the stage nor anything under it moves.
  */
 export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) {
   const reduced = useReducedMotion()
@@ -311,6 +334,26 @@ export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) 
   const keys = states.map(layerKey)
   const keysSig = keys.join('|')
   const highlightsSig = states.map((v) => Boolean(v.highlight)).join('|')
+
+  // The opening image first; the other layers' images are requested after it (in the same render as any change of
+  // target, so the sequencer always finds the image it waits for).
+  const [openingLoaded, setOpeningLoaded] = useState(false)
+  const loadAll = openingLoaded || target !== 0
+  useEffect(() => {
+    if (openingLoaded) return
+    const img = stageRef.current?.querySelector<HTMLImageElement>(`[data-layer="${CSS.escape(keysSig.split('|')[0] ?? '')}"] img`)
+    const done = () => setOpeningLoaded(true)
+    if (!img || img.complete) {
+      done()
+      return
+    }
+    img.addEventListener('load', done)
+    img.addEventListener('error', done)
+    return () => {
+      img.removeEventListener('load', done)
+      img.removeEventListener('error', done)
+    }
+  }, [openingLoaded, keysSig])
 
   // Before the first paint: the current layer is visible (the stage is never empty).
   useLayoutEffect(() => {
@@ -344,15 +387,17 @@ export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) 
             // data-state (shown / under / hidden) is set by the sequencer, never by React.
             <div key={key} className="cs-layer" data-layer={key} data-transparent={transparent || undefined} aria-hidden={!isFront || undefined}>
               <div className="cs-canvas" style={{ '--r': imageRatio(visual) } as CSSProperties}>
-                <ResponsiveImage
-                  image={visual.image}
-                  sizes={sizes}
-                  fit="contain"
-                  priority={index === 0}
-                  loading={index === 0 ? undefined : 'eager'}
-                  fetchPriority={index === 0 ? undefined : 'low'}
-                  alt={isFront ? front.alt : visual.alt}
-                />
+                {(index === 0 || loadAll) && (
+                  <ResponsiveImage
+                    image={visual.image}
+                    sizes={sizes}
+                    fit="contain"
+                    priority={index === 0}
+                    loading={index === 0 ? undefined : 'eager'}
+                    fetchPriority={index === 0 ? undefined : 'low'}
+                    alt={isFront ? front.alt : visual.alt}
+                  />
+                )}
                 {hl && <HighlightBox rect={hl} dim={!transparent} />}
               </div>
             </div>

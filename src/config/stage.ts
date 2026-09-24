@@ -9,6 +9,12 @@ export const STAGE = {
     mobileBelow: 600,
     /** The video fades in over the poster once frames are actually playing (ms). */
     fadeInMs: 800,
+    /**
+     * The page's visible images load before the video is requested, so on a
+     * slow connection the content (not the decorative set) gets the bandwidth
+     * first; the video starts after at most this long regardless (ms).
+     */
+    contentFirstMaxMs: 4000,
     /** Playback speed per route: About is calmer. The same element plays on every route (it never restarts). */
     rate: { home: 1, case: 1, about: 0.6, other: 0.8 },
   },

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 import type { ClientFilm } from '../../../content/pages/client-work'
 import { fallbackSrc, getImage, getVideo, type VideoAsset } from '../../../content/media'
 import { useReducedMotion } from '../../../hooks/useReducedMotion'
-import { ExpandIcon } from '../../media/Figure'
+import { ExpandIcon } from '../../media/ExpandIcon'
+import { enterFullscreen, NATIVE_FULLSCREEN } from '../../media/fullscreen'
 import { ResponsiveImage } from '../../media/ResponsiveImage'
 import { shortDuration, spokenDuration } from '../../media/duration'
 import { FilmDialog, type FilmState } from './FilmDialog'
@@ -30,8 +31,15 @@ import { FilmDialog, type FilmState } from './FilmDialog'
  * so it plays with sound). `silenced` (another film was opened) pauses this
  * one. Expand (inside the frame, never on the native control bar) opens a
  * larger view from the same time and pauses this copy; closing it restores
- * the time and state here. The site-wide media policy (useMediaPlayback)
+ * the time and state here. On a phone or a touch screen, Expand puts this
+ * film itself in the browser's full screen instead (a dialog would be no
+ * larger than the frame). The site-wide media policy (useMediaPlayback)
  * treats the muted preview as ambient (`data-ambient`).
+ *
+ * The poster wins the bandwidth: a preview's recording is neither loaded in
+ * full nor started until the shown film's poster has loaded, so a slow
+ * connection shows the poster (not a dark frame with a spinner) first. The
+ * video's own poster reuses the file the picture loaded (no second download).
  */
 
 /** Share of the frame that must be visible before a preview starts. */
@@ -115,11 +123,42 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
   const [previewsStopped, setPreviewsStopped] = useState(false)
   const [hasFrame, setHasFrame] = useState(false)
   const [expanded, setExpanded] = useState<FilmState | null>(null)
+  /** Each film's loaded poster file, by index ('' if it failed); a film is missing until its poster has loaded. */
+  const [posterFiles, setPosterFiles] = useState<Record<number, string>>({})
+  const posterFile = posterFiles[view.front]
+  const posterReady = posterFile !== undefined
+  // The first film's poster first: the other posters are requested once it has loaded, or at once when the film
+  // changes (in the same render, so the poster change always finds the image it waits for).
+  const [firstFilm] = useState(target)
+  const loadAllPosters = firstFilm in posterFiles || target !== firstFilm || opened
   /** Imperative state read by media event handlers (never rendered). */
-  const ctl = useRef({ inView: false, autoStart: false, selfPause: false, selfMute: false, selfSeek: false, expanded: false, pendingPlay: false, opened, silenced, preview, reduced, previewsStopped })
+  const ctl = useRef({ inView: false, autoStart: false, selfPause: false, selfMute: false, selfSeek: false, expanded: false, pendingPlay: false, opened, silenced, preview, reduced, previewsStopped, posterReady })
   useLayoutEffect(() => {
-    Object.assign(ctl.current, { opened, silenced, preview, reduced, previewsStopped })
+    Object.assign(ctl.current, { opened, silenced, preview, reduced, previewsStopped, posterReady })
   })
+
+  // Note each poster's file once its picture has loaded (lazy stacked posters included).
+  useEffect(() => {
+    const frame = frameRef.current
+    if (!frame) return
+    const cleanups: Array<() => void> = []
+    frame.querySelectorAll<HTMLElement>('[data-poster]').forEach((el) => {
+      const index = Number(el.dataset.poster)
+      const img = el.querySelector('img')
+      const done = () => setPosterFiles((m) => (index in m ? m : { ...m, [index]: img?.naturalWidth ? img.currentSrc || img.src : '' }))
+      if (!img || img.complete) {
+        done()
+        return
+      }
+      img.addEventListener('load', done)
+      img.addEventListener('error', done)
+      cleanups.push(() => {
+        img.removeEventListener('load', done)
+        img.removeEventListener('error', done)
+      })
+    })
+    return () => cleanups.forEach((cleanup) => cleanup())
+  }, [films, loadAllPosters])
 
   const front = films[view.front] ?? films[0]
   const asset = getVideo(front.video)
@@ -165,7 +204,7 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
   const tryPreview = useCallback(() => {
     const v = videoRef.current
     const c = ctl.current
-    if (!v || !v.paused || !c.preview || c.opened || c.silenced || c.reduced || c.previewsStopped || c.expanded || !c.inView) return
+    if (!v || !v.paused || !c.posterReady || !c.preview || c.opened || c.silenced || c.reduced || c.previewsStopped || c.expanded || !c.inView) return
     if (document.visibilityState === 'hidden') return
     if (!v.muted) {
       c.selfMute = true
@@ -199,7 +238,8 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
         if (entry.intersectionRatio >= PLAY_RATIO) {
           ctl.current.inView = true
           tryPreview()
-        } else if (!entry.isIntersecting) {
+        } else if (!entry.isIntersecting && !document.fullscreenElement) {
+          // (In full screen the page behind is not what the visitor is watching.)
           ctl.current.inView = false
           autoPause()
         }
@@ -230,7 +270,7 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
       }
       tryPreview()
     }
-  }, [silenced, reduced, opened, preview, previewsStopped, isAttached, autoPause, tryPreview])
+  }, [silenced, reduced, opened, preview, previewsStopped, isAttached, posterReady, autoPause, tryPreview])
 
   // A newly attached recording: a clean state, then the preview if allowed.
   const attachVideo = useCallback(
@@ -333,6 +373,17 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
     const c = ctl.current
     const wasPreview = !c.opened
     const play = (!v.paused && !v.ended) || !c.opened
+    if (window.matchMedia(NATIVE_FULLSCREEN).matches) {
+      // This film itself in full screen; from a preview the visitor asked to watch, so it continues with sound
+      // (started within the gesture). Without full screen support, the dialog below takes over.
+      open()
+      if (wasPreview && v.muted) {
+        c.selfMute = true
+        v.muted = false
+      }
+      if (play && v.paused) v.play().catch(() => {})
+      if (enterFullscreen(v)) return
+    }
     c.expanded = true
     open()
     autoPause()
@@ -387,15 +438,17 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
       >
         {films.map((f, i) => (
           <div key={f.id} className="fp-poster" data-poster={i} data-state={i === view.front ? 'shown' : i === view.prev ? 'under' : 'hidden'} aria-hidden="true">
-            <ResponsiveImage
-              image={getVideo(f.video).poster}
-              sizes={sizes}
-              decorative
-              fit="contain"
-              priority={priority && i === 0}
-              loading={priority && i === 0 ? undefined : variant === 'sticky' ? 'eager' : 'lazy'}
-              fetchPriority={priority && i === 0 ? undefined : variant === 'sticky' ? 'low' : 'auto'}
-            />
+            {(i === firstFilm || loadAllPosters) && (
+              <ResponsiveImage
+                image={getVideo(f.video).poster}
+                sizes={sizes}
+                decorative
+                fit="contain"
+                priority={priority && i === 0}
+                loading={priority && i === 0 ? undefined : variant === 'sticky' ? 'eager' : 'lazy'}
+                fetchPriority={priority && i === 0 ? undefined : variant === 'sticky' ? 'low' : 'auto'}
+              />
+            )}
           </div>
         ))}
         {posterOnly && (
@@ -426,13 +479,13 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
             ref={attachVideo}
             className="fp-video"
             src={src}
-            poster={fallbackSrc(posterAsset, 1600)}
+            poster={posterFile || undefined}
             width={asset.width}
             height={asset.height}
             loop={!opened}
             playsInline
             controls={!posterOnly}
-            preload={opened || (preview && !reduced) ? 'auto' : 'none'}
+            preload={opened || (preview && !reduced && posterReady) ? 'auto' : 'none'}
             data-ambient={opened ? undefined : ''}
             aria-label={`${name} film`}
             aria-describedby={captionId}

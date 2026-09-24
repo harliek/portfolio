@@ -2,19 +2,20 @@ import { useLocation } from 'react-router-dom'
 import { accentVars } from '../../content/accents'
 import { projectForPath } from '../../content/projects'
 import { SITE } from '../../content/site'
-import { useMotionPreference } from '../../hooks/useMotionPreference'
+import { MotionToggle } from './MotionToggle'
 
 /**
- * The compact footer at the end of every professional page: the copyright
- * line and the quiet, persistent "Reduce motion" setting (a labelled switch
- * that stops the carousel, the background video, the pointer trail and
- * transitions; its default follows the operating system setting). No
+ * The compact footer at the end of every interior professional page: the
+ * copyright line and the quiet, persistent "Reduce motion" setting. No
  * contact block and no résumé link: email and LinkedIn live quietly at the
  * end of About. On a case study it carries the project's accent.
+ *
+ * The homepage is a fixed scene without a footer section; it shows the
+ * same Reduce motion setting inside the scene (Home.tsx).
  */
 export function Footer() {
   const { pathname } = useLocation()
-  const { reduced, setReduced } = useMotionPreference()
+  if (pathname === '/') return null
   const project = projectForPath(pathname)
   const year = new Date().getFullYear()
   return (
@@ -24,12 +25,7 @@ export function Footer() {
           <p className="site-footer__copy tabular">
             © {year} {SITE.name}
           </p>
-          <button type="button" className="motion-toggle" aria-pressed={reduced} onClick={() => setReduced(!reduced)}>
-            <span className="motion-toggle__track" aria-hidden="true">
-              <span className="motion-toggle__knob" />
-            </span>
-            Reduce motion
-          </button>
+          <MotionToggle />
         </div>
       </div>
     </footer>

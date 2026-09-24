@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { SITE } from '../content/site'
 import { usePageMeta } from '../hooks/usePageMeta'
 
 export function NotFound() {
@@ -9,7 +8,7 @@ export function NotFound() {
       <h1 className="t-display" tabIndex={-1}>
         Page not found
       </h1>
-      <p className="t-body t-muted">This page is unavailable. You can return to the work or contact me directly.</p>
+      <p className="t-body t-muted">This page is unavailable. You can return to the work.</p>
       <ul className="not-found__links">
         <li>
           <Link className="button" to="/">
@@ -17,9 +16,9 @@ export function NotFound() {
           </Link>
         </li>
         <li>
-          <a className="button button--quiet" href={SITE.emailHref}>
-            Email Harlie
-          </a>
+          <Link className="button button--quiet" to="/about">
+            About
+          </Link>
         </li>
       </ul>
     </div>

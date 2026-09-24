@@ -396,11 +396,12 @@
   filter: drop-shadow(0 0 1px rgb(var(--case-accent-rgb) / 0.85)) drop-shadow(0 0 12px rgb(var(--case-accent-rgb) / 0.35));
 }
 
-/* The small expand icon in the image's corner: on hover and focus; always on touch. */
+/* The small expand icon in the image's top corner, like the video's expand control (the highlights sit lower in the
+   images, so it never covers the region they point to): on hover and focus; always on touch. */
 .cs-zoom__icon {
   position: absolute;
+  top: 10px;
   right: 10px;
-  bottom: 10px;
   display: grid;
   place-items: center;
   width: 34px;
@@ -420,9 +421,11 @@
 
 @media (hover: none) {
   .cs-zoom__icon {
+    top: 8px;
+    right: 8px;
     opacity: 1;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -447,9 +450,10 @@
 }
 
 /* A short visible tag before the caption (e.g. Illustrative conversation). */
+/* Followed by a space in the text (Caption), so the label and the caption never run together. */
 .cs-label {
   display: inline-block;
-  margin-right: var(--space-2);
+  margin-right: var(--space-1);
   padding: 0 8px;
   border-radius: 999px;
   box-shadow: inset 0 0 0 1px rgb(var(--case-accent-rgb) / 0.55);
@@ -676,10 +680,12 @@ html[data-motion='reduce'] .cs-demo__expand:is(:hover, :focus-visible) {
   text-decoration: none;
 }
 
+/* A block box (not a grid: a percentage height inside an auto grid row does
+   not resolve, so tall objects such as the phone overflowed it); the image
+   fills it and is contained, centred. */
 .next-project__thumb {
   flex: none;
-  display: grid;
-  place-items: center;
+  display: block;
   width: var(--thumb-w, 104px);
   height: var(--thumb-h, 84px);
   filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.45));
@@ -689,7 +695,7 @@ html[data-motion='reduce'] .cs-demo__expand:is(:hover, :focus-visible) {
 }
 
 .next-project__thumb .picture,
-.next-project__thumb img {
+.next-project__thumb .picture img {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -707,10 +713,8 @@ html[data-motion='reduce'] .cs-demo__expand:is(:hover, :focus-visible) {
   line-height: 1.4;
 }
 
+/* Plain text flow: a long name wraps and the arrow stays after its last word (NextProject.tsx keeps them together). */
 .next-project__name {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
   color: var(--stage-ivory);
   font-size: clamp(1.25rem, 1.15rem + 0.35vw, 1.5rem);
   font-weight: 600;
@@ -719,8 +723,14 @@ html[data-motion='reduce'] .cs-demo__expand:is(:hover, :focus-visible) {
   transition: color 180ms var(--ease-out);
 }
 
+.next-project__tail {
+  white-space: nowrap;
+}
+
 .next-project__arrow {
-  flex: none;
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: -0.08em;
   transition: transform 180ms var(--ease-out);
 }
 
@@ -748,81 +758,4 @@ html[data-motion='reduce'] :is(.next-project__thumb, .next-project__name, .next-
 
 html[data-motion='reduce'] .next-project__link:is(:hover, :focus-visible) :is(.next-project__thumb, .next-project__arrow) {
   transform: none;
-}
-
-/* ======================================================================= */
-/* LEGACY, until Creative Production (FilmScroll, Results "Other agency     */
-/* work") moves to the new layout. Delete once nothing uses them.           */
-/* ======================================================================= */
-
-.cs-meta__row {
-  display: grid;
-  grid-template-columns: 7.75rem minmax(0, 1fr);
-  gap: var(--space-3);
-  align-items: baseline;
-}
-
-.cs-meta dt {
-  color: var(--color-muted);
-  font-size: 0.875rem;
-  line-height: 1.45;
-}
-
-.cs-meta dd {
-  color: var(--color-text);
-  font-size: 0.9375rem;
-  line-height: 1.45;
-}
-
-.cs-note {
-  margin-top: var(--space-4);
-  padding-left: var(--space-3);
-  border-left: 2px solid var(--case-accent);
-}
-
-.cs-note p {
-  max-width: 62ch;
-  color: var(--color-text);
-  font-size: 0.9375rem;
-  line-height: 1.5;
-}
-
-.cs-situation {
-  margin-top: var(--space-5);
-}
-
-.case-results {
-  display: grid;
-  gap: var(--space-5);
-  width: 100%;
-  max-width: calc(var(--case-max) + 2 * var(--gutter));
-  margin: 64px auto 0;
-  padding-inline: var(--gutter);
-  scroll-margin-top: var(--space-2);
-}
-
-@media (min-width: 960px) {
-  .case-results {
-    grid-template-columns: minmax(0, 42fr) minmax(0, 52fr);
-    column-gap: var(--case-gap);
-    align-items: start;
-  }
-}
-
-.case-results__text {
-  min-width: 0;
-}
-
-.case-results__heading {
-  margin-bottom: var(--space-4);
-  color: var(--stage-ivory);
-  font-size: clamp(1.375rem, 1.22rem + 0.45vw, 1.625rem);
-  line-height: 1.22;
-  letter-spacing: -0.02em;
-  font-weight: var(--weight-heading);
-}
-
-.case-results__figure {
-  min-width: 0;
-  max-width: 460px;
 }

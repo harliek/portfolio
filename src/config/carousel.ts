@@ -1,112 +1,151 @@
+import type { ObjectKind } from '../content/carousel'
+
 /**
- * The homepage object carousel (src/components/home/ObjectArc.tsx and
- * ObjectRow.tsx; the order, labels and sentences are in
- * src/content/carousel.ts, the display sizes in its OBJECT_SIZE).
+ * The homepage depth gallery (src/components/home/DepthGallery.tsx; the
+ * geometry is in src/components/home/galleryModel.ts; the order, names and
+ * subtitles are in src/content/carousel.ts, the reference object sizes in
+ * its OBJECT_SIZE).
  *
- * Geometry (moving arc). The seven transparent PNG objects stand on one
- * continuous track in their fixed order. Each object takes its own width
- * on the track plus one constant gap, so the visible spacing follows the
- * object widths instead of a fixed pitch. The track is a shallow concave
- * arc around the viewer: at the centre the objects are slightly farther
- * away (smaller), towards the sides they come closer and turn inward, and
- * in the last stretch before they leave the stage they shrink and dim
- * again. One phase (px along the track) moves at a constant, time-based
- * speed; every object's transform is derived from it each frame. An object
- * is moved from one end of the loop to the other only where it is fully
- * outside the stage and invisible.
+ * Model. The seven transparent PNG objects stand on the floor of the room in
+ * their fixed circular order. One continuous position `pos` (in items)
+ * says which object is featured: item i sits at the offset d = wrap(i − pos)
+ * (−3.5 to 3.5). From d the model derives, together and smoothly: depth
+ * scale (the featured object is substantially closer and larger), the base
+ * line on the floor (farther objects stand higher, towards the far wall),
+ * the horizontal place (a chain of objects edge to edge with a small gap,
+ * the featured one slightly right of centre), a turn towards the viewer,
+ * stacking order and brightness. Objects far from the front fade out and
+ * wrap round while invisible.
  *
- * All px values are at the 1440×900 reference and scale with the size
- * factor `u` (see `size`), except where noted.
+ * Px values are at the 1440×900 reference and scale with the size factor
+ * `u` (see `size`) unless noted.
  */
-export const CAROUSEL = {
-  /** Idle speed along the track (px per second at u = 1). */
-  speed: 30,
+export const GALLERY = {
+  /** Featured object size, as a multiple of OBJECT_SIZE (the 1440×900 carousel reference). */
+  featured: 1.5,
   /**
-   * On a fresh visit the motion eases in from rest over this long (ms), so
-   * the About-first opening reads before the objects start to travel.
-   * After that the speed is constant.
+   * Per-kind size adjustment at every depth, for balanced visual weight
+   * (the wide screens slightly smaller, the slim phone slightly larger).
    */
-  startRampMs: 1600,
+  kindScale: { headshot: 0.97, monitor: 0.97, mug: 0.9, laptop: 0.95, tablet: 0.98, camera: 0.98, phone: 1 },
 
   /**
-   * Scrolling (wheel or trackpad) over the carousel adds up to `max` times
-   * the idle speed (1 = twice as fast), then eases back over `easeMs`
-   * after the last wheel event. Each event adds |delta| / `perPx` of the
-   * extra speed, never beyond `max`. The listener is passive: the page
-   * still scrolls normally and nothing navigates.
+   * Size factor u = clamp(min, min(width / 1440, (height − heightOffset) / heightSpan), max).
+   * Below `fitBelow` px wide the widest featured object also fits within
+   * `fit` of the width (phones and portrait tablets show the featured
+   * object with its neighbours at the edges instead of shrinking everything).
    */
-  wheel: { max: 1, perPx: 160, easeMs: 700, smoothMs: 90 },
+  size: { min: 0.36, max: 1.3, heightOffset: 120, heightSpan: 780, fitBelow: 1000, fit: { tablet: 0.54, phone: 0.54 } },
+  /**
+   * Phones: one size factor fits the widest object (the monitor), which
+   * leaves the upright objects small. As an object comes to the front it may
+   * grow by up to `max`, within `fit` of the width and `height` of the
+   * window height (its neighbours keep their size).
+   */
+  phoneBoost: { max: 1.6, fit: 0.7, height: 0.45 },
 
-  /** Size factor u = clamp(min, min(width / 1440, (height − heightOffset) / heightSpan), max). */
-  size: { min: 0.62, max: 1.35, heightOffset: 240, heightSpan: 660 },
-
-  /** Gap between neighbouring objects on the track: `ratio` × stage width, clamped (px, not scaled). */
-  gap: { ratio: 0.044, min: 40, max: 90 },
-
-  arc: {
-    /** Depth scale at the centre (slightly farther away). */
-    centre: 0.94,
-    /** Depth scale at `peakAt` (closer). */
-    peak: 1.045,
-    /** Where the objects are closest, as a share of the stage half-width. */
-    peakAt: 0.8,
-    /** Beyond `peakAt`, objects shrink by `shrink` × (t − peakAt)² as they leave (t = share of the half-width). */
-    shrink: 0.7,
-    /** Smallest depth scale at the far ends. */
-    minScale: 0.8,
-    /** Inward turn at the stage edge (radians; ≈14°), proportional to the distance from the centre. */
-    turn: 0.24,
-    /** Largest turn (radians). */
-    maxTurn: 0.3,
-    /** Perspective of each object's turn (px at u = 1). */
-    perspective: 1100,
-    /** Closer objects stand a little lower (the floor comes towards the viewer): px per unit of depth scale. */
-    floorDrop: 150,
-    /** Objects dim from this share of the half-width (object centre)… */
-    dimFrom: 0.8,
-    /** …to this share… */
-    dimTo: 1.18,
-    /** …down to this opacity. */
-    dimOpacity: 0.42,
+  /** Layout per width class: desktop (≥ 1000px), tablet (600 to 999px), phone (< 600px). */
+  layout: {
+    desktop: {
+      /** Featured object's centre as a share of the width (slightly right of centre). */
+      x0: 0.515,
+      /** Depth: scale s(a) = 1 / (1 + k·(√(a² + c²) − c)) at distance a (in items) from the front. */
+      k: 0.86,
+      c: 0.35,
+      /** Largest turn towards the viewer (radians) and how quickly it is reached: turn = −max·tanh(d / reach). */
+      turnMax: 0.33,
+      turnReach: 1.35,
+      /** Gaps between neighbours on the chain, by the inner one's distance (0 = featured, 1, 2, 3); px at u = 1. */
+      gaps: [22, 34, 60, 70],
+      /** At rest the featured object's neighbours tuck this far behind it (px at u = 1); none while objects pass. */
+      tuck: 34,
+      /** Spacing on the left (more room there) × (1 + bias), on the right × (1 − bias). */
+      bias: 0.13,
+      /**
+       * Objects fade out between these distances (and are invisible beyond):
+       * on the right, and sooner on the left, so the left neighbour is the
+       * leftmost object at rest (About Me at the opening).
+       */
+      fade: [2.3, 2.85],
+      fadeLeft: [1.3, 1.85],
+    },
+    /** Tablets show the featured object and its two neighbours (the outer ones only while passing). */
+    tablet: { x0: 0.5, k: 0.8, c: 0.35, turnMax: 0.26, turnReach: 1.35, gaps: [22, 36, 48, 56], tuck: 50, bias: 0, fade: [1.35, 1.9], fadeLeft: [1.35, 1.9] },
+    /** Phones: the featured slot stands right of centre, so the left neighbour (About Me at the opening) shows whole with its name and the right one only peeks in. */
+    phone: { x0: 0.6, k: 0.55, c: 0.35, turnMax: 0.18, turnReach: 1.35, gaps: [10, 22, 30, 40], tuck: 26, bias: 0, fade: [1.3, 1.85], fadeLeft: [1.3, 1.85] },
   },
 
   /**
-   * Hover or keyboard focus: the object comes forward (`lift` px at u = 1)
-   * and grows by `scale` (+6%); the whole carousel pauses. Applied through
-   * the --hover-scale and --hover-lift custom properties (home.css).
+   * Floor. The featured object's base sits `bottom` above the window's
+   * bottom edge (room for its name, subtitle and the controls). Bases of
+   * farther objects approach the room's far floor line (where stage.css
+   * draws it: the loop's line at 65% of its frame, object-fit cover at 50%
+   * 55%), minus `horizonLift` of the window height. Phones stand the
+   * objects higher (`phoneBottom`), nearer the middle of the tall window.
    */
-  hover: { scale: 1.06, lift: 6 },
+  floor: { bottom: { share: 0.145, min: 96, max: 150 }, phoneBottom: { share: 0.28, min: 96, max: 250 }, horizonLift: 0.02 },
+
+  /** Distance dimming (opacity) at distance a: 1 − linear·a − square·a². */
+  dim: { linear: 0.08, square: 0.025 },
+  /** Per-object perspective of the turn (px at u = 1). */
+  perspective: 1500,
+  /**
+   * Name label: gap below the base (px at u = 1, plus a share of the depth
+   * scale); it stays `edgeMargin` px inside the window and fades out while
+   * its object's share inside the window falls from `edgeFade[1]` to `edgeFade[0]`.
+   * A name standing beside a nearer object keeps `clear` px (at u = 1)
+   * from it, fully once the name's top is `rise` px (at u = 1) above that
+   * object's lowest wide part; `foot` is the share of an object's height,
+   * from its base, that is only a narrow stand (the monitor's), beside
+   * which names may stand. Phones: the front name is gone by distance
+   * `phoneFade.front`; a neighbour's name (only where its object rests
+   * wholly in the window with room for the name beside the front object)
+   * fades in between `side[0]` and `side[1]` and out between `side[2]` and
+   * `side[3]`.
+   */
+  label: {
+    gap: 12,
+    gapDepth: 10,
+    edgeFade: [0.55, 0.78],
+    edgeMargin: 12,
+    clear: 10,
+    rise: 24,
+    foot: { monitor: 0.142 } as Partial<Record<ObjectKind, number>>,
+    phoneFade: { front: 0.4, side: [0.8, 0.97, 1.03, 1.2] },
+  },
+
+  /** Very slow idle drift: items per second on average, and its wave (slower near each featured position, never stopped). */
+  drift: { rate: 0.1, wave: 0.62, rampMs: 1800 },
+  /** A fresh opening holds still this long, so the About-first composition reads. */
+  openingHoldMs: 3200,
+  /** After movement settles, a short reading pause before the drift resumes. */
+  readPauseMs: 2600,
+  /** After hover or focus ends, at least this long before a pending drift resumes. */
+  resumeDelayMs: 900,
 
   /**
-   * Room above the tallest object at its closest (px at u = 1). A hovered
-   * object may rise a little above the stage (it is not clipped vertically).
+   * Wheel and trackpad: `pxPerItem` of scrolling moves one project; each
+   * event counts at most `maxEvent` px; one gesture (events less than
+   * `gapMs` apart) moves at most one project; `inputTau` smooths the
+   * movement during input; `endMs` after the last event it settles on a
+   * project (the next one in the gesture's direction once it moved at least
+   * `threshold`; `overshoot` past a project settles back on it).
    */
-  topRoom: 12,
-  /**
-   * At the opening, About's left edge lines up with the identity block,
-   * unless the object before it would then be more than this share visible
-   * (very wide screens): About is always the leftmost fully visible object.
-   */
-  openingPrevShare: 0.45,
-  /** Room below the baseline for the floor drop and the grounding shadow (px at u = 1). */
-  bottomRoom: 30,
+  wheel: { pxPerItem: 240, maxEvent: 60, gapMs: 220, endMs: 140, inputTau: 70, threshold: 0.05, overshoot: 0.15 },
+  /** Settling: a critically damped spring (rad/s); no bounce. */
+  settle: { omega: 7.2 },
+  /** Touch swipe: one project per this share of the width, flick look-ahead (s), movement before a swipe is recognised (px). */
+  swipe: { widthPerItem: 0.55, flick: 0.22, slop: 8 },
 
-  /** An object is a pointer target while at least this share of its width is inside the stage. */
-  minVisible: 0.5,
-  /** After the pointer leaves an object (or the caption region), motion resumes this much later unless it returns (ms). */
-  hoverGraceMs: 160,
-  /** While moving, the object under a still pointer is re-checked this often (ms), so an arriving object pauses the carousel. */
-  recheckMs: 90,
-  /** Keyboard focus on an object outside the readable area glides it in over this long (ms). */
-  focusGlideMs: 420,
+  hover: {
+    /** Forward (px at u = 1) and +5% (the inner wrapper; the gallery transform stays on the outer element). */
+    lift: 8,
+    scale: 1.05,
+    /** After the pointer leaves an object, it may reach the object's name (or come back) within this long without resuming. */
+    graceMs: 150,
+  },
+  /** Reduced motion: steps cross-fade (ms out, ms in); a wheel gesture moves one step after this much scrolling (px). */
+  reduced: { outMs: 110, inMs: 170, wheelPx: 40 },
   /** Largest frame time used for one step (s), so a stalled frame never produces a jump. */
   maxStep: 0.05,
-
-  /** Hover-capable fine pointers at least this wide get the moving arc; everything else gets the swipe row. */
-  arcMinWidth: 960,
-  /** Touch and coarse pointers get the swipe row (tap opens a project directly). */
-  touchQuery: '(hover: none), (pointer: coarse)',
-
-  /** Swipe row (touch, narrow windows, reduced motion): object size factor limits and the narrowest item (px, room for its sentence). */
-  row: { minU: 0.66, maxU: 1, minItemWidth: 232 },
 } as const

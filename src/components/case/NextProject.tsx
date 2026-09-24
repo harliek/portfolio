@@ -26,6 +26,9 @@ export function NextProject({ current }: { current: ProjectId }) {
   const next = projectById(projectById(current).next)
   const path = projectPath(next)
   const accent = ACCENTS[next.accent]
+  const split = next.name.lastIndexOf(' ') + 1
+  const head = next.name.slice(0, split)
+  const tail = next.name.slice(split)
   const style = { '--next-accent': accent.hex, '--next-accent-rgb': accent.rgb, '--thumb-w': `${THUMB.width}px`, '--thumb-h': `${THUMB.height}px` } as CSSProperties
   return (
     <nav className="next-project" aria-label="Next project">
@@ -47,10 +50,14 @@ export function NextProject({ current }: { current: ProjectId }) {
         <span className="next-project__text">
           <span className="next-project__label">Next project</span>{' '}
           <span className="next-project__name">
-            {next.name}
-            <svg className="next-project__arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-              <path d="M3 8h9.5M8.5 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            {head}
+            {/* The last word and the arrow never separate when the name wraps. */}
+            <span className="next-project__tail">
+              {tail}
+              <svg className="next-project__arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path d="M3 8h9.5M8.5 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
           </span>
         </span>
       </Link>

@@ -1,25 +1,23 @@
 import type { NavigationType } from 'react-router-dom'
 
 /**
- * Where the homepage carousel was, per history entry, so browser Back from
+ * Where the homepage gallery was, per history entry, so browser Back from
  * a project returns to the same position instead of resetting it. A fresh
  * visit (a link, the address bar, a reload, or an in-app link to /) starts
- * at the intended About-first opening.
+ * at the intended opening (Merchandising Platform featured, About Me on
+ * the left).
  *
  * Positions are kept in memory (in-app Back) and in sessionStorage (Back
  * into a reloaded document, e.g. from the creative portfolio, which is a
- * separate page load). The arc stores its phase as a share of the loop, so
- * it survives a different window size; the swipe row stores its scroll
- * offset in px.
+ * separate page load). The gallery stores its position in items (0 to 7),
+ * so it survives a different window size.
  */
 export interface SavedPosition {
-  /** Arc phase as a share of the loop length (0 to 1). */
-  loop?: number
-  /** Swipe row scroll offset (px). */
-  row?: number
+  /** Gallery position in items (the featured object's index when settled). */
+  pos?: number
 }
 
-const STORAGE_KEY = 'hk-home-carousel'
+const STORAGE_KEY = 'hk-home-gallery'
 const memory = new Map<string, SavedPosition>()
 
 /** How this document was loaded ('navigate', 'reload', 'back_forward'). */

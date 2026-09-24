@@ -712,6 +712,8 @@ function startCover(path: string, found: NonNullable<ReturnType<typeof coverSour
   img.draggable = false
   img.src = found.src
   clone.appendChild(img)
+  // A cut-out shown with a faded lower edge (the headshot) keeps that fade in flight (transition.css).
+  if (getComputedStyle(found.el).maskImage !== 'none' || getComputedStyle(found.img).maskImage !== 'none') clone.dataset.fade = 'bottom'
   placeBox(clone, found.box)
   clone.style.transformOrigin = '50% 50%'
   clone.style.filter = painted.filter

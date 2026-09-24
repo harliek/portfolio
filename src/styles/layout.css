@@ -512,7 +512,7 @@ a:focus-visible > .site-nav__mark {
     visibility 0s linear calc(var(--shelf-dur) * 0.7);
 }
 
-/* The dimmed page below the shelf (clicks pass through; a click outside closes the shelf). */
+/* The dimmed page below the shelf (a press there only closes the shelf; Header.tsx cancels its click). */
 .work-shelf::after {
   content: '';
   position: absolute;

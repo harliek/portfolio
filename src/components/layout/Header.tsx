@@ -18,6 +18,38 @@ const CREATIVE_HREF = '/creative/'
 const modified = (e: MouseEvent) => e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey
 
 /**
+ * Cancels the click that completes the current press, so a press on the
+ * dimmed page below the open shelf only closes the shelf and never also
+ * opens or follows what is underneath. The guard lasts one press: it goes
+ * with that click, shortly after a release that produced none (a drag), on a
+ * cancelled pointer, or at the next key press, so no later click or keyboard
+ * activation is ever lost.
+ */
+function swallowPressClick() {
+  let timer = 0
+  const done = () => {
+    window.clearTimeout(timer)
+    window.removeEventListener('click', stop, true)
+    window.removeEventListener('pointerup', released, true)
+    window.removeEventListener('pointercancel', done, true)
+    window.removeEventListener('keydown', done, true)
+  }
+  const stop = (e: Event) => {
+    e.preventDefault()
+    e.stopPropagation()
+    done()
+  }
+  const released = () => {
+    window.clearTimeout(timer)
+    timer = window.setTimeout(done, 400)
+  }
+  window.addEventListener('click', stop, true)
+  window.addEventListener('pointerup', released, true)
+  window.addEventListener('pointercancel', done, true)
+  window.addEventListener('keydown', done, true)
+}
+
+/**
  * Header. On the homepage there is no brand (the page's own identity block
  * is the introduction), only the navigation. On every other page a smaller
  * home link sits on the left: "Harlie Katz" (28px, the homepage title's pale
@@ -69,7 +101,9 @@ export function Header() {
   // Desktop shelf: Escape, a click outside Work and its shelf, or focus
   // leaving them (e.g. Tab on to About) closes it. Focus returns to Work,
   // except when the click itself landed on something focusable (a link, a
-  // button, a field), which keeps the focus.
+  // button, a field), which keeps the focus. A click on the dimmed page only
+  // closes the shelf (what is underneath is not activated); the header's own
+  // links (home, About, Creative Portfolio) work directly.
   useEffect(() => {
     if (!open || !desktop) return
     const scope = workRef.current?.closest('li')
@@ -84,6 +118,7 @@ export function Header() {
       if (scope?.contains(e.target as Node)) return
       const hadFocus = scope?.contains(document.activeElement)
       setOpen(false)
+      if (!headerRef.current?.contains(e.target as Node)) swallowPressClick()
       const interactive = e.target instanceof Element && e.target.closest(INTERACTIVE)
       // After the browser's own mousedown focus handling (which would otherwise focus <main>).
       if (hadFocus && !interactive) window.setTimeout(focusWork, 0)

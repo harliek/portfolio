@@ -5,6 +5,7 @@ import { TRANSCRIPTS } from '../../../content/transcripts'
 import { useMediaQuery } from '../../../hooks/useMediaQuery'
 import { goToSection } from '../../layout/RouteFocus'
 import { CoverSlot } from '../../transition/CoverSlot'
+import { StoryTracker } from '../../case/storyTracker'
 import { FilmPlayer } from './FilmPlayer'
 
 /*
@@ -16,7 +17,8 @@ import { FilmPlayer } from './FilmPlayer'
  * transition.
  *
  * Desktop (≥960px): the media column holds ONE sticky region from the
- * opening until the last film's section ends: the project navigation
+ * opening until the last film's section has reached its top (on a short
+ * viewport the text column gets a tail, storyTracker.ts): the project navigation
  * (Nickleby Capital, Aristocracy, The Night Club Global Tour) above one
  * stable 16:9 player (FilmPlayer). The page opens with a muted preview of the
  * Nickleby Capital film; while it only previews, scrolling moves the player
@@ -24,7 +26,8 @@ import { FilmPlayer } from './FilmPlayer'
  * film, Watch with sound, unmuting, playing, scrubbing, full screen or
  * expand), it stays in place while the page scrolls. The navigation marks
  * the film in the player; choosing another project there returns the player
- * to previews and scrolls to that project. One film plays at a time.
+ * to previews and scrolls to that project. A link to a project
+ * (#aristocracy) selects it the same way on arrival. One film plays at a time.
  * Below 960px: title, metadata, summary, cover, the project navigation, then
  * each project with its own player (only the first previews by itself).
  */
@@ -34,149 +37,8 @@ type FilmId = ClientFilm['id']
 const DESKTOP = '(min-width: 960px)'
 /** Keep in step with projects.ts FRAME_SIZES (the Nickleby poster is warmed with it before the page opens). */
 const POSTER_SIZES = '(min-width: 960px) 620px, calc(100vw - 32px)'
-/** Share of the viewport height where a section becomes active. */
-const ACTIVATION_LINE = 0.4
-/** The last section stays active for at least this share of the viewport height while the player is pinned. */
-const LAST_DWELL = 0.22
-/** The lowest the activation line may move near the end (share of the viewport). */
-const MAX_LINE = 0.75
-/** The line moves down over RAMP × the distance it moves. */
-const RAMP = 3
-
-/* ----------------------------------------------------------------------- */
-/* Active section (the same rules as CaseScroll's tracker)                  */
-/* ----------------------------------------------------------------------- */
-
-/**
- * The last section whose top has passed the activation line (-1 = the
- * opening), from the scroll position (rAF-throttled; the snapshot changes
- * only when the section changes, so fast scrolling in either direction lands
- * on the same state without a queue). Near the end (desktop) the line moves
- * down gradually, at most to 75% of the viewport, so the last section
- * becomes active LAST_DWELL of the viewport before the sticky player starts
- * to leave with its column; only a player too tall for that gives the text
- * column a short tail (--cs-tail). Ported from CaseScroll.tsx, whose tracker
- * is not exported.
- */
-class SectionTracker {
-  private els: Array<HTMLElement | null> = []
-  private grid: HTMLElement | null = null
-  private column: HTMLElement | null = null
-  private sticky: HTMLElement | null = null
-  private body: HTMLElement | null = null
-  private active = -1
-  private frame = 0
-  private listeners = new Set<() => void>()
-  private ro: ResizeObserver | null = null
-  private dirty = true
-  private stickyTop = 0
-  private tail = 0
-
-  setEl(i: number, el: HTMLElement | null) {
-    this.els[i] = el
-    this.relayout()
-  }
-
-  setCount(n: number) {
-    this.els.length = n
-  }
-
-  /** Ref callback for the media column (desktop only). Stable identity. */
-  attachMedia = (column: HTMLElement | null) => {
-    if (column === this.column) return
-    this.setTail(0)
-    this.column = column
-    this.grid = column?.parentElement ?? null
-    this.sticky = column?.querySelector<HTMLElement>('.cs-sticky') ?? null
-    this.body = this.grid?.querySelector<HTMLElement>(':scope > .cs-body') ?? null
-    this.relayout()
-  }
-
-  subscribe = (listener: () => void) => {
-    this.listeners.add(listener)
-    if (this.listeners.size === 1) {
-      window.addEventListener('scroll', this.schedule, { passive: true })
-      window.addEventListener('resize', this.resized)
-      this.ro = new ResizeObserver(this.relayout)
-      this.ro.observe(document.body)
-      this.schedule()
-    }
-    return () => {
-      this.listeners.delete(listener)
-      if (this.listeners.size) return
-      window.removeEventListener('scroll', this.schedule)
-      window.removeEventListener('resize', this.resized)
-      this.ro?.disconnect()
-      this.ro = null
-      cancelAnimationFrame(this.frame)
-      this.frame = 0
-    }
-  }
-
-  getSnapshot = () => this.active
-
-  private schedule = () => {
-    if (!this.frame && this.listeners.size) this.frame = requestAnimationFrame(this.measure)
-  }
-
-  private relayout = () => {
-    this.dirty = true
-    this.schedule()
-  }
-
-  private resized = () => {
-    this.setTail(0)
-    this.relayout()
-  }
-
-  private setTail(px: number) {
-    this.tail = px
-    if (px > 0) this.grid?.style.setProperty('--cs-tail', `${px}px`)
-    else this.grid?.style.removeProperty('--cs-tail')
-  }
-
-  private line(vh: number) {
-    const base = vh * ACTIVATION_LINE
-    const n = this.els.length
-    const lastEl = this.els[n - 1]
-    const { column, sticky, body } = this
-    if (!lastEl || !column || !sticky || !body) return base
-    const y = window.scrollY
-    if (this.dirty) {
-      this.dirty = false
-      this.stickyTop = Number.parseFloat(getComputedStyle(sticky).top) || 0
-    }
-    const region = this.stickyTop + sticky.offsetHeight
-    const dwell = vh * LAST_DWELL
-    const lastTop = lastEl.getBoundingClientRect().top + y
-    const after = body.getBoundingClientRect().bottom + y - this.tail - lastTop
-    const tail = Math.max(0, Math.ceil(region + dwell - after - vh * MAX_LINE))
-    if (tail > this.tail) this.setTail(tail)
-    const unpin = column.getBoundingClientRect().bottom + y - region
-    const end = unpin - dwell
-    const shift = Math.min(Math.max(lastTop - end - base, 0), vh * (MAX_LINE - ACTIVATION_LINE))
-    if (!shift) return base
-    const start = Math.max(0, end - RAMP * shift)
-    const progress = end > start ? Math.min(Math.max((y - start) / (end - start), 0), 1) : y >= end ? 1 : 0
-    return base + shift * progress
-  }
-
-  private measure = () => {
-    this.frame = 0
-    const line = this.line(window.innerHeight)
-    let active = -1
-    for (let i = 0; i < this.els.length; i++) {
-      const el = this.els[i]
-      if (!el) continue
-      if (el.getBoundingClientRect().top <= line) active = i
-      else break
-    }
-    if (active !== this.active) {
-      this.active = active
-      this.listeners.forEach((l) => l())
-    }
-  }
-}
+/** A pick holds at least this long (ms), past the page's own alignment of a linked section on arrival (RouteFocus). */
+const PICK_HOLD = 600
 
 /* ----------------------------------------------------------------------- */
 /* Pieces                                                                   */
@@ -241,7 +103,7 @@ interface FilmScrollProps {
 
 export function FilmScroll({ project, meta, summary, films, coverScale = 0.72 }: FilmScrollProps) {
   const desktop = useMediaQuery(DESKTOP)
-  const [tracker] = useState(() => new SectionTracker())
+  const [tracker] = useState(() => new StoryTracker())
   const active = useSyncExternalStore(tracker.subscribe, tracker.getSnapshot, tracker.getSnapshot)
   const count = films.length
   useEffect(() => tracker.setCount(count), [tracker, count])
@@ -249,27 +111,43 @@ export function FilmScroll({ project, meta, summary, films, coverScale = 0.72 }:
   /** The film the visitor opened (it stays in place), or null while the player only previews. */
   const [openedId, setOpenedId] = useState<FilmId | null>(null)
   /**
-   * The project chosen in the navigation, held until the visitor scrolls again. Near the end of the page
-   * the activation line sits lower (see SectionTracker), so the chosen section, scrolled to the top, is not
-   * necessarily the active one; the choice wins until the next scroll the visitor makes.
+   * The project chosen in the navigation, or named by the link the page was opened with
+   * (#aristocracy), held until the visitor scrolls. Near the end of the page the activation line
+   * sits lower (storyTracker.ts), so the chosen section, scrolled to the top, is not necessarily the
+   * active one; the choice wins until the next scroll the visitor makes.
    */
-  const [pickedId, setPickedId] = useState<FilmId | null>(null)
+  const [pickedId, setPickedId] = useState<FilmId | null>(() => {
+    const id = decodeURIComponent(window.location.hash.slice(1))
+    return films.find((f) => f.id === id)?.id ?? null
+  })
 
   useEffect(() => {
     if (!pickedId) return
     let armed = false
+    let settled = false
+    let held = false
     const release = () => setPickedId(null)
-    // The navigation's own (smooth) scroll ends first; any scroll after that is the visitor's.
+    // The page's own scroll ends first (the navigation's smooth scroll, or the alignment of a linked
+    // section on arrival); any scroll after that is the visitor's.
     const arm = () => {
       if (armed) return
       armed = true
       window.addEventListener('scroll', release, { once: true, passive: true })
     }
-    window.addEventListener('scrollend', arm, { once: true })
+    const onEnd = () => {
+      settled = true
+      if (held) arm()
+    }
+    window.addEventListener('scrollend', onEnd)
+    const hold = window.setTimeout(() => {
+      held = true
+      if (settled) arm()
+    }, PICK_HOLD)
     const fallback = window.setTimeout(arm, 1200)
     return () => {
+      window.clearTimeout(hold)
       window.clearTimeout(fallback)
-      window.removeEventListener('scrollend', arm)
+      window.removeEventListener('scrollend', onEnd)
       window.removeEventListener('scroll', release)
     }
   }, [pickedId])

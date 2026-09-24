@@ -6,13 +6,38 @@ import { subscribeTransitionTarget, transitionTarget } from '../transition/proje
 
 const MOBILE_QUERY = `(max-width: ${STAGE.background.mobileBelow - 0.02}px)`
 
+/** An image the visitor can see now: in the viewport, not in a hidden layer, not a low-priority prefetch. */
+function seenNow(img: HTMLImageElement) {
+  if (img.complete || img.fetchPriority === 'low' || img.closest('.stage-bg')) return false
+  const r = img.getBoundingClientRect()
+  if (r.width < 1 || r.height < 1 || r.bottom <= 0 || r.top >= window.innerHeight || r.right <= 0 || r.left >= window.innerWidth) return false
+  return img.checkVisibility?.({ opacityProperty: true, visibilityProperty: true }) ?? true
+}
+
+/** Resolves when every image the visitor can see has loaded or failed (the page's own content comes first). */
+function visibleImagesSettled() {
+  const pending = [...document.images].filter(seenNow)
+  return Promise.all(
+    pending.map(
+      (img) =>
+        new Promise<void>((resolve) => {
+          img.addEventListener('load', () => resolve(), { once: true })
+          img.addEventListener('error', () => resolve(), { once: true })
+        }),
+    ),
+  )
+}
+
 /**
  * The persistent set: a full-viewport architectural video behind every
  * professional page, mounted ONCE in PageShell so the same <video> keeps
  * playing through route changes and project openings (it never restarts).
  * The poster is painted first and content never waits for the video; the
- * muted loop fades in over it once frames play. One file per device class,
- * chosen once.
+ * muted loop fades in over it once frames play. The video itself is requested
+ * only once the images the visitor can see on the first page have loaded (at
+ * most STAGE.background.contentFirstMaxMs later), so on a slow connection the
+ * content gets the bandwidth before the decorative set. One file per device
+ * class, chosen once.
  *
  * Readability (src/styles/stage.css): broad, smoothly blended gradients
  * only, no boxes. A base shade per route (lightest on the homepage, where
@@ -39,13 +64,36 @@ export function StageBackground({ route: current }: { route: StageRoute }) {
   const [mobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches)
   const file = mobile ? STAGE_MEDIA.background.mobile : STAGE_MEDIA.background.desktop
   const [playing, setPlaying] = useState(false)
+  /** The video file, set once the first page's visible images have loaded. */
+  const [videoSrc, setVideoSrc] = useState<string>()
   const videoRef = useRef<HTMLVideoElement>(null)
 
+  // Content first: wait (one frame, so the page has laid out) for the visible images, or the cap.
+  useEffect(() => {
+    if (reduced || videoSrc) return
+    let cancelled = false
+    let timer = 0
+    const frame = window.requestAnimationFrame(() => {
+      const cap = new Promise<void>((resolve) => {
+        timer = window.setTimeout(resolve, STAGE.background.contentFirstMaxMs)
+      })
+      void Promise.race([visibleImagesSettled(), cap]).then(() => {
+        if (!cancelled) setVideoSrc(file.src)
+      })
+    })
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(timer)
+    }
+  }, [reduced, videoSrc, file.src])
+
   // Play only while it can be seen: the tab is visible, no image dialog or
-  // small-screen menu covers the page, nothing is fullscreen.
+  // small-screen menu covers the page, nothing is fullscreen (checked again
+  // once the file is attached).
   useEffect(() => {
     const video = videoRef.current
-    if (reduced || !video) return
+    if (reduced || !video || !videoSrc) return
     const root = document.documentElement
     const sync = () => {
       const covered = root.classList.contains('is-dialog-open') || root.classList.contains('is-menu-open')
@@ -63,7 +111,7 @@ export function StageBackground({ route: current }: { route: StageRoute }) {
       document.removeEventListener('visibilitychange', sync)
       document.removeEventListener('fullscreenchange', sync)
     }
-  }, [reduced])
+  }, [reduced, videoSrc])
 
   // Calmer set on About: the same element, a slower loop.
   useEffect(() => {
@@ -100,7 +148,7 @@ export function StageBackground({ route: current }: { route: StageRoute }) {
           data-playing={playing || undefined}
           data-ambient=""
           data-stage-background=""
-          src={file.src}
+          src={videoSrc}
           width={file.width}
           height={file.height}
           autoPlay

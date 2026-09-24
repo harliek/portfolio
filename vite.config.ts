@@ -99,6 +99,19 @@ export default defineConfig({
   build: {
     target: 'es2022',
     chunkSizeWarningLimit: 400,
+    rolldownOptions: {
+      output: {
+        // The framework (React, React DOM, React Router: about 70% of the
+        // entry) in its own chunk. Every route needs it, so nothing extra is
+        // downloaded, it is requested in parallel with the app entry, and it
+        // stays cached across content deploys. The homepage gallery is only
+        // about 5% of the entry and stays eager so the homepage has no extra
+        // round trip.
+        codeSplitting: {
+          groups: [{ name: 'framework', test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/ }],
+        },
+      },
+    },
   },
   preview: {
     port: 4173,

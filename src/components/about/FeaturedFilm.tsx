@@ -37,7 +37,9 @@ export function FeaturedFilm() {
             className="about-film__player"
             src={embedUrl(FILM.youtubeId)}
             title={`${FILM.title}, short film, YouTube player`}
-            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            // Fullscreen comes from allowFullScreen alone (YouTube's own embed pattern, honoured by every browser);
+            // listing it in `allow` as well makes Chrome warn that one overrides the other.
+            allow="autoplay; encrypted-media; picture-in-picture"
             allowFullScreen
             referrerPolicy="strict-origin-when-cross-origin"
           />

@@ -9,6 +9,10 @@ export interface OpenOptions {
   gallery?: ImageId[]
   /** Caption for the opened image (default: its manifest caption), e.g. the caption shown beside it on the page. */
   caption?: ReactNode
+  /** The caption carries its own label (e.g. Illustrative conversation), so the manifest's provenance label is not added. */
+  labelled?: boolean
+  /** Opens in the actual-size view (e.g. a wide image on a phone, where fitting it would make it no larger). */
+  detail?: boolean
 }
 
 interface DialogApi {
@@ -48,15 +52,15 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   const [index, setIndex] = useState(0)
   const [detail, setDetail] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
-  const [override, setOverride] = useState<{ id: ImageId; caption: ReactNode } | null>(null)
+  const [override, setOverride] = useState<{ id: ImageId; caption: ReactNode; labelled: boolean } | null>(null)
 
   const open = useCallback((id: ImageId, trigger: HTMLElement, options?: OpenOptions) => {
     const list = options?.gallery ?? galleryFrom(trigger)
     triggerRef.current = trigger
-    setOverride(options?.caption ? { id, caption: options.caption } : null)
+    setOverride(options?.caption ? { id, caption: options.caption, labelled: Boolean(options.labelled) } : null)
     setGallery(list.length ? list : [id])
     setIndex(Math.max(0, list.indexOf(id)))
-    setDetail(false)
+    setDetail(Boolean(options?.detail))
     setIsOpen(true)
   }, [])
 
@@ -97,7 +101,8 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
 
   const api = useMemo(() => ({ open }), [open])
   const current = isOpen && count ? getImage(gallery[index]) : null
-  const label = current ? PROVENANCE_LABEL[current.provenance] : null
+  const ownCaption = current && override && override.id === current.id ? override : null
+  const label = current && !ownCaption?.labelled ? PROVENANCE_LABEL[current.provenance] : null
 
   return (
     <ImageDialogContext.Provider value={api}>
@@ -172,7 +177,7 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
                   <span className="provenance-sep"> · </span>
                 </>
               )}
-              {override && override.id === current.id ? override.caption : (current.caption ?? current.alt)}
+              {ownCaption ? ownCaption.caption : (current.caption ?? current.alt)}
             </p>
           </div>
         )}

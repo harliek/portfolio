@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { Link, useLocation, useRouteError } from 'react-router-dom'
-import { SITE } from '../content/site'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { CHUNK_RELOAD_KEY } from '../routes'
 
@@ -63,9 +62,9 @@ export function RouteError() {
           </Link>
         </li>
         <li>
-          <a className="button button--quiet" href={SITE.emailHref}>
-            Email Harlie
-          </a>
+          <Link className="button button--quiet" to="/about">
+            About
+          </Link>
         </li>
       </ul>
     </div>

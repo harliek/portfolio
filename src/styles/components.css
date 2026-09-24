@@ -1,4 +1,4 @@
-/* Shared components: buttons and links (with the site-wide interaction states), figures, media frames, dialog, video, notes. */
+/* Shared components: buttons and in-page navigation (with the site-wide interaction states), pictures, the image dialog, transcripts, cover slots. */
 
 /*
  * Controls. One coherent set, legible on the moving video before any hover:
@@ -7,7 +7,6 @@
  *   .button--secondary      visible dark fill + clear light outline
  *   .button--quiet          alias of --secondary (older markup)
  *   .button--small          40px, for frame controls
- *   .text-link              link in prose: persistent underline
  *   .nav-chip               in-page jump navigation; [aria-current] = selected
  *
  * Interaction states (section 31 of the brief), the same everywhere:
@@ -21,7 +20,6 @@
  * it on the element itself (--_acc, --_acc-rgb), so it follows the page.
  */
 .button,
-.text-link,
 .nav-chip {
   --_acc: var(--accent, var(--accent-default));
   --_acc-rgb: var(--accent-rgb, var(--accent-default-rgb));
@@ -158,49 +156,6 @@ a:hover > .link-arrow {
   width: 100%;
 }
 
-/*
- * Links in prose: a persistent underline. Hover and focus tint the words
- * slightly towards the accent and turn the underline into the accent (the
- * thicker line does not move the text).
- */
-.text-link {
-  color: inherit;
-  font-weight: var(--weight-label);
-  text-decoration-line: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-  text-decoration-color: var(--link-underline);
-  transition:
-    text-decoration-color var(--dur-feedback) var(--ease-out),
-    color var(--dur-feedback) var(--ease-out),
-    text-shadow var(--dur-feedback) var(--ease-out);
-}
-
-.text-link:is(:hover, :focus-visible) {
-  color: color-mix(in oklch, var(--_acc) 32%, var(--color-text));
-  text-decoration-color: var(--_acc);
-  text-decoration-thickness: 2px;
-  text-shadow: 0 0 12px rgb(var(--_acc-rgb) / 0.45);
-}
-
-.text-link:active {
-  opacity: 0.8;
-}
-
-.text-link:focus-visible {
-  outline: 2px solid var(--_acc);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-/* A standalone link (not inside a sentence) gets a full 44px target. */
-.text-link--standalone {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-}
-
 /* In-page jump navigation (e.g. the Creative Production project row). */
 .nav-chip {
   display: inline-flex;
@@ -258,34 +213,7 @@ a:hover > .link-arrow {
   box-shadow: 0 0 0 1px rgb(var(--_acc-rgb) / 0.55), 0 0 18px -4px rgb(var(--_acc-rgb) / 0.6);
 }
 
-/* Figures and media */
-.figure {
-  display: grid;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.media-frame {
-  position: relative;
-  border-radius: var(--radius-inner);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-media);
-  overflow: hidden;
-  isolation: isolate;
-}
-
-/* Padded frame: outer radius = inner radius + padding. */
-.media-frame--padded {
-  padding: var(--pad-frame);
-  border-radius: var(--radius-outer);
-  background: var(--color-raised);
-}
-
-.media-frame--padded .picture img,
-.media-frame--padded .zoom-trigger {
-  border-radius: var(--radius-inner);
-}
-
+/* Pictures (ResponsiveImage.tsx) */
 .picture,
 .picture img {
   display: block;
@@ -314,13 +242,6 @@ a:hover > .link-arrow {
   font-size: var(--text-small);
 }
 
-.figure__caption {
-  max-width: var(--prose-max);
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  line-height: var(--leading-small);
-}
-
 .provenance {
   display: inline;
   color: var(--color-text);
@@ -330,58 +251,6 @@ a:hover > .link-arrow {
 .provenance-sep {
   margin-right: var(--space-2);
   color: var(--color-subtle);
-}
-
-/* Zoom trigger: the whole image is a real button. */
-.zoom-trigger {
-  position: relative;
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: zoom-in;
-  border-radius: inherit;
-}
-
-.zoom-trigger:focus-visible {
-  outline: none;
-}
-
-/* Draw the focus ring around the whole media frame, outside the artwork,
-   so it stays visible on light screenshots. */
-.media-frame:has(> .zoom-trigger:focus-visible, > .video-facade:focus-visible, > .video-el:focus-visible),
-.media-frame:has(> .picture + .zoom-trigger:focus-visible) {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-}
-
-@supports not selector(:has(*)) {
-  .zoom-trigger:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: -3px;
-  }
-}
-
-.zoom-trigger__hint {
-  position: absolute;
-  right: var(--space-3);
-  bottom: var(--space-3);
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgb(9 10 15 / 0.78);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14);
-  color: var(--color-text);
-  opacity: 0.85;
-  transition: opacity var(--dur-feedback) var(--ease-out);
-}
-
-.zoom-trigger:hover .zoom-trigger__hint,
-.zoom-trigger:focus-visible .zoom-trigger__hint {
-  opacity: 1;
 }
 
 /* Image dialog */
@@ -539,135 +408,6 @@ html.is-dialog-open {
   .image-dialog[open] {
     animation: none;
   }
-}
-
-/* Video */
-.video-frame {
-  background: #000;
-}
-
-.video-facade {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  background: #000;
-  cursor: pointer;
-}
-
-.video-facade .picture,
-.video-facade .picture img {
-  width: 100%;
-  height: 100%;
-}
-
-.video-facade:focus-visible {
-  outline: none;
-}
-
-.video-facade__chip {
-  position: absolute;
-  left: var(--space-4);
-  bottom: var(--space-4);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  max-width: calc(100% - 2 * var(--space-4));
-  min-height: var(--control-height);
-  padding: 0 18px 0 14px;
-  border-radius: var(--radius-control);
-  background: var(--btn-primary-bg);
-  box-shadow: var(--shadow-control);
-  color: var(--btn-primary-fg);
-  font-size: var(--control-font);
-  font-weight: var(--control-weight);
-  transition:
-    background-color var(--dur-feedback) var(--ease-out),
-    transform var(--dur-feedback) var(--ease-out);
-}
-
-.video-facade:hover .video-facade__chip {
-  background: var(--btn-primary-bg-hover);
-  transform: translateY(-1px);
-}
-
-.video-facade:active .video-facade__chip {
-  background: var(--btn-primary-bg-active);
-  transform: none;
-}
-
-.video-facade__chip svg {
-  flex: none;
-}
-
-.video-facade__title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.video-facade__time {
-  color: rgb(11 12 19 / 0.68);
-  font-weight: var(--weight-label);
-}
-
-/* On phones the chip shows only play + duration; the button's accessible
-   name still carries the title. */
-@media (max-width: 599px) {
-  .video-facade__title {
-    display: none;
-  }
-}
-
-.video-el {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: #000;
-  object-fit: contain;
-}
-
-.video-el:focus-visible {
-  outline: none;
-}
-
-.video-error {
-  position: absolute;
-  inset: 0;
-}
-
-.video-error__poster {
-  position: absolute;
-  inset: 0;
-  height: 100%;
-  opacity: 0.35;
-}
-
-.video-error__poster img {
-  height: 100%;
-  object-fit: cover;
-}
-
-.video-error__panel {
-  position: absolute;
-  inset: auto var(--space-4) var(--space-4);
-  display: grid;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border-radius: var(--radius-inner);
-  background: rgb(9 10 15 / 0.9);
-  box-shadow: 0 0 0 1px var(--color-line);
-  font-size: var(--text-small);
-}
-
-.video-error__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
 }
 
 /* Transcript disclosure */

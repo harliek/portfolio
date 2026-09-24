@@ -32,6 +32,17 @@
 }
 
 /*
+ * The headshot is a bust cut straight across: in the gallery and in the
+ * About page's slot its lower edge fades into the room, so the copy in
+ * flight fades the same way (on the image, inside the copy's glow filter,
+ * so the glow follows the faded edge and is never clipped).
+ */
+.cover-clone[data-fade='bottom'] img {
+  -webkit-mask-image: linear-gradient(to bottom, #000 83%, rgb(0 0 0 / 0.5) 91.5%, transparent);
+  mask-image: linear-gradient(to bottom, #000 83%, rgb(0 0 0 / 0.5) 91.5%, transparent);
+}
+
+/*
  * The clicked object while its copy is in flight (opacity, not visibility,
  * so its link keeps keyboard focus and the carousel's own styles are untouched).
  */

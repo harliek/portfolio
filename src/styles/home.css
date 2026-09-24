@@ -1,51 +1,59 @@
 /*
- * Homepage: the identity block (the page's H1), the PNG object carousel
- * below it with its reserved caption region, then the compact footer.
+ * Homepage: a fixed scene in the architectural room. The identity block
+ * (the page's H1 and a very small descriptor) upper left, the depth gallery
+ * of PNG objects standing on the floor, and along the bottom edge the
+ * previous and next arrows and the quiet Reduce motion setting. The
+ * document does not scroll here (Home.tsx sets html.home-scene) and there
+ * is no footer section.
  *
- * Carousel geometry and speed: src/config/carousel.ts. The components
- * (src/components/home/) set per-object sizes as custom properties:
- * --u (size factor), and on each item --w / --h (the object box) and
- * --img-h (the image part; About adds its live label below it).
+ * Gallery geometry and motion: src/config/carousel.ts and
+ * src/components/home/galleryModel.ts. DepthGallery.tsx writes each
+ * object's depth transform, opacity and stacking order, and each name's
+ * place, every frame; it sets --u (size factor) on the gallery and --w / --h
+ * (the object's featured size) on each item, and data-tier (0 featured,
+ * 1 neighbours, 2 farther), data-featured, data-active (hover or keyboard
+ * focus) and data-off / data-label-off (not a pointer target) on items.
  */
 
 /* ======================================================================= */
-/* Page frame                                                              */
+/* Fixed scene                                                              */
 /* ======================================================================= */
 
-/* The page fills the screen: header, main, footer; the footer sits at the bottom. */
-#root:has(.home) {
-  display: flex;
-  flex-direction: column;
-  min-height: 100svh;
+html.home-scene,
+html.home-scene body {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
-.site-main:has(.home) {
-  display: flex;
-  flex: 1 0 auto;
-  flex-direction: column;
+html.home-scene body,
+html.home-scene .site-main {
   min-height: 0;
-}
-
-/* The compact footer closes the first screen instead of sitting below the fold. */
-.site-main:has(.home) + .site-footer {
-  margin-top: 0;
-}
-
-.site-main:has(.home) > .route-reveal {
-  display: flex;
-  flex: 1 0 auto;
-  flex-direction: column;
 }
 
 .home {
   position: relative;
-  display: flex;
-  flex: 1 0 auto;
-  flex-direction: column;
+  height: calc(100vh - var(--header-height));
+  height: calc(100dvh - var(--header-height));
+}
+
+/*
+ * A soft pool of shade behind the identity (no edge), on top of the set's
+ * own, so the name's glow reads without extra brightness.
+ */
+.home::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  left: 0;
+  top: calc(var(--header-height) * -1);
+  width: min(62rem, 78vw);
+  height: min(34rem, 58svh);
+  background: radial-gradient(closest-side at 34% 46% in oklch, rgb(5 6 9 / 0.5), rgb(5 6 9 / 0.26) 58%, rgb(5 6 9 / 0));
+  pointer-events: none;
 }
 
 /* ======================================================================= */
-/* Identity: Harlie Katz / Professional portfolio / positioning sentence    */
+/* Identity: Harlie Katz / AI product, strategy & operations               */
 /* ======================================================================= */
 
 .home-id {
@@ -54,7 +62,6 @@
   padding-top: clamp(10px, 3.2svh, 36px);
 }
 
-/* Narrow, so it reads as one focal point. Its left edge is where About starts at the opening. */
 .home-id__block {
   width: fit-content;
   max-width: min(34rem, 100%);
@@ -88,202 +95,48 @@
   filter: drop-shadow(0 0 1px rgb(236 228 255 / 0.5)) drop-shadow(0 0 12px rgb(190 170 255 / 0.4)) drop-shadow(0 0 34px rgb(150 128 250 / 0.24));
 }
 
-.home-id__role {
-  display: block;
-  margin-top: clamp(8px, 1.2svh, 12px);
-  font-size: clamp(1.125rem, min(1.55vw, 2.5svh), 1.375rem);
+/* One very small, quiet descriptor beneath the name. */
+.home-id__desc {
+  margin: clamp(10px, 1.6svh, 16px) 0 0 0.12em;
+  font-size: 0.875rem;
   font-weight: 500;
-  line-height: 1.25;
-  letter-spacing: 0.002em;
-  color: #ddd6fb;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.55);
-}
-
-.home-id__line {
-  max-width: 25em;
-  margin: clamp(8px, 1.4svh, 14px) 0 0;
-  font-size: clamp(1rem, min(1.2vw, 2svh), 1.125rem);
-  line-height: 1.5;
-  color: #c9ccd9;
-  text-wrap: pretty;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
-}
-
-/*
- * The carousel takes the rest of the first screen. Spare height (tall
- * windows) goes one third above it and two thirds below, so it sits low
- * under the identity without leaving an empty band above the footer.
- */
-.home-carousel {
-  position: relative;
-  display: flex;
-  flex: 1 0 auto;
-  flex-direction: column;
-}
-
-.home-carousel::before,
-.home-carousel::after {
-  content: '';
-  flex: 1 1 0;
-}
-
-.home-carousel::after {
-  flex-grow: 2;
-}
-
-/* The row (touch, narrow, reduced motion) is centred in the spare height. */
-.home-carousel:has(.hrow)::after {
-  flex-grow: 1.4;
+  line-height: 1.35;
+  letter-spacing: 0.012em;
+  color: #c6c2de;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.65);
 }
 
 /* ======================================================================= */
-/* Objects (shared by the arc and the row)                                  */
+/* Gallery                                                                   */
 /* ======================================================================= */
 
-/* One link per object. Its own box takes no pointer events: only the silhouette and the live label do. */
-.hobj__link {
+.gallery {
+  --hover-lift: calc(8px * var(--u, 1));
   position: absolute;
   inset: 0;
-  display: block;
-  color: inherit;
-  text-decoration: none;
-  border-radius: 14px;
-  pointer-events: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.hobj__link:focus-visible {
-  outline: 2px solid rgb(var(--accent-rgb, 201 184 255));
-  outline-offset: 8px;
-}
-
-/* Grounding: a soft shadow on the floor beneath the object. */
-.hobj__floor {
-  position: absolute;
-  left: 50%;
-  bottom: calc(var(--h) * -0.035);
-  width: 88%;
-  height: max(10px, 8%);
-  translate: -50% 0;
-  background: radial-gradient(closest-side, rgb(0 0 0 / 0.58), rgb(0 0 0 / 0.26) 55%, transparent);
-  pointer-events: none;
-  transition: opacity 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-
-/* Hover, focus and the route transition's lift act here, never on the positioned element. */
-.hobj__lift {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transform-origin: 50% 100%;
-  transition:
-    transform 260ms cubic-bezier(0.2, 0.7, 0.2, 1),
-    opacity 200ms var(--ease-out);
-}
-
-.hobj__figure {
-  position: relative;
-  flex: none;
-  width: 100%;
-  height: var(--img-h);
-}
-
-.hobj__art {
-  position: absolute;
-  inset: 0;
-  display: block;
-}
-
-.hobj__art .picture,
-.hobj__art img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-/*
- * Alpha-aware accent glow: drop-shadow follows the PNG's silhouette (never a
- * rectangle around the transparent canvas). A thin close halo and a soft
- * wider one; hover and focus strengthen both without washing out the art.
- */
-.hobj__art .picture {
-  filter: drop-shadow(0 0 1px rgb(var(--accent-rgb) / 0.45)) drop-shadow(0 0 13px rgb(var(--accent-rgb) / 0.24));
-  transition: filter 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-
-/*
- * The headshot is a bust cut straight across at the bottom. Its image and
- * glow fade out over the lowest 14% instead of ending in a hard lit edge
- * above the label. The mask sits on the wrapper, enlarged by the glow's
- * reach (padding), so it fades the glow with the image and never clips the
- * halo into a rectangle.
- */
-.hobj[data-kind='headshot'] .hobj__art {
-  --glow-room: 56px;
-  inset: calc(var(--glow-room) * -1);
-  padding: var(--glow-room);
-  mask-image: linear-gradient(
-    to bottom,
-    #000 calc(var(--glow-room) + (100% - 2 * var(--glow-room)) * 0.86),
-    transparent calc(100% - var(--glow-room))
-  );
-}
-
-/* The silhouette pointer target (objectHull.ts sets its clip-path polygon). */
-.hobj__hit {
-  position: absolute;
-  inset: 0;
-  pointer-events: auto;
-  cursor: pointer;
-}
-
-/* About's live label: part of the About link, beneath the headshot. */
-.hobj__label {
-  display: flex;
-  flex: 1 0 auto;
-  align-items: center;
-  justify-content: center;
-  padding-inline: 14px;
-  font-size: max(0.9375rem, calc(1.1875rem * var(--u, 1)));
-  font-weight: 580;
-  line-height: 1;
-  letter-spacing: -0.005em;
-  color: #f6f3ff;
-  white-space: nowrap;
-  text-shadow:
-    0 0 14px rgb(var(--accent-rgb) / 0.6),
-    0 1px 2px rgb(0 0 0 / 0.7);
-  pointer-events: auto;
-  cursor: pointer;
-}
-
-/* ======================================================================= */
-/* The moving arc                                                           */
-/* ======================================================================= */
-
-.harc {
-  position: relative;
-  /* The whole carousel region (objects and caption) tracks the pointer and receives wheel events. */
-  pointer-events: auto;
-}
-
-/* Full-bleed stage; objects enter and leave at the window edges. */
-.harc__stage {
-  position: relative;
   z-index: 1;
-  height: var(--stage-h, calc(26rem * var(--u, 1)));
-  overflow-x: clip;
-  overflow-y: visible;
-  pointer-events: none;
 }
 
-.harc__list {
+/*
+ * The stage is the whole viewport (it reaches up behind the header), so the
+ * objects stand on the room's floor in viewport coordinates. Horizontal
+ * swipes reach the script; vertical pans and pinch zoom stay native.
+ */
+.gallery__stage {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--header-height) * -1);
+  height: 100vh;
+  height: 100dvh;
+  overflow: clip;
+  touch-action: pan-y pinch-zoom;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Reduced motion: a step cross-fades this list (DepthGallery, Web Animations). */
+.gallery__list {
   position: absolute;
   inset: 0;
   margin: 0;
@@ -291,8 +144,115 @@
   list-style: none;
 }
 
-/* The positioned element: ObjectArc.tsx writes its transform (and opacity near the edges) every frame. */
-.harc__item {
+/* One link per object: the object and its name. The link itself has no box; only the silhouette and the name take the pointer. */
+.gobj__link {
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Glow, floor light and brightness by depth (discrete steps with a transition; never re-rendered every frame). */
+.gobj {
+  --edge-a: 0.56;
+  --edge-r: 1.5px;
+  --halo-a: 0.32;
+  --halo-r: 22px;
+  --bright: 0.9;
+  --spill-o: 0.7;
+  --refl-o: 0.2;
+  --shadow-o: 0.85;
+  /* Per object balance (below): brightness, glow, contact shadow footprint. */
+  --kb: 1;
+  --kg: 1;
+  --foot: 0.8;
+  --foot-x: 0;
+}
+
+.gobj[data-tier='0'] {
+  --edge-a: 0.78;
+  --edge-r: 1.75px;
+  --halo-a: 0.46;
+  --halo-r: 30px;
+  --bright: 1;
+  --spill-o: 1;
+  --refl-o: 0.28;
+  --shadow-o: 1;
+  --shade-o: 0.7;
+}
+
+.gobj[data-tier='2'] {
+  --edge-a: 0.42;
+  --halo-a: 0.24;
+  --halo-r: 18px;
+  --bright: 0.8;
+  --spill-o: 0.46;
+  --refl-o: 0.14;
+  --shadow-o: 0.7;
+  --shade-o: 1;
+}
+
+/* Hover or keyboard focus: stronger light on the silhouette and the floor. */
+.gobj[data-active] {
+  --edge-a: 1;
+  --edge-r: 2px;
+  --halo-a: 0.66;
+  --halo-r: 40px;
+  --bright: 1.04;
+  --spill-o: 1.3;
+  --shade-o: 0.5;
+}
+
+/*
+ * Balance per object: the white screens and the mug are toned down a little
+ * so they never outshine the headshot and the dark camera, which get more
+ * light to stay visible in the dark room.
+ */
+.gobj[data-kind='monitor'] {
+  --kb: 0.9;
+  --kg: 0.85;
+  --foot: 0.5;
+}
+
+.gobj[data-kind='laptop'] {
+  --kb: 0.9;
+  --kg: 0.85;
+  --foot: 0.98;
+}
+
+.gobj[data-kind='mug'] {
+  --kb: 0.92;
+  --kg: 0.9;
+  --foot: 0.66;
+  --foot-x: -0.09;
+}
+
+.gobj[data-kind='tablet'] {
+  --kb: 0.95;
+  --kg: 0.95;
+  --foot: 0.9;
+}
+
+/* The phone's artwork has its own saturated green frame: less added light, so it never reads as a neon tube. */
+.gobj[data-kind='phone'] {
+  --kg: 0.7;
+  --foot: 0.84;
+}
+
+.gobj[data-kind='camera'] {
+  --kb: 1.12;
+  --kg: 1.35;
+  --foot: 0.86;
+}
+
+.gobj[data-kind='headshot'] {
+  --kb: 1.05;
+  --kg: 1.25;
+  --foot: 0.78;
+}
+
+/* The positioned element: DepthGallery writes its transform, opacity and z-index every frame. */
+.gobj__object {
   position: absolute;
   left: 0;
   top: 0;
@@ -303,208 +263,330 @@
   pointer-events: none;
 }
 
-.harc__item[data-active] {
-  z-index: 2;
+/* The accent light spilling onto the floor beneath the object. */
+.gobj__spill {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: calc(var(--w) * 1.3);
+  height: calc(var(--h) * 0.36);
+  translate: -50% -52%;
+  background: radial-gradient(closest-side, rgb(var(--accent-rgb) / 0.34), rgb(var(--accent-rgb) / 0.13) 46%, rgb(var(--accent-rgb) / 0));
+  opacity: calc(var(--spill-o) * var(--kg));
+  transition: opacity 520ms var(--ease-out);
 }
 
-/* Mostly outside the stage: not a pointer target. */
-.harc__item[data-off] .hobj__hit,
-.harc__item[data-off] .hobj__label {
-  pointer-events: none;
-}
-
-/* Hover or keyboard focus: forward (+6%) with a stronger glow; the carousel is paused. */
-.harc__item[data-active] .hobj__lift {
-  transform: translateY(calc(var(--hover-lift, 6px) * -1)) scale(var(--hover-scale, 1.06));
-}
-
-.harc__item[data-active] .hobj__art .picture {
-  filter: drop-shadow(0 0 1.5px rgb(var(--accent-rgb) / 0.7)) drop-shadow(0 0 22px rgb(var(--accent-rgb) / 0.42));
-}
-
-.harc__item[data-active] .hobj__floor {
-  opacity: 0.75;
-}
-
-/* A project is opening (projectTransition.ts moves the chosen PNG): the other objects dim. */
-.harc[data-leaving] .harc__item:not([data-selected]) .hobj__lift,
-.harc[data-leaving] .harc__item:not([data-selected]) .hobj__floor {
-  opacity: 0.4;
+/* The soft contact shadow where the object meets the floor. */
+.gobj__shadow {
+  position: absolute;
+  left: calc(50% + var(--foot-x) * 100%);
+  top: 100%;
+  width: calc(var(--w) * var(--foot));
+  height: max(8px, calc(var(--h) * 0.07));
+  translate: -50% -56%;
+  background: radial-gradient(closest-side, rgb(1 1 5 / 0.96), rgb(1 1 5 / 0.62) 45%, rgb(1 1 5 / 0));
+  opacity: var(--shadow-o);
+  transition: opacity 520ms var(--ease-out);
 }
 
 /*
- * The reserved caption region under the carousel: stable height, so nothing
- * moves when a sentence appears. Its top overlaps the room below the
- * objects' baseline, so the pointer passes straight from an object into it
- * (and the carousel stays paused).
+ * The glossy floor's reflection: the same image flipped below the base,
+ * fading out within about a third of the object's height and dim enough
+ * never to read as a second object.
  */
-.harc__band {
-  position: relative;
-  z-index: 0;
-  height: calc(var(--below, 40px) + 3.5rem);
-  margin-top: calc(var(--below, 40px) * -1);
-  pointer-events: auto;
-}
-
-.harc__caption {
+.gobj__reflect {
   position: absolute;
-  top: calc(var(--below, 40px) + 2px);
   left: 0;
-  width: max-content;
-  max-width: min(44rem, calc(100% - 2 * var(--gutter)));
-  margin: 0;
-  font-size: 1.0625rem;
-  line-height: 1.45;
-  color: var(--stage-ivory);
-  text-shadow:
-    0 1px 2px rgb(0 0 0 / 0.7),
-    0 0 18px rgb(5 6 9 / 0.9);
-  opacity: 0;
-  transition: opacity 160ms var(--ease-out);
+  top: calc(100% - var(--h) * 0.012);
+  width: 100%;
+  height: 100%;
+  transform: scaleY(-1);
+  mask-image: linear-gradient(to top, rgb(0 0 0 / 0.6), rgb(0 0 0 / 0.2) 10%, rgb(0 0 0 / 0) 24%);
+  opacity: var(--refl-o);
+  transition: opacity 520ms var(--ease-out);
 }
 
-.harc__caption[data-visible] {
-  opacity: 1;
-  transition-duration: 200ms;
+/*
+ * The screens stand on a stand or a thin base: their reflection ends within
+ * it, so the flipped straight edge of the screen never shows as a faint
+ * band on the floor (under the name).
+ */
+.gobj[data-kind='monitor'] .gobj__reflect,
+.gobj[data-kind='laptop'] .gobj__reflect {
+  mask-image: linear-gradient(to top, rgb(0 0 0 / 0.6), rgb(0 0 0 / 0.2) 6%, rgb(0 0 0 / 0) 13%);
 }
 
-/* A small accent mark before the sentence. */
-.harc__mark {
-  display: inline-block;
-  width: 16px;
-  height: 2px;
-  margin-right: 10px;
-  vertical-align: 0.3em;
-  border-radius: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 8px rgb(var(--accent-rgb) / 0.8);
-}
-
-/* ======================================================================= */
-/* The swipe row (touch, narrow windows, reduced motion)                    */
-/* ======================================================================= */
-
-.hrow {
-  --edge: max(var(--gutter), (100vw - var(--content-max)) / 2);
-  margin-top: clamp(4px, 2svh, 24px);
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x proximity;
-  scroll-padding-inline: var(--edge);
-  scrollbar-width: none;
-}
-
-.hrow::-webkit-scrollbar {
+.gobj[data-kind='headshot'] .gobj__reflect {
   display: none;
 }
 
-/* With a mouse (a narrow window, or reduced motion), a thin scrollbar shows there is more to the side. */
-@media (pointer: fine) {
-  .hrow {
-    scrollbar-width: thin;
-    scrollbar-color: rgb(238 234 226 / 0.35) transparent;
-  }
-
-  .hrow::-webkit-scrollbar {
-    display: block;
-    height: 6px;
-  }
-
-  .hrow::-webkit-scrollbar-thumb {
-    border-radius: 3px;
-    background: rgb(238 234 226 / 0.35);
-  }
+/* Hover, focus and the route transition's lift act here, never on the positioned element. */
+.gobj__lift {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  transition:
+    transform 280ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 200ms var(--ease-out);
 }
 
-.hrow__list {
-  display: flex;
-  gap: calc(28px * var(--u, 1));
-  width: max-content;
-  margin: 0;
-  /* Room inside the scroll container for the glow. */
-  padding: 28px var(--edge) 20px;
-  list-style: none;
+.gobj[data-active] .gobj__lift {
+  transform: translateY(calc(var(--hover-lift) * -1)) scale(1.05);
 }
 
-.hrow__item {
-  position: relative;
-  flex: none;
-  width: max(var(--w), var(--item-min, 232px));
-  scroll-snap-align: start;
+.gobj__art {
+  position: absolute;
+  inset: 0;
+  display: block;
 }
 
-.hrow__link {
-  position: relative;
-  inset: auto;
-  display: grid;
-  justify-items: center;
-  gap: 18px;
-  border-radius: 16px;
-}
-
-.hrow__link:focus-visible {
-  outline-offset: 6px;
-}
-
-/* Every object stands on one baseline: the tallest object's height. */
-.hrow__object {
-  position: relative;
+.gobj__art .picture,
+.gobj__art img,
+.gobj__reflect .picture,
+.gobj__reflect img {
   display: block;
   width: 100%;
-  height: var(--row-h, 300px);
+  max-width: none;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
 }
 
-.hrow__box {
+/*
+ * Two-layer, alpha-aware light on the transparent artwork itself (never a
+ * rectangle around its canvas): a tight luminous edge following the
+ * silhouette and a broader, softer halo in the project's accent.
+ */
+.gobj__art .picture {
+  filter: brightness(calc(var(--bright) * var(--kb))) drop-shadow(0 0 var(--edge-r) rgb(var(--rim-rgb) / calc(var(--edge-a) * var(--kg))))
+    drop-shadow(0 0 var(--halo-r) rgb(var(--accent-rgb) / calc(var(--halo-a) * var(--kg))));
+  transition: filter 520ms var(--ease-out);
+}
+
+/*
+ * The room's light on the artwork, masked by the same image (DepthGallery
+ * sets the mask once the file has loaded): a cool lavender light from above
+ * and a gentle falloff towards the floor, stronger for farther objects, so
+ * the studio renders sit in the dark room. Never over the object's centre,
+ * where its title and screen are.
+ */
+.gobj__shade {
   position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: var(--w);
-  height: var(--h);
-  translate: -50% 0;
+  inset: var(--glow-room, 0);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  background:
+    linear-gradient(to bottom, rgb(200 188 255 / 0.12), rgb(200 188 255 / 0) 26%),
+    linear-gradient(to top, rgb(6 5 16 / 0.42), rgb(6 5 16 / 0.14) 26%, rgb(6 5 16 / 0) 50%);
+  opacity: var(--shade-o, 0.9);
+  pointer-events: none;
+  transition: opacity 520ms var(--ease-out);
 }
 
-/* The contribution sentence, always visible here (the touch equivalent of the hover state). */
-.hrow__sentence {
-  max-width: 17rem;
-  padding-inline: 4px;
-  font-size: 0.9375rem;
-  line-height: 1.45;
-  text-align: center;
-  color: #c9ccd9;
-  text-wrap: balance;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+/*
+ * The headshot is a bust cut straight across at the bottom: its image and
+ * glow fade out over the lowest 14%. The mask sits on the wrapper, enlarged
+ * by the glow's reach, so it never clips the halo into a rectangle.
+ */
+.gobj[data-kind='headshot'] .gobj__art {
+  --glow-room: 64px;
+  inset: calc(var(--glow-room) * -1);
+  padding: var(--glow-room);
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(var(--glow-room) + (100% - 2 * var(--glow-room)) * 0.86),
+    transparent calc(100% - var(--glow-room))
+  );
+}
+
+/*
+ * The silhouette pointer target (objectHull.ts sets its clip-path outline),
+ * outside the lift: it stays where the object rests while hover lifts it.
+ */
+.gobj__hit {
+  position: absolute;
+  inset: 0;
   pointer-events: auto;
   cursor: pointer;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .hrow__link:hover .hobj__lift {
-    transform: translateY(calc(-4px * var(--u, 1))) scale(1.04);
-  }
-
-  .hrow__link:hover .hobj__art .picture {
-    filter: drop-shadow(0 0 1.5px rgb(var(--accent-rgb) / 0.7)) drop-shadow(0 0 22px rgb(var(--accent-rgb) / 0.42));
-  }
-
-  .hrow__link:hover .hrow__sentence {
-    color: var(--stage-ivory);
-  }
+.gobj[data-off] .gobj__hit {
+  pointer-events: none;
 }
 
-.hrow__link:focus-visible .hobj__art .picture {
-  filter: drop-shadow(0 0 1.5px rgb(var(--accent-rgb) / 0.7)) drop-shadow(0 0 22px rgb(var(--accent-rgb) / 0.42));
+/* The name, upright and readable beneath its object (never turned with it); DepthGallery places it. */
+.gobj__label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 200;
+  will-change: transform, opacity;
+  pointer-events: none;
 }
 
-/* Pressed: a small, immediate response on touch. */
-.hrow__link:active .hobj__lift {
-  transform: scale(0.98);
-  transition-duration: 80ms;
+/* Only the name (and the subtitle while it shows) takes the pointer, never the reserved space. */
+.gobj__caption {
+  display: grid;
+  justify-items: center;
+  width: max-content;
+  translate: calc(-50% + var(--sx, 0px)) 0;
+  padding: 2px 8px 3px;
+  border-radius: 8px;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  cursor: pointer;
 }
 
-html[data-motion='reduce'] .hobj__lift,
-html[data-motion='reduce'] .hrow__link:hover .hobj__lift {
-  transform: none;
+/*
+ * The label stands at its name, under the object. Where a nearer object or
+ * the window edge needs it, the caption box and its subtitle sit --sx to one
+ * side while the name stays put (DepthGallery.tsx; both places are fixed
+ * whether or not the subtitle shows).
+ */
+.gobj__name {
+  translate: calc(var(--sx, 0px) * -1) 0;
+  pointer-events: auto;
+}
+
+.gobj[data-label-off] .gobj__name,
+.gobj[data-label-off] .gobj__sub {
+  pointer-events: none !important;
+}
+
+.gobj__name {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.006em;
+  color: #f1eefb;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.8),
+    0 0 14px rgb(5 6 9 / 0.9);
+  transition:
+    color 200ms var(--ease-out),
+    text-shadow 200ms var(--ease-out);
+}
+
+/* The subtitle: directly beneath the name, its space always reserved. */
+.gobj__sub {
+  margin-top: 3px;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: #cfccdf;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.8),
+    0 0 12px rgb(5 6 9 / 0.95);
+  opacity: 0;
+  transition: opacity 220ms var(--ease-out);
+}
+
+/* Shown on hover or focus; by default for the featured object; on touch (tablets and larger) for the neighbours too where they fit. */
+.gobj[data-active] .gobj__sub,
+.gallery:not([data-has-active]) .gobj[data-featured] .gobj__sub,
+.gallery[data-touch] .gobj[data-sub-fits] .gobj__sub {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gobj[data-active] .gobj__name {
+  color: #fff;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.8),
+    0 0 16px rgb(var(--accent-rgb) / 0.55);
+}
+
+.gobj__link:focus-visible .gobj__caption {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* A project is opening (projectTransition.ts moves the chosen PNG): the others dim. */
+.gallery[data-leaving] .gobj:not([data-selected]) .gobj__lift,
+.gallery[data-leaving] .gobj:not([data-selected]) .gobj__caption {
+  opacity: 0.35;
+}
+
+/* ======================================================================= */
+/* Bottom edge: previous / next, and the Reduce motion setting             */
+/* ======================================================================= */
+
+.gallery__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(10px, 2.2svh, 24px);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.gallery__bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.gallery__nav {
+  display: flex;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.gallery__arrow {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 0.34);
+  border-radius: 50%;
+  background: rgb(10 11 18 / 0.45);
+  color: #ebe8f8;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-feedback) var(--ease-out),
+    box-shadow var(--dur-feedback) var(--ease-out),
+    background-color var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out);
+}
+
+.gallery__arrow:hover,
+.gallery__arrow:focus-visible {
+  border-color: var(--accent-default);
+  background: rgb(var(--accent-default-rgb) / 0.12);
+  box-shadow: 0 0 16px -3px rgb(var(--accent-default-rgb) / 0.65);
+  color: #fff;
+}
+
+.gallery__arrow:focus-visible {
+  outline: 2px solid var(--accent-default);
+  outline-offset: 3px;
+}
+
+.gallery__arrow:active {
+  transform: scale(var(--press-scale));
+}
+
+.home-motion {
+  pointer-events: auto;
+}
+
+/* ======================================================================= */
+/* Reduced motion: a still arrangement; steps cross-fade                    */
+/* ======================================================================= */
+
+html[data-motion='reduce'] .gobj__lift,
+html[data-motion='reduce'] .gobj__art .picture,
+html[data-motion='reduce'] .gobj__spill,
+html[data-motion='reduce'] .gobj__shadow,
+html[data-motion='reduce'] .gobj__reflect {
   transition: none;
+}
+
+html[data-motion='reduce'] .gobj[data-active] .gobj__lift {
+  transform: none;
 }
 
 /* ======================================================================= */
@@ -520,11 +602,15 @@ html[data-motion='reduce'] .hrow__link:hover .hobj__lift {
     font-size: clamp(2.5rem, 12vw, 3rem);
   }
 
-  .home-id__role {
-    font-size: 1.125rem;
+  .home-id__desc {
+    font-size: 0.8125rem;
   }
 
-  .home-id__line {
-    font-size: 1rem;
+  .gobj__name {
+    font-size: 0.9375rem;
+  }
+
+  .gobj__sub {
+    font-size: 0.78125rem;
   }
 }

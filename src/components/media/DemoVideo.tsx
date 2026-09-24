@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import { fallbackSrc, getImage, getVideo, type ImageId, type VideoAsset, type VideoId } from '../../content/media'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
-import { ExpandIcon } from './Figure'
+import { ExpandIcon } from './ExpandIcon'
+import { enterFullscreen, NATIVE_FULLSCREEN } from './fullscreen'
 import { ResponsiveImage } from './ResponsiveImage'
 
 /*
@@ -23,9 +24,15 @@ import { ResponsiveImage } from './ResponsiveImage'
  *   is paused first, so two copies never play. Closing restores the inline
  *   copy at the expanded view's time, playing if the expanded one was
  *   playing, paused (as the visitor's own pause) if it was paused. Focus
- *   returns to the expand button.
+ *   returns to the expand button. On a phone or a touch screen, Expand puts
+ *   the recording itself in the browser's full screen instead (it can turn
+ *   to landscape there; a dialog would be no larger than the inline player).
+ * - The poster wins the bandwidth: the recording is neither requested in
+ *   full nor started until the poster image has loaded, so a slow connection
+ *   shows the poster (not an empty frame with a spinner) first.
  * - Nothing loads twice: the poster is drawn underneath until the first frame
- *   exists, so the stage is never empty.
+ *   exists, so the stage is never empty, and the video's own poster reuses the
+ *   file the picture already loaded.
  */
 
 /** Share of the player that must be visible before it starts by itself. */
@@ -79,14 +86,19 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
   const [status, setStatus] = useState<Status>('idle')
   const [hasFrame, setHasFrame] = useState(false)
   const [expanded, setExpanded] = useState<Expanded | null>(null)
+  /** The poster file the picture loaded (undefined until then; '' if it failed). */
+  const [posterSrc, setPosterSrc] = useState<string>()
+  /** The recording itself is in full screen (Expand on a phone or touch screen): its native controls are always there. */
+  const [fullscreen, setFullscreen] = useState(false)
+  const posterReady = posterSrc !== undefined
   /** Imperative state read by event handlers (never rendered). */
-  const ctl = useRef({ inView: false, userPaused: false, selfPause: false, autoStart: false, userStarted: false, expanded: false, reduced })
+  const ctl = useRef({ inView: false, userPaused: false, selfPause: false, autoStart: false, userStarted: false, expanded: false, reduced, posterReady })
 
   /** Starts playback by itself when allowed: visible, not paused by the visitor, not expanded, no reduced motion. */
   const tryPlay = useCallback(() => {
     const v = videoRef.current
     const c = ctl.current
-    if (!v || !v.paused || c.reduced || c.userPaused || c.expanded || !c.inView || document.visibilityState === 'hidden') return
+    if (!v || !v.paused || !c.posterReady || c.reduced || c.userPaused || c.expanded || !c.inView || document.visibilityState === 'hidden') return
     c.autoStart = true
     v.play().then(
       () => {
@@ -118,7 +130,8 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
         if (entry.intersectionRatio >= PLAY_RATIO) {
           ctl.current.inView = true
           tryPlay()
-        } else if (!entry.isIntersecting) {
+        } else if (!entry.isIntersecting && !document.fullscreenElement) {
+          // (In full screen the page behind is not what the visitor is watching.)
           ctl.current.inView = false
           autoPause()
         }
@@ -136,12 +149,43 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
     }
   }, [tryPlay, autoPause])
 
+  // The poster first: note the file it loaded, then the recording may load and start.
+  useEffect(() => {
+    const img = stageRef.current?.querySelector<HTMLImageElement>('.cs-demo__poster img')
+    if (!img) {
+      setPosterSrc('')
+      return
+    }
+    const done = () => setPosterSrc(img.naturalWidth ? img.currentSrc || img.src : '')
+    if (img.complete) {
+      done()
+      return
+    }
+    img.addEventListener('load', done)
+    img.addEventListener('error', done)
+    return () => {
+      img.removeEventListener('load', done)
+      img.removeEventListener('error', done)
+    }
+  }, [])
+
+  useEffect(() => {
+    ctl.current.posterReady = posterReady
+    if (posterReady) tryPlay()
+  }, [posterReady, tryPlay])
+
   // Reduced motion switched on: stop a recording that started by itself (a visitor's own playback continues).
   useEffect(() => {
     ctl.current.reduced = reduced
     if (reduced && !ctl.current.userStarted) autoPause()
     else if (!reduced) tryPlay()
   }, [reduced, autoPause, tryPlay])
+
+  useEffect(() => {
+    const onChange = () => setFullscreen(Boolean(videoRef.current) && document.fullscreenElement === videoRef.current)
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
 
   // Leaving the page always stops playback.
   useEffect(() => {
@@ -185,11 +229,17 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
     const v = videoRef.current
     if (!v) return
     const playing = !v.paused && !v.ended
-    ctl.current.expanded = true
-    autoPause()
     // Blocked or never started: the visitor asked to watch, so the larger view plays (a user gesture). A paused
     // recording stays paused.
     const play = playing || status === 'blocked' || (status === 'idle' && !reduced)
+    if (window.matchMedia(NATIVE_FULLSCREEN).matches) {
+      // The same element in full screen: it simply continues (started first, within the gesture, if the visitor
+      // asked to watch). Without full screen support, the dialog below takes over.
+      if (play && !playing) playNow()
+      if (enterFullscreen(v)) return
+    }
+    ctl.current.expanded = true
+    autoPause()
     setExpanded({ time: v.currentTime, play, muted: v.muted, volume: v.volume })
   }
 
@@ -227,14 +277,14 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
           ref={videoRef}
           className="cs-demo__video"
           src={src}
-          poster={fallbackSrc(posterAsset, 1600)}
+          poster={posterSrc || undefined}
           width={asset.width}
           height={asset.height}
           muted
           loop
           playsInline
-          controls={!showPlay}
-          preload={reduced ? 'metadata' : 'auto'}
+          controls={!showPlay || fullscreen}
+          preload={!posterReady ? 'none' : reduced ? 'metadata' : 'auto'}
           aria-label={asset.title}
           aria-describedby={captionId}
           onLoadedData={() => setHasFrame(true)}

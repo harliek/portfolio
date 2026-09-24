@@ -19,6 +19,7 @@
  *   node scripts/prepare-media.mjs phones     # carousel phone PNGs (normalized), CafePress monitor, art video
  *   node scripts/prepare-media.mjs crops [page]  # focused evidence crops from scripts/crops/<page>.json
  *   node scripts/prepare-media.mjs tiles      # carousel tile artwork (final tiles/, 3:4 focal-point crops)
+ *   node scripts/prepare-media.mjs objects    # carousel PNG objects (final png tiles/, trimmed, alpha kept)
  *
  * Requires: ffmpeg/ffprobe, poppler (pdftoppm, pdfimages), sharp, and
  * Playwright's Chromium (for the typographic cover and social image).
@@ -748,6 +749,50 @@ async function tiles() {
   }
   writeFileSync(join(CACHE, 'tiles.json'), JSON.stringify(dims, null, 2))
 }
+
+/* ------------------------------------------------------------------ */
+/* Carousel objects (transparent PNG covers)                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The seven supplied transparent PNG objects (final png tiles/, matched by
+ * content): a headshot cut-out and six project covers (monitor, mug,
+ * laptop, tablet, camera, phone) with their titles embedded in the artwork.
+ * Each is trimmed to its visible pixels (alpha ≥ 8) plus a small transparent
+ * margin, so CSS sizes describe the object rather than empty canvas, then
+ * exported as AVIF/WebP/PNG with alpha. Never cropped into the artwork,
+ * never stretched, never recoloured. Originals are not modified.
+ */
+const OBJECTS = [
+  { id: 'obj-about', src: 'final png tiles/about me.png' },
+  { id: 'obj-merchandising-platform', src: 'final png tiles/merch dash.png' },
+  { id: 'obj-cafepress-uk', src: 'final png tiles/cafepress uk.png' },
+  { id: 'obj-spreadsheet-agent', src: 'final png tiles/spreadsheet agent.png' },
+  { id: 'obj-ai-leasing-agent', src: 'final png tiles/ai leasing.png' },
+  { id: 'obj-creative-production', src: 'final png tiles/creative production.png' },
+  { id: 'obj-jumpstart-finance', src: 'final png tiles/jumpstart.png' },
+]
+const OBJECT_PAD = 16
+const OBJECT_WIDTHS = [160, 240, 360, 480, 720, 960]
+
+async function objects() {
+  ensure(join(CACHE, 'objects'))
+  const dims = {}
+  for (const o of OBJECTS) {
+    if (!only(o.id)) continue
+    const input = src(o.src)
+    const b = await alphaBox(input, 8)
+    const left = Math.max(0, b.left - OBJECT_PAD)
+    const top = Math.max(0, b.top - OBJECT_PAD)
+    const right = Math.min(b.canvasW, b.left + b.width + OBJECT_PAD)
+    const bottom = Math.min(b.canvasH, b.top + b.height + OBJECT_PAD)
+    const trimmed = join(CACHE, 'objects', `${o.id}.png`)
+    await sharp(input).extract({ left, top, width: right - left, height: bottom - top }).png().toFile(trimmed)
+    report.push(`${o.id}: ${b.canvasW}×${b.canvasH} → trimmed ${right - left}×${bottom - top}`)
+    dims[o.id] = await variants(o.id, trimmed, OBJECT_WIDTHS, { fallback: 'png', quality: 'ui' })
+  }
+  writeFileSync(join(CACHE, 'objects.json'), JSON.stringify(dims, null, 2))
+}
 /* ------------------------------------------------------------------ */
 
 const task = process.argv[2] ?? 'all'
@@ -765,5 +810,6 @@ if (task === 'traction') await jumpstartTraction()
 if (task === 'phones' || task === 'all') await phones()
 if (task === 'crops' || task === 'all') await crops()
 if (task === 'tiles' || task === 'all') await tiles()
+if (task === 'objects' || task === 'all') await objects()
 console.log(report.join('\n'))
 if (existsSync(join(CACHE, 'dimensions.json'))) console.log('dimensions → .media-cache/dimensions.json')

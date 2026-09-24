@@ -47,7 +47,7 @@ function Tile({ item, sizes, priority, liftRef }: { item: CarouselItem; sizes: s
       <span className="arc-tile__floor" aria-hidden="true" />
       <span ref={liftRef} className="arc-tile__lift" data-transition="tile">
         <span className="arc-tile__frame">
-          <ResponsiveImage image={item.cover} sizes={sizes} decorative fit="cover" priority={priority} />
+          <ResponsiveImage image={item.image} sizes={sizes} decorative fit="cover" priority={priority} />
         </span>
       </span>
     </>
@@ -58,14 +58,14 @@ function Caption({ item, id, className, captionRef }: { item: CarouselItem; id: 
   return (
     <span ref={captionRef} className={className}>
       <span className="arc-caption__name" id={`${id}-name`}>
-        {item.name}
+        {item.visibleLabel ?? item.label}
       </span>
       <span className="arc-caption__cta" id={`${id}-cta`}>
-        {item.action}
+        {item.project ? 'View case study' : 'View About page'}
         <span aria-hidden="true"> ↗</span>
       </span>
       <span className="arc-caption__desc" id={`${id}-desc`}>
-        {item.description}
+        {item.sentence}
       </span>
     </span>
   )
@@ -579,7 +579,7 @@ function Arc({ moving }: { moving: boolean }) {
                   itemRefs.current[i] = el
                 }}
                 className="arc__item"
-                data-accent={p.accent}
+                data-accent={p.id}
               >
                 <a
                   ref={(el) => {
@@ -638,7 +638,7 @@ function SwipeRow() {
           const path = p.path
           const id = `arc-row-${p.id}`
           return (
-            <li key={p.id} className="arc-row__item" data-accent={p.accent}>
+            <li key={p.id} className="arc-row__item" data-accent={p.id}>
               <a
                 href={path}
                 className="arc-row__link"

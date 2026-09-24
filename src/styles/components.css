@@ -680,3 +680,18 @@ html.is-dialog-open {
   padding-bottom: var(--space-4);
   color: var(--color-muted);
 }
+
+/* The reserved place of a carousel PNG object on its destination page (CoverSlot.tsx). */
+.cover-slot {
+  position: relative;
+  width: min(var(--cover-w, 260px), 100%);
+  max-width: 100%;
+}
+
+.cover-slot .picture,
+.cover-slot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

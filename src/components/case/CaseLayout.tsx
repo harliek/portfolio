@@ -1,6 +1,7 @@
 import '../../styles/case.css'
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
+import { ACCENTS, accentVars } from '../../content/accents'
 import type { Project } from '../../content/projects'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { prefersReducedMotion } from '../../hooks/useReducedMotion'
@@ -30,11 +31,6 @@ export const SECTION_LINKS = [
   { id: 'results', label: 'Results' },
 ] as const
 
-const ACCENT_VAR: Record<Project['accent'], string> = {
-  violet: 'var(--stage-violet)',
-  green: 'var(--stage-green)',
-  warm: 'var(--stage-amber)',
-}
 
 interface CaseLayoutProps {
   project: Project
@@ -49,7 +45,7 @@ export function CaseLayout({ project, className, children }: CaseLayoutProps) {
     <article
       className={['case', className].filter(Boolean).join(' ')}
       data-project={project.id}
-      style={{ '--case-accent': ACCENT_VAR[project.accent] } as CSSProperties}
+      style={{ ...accentVars(project.accent), '--case-accent': ACCENTS[project.accent].hex } as CSSProperties}
     >
       {children}
     </article>

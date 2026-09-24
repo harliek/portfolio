@@ -161,6 +161,63 @@ export const IMAGES = {
     source: 'final tiles/shift.png', role: 'Homepage carousel tile, Work shelf thumbnail, next-project link',
     crop: '3:4 crop, y 292 to 1547 of 941×1672',
   }),
+  /*
+   * Carousel objects (scripts/prepare-media.mjs, task `objects`): the seven
+   * supplied transparent PNGs from `final png tiles/`, trimmed to their
+   * visible pixels (alpha kept). The six project covers carry their titles
+   * inside the artwork and are concept cover artwork, never evidence; the
+   * embedded wording is tracked in docs/asset-checklist.md. Links give
+   * their accessible names in HTML, so the images are decorative there.
+   */
+  'obj-about': img({
+    id: 'obj-about', file: 'obj-about', width: 1108, height: 1346, widths: [160, 240, 360, 480, 720, 960], fallback: 'png', transparent: true,
+    alt: 'Portrait of Harlie Katz, cut out against a transparent background.',
+    provenance: 'portrait', synthetic: false,
+    source: 'final png tiles/about me.png', role: 'Homepage carousel About Me object, About page portrait',
+    crop: 'Trimmed to visible pixels (alpha ≥ 8) plus 16px of transparent margin.',
+  }),
+  'obj-merchandising-platform': img({
+    id: 'obj-merchandising-platform', file: 'obj-merchandising-platform', width: 1536, height: 1024, widths: [160, 240, 360, 480, 720, 960], fallback: 'png', transparent: true,
+    alt: 'Cover artwork of a desktop monitor showing a merchandising dashboard titled Merchandising Platform.',
+    provenance: 'cover-artwork', synthetic: true,
+    source: 'final png tiles/merch dash.png', role: 'Carousel object, case opening cover, next-project thumbnail',
+    crop: 'Trimmed to visible pixels (alpha ≥ 8) plus 16px of transparent margin.',
+  }),
+  'obj-cafepress-uk': img({
+    id: 'obj-cafepress-uk', file: 'obj-cafepress-uk', width: 1162, height: 1075, widths: [160, 240, 360, 480, 720, 960], fallback: 'png', transparent: true,
+    alt: 'Cover artwork of a green and white CafePress mug.',
+    provenance: 'cover-artwork', synthetic: true,
+    source: 'final png tiles/cafepress uk.png', role: 'Carousel object, case opening cover, next-project thumbnail',
+    crop: 'Trimmed to visible pixels (alpha ≥ 8) plus 16px of transparent margin.',
+  }),
+  'obj-spreadsheet-agent': img({
+    id: 'obj-spreadsheet-agent', file: 'obj-spreadsheet-agent', width: 1536, height: 993, widths: [160, 240, 360, 480, 720, 960], fallback: 'png', transparent: true,
+    alt: 'Cover artwork of a laptop showing a spreadsheet with an assistant panel, titled Spreadsheet Agent.',
+    provenance: 'cover-artwork', synthetic: true,
+    source: 'final png tiles/spreadsheet agent.png', role: 'Carousel object, case opening cover, next-project thumbnail',
+    crop: 'Trimmed to visible pixels (alpha ≥ 8) plus 16px of transparent margin.',
+  }),
+  'obj-ai-leasing-agent': img({
+    id: 'obj-ai-leasing-agent', file: 'obj-ai-leasing-agent', width: 1085, height: 1359, widths: [160, 240, 360, 480, 720, 960], fallback: 'png', transparent: true,
+    alt: 'Cover artwork of a tablet showing an apartment leasing website and chat, titled AI Leasing Agent.',
+    provenance: 'cover-artwork', synthetic: true,
+    source: 'final png tiles/ai leasing.png', role: 'Carousel object, case opening cover, next-project thumbnail',
+    crop: 'Trimmed to visible pixels (alpha ≥ 8) plus 16px of transparent margin.',
+  }),
+  'obj-creative-production': img({
+    id: 'obj-creative-production', file: 'obj-creative-production', width: 1424, height: 957, widths: [160, 240, 360, 480, 720, 960], fallback: 'png', transparent: true,
+    alt: 'Cover artwork of a camera whose screen shows a filmmaker at sunset.',
+    provenance: 'cover-artwork', synthetic: true,
+    source: 'final png tiles/creative production.png', role: 'Carousel object, case opening cover, next-project thumbnail',
+    crop: 'Trimmed to visible pixels (alpha ≥ 8) plus 16px of transparent margin.',
+  }),
+  'obj-jumpstart-finance': img({
+    id: 'obj-jumpstart-finance', file: 'obj-jumpstart-finance', width: 892, height: 1667, widths: [160, 240, 360, 480, 720, 892], fallback: 'png', transparent: true,
+    alt: 'Cover artwork of a phone showing the Jumpstart app with lessons and progress.',
+    provenance: 'cover-artwork', synthetic: true,
+    source: 'final png tiles/jumpstart.png', role: 'Carousel object, case opening cover, next-project thumbnail',
+    crop: 'Trimmed to visible pixels (alpha ≥ 8) plus 16px of transparent margin.',
+  }),
   'tile-about': img({
     id: 'tile-about', file: 'tile-about', width: 566, height: 755, widths: [320, 480, 566], fallback: 'jpg',
     alt: 'Portrait of Harlie Katz.',

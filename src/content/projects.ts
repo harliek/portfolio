@@ -1,8 +1,11 @@
+import type { AccentId } from './accents'
 import type { ImageId } from './media'
 
 /**
- * The six work entries, in the order used everywhere the work appears as a
- * sequence (carousel, Work shelf, Selected work index, next project).
+ * The six work entries, in the homepage carousel's order (after About Me):
+ * Merchandising Platform, CafePress UK, Spreadsheet Agent, AI Leasing Agent,
+ * Creative Production, Jumpstart Finance. The Work shelf and the next-project
+ * sequence follow it (Jumpstart Finance loops back to Merchandising Platform).
  * Page copy lives in src/content/pages/<id>.ts(x).
  *
  * Verified facts only (résumé and project sources; see
@@ -19,7 +22,8 @@ export type ProjectId =
   | 'jumpstart-finance'
   | 'client-work'
 
-export type ProjectAccent = 'violet' | 'green' | 'warm'
+/** Each project's accent (src/content/accents.ts). */
+export type ProjectAccent = AccentId
 
 /**
  * `sizes` of the case studies' sticky media frame (CaseScroll's default and
@@ -50,7 +54,7 @@ export interface Project {
   description: string
   /** Compact case metadata ("Company:", "Role:", "Dates:", "Project status:"). */
   meta: { company: string; role: string; dates: string; status: string }
-  /** 3:4 tile artwork from `final tiles/` (carousel tile, Work shelf thumbnail, next project). */
+  /** Transparent PNG cover object from `final png tiles/` (carousel, case opening, Work shelf and next-project thumbnails). */
   cover: ImageId
   /**
    * The image the case study opens on (the `opening` visual in
@@ -67,33 +71,9 @@ export interface Project {
 
 export const PROJECTS: Project[] = [
   {
-    id: 'cafepress-uk',
-    slug: 'cafepress-uk',
-    order: 1,
-    name: 'CafePress UK',
-    label: 'UK market research and storefront prototype',
-    category: 'Internship research',
-    summary: 'UK market research and a localized storefront prototype during a PlanetArt internship.',
-    year: '2026',
-    dateRange: 'Jun–Aug 2026',
-    role: 'Product Operations & Merchandising Intern',
-    org: 'PlanetArt',
-    status: 'Research and prototype',
-    description: 'UK market research and a localized storefront prototype.',
-    meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
-    cover: 'tile-cafepress-uk',
-    hero: { image: 'cafepress-monitor', sizes: FRAME_SIZES },
-    accent: 'violet',
-    next: 'merchandising-platform',
-    seo: {
-      title: 'CafePress UK',
-      description: 'UK promotional products market research and a localized CafePress storefront prototype, developed during a PlanetArt internship.',
-    },
-  },
-  {
     id: 'merchandising-platform',
     slug: 'merchandising-platform',
-    order: 2,
+    order: 1,
     name: 'Merchandising Platform',
     label: 'Independent merchandising application prototype',
     category: 'Independent prototype',
@@ -105,13 +85,37 @@ export const PROJECTS: Project[] = [
     status: 'Independent prototype',
     description: 'Product, inventory, and replenishment information in one prototype.',
     meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Working prototype' },
-    cover: 'tile-merchandising-platform',
+    cover: 'obj-merchandising-platform',
     hero: { image: 'mp-overview', sizes: FRAME_SIZES },
-    accent: 'violet',
-    next: 'spreadsheet-agent',
+    accent: 'merchandising-platform',
+    next: 'cafepress-uk',
     seo: {
       title: 'Merchandising Platform',
       description: 'An independent merchandising application prototype that uses synthetic data, separate from PlanetArt systems.',
+    },
+  },
+  {
+    id: 'cafepress-uk',
+    slug: 'cafepress-uk',
+    order: 2,
+    name: 'CafePress UK',
+    label: 'UK market research and storefront prototype',
+    category: 'Internship research',
+    summary: 'UK market research and a localized storefront prototype during a PlanetArt internship.',
+    year: '2026',
+    dateRange: 'Jun–Aug 2026',
+    role: 'Product Operations & Merchandising Intern',
+    org: 'PlanetArt',
+    status: 'Research and prototype',
+    description: 'UK market research and a localized storefront prototype.',
+    meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
+    cover: 'obj-cafepress-uk',
+    hero: { image: 'cafepress-monitor', sizes: FRAME_SIZES },
+    accent: 'cafepress-uk',
+    next: 'spreadsheet-agent',
+    seo: {
+      title: 'CafePress UK',
+      description: 'UK promotional products market research and a localized CafePress storefront prototype, developed during a PlanetArt internship.',
     },
   },
   {
@@ -129,9 +133,9 @@ export const PROJECTS: Project[] = [
     status: 'Independent prototype',
     description: 'A request, a reviewable plan, and an editable spreadsheet.',
     meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Prototype with simulated AI responses' },
-    cover: 'tile-spreadsheet-agent',
+    cover: 'obj-spreadsheet-agent',
     hero: { image: 'sa-overview', sizes: FRAME_SIZES },
-    accent: 'violet',
+    accent: 'spreadsheet-agent',
     next: 'ai-leasing-agent',
     seo: {
       title: 'Spreadsheet Agent',
@@ -153,19 +157,43 @@ export const PROJECTS: Project[] = [
     status: 'Adopted across 18 properties',
     description: 'Requirements and testing for recurring leasing questions.',
     meta: { company: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'October 2024 to June 2025', status: 'Adopted across 18 properties' },
-    cover: 'tile-ai-leasing-agent',
+    cover: 'obj-ai-leasing-agent',
     hero: { image: 'valiance-messages', sizes: FRAME_SIZES },
-    accent: 'violet',
-    next: 'jumpstart-finance',
+    accent: 'ai-leasing-agent',
+    next: 'client-work',
     seo: {
       title: 'AI Leasing Agent',
       description: 'Workflow requirements and testing for an AI leasing assistant at Valiance Capital. The production assistant was supplied by a third-party platform.',
     },
   },
   {
+    id: 'client-work',
+    slug: 'creative-production',
+    order: 5,
+    name: 'Creative Production',
+    label: 'Client film production at Shift Content',
+    category: 'Agency production',
+    summary: 'Production support on client films and related agency work during an internship at Shift Content in London.',
+    year: '2026',
+    dateRange: 'Jan–May 2026',
+    role: 'Creative Strategy and Client Solutions Intern',
+    org: 'Shift Content, London',
+    status: 'Agency client work',
+    description: 'Production and campaign support at Shift Content.',
+    meta: { company: 'Shift Content, London', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', status: 'Three completed client films' },
+    cover: 'obj-creative-production',
+    hero: { image: 'nickleby-poster', sizes: FRAME_SIZES },
+    accent: 'creative-production',
+    next: 'jumpstart-finance',
+    seo: {
+      title: 'Creative Production',
+      description: 'Production preparation, coordination, and related agency work on client films at Shift Content in London.',
+    },
+  },
+  {
     id: 'jumpstart-finance',
     slug: 'jumpstart',
-    order: 5,
+    order: 6,
     name: 'Jumpstart Finance',
     label: 'Financial education startup developed during a student venture program',
     category: 'Student venture',
@@ -177,37 +205,13 @@ export const PROJECTS: Project[] = [
     status: 'Venture concept and prototype',
     description: 'A student venture exploring mobile financial education.',
     meta: { company: 'Jumpstart Finance (student venture)', role: 'Founder & Product Lead', dates: 'June to July 2024', status: 'Program concept and prototype' },
-    cover: 'tile-jumpstart-finance',
+    cover: 'obj-jumpstart-finance',
     hero: { image: 'jf-screen-home', sizes: '(min-width: 960px) 360px, 300px' },
-    accent: 'green',
-    next: 'client-work',
+    accent: 'jumpstart-finance',
+    next: 'merchandising-platform',
     seo: {
       title: 'Jumpstart Finance',
       description: 'A financial education startup concept and mobile prototype developed by a five-person team at the European Innovation Academy in 2024.',
-    },
-  },
-  {
-    id: 'client-work',
-    slug: 'shift',
-    order: 6,
-    name: 'Client Work',
-    label: 'Creative strategy and production support at Shift Content',
-    category: 'Agency production',
-    summary: 'Production support on client films and related agency work during an internship at Shift Content in London.',
-    year: '2026',
-    dateRange: 'Jan–May 2026',
-    role: 'Creative Strategy and Client Solutions Intern',
-    org: 'Shift Content, London',
-    status: 'Agency client work',
-    description: 'Production and campaign support at Shift Content.',
-    meta: { company: 'Shift Content, London', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', status: 'Three completed client films' },
-    cover: 'tile-client-work',
-    hero: { image: 'nickleby-poster', sizes: FRAME_SIZES },
-    accent: 'warm',
-    next: 'cafepress-uk',
-    seo: {
-      title: 'Client Work',
-      description: 'Production preparation, coordination, and related agency work on client films at Shift Content in London.',
     },
   },
 ]
@@ -222,9 +226,12 @@ export const projectPath = (p: Pick<Project, 'slug'>) => `/work/${p.slug}`
 
 export const projectBySlug = (slug: string | undefined) => PROJECTS.find((p) => p.slug === slug)
 
-/** The project whose case study is at `pathname` (legacy /work/planetart counts as CafePress UK). */
+/** Legacy slugs that redirect to a current case study. */
+const LEGACY_SLUGS: Record<string, string> = { planetart: 'cafepress-uk', shift: 'creative-production' }
+
+/** The project whose case study is at `pathname` (legacy /work/planetart and /work/shift count too). */
 export const projectForPath = (pathname: string) => {
   const slug = pathname.replace(/\/+$/, '').split('/')[2]
   if (!pathname.startsWith('/work/')) return undefined
-  return projectBySlug(slug === 'planetart' ? 'cafepress-uk' : slug)
+  return projectBySlug(LEGACY_SLUGS[slug] ?? slug)
 }

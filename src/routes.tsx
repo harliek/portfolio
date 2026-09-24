@@ -23,7 +23,7 @@ export const routeChunks = {
   '/work/spreadsheet-agent': () => import('./pages/work/SpreadsheetAgent'),
   '/work/valiance': () => import('./pages/work/AILeasingAgent'),
   '/work/jumpstart': () => import('./pages/work/JumpstartFinance'),
-  '/work/shift': () => import('./pages/work/ClientWork'),
+  '/work/creative-production': () => import('./pages/work/ClientWork'),
 } as const
 
 type ChunkPath = keyof typeof routeChunks
@@ -79,7 +79,9 @@ export const router = createBrowserRouter([
           { path: 'work/spreadsheet-agent', lazy: lazyPage('/work/spreadsheet-agent') },
           { path: 'work/valiance', lazy: lazyPage('/work/valiance') },
           { path: 'work/jumpstart', lazy: lazyPage('/work/jumpstart') },
-          { path: 'work/shift', lazy: lazyPage('/work/shift') },
+          { path: 'work/creative-production', lazy: lazyPage('/work/creative-production') },
+          // Creative Production was Client Work at /work/shift.
+          { path: 'work/shift', element: <Legacy to="/work/creative-production" /> },
           // Legacy links: the PlanetArt case study became CafePress UK; the
           // previous portfolio's Merch Console URL.
           { path: 'work/planetart', element: <Legacy to="/work/cafepress-uk" /> },

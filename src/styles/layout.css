@@ -1,4 +1,4 @@
-/* Page shell: skip link, header with the Work shelf, main, footer, route reveal. */
+/* Page shell: skip link, header with the Work shelf and the small-screen menu, main, footer, route reveal. */
 
 .shell {
   width: 100%;
@@ -12,12 +12,15 @@
   top: var(--space-3);
   left: var(--space-3);
   z-index: 100;
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-button);
-  background: var(--color-text);
-  color: var(--color-bg);
-  font-size: var(--text-small);
-  font-weight: var(--weight-label);
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: 0 var(--control-pad);
+  border-radius: var(--radius-control);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  font-size: var(--control-font);
+  font-weight: var(--control-weight);
   text-decoration: none;
   transform: translateY(calc(-100% - var(--space-5)));
 }
@@ -31,25 +34,53 @@
 /* Header                                                                   */
 /* ----------------------------------------------------------------------- */
 
+/*
+ * No bar with hard edges: two soft gradients behind the header. The light
+ * one is always there; the deeper one appears once the page scrolls (or the
+ * shelf or menu opens) and runs 40px past the header, so text passing
+ * underneath fades out instead of meeting an edge.
+ */
 .site-header {
   position: sticky;
   top: 0;
   z-index: 50;
   height: var(--header-height);
-  background-color: transparent;
-  background-image: linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.72), rgb(5 6 9 / 0));
-  border-bottom: 1px solid transparent;
-  transition:
-    background-color var(--dur-route) var(--ease-out),
-    border-color var(--dur-route) var(--ease-out);
 }
 
-.site-header[data-scrolled='true'],
-.site-header[data-shelf-open] {
-  background-color: var(--color-header);
-  border-bottom-color: rgb(238 234 226 / 0.1);
+/* Behind the header's content (the header is its own stacking context). */
+.site-header::before,
+.site-header::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto;
+  pointer-events: none;
 }
 
+.site-header::before {
+  height: calc(100% + 24px);
+  background: linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.62), rgb(5 6 9 / 0.3) 60%, rgb(5 6 9 / 0));
+}
+
+.site-header::after {
+  height: calc(100% + 40px);
+  background: linear-gradient(
+    to bottom in oklch,
+    rgb(6 7 11 / 0.95),
+    rgb(6 7 11 / 0.9) calc(100% - 40px),
+    rgb(6 7 11 / 0.55) calc(100% - 22px),
+    rgb(6 7 11 / 0)
+  );
+  opacity: 0;
+  transition: opacity var(--dur-route) var(--ease-out);
+}
+
+.site-header[data-scrolled='true']::after,
+.site-header[data-open]::after {
+  opacity: 1;
+}
+
+/* Not positioned: the Work shelf (inside the Work item) spans the whole header. */
 .site-header__inner {
   height: 100%;
   display: flex;
@@ -58,16 +89,48 @@
   gap: var(--space-4);
 }
 
+/* One home link: the name over a quiet descriptor. */
 .site-brand {
-  display: inline-flex;
-  align-items: center;
+  display: inline-grid;
+  align-content: center;
+  gap: 3px;
   min-height: 44px;
+  margin-inline: -6px;
+  padding: 2px 6px;
+  border-radius: 8px;
   color: var(--stage-ivory);
-  font-size: 1.0625rem;
-  font-weight: var(--weight-heading);
-  letter-spacing: -0.02em;
   text-decoration: none;
   white-space: nowrap;
+}
+
+.site-brand__name {
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.site-brand__role {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: var(--weight-label);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  transition: color var(--dur-feedback) var(--ease-out);
+}
+
+.site-brand:hover .site-brand__role {
+  color: var(--color-text);
+}
+
+@media (min-width: 900px) {
+  .site-brand__name {
+    font-size: 1.3125rem;
+  }
+
+  .site-brand__role {
+    font-size: 0.8125rem;
+  }
 }
 
 .site-nav__list {
@@ -75,48 +138,73 @@
   align-items: center;
   gap: var(--space-1);
   list-style: none;
-  margin-right: calc(-1 * var(--space-3));
+  margin-right: -12px;
 }
 
+/*
+ * Primary navigation: bright text with a pill on hover; the current page
+ * keeps a violet underline (not colour alone), and Work's open state is a
+ * filled, outlined pill with its chevron turned up.
+ */
 .site-nav__item {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   min-height: 44px;
-  padding: 0 var(--space-3);
-  border: 0;
-  background: none;
-  color: var(--color-muted);
+  padding: 0 12px;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: #e9e9f1;
   font-size: 0.9375rem;
   font-weight: var(--weight-label);
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
   transition:
-    color var(--dur-feedback) var(--ease-out),
-    transform var(--shelf-dur, 250ms) var(--ease-out);
+    background-color var(--dur-feedback) var(--ease-out),
+    border-color var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out);
 }
 
-.site-nav__item:hover,
-.site-nav__work[aria-expanded='true'] {
-  color: var(--color-text);
+.site-nav__item:hover {
+  background: rgb(255 255 255 / 0.08);
+  color: #fff;
 }
 
-/* Current section: brighter text plus a thin violet underline (not colour alone). */
-.site-nav__item[data-active='true'] {
-  color: var(--color-text);
+.site-nav__item:active {
+  background: rgb(255 255 255 / 0.04);
+}
+
+.site-nav__item:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .site-nav__item[data-active='true']::after {
   content: '';
   position: absolute;
-  left: var(--space-3);
-  right: var(--space-3);
-  bottom: 9px;
-  height: 1.5px;
+  left: 12px;
+  right: 12px;
+  bottom: 7px;
+  height: 2px;
   border-radius: 1px;
   background: var(--stage-violet);
+}
+
+.site-nav__work[data-active='true']::after {
+  right: 30px;
+}
+
+.site-nav__work[aria-expanded='true'] {
+  background: rgb(255 255 255 / 0.12);
+  border-color: rgb(255 255 255 / 0.5);
+  color: #fff;
+}
+
+.site-nav__work[aria-expanded='true']::after {
+  display: none;
 }
 
 .site-nav__chevron {
@@ -124,76 +212,227 @@
   transition: transform var(--dur-feedback) var(--ease-out);
 }
 
-/* Opening the shelf: the Work control moves slightly left; the page does not move. */
-.site-nav__work[aria-expanded='true'] {
-  transform: translateX(-6px);
-}
-
 .site-nav__work[aria-expanded='true'] .site-nav__chevron {
   transform: rotate(180deg);
 }
 
-@media (max-width: 400px) {
-  .site-nav__item {
-    padding-inline: 10px;
-    font-size: 0.875rem;
-  }
+/* Small screens: one outlined Menu button (three bars turn into a cross). */
+.menu-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-right: -4px;
+  padding: 0 14px 0 12px;
+  border: 1.5px solid var(--btn-secondary-border);
+  border-radius: var(--radius-control);
+  background: var(--btn-secondary-bg);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: var(--control-weight);
+  transition:
+    background-color var(--dur-feedback) var(--ease-out),
+    border-color var(--dur-feedback) var(--ease-out);
+}
 
-  .site-nav__item[data-active='true']::after {
-    left: 10px;
-    right: 10px;
-  }
+.menu-button:hover {
+  background: var(--btn-secondary-bg-hover);
+  border-color: var(--btn-secondary-border-hover);
+}
+
+.menu-button:active {
+  background: var(--btn-secondary-bg-active);
+}
+
+.menu-button[aria-expanded='true'] {
+  background: rgb(255 255 255 / 0.12);
+  border-color: var(--btn-secondary-border-hover);
+}
+
+.menu-button__icon {
+  position: relative;
+  display: grid;
+  align-content: space-between;
+  width: 16px;
+  height: 12px;
+}
+
+.menu-button__icon > span {
+  display: block;
+  height: 1.75px;
+  border-radius: 1px;
+  background: currentColor;
+  transition:
+    transform var(--dur-feedback) var(--ease-out),
+    opacity var(--dur-feedback) var(--ease-out);
+}
+
+.menu-button[aria-expanded='true'] .menu-button__icon > span:nth-child(1) {
+  transform: translateY(5.1px) rotate(45deg);
+}
+
+.menu-button[aria-expanded='true'] .menu-button__icon > span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-button[aria-expanded='true'] .menu-button__icon > span:nth-child(3) {
+  transform: translateY(-5.1px) rotate(-45deg);
 }
 
 /* ----------------------------------------------------------------------- */
-/* Work shelf (WorkShelf.tsx)                                               */
+/* Project links shared by the Work shelf and the small-screen menu         */
 /* ----------------------------------------------------------------------- */
 
-/* Positioned against the sticky header (its containing block), full width under it. */
+/*
+ * Each entry is one link with a visible outline and surface, the phone
+ * mockup (transparent, no box around it), the name, and a persistent
+ * underlined "View case study ↗": clickable before any hover.
+ */
+.shelf-item {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 8px;
+  height: 100%;
+  padding: 12px 10px 14px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.035);
+  color: var(--color-text);
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background-color var(--dur-feedback) var(--ease-out),
+    border-color var(--dur-feedback) var(--ease-out),
+    transform var(--dur-feedback) var(--ease-out);
+}
+
+.shelf-item:hover {
+  border-color: rgb(255 255 255 / 0.55);
+  background: rgb(255 255 255 / 0.08);
+  transform: translateY(-2px);
+}
+
+.shelf-item:active {
+  background: rgb(255 255 255 / 0.05);
+  transform: none;
+}
+
+.shelf-item:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.shelf-item__thumb {
+  display: block;
+  flex: none;
+  width: 45px;
+  height: 60px;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14), 0 6px 12px -6px rgb(0 0 0 / 0.6);
+}
+
+.shelf-item__thumb .picture,
+.shelf-item__thumb img {
+  width: 100%;
+  height: 100%;
+}
+
+.shelf-item__thumb img {
+  object-fit: cover;
+}
+
+.shelf-item__text {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Room for two lines, set on the baseline of the action, so every "View case study" lines up. */
+.shelf-item__name {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 2.5em;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+}
+
+.shelf-item__action {
+  color: #dcdcea;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-label);
+  line-height: 1.3;
+  text-decoration: underline;
+  text-decoration-color: var(--link-underline);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+  transition: text-decoration-color var(--dur-feedback) var(--ease-out);
+}
+
+.shelf-item:hover .shelf-item__action {
+  color: #fff;
+  text-decoration-color: currentColor;
+}
+
+/* The current project: violet outline and a plain "Current case study" (no underline). */
+.shelf-item[aria-current='page'] {
+  border-color: color-mix(in oklch, var(--stage-violet) 80%, transparent);
+  background: color-mix(in oklch, var(--stage-violet) 12%, transparent);
+}
+
+.shelf-item[aria-current='page'] .shelf-item__action {
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Work shelf (desktop, WorkShelf.tsx)                                      */
+/* ----------------------------------------------------------------------- */
+
+/* Positioned against the sticky header (its nearest positioned ancestor), full width under it; the page never moves. */
 .work-shelf {
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
-  z-index: 49;
-  padding-block: var(--space-4) var(--space-5);
-  background: var(--stage-room);
-  border-bottom: 1px solid rgb(238 234 226 / 0.1);
-  box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.9);
+  z-index: 1;
+  padding-block: var(--space-2) var(--space-5);
+  background: rgb(7 8 12);
+  border-bottom: 1px solid rgb(238 234 226 / 0.12);
+  box-shadow: 0 32px 64px -32px rgb(0 0 0 / 0.95);
   opacity: 0;
   visibility: hidden;
+  transform: translateY(-6px);
   transition:
     opacity calc(var(--shelf-dur) * 0.7) var(--ease-out),
+    transform calc(var(--shelf-dur) * 0.7) var(--ease-out),
     visibility 0s linear calc(var(--shelf-dur) * 0.7);
 }
 
 .work-shelf[data-open] {
   opacity: 1;
   visibility: visible;
+  transform: none;
   transition:
     opacity var(--shelf-dur) var(--ease-out),
+    transform var(--shelf-dur) var(--ease-out),
     visibility 0s;
-}
-
-.work-shelf__inner {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.work-shelf__viewport {
-  min-width: 0;
 }
 
 .work-shelf__list {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: var(--space-2);
+  gap: var(--space-3);
   list-style: none;
 }
 
-/* The horizontal reveal: entries slide in from the Work side while fading in. */
+/* Entries arrive from the Work side with a short stagger. */
 .work-shelf__entry {
   opacity: 0;
   transform: translateX(var(--shelf-offset));
@@ -205,233 +444,130 @@
 .work-shelf[data-open] .work-shelf__entry {
   opacity: 1;
   transform: none;
-  transition-delay: calc(var(--i) * var(--shelf-stagger));
+  transition-delay: calc((5 - var(--i)) * var(--shelf-stagger));
 }
 
-.shelf-item {
-  position: relative;
-  display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 76px;
-  padding: var(--space-2);
-  border-radius: var(--radius-inner);
-  color: var(--color-text);
-  text-decoration: none;
-  transition: background-color var(--dur-feedback) var(--ease-out);
-}
-
-.shelf-item:hover {
-  background: rgb(238 234 226 / 0.06);
-}
-
-.shelf-item:focus-visible {
-  outline-offset: -2px;
-  border-radius: var(--radius-inner);
-}
-
-.shelf-item__thumb {
-  display: block;
-  width: 48px;
-  aspect-ratio: 3 / 4;
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--color-surface);
-  box-shadow: 0 0 0 1px var(--color-media-edge);
-}
-
-.shelf-item__thumb .picture,
-.shelf-item__thumb img {
-  width: 100%;
-  height: 100%;
-}
-
-.shelf-item__text {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.shelf-item__name {
-  font-size: 0.875rem;
-  font-weight: var(--weight-label);
-  line-height: 1.3;
-}
-
-.shelf-item__category {
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-  line-height: 1.35;
-}
-
-/* Active project: a violet bar under the entry, and a lit thumbnail edge. */
-.shelf-item[aria-current='page'] {
-  background: rgb(165 140 240 / 0.08);
-}
-
-.shelf-item[aria-current='page']::after {
-  content: '';
-  position: absolute;
-  left: var(--space-2);
-  right: var(--space-2);
-  bottom: 2px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--stage-violet);
-}
-
-.shelf-item[aria-current='page'] .shelf-item__thumb {
-  box-shadow: 0 0 0 1px var(--stage-violet);
-}
-
-.work-shelf__close {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  padding: 0 var(--space-4);
-  border: 0;
-  border-radius: var(--radius-button);
-  background: rgb(238 234 226 / 0.06);
-  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.14);
-  color: var(--color-text);
-  font-size: var(--text-small);
-  font-weight: var(--weight-label);
-  transition: background-color var(--dur-feedback) var(--ease-out);
-}
-
-.work-shelf__close:hover {
-  background: rgb(238 234 226 / 0.12);
-}
-
-/*
- * Wide screens: Close sits above the row, so the six entries share the full
- * content width as small cards, each with its name and category on one line.
- */
-@media (min-width: 1200px) {
-  .work-shelf {
-    padding-block: var(--space-2) var(--space-5);
-  }
-
-  .work-shelf__inner {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: var(--space-1);
-  }
-
-  .work-shelf__close {
-    grid-row: 1;
-    justify-self: end;
-  }
-
+@media (max-width: 1099.98px) {
   .work-shelf__list {
-    gap: var(--space-3);
+    gap: var(--space-2);
   }
 
   .shelf-item {
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
-    justify-items: start;
-    gap: var(--space-2);
-    min-height: 0;
-    padding: var(--space-2) var(--space-2) var(--space-3);
+    padding-inline: 6px;
   }
 
-  .shelf-item__name,
-  .shelf-item__category {
-    display: block;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .shelf-item__name {
+    font-size: 0.8125rem;
   }
 
-  .shelf-item__text {
-    width: 100%;
-  }
-}
-
-/* Intermediate widths: a deliberately scrollable row with edge fades as overflow cues. */
-@media (max-width: 1199.98px) {
-  .work-shelf__viewport {
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
-    scroll-padding-inline: var(--space-2);
-    padding-bottom: var(--space-2);
-    scrollbar-width: thin;
-    scrollbar-color: rgb(238 234 226 / 0.3) transparent;
-    --fade-start: 0px;
-    --fade-end: 0px;
-    mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
-  }
-
-  .work-shelf__viewport[data-more-start='true'] {
-    --fade-start: 56px;
-  }
-
-  .work-shelf__viewport[data-more-end='true'] {
-    --fade-end: 72px;
-  }
-
-  .work-shelf__list {
-    display: flex;
-    width: max-content;
-  }
-
-  .work-shelf__entry {
-    width: 212px;
-    scroll-snap-align: start;
-  }
-}
-
-/* Phones: a simple two-column menu; Close sits under it. */
-@media (max-width: 639.98px) {
-  .work-shelf {
-    max-height: calc(100dvh - var(--header-height));
-    overflow-y: auto;
-    padding-block: var(--space-3) var(--space-4);
-  }
-
-  .work-shelf__inner {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .work-shelf__viewport {
-    overflow: visible;
-    mask-image: none;
-    padding-bottom: 0;
-  }
-
-  .work-shelf__list {
-    display: grid;
-    width: auto;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-1) var(--space-2);
-  }
-
-  .work-shelf__entry {
-    width: auto;
-  }
-
-  .shelf-item {
-    grid-template-columns: 40px minmax(0, 1fr);
-    gap: var(--space-2);
-    min-height: 68px;
-    padding: 6px;
-  }
-
-  .shelf-item__thumb {
-    width: 40px;
-  }
-
-  .shelf-item__category {
+  .shelf-item__action {
     font-size: 0.75rem;
   }
+}
 
-  .work-shelf__close {
-    justify-self: stretch;
-    justify-content: center;
+/* ----------------------------------------------------------------------- */
+/* Small-screen menu (below 900px, WorkShelf.tsx MobileMenu)                */
+/* ----------------------------------------------------------------------- */
+
+.site-menu {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-block: var(--space-2) var(--space-7);
+  background: rgb(7 8 12);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition:
+    opacity 160ms var(--ease-out),
+    transform 160ms var(--ease-out),
+    visibility 0s linear 160ms;
+}
+
+.site-menu[data-open] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out),
+    visibility 0s;
+}
+
+.site-menu__inner {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.site-menu__label {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.site-menu__work {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  list-style: none;
+}
+
+/* In the menu: the same card as the shelf, two per row. */
+.shelf-item--menu {
+  padding: 10px 8px 12px;
+}
+
+.shelf-item--menu .shelf-item__thumb {
+  width: 39px;
+  height: 52px;
+}
+
+.site-menu__pages {
+  display: grid;
+  margin-top: var(--space-4);
+  list-style: none;
+  border-top: 1px solid rgb(238 234 226 / 0.12);
+}
+
+.site-menu__link {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  border-bottom: 1px solid rgb(238 234 226 / 0.12);
+  color: var(--color-text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.site-menu__link:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.site-menu__link[aria-current='page'] {
+  text-decoration: underline;
+  text-decoration-color: var(--stage-violet);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+html.is-menu-open {
+  overflow: hidden;
+}
+
+@media (max-width: 359.98px) {
+  .site-menu__work {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -476,21 +612,18 @@ html[data-motion='reduce'] .route-reveal {
 }
 
 /* ----------------------------------------------------------------------- */
-/* Footer (every page): contact, résumé, the Reduce motion toggle           */
+/* Footer: the single contact area and the Reduce motion setting           */
 /* ----------------------------------------------------------------------- */
 
+/*
+ * About 56px after the page content. The darkening fades in over its first
+ * 80px (no edge), so the room blends into a calm base for the links.
+ */
 .site-footer {
-  margin-top: var(--space-9);
-  border-top: 1px solid rgb(238 234 226 / 0.1);
-  padding-block: var(--space-7) var(--space-6);
-  background: linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.6), rgb(5 6 9 / 0.88));
+  margin-top: 56px;
+  padding-block: var(--space-7) var(--space-5);
+  background: linear-gradient(to bottom in oklch, rgb(5 6 9 / 0), rgb(5 6 9 / 0.72) 80px, rgb(5 6 9 / 0.9));
   font-size: var(--text-small);
-  /* The root's scroll-padding-top (base.css) already clears the sticky header. */
-  scroll-margin-top: 0;
-}
-
-.site-footer:focus {
-  outline: none;
 }
 
 .site-footer__inner {
@@ -500,41 +633,42 @@ html[data-motion='reduce'] .route-reveal {
 
 .site-footer__contact {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-3) var(--space-6);
+  align-items: center;
 }
 
 .site-footer__title {
   color: var(--color-text);
   font-size: 1.375rem;
-  font-weight: var(--weight-heading);
+  font-weight: 600;
+  line-height: 1.2;
   letter-spacing: -0.015em;
 }
 
 .site-footer__links {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
+  gap: 0 var(--space-5);
   list-style: none;
-  margin-inline: calc(-1 * var(--space-2));
 }
 
 .site-footer__link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding-inline: var(--space-2);
   color: var(--color-text);
   font-size: 1rem;
-  font-weight: var(--weight-label);
-  text-decoration: underline;
-  text-decoration-color: rgb(238 234 226 / 0.3);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.25em;
-  transition: text-decoration-color var(--dur-feedback) var(--ease-out);
 }
 
-.site-footer__link:hover {
-  text-decoration-color: currentColor;
+.site-footer__resume {
+  justify-self: start;
+}
+
+@media (min-width: 760px) {
+  .site-footer__contact {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .site-footer__resume {
+    justify-self: end;
+  }
 }
 
 .site-footer__base {
@@ -542,68 +676,87 @@ html[data-motion='reduce'] .route-reveal {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3) var(--space-5);
-  padding-top: var(--space-4);
-  border-top: 1px solid rgb(238 234 226 / 0.08);
+  gap: var(--space-2) var(--space-5);
+  padding-top: var(--space-3);
+  border-top: 1px solid rgb(238 234 226 / 0.1);
 }
 
 .site-footer__copy {
-  color: var(--color-subtle);
+  color: var(--color-muted);
 }
 
-/* The site-wide motion preference: a quiet checkbox-like toggle button. */
+/*
+ * The site-wide motion setting: quiet, but clearly a control. An outlined
+ * switch whose knob moves across and fills when on (position and fill, not
+ * colour alone), with a visible label, hover surface and focus ring.
+ */
 .motion-toggle {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 10px;
   min-height: 44px;
-  padding: 0 var(--space-2);
-  margin-inline: calc(-1 * var(--space-2));
+  margin-inline: -10px;
+  padding: 0 10px;
   border: 0;
-  border-radius: var(--radius-button);
+  border-radius: var(--radius-control);
   background: none;
-  color: var(--color-muted);
+  color: #d4d6e2;
   font-size: var(--text-small);
   font-weight: var(--weight-label);
-  transition: color var(--dur-feedback) var(--ease-out);
+  transition:
+    background-color var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out);
 }
 
-.motion-toggle:hover,
-.motion-toggle[aria-pressed='true'] {
-  color: var(--color-text);
+.motion-toggle:hover {
+  background: rgb(255 255 255 / 0.07);
+  color: #fff;
 }
 
-.motion-toggle__box {
+.motion-toggle:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.motion-toggle__track {
   position: relative;
-  width: 28px;
-  height: 16px;
+  flex: none;
+  width: 34px;
+  height: 20px;
+  border: 1.5px solid rgb(255 255 255 / 0.6);
   border-radius: 999px;
-  background: rgb(238 234 226 / 0.1);
-  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.28);
-  transition: background-color var(--dur-feedback) var(--ease-out);
+  background: rgb(10 11 18 / 0.6);
+  transition:
+    background-color var(--dur-feedback) var(--ease-out),
+    border-color var(--dur-feedback) var(--ease-out);
 }
 
-.motion-toggle__box::after {
-  content: '';
+.motion-toggle__knob {
   position: absolute;
-  top: 3px;
+  top: 50%;
   left: 3px;
-  width: 10px;
-  height: 10px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
-  background: var(--color-muted);
+  background: #d4d6e2;
+  transform: translateY(-50%);
   transition:
     transform var(--dur-feedback) var(--ease-out),
     background-color var(--dur-feedback) var(--ease-out);
 }
 
-.motion-toggle[aria-pressed='true'] .motion-toggle__box {
-  background: color-mix(in oklch, var(--stage-violet) 45%, transparent);
+.motion-toggle[aria-pressed='true'] {
+  color: var(--color-text);
 }
 
-.motion-toggle[aria-pressed='true'] .motion-toggle__box::after {
-  transform: translateX(12px);
-  background: var(--stage-ivory);
+.motion-toggle[aria-pressed='true'] .motion-toggle__track {
+  border-color: var(--btn-primary-bg);
+  background: var(--btn-primary-bg);
+}
+
+.motion-toggle[aria-pressed='true'] .motion-toggle__knob {
+  background: var(--btn-primary-fg);
+  transform: translate(14px, -50%);
 }
 
 /* Not found / route error */

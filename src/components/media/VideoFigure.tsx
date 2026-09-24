@@ -18,7 +18,7 @@ interface VideoFigureProps {
   caption?: ReactNode
   /** A real transcript. Omit entirely when none exists (no empty disclosure). */
   transcript?: ReactNode
-  /** Visible text on the play control instead of the video's title (e.g. "Watch demo"); always shown, also on phones. */
+  /** Visible text on the play control (e.g. "Watch film", "Play dashboard demo"); always shown, also on phones. */
   label?: string
   /** Another real frame of the recording as the poster (e.g. when the default poster repeats a nearby image). */
   poster?: ImageId
@@ -77,11 +77,12 @@ export function VideoFigure({ video: id, sizes, caption, transcript, label, post
             onClick={start}
           >
             <ResponsiveImage image={posterImage} sizes={sizes} decorative fit="cover" />
-            <span className="video-facade__chip" aria-hidden="true">
+            {/* A prominent labelled play control on the poster (the whole poster is the button). */}
+            <span className="button video-facade__cta" aria-hidden="true">
               <svg viewBox="0 0 16 16" width="14" height="14">
                 <path d="M4.5 2.8v10.4a.5.5 0 0 0 .76.43l8.4-5.2a.5.5 0 0 0 0-.86l-8.4-5.2a.5.5 0 0 0-.76.43Z" fill="currentColor" />
               </svg>
-              <span className={label ? 'video-facade__label' : 'video-facade__title'}>{label ?? video.title}</span>
+              <span className="video-facade__label">{label ?? `Play ${video.title}`}</span>
               <span className="video-facade__time tabular">{shortDuration(video.duration)}</span>
             </span>
           </button>

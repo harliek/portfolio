@@ -1,10 +1,16 @@
 /*
- * The dark architectural setting shared by every page: the persistent
- * background set (StageBackground), the reading scrims that keep the bright
- * horizon out of body text, the image-continuity copy used when a project
- * opens, the pointer trail canvas, and the debug outline for empty diagram
- * slots. Glow is used only on carousel tile edges, the highlighted region of
- * an image, and a small pool of light under a featured artifact.
+ * The dark architectural setting behind every professional page: the
+ * persistent background set (StageBackground), its readability layers, the
+ * route-transition helpers, and the pointer trail canvas.
+ *
+ * Readability uses broad gradients only (no rectangles with edges):
+ *   __shade    a uniform shade per route (lighter on the homepage)
+ *   __read     the reading layer: strongest behind the text column on
+ *              interior routes; on the homepage it follows the scroll from
+ *              the carousel into About (--read, 0 → 1, set by StageBackground)
+ *   __band     a soft band that dims the bright floor line, so it never cuts
+ *              through paragraphs, rows, captions or controls
+ * The room stays visible around media and in the outer margins.
  */
 
 /* ----------------------------------------------------------------------- */
@@ -13,12 +19,34 @@
 
 .stage-bg {
   --bg-shade: 0.5;
+  --read: 1;
+  /* Floor-line band strength with the reading layer off / fully on. */
+  --band-from: 0.55;
+  --band-to: 0.9;
+  --band-above: 120px;
+  --band-below: 170px;
+  /*
+   * Where the bright floor line sits in the viewport. The desktop loop's
+   * line is at 65% of its 4:3 frame, drawn with object-fit: cover and
+   * object-position 50% 55% (below): 65% of the height when the viewport is
+   * narrower than 4:3, else 55% of the height + 7.5% of the width.
+   */
+  --floor-y: max(65%, calc(55% + 7.5vw));
+  /* Reading layer fill: phones and tablets read across the whole width. */
+  --read-fill: rgb(5 6 9 / 0.48);
   position: fixed;
   inset: 0;
   z-index: 0;
   overflow: hidden;
   background: var(--stage-room);
   pointer-events: none;
+}
+
+/* The portrait loop (chosen below 600px) has its line at about 65.2% of a 470:834 frame. */
+.stage-bg[data-file='mobile'] {
+  --floor-y: max(65.2%, calc(55% + 18.1vw));
+  --band-above: 90px;
+  --band-below: 130px;
 }
 
 .stage-bg__poster,
@@ -42,44 +70,119 @@
   opacity: 1;
 }
 
-/* Dark overlay: per route, darker on phones. */
-.stage-bg__shade {
+.stage-bg__shade,
+.stage-bg__read,
+.stage-bg__reflection,
+.stage-bg__band {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+}
+
+.stage-bg__shade,
+.stage-bg__read {
+  top: 0;
+  bottom: 0;
+}
+
+/* Uniform shade per route, a little darker on phones. */
+.stage-bg__shade {
   background: var(--stage-room);
   opacity: min(0.94, calc(var(--bg-shade) + var(--bg-phone, 0)));
   transition: opacity 700ms var(--ease-out);
 }
 
 .stage-bg[data-route='home'] {
-  --bg-shade: 0.4;
+  --bg-shade: 0.34;
+  --read: 0;
 }
 
 .stage-bg[data-route='case'] {
-  --bg-shade: 0.58;
+  --bg-shade: 0.46;
 }
 
 .stage-bg[data-route='about'],
-.stage-bg[data-route='creative'],
 .stage-bg[data-route='other'] {
-  --bg-shade: 0.66;
+  --bg-shade: 0.5;
+}
+
+@media (max-width: 767.98px) {
+  .stage-bg {
+    --bg-phone: 0.1;
+  }
 }
 
 /* A restrained violet light on the floor (atmosphere only; nothing aligns to it). */
 .stage-bg__reflection {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: max(64.7vh, calc(55vh + 7.28vw));
-  height: 40vh;
+  top: var(--floor-y);
+  height: 40%;
   background: radial-gradient(40% 62% at 50% 0% in oklch, color-mix(in oklch, var(--stage-violet) 16%, transparent), transparent 74%);
-  opacity: 0.8;
+  opacity: calc(0.8 - 0.5 * var(--read));
 }
 
-.stage-bg[data-route='about'] .stage-bg__reflection,
-.stage-bg[data-route='creative'] .stage-bg__reflection,
-.stage-bg[data-route='other'] .stage-bg__reflection {
-  opacity: 0.4;
+/* Reading layer. */
+.stage-bg__read {
+  background: var(--read-fill);
+  opacity: var(--read);
+  transition: opacity 600ms var(--ease-out);
+}
+
+/* The homepage value follows the scroll every frame: keep the easing short. */
+.stage-bg[data-route='home'] .stage-bg__read,
+.stage-bg[data-route='home'] .stage-bg__band,
+.stage-bg[data-route='home'] .stage-bg__reflection {
+  transition-duration: 160ms;
+}
+
+/* Floor-line band: darkest exactly on the line, fading out above and below. */
+.stage-bg__band {
+  top: calc(var(--floor-y) - var(--band-above));
+  height: calc(var(--band-above) + var(--band-below));
+  background: linear-gradient(
+    to bottom in oklch,
+    rgb(5 6 9 / 0),
+    rgb(5 6 9 / 0.55) 26%,
+    rgb(5 6 9 / 0.92) calc(var(--band-above) - 8px),
+    rgb(5 6 9 / 0.92) calc(var(--band-above) + 10px),
+    rgb(5 6 9 / 0.5) 72%,
+    rgb(5 6 9 / 0)
+  );
+  opacity: calc(var(--band-from) + (var(--band-to) - var(--band-from)) * var(--read));
+  transition: opacity 600ms var(--ease-out);
+}
+
+@media (min-width: 960px) {
+  /*
+   * Case studies: text on the left (about 44% of a centred 1240px grid),
+   * media on the right. Darkest behind the text column, easing out towards
+   * the media, so the room stays visible around it.
+   */
+  .stage-bg[data-route='case'] {
+    --read-fill: linear-gradient(
+      to right in oklch,
+      rgb(5 6 9 / 0.62),
+      rgb(5 6 9 / 0.58) 44%,
+      rgb(5 6 9 / 0.3) 56%,
+      rgb(5 6 9 / 0.16) 70%,
+      rgb(5 6 9 / 0.14)
+    );
+  }
+
+  .stage-bg[data-route='case'] .stage-bg__band {
+    mask-image: linear-gradient(to right, #000 50%, rgb(0 0 0 / 0.7) 66%, rgb(0 0 0 / 0.62));
+  }
+
+  /* About (on the homepage and at /about): content on both sides; lighter towards the outer margins. */
+  .stage-bg[data-route='home'],
+  .stage-bg[data-route='about'],
+  .stage-bg[data-route='other'] {
+    --read-fill: radial-gradient(
+      120% 90% at 50% 50% in oklch,
+      rgb(5 6 9 / 0.54),
+      rgb(5 6 9 / 0.48) 55%,
+      rgb(5 6 9 / 0.26)
+    );
+  }
 }
 
 /* Framing light: darker at the header and at the bottom, soft side vignette. */
@@ -88,41 +191,16 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.66), rgb(5 6 9 / 0) 22%, rgb(5 6 9 / 0) 62%, rgb(5 6 9 / 0.72)),
+    linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.66), rgb(5 6 9 / 0) 22%, rgb(5 6 9 / 0) 62%, rgb(5 6 9 / 0.6)),
     radial-gradient(130% 95% at 50% 48% in oklch, rgb(5 6 9 / 0) 56%, rgb(5 6 9 / 0.58));
 }
 
-@media (max-width: 767.98px) {
-  .stage-bg {
-    --bg-phone: 0.14;
-  }
-}
-
-/* ----------------------------------------------------------------------- */
-/* Reading scrim: a dark translucent field behind reading columns so the    */
-/* bright horizon never passes through body text.                            */
-/* ----------------------------------------------------------------------- */
-
+/*
+ * Legacy hook (.reading-scrim): boxes behind text columns are no longer
+ * drawn; the full-viewport gradients above do the work without edges.
+ */
 .reading-scrim {
   position: relative;
-  isolation: isolate;
-}
-
-.reading-scrim::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: calc(-1 * var(--scrim-pad, 32px)) calc(-1 * var(--scrim-pad-x, 48px)) calc(-1 * var(--scrim-pad-end, var(--scrim-pad, 32px)));
-  border-radius: 40px;
-  /* Holds most of its strength across the text (an ellipse meeting every side), fading only at the rim. */
-  background: radial-gradient(
-    closest-side in oklch,
-    rgb(5 6 9 / var(--scrim-strength, 0.62)),
-    rgb(5 6 9 / calc(var(--scrim-strength, 0.62) * 0.9)) 62%,
-    rgb(5 6 9 / calc(var(--scrim-strength, 0.62) * 0.55)) 84%,
-    rgb(5 6 9 / 0)
-  );
-  pointer-events: none;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -154,8 +232,8 @@
   position: fixed;
   inset: 0;
   z-index: 80;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 

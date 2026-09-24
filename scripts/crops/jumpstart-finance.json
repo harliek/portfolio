@@ -1,0 +1,6 @@
+[
+  { "id": "jf-screen-home", "source": ".media-cache/covers/proto-1.png", "rect": { "x": 16, "y": 2, "width": 600, "height": 1210 }, "widths": [320, 480, 600], "fallback": "png" },
+  { "id": "jf-screen-lessons", "source": ".media-cache/covers/proto-3.png", "rect": { "x": 14, "y": 9, "width": 600, "height": 1210 }, "widths": [320, 480, 600], "fallback": "png" },
+  { "id": "jf-screen-progress", "source": ".media-cache/covers/proto-2.png", "rect": { "x": 9, "y": 30, "width": 600, "height": 1210 }, "widths": [320, 480, 600], "fallback": "png" },
+  { "id": "jf-screen-community", "source": ".media-cache/covers/proto-4.png", "rect": { "x": 18, "y": 5, "width": 600, "height": 1210 }, "widths": [320, 480, 600], "fallback": "png" }
+]

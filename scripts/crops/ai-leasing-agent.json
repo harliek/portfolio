@@ -1,0 +1,4 @@
+[
+  { "id": "ala-conversation-request", "source": "Valiance Capital/messages.png", "rect": { "x": 258, "y": 196, "width": 836, "height": 452 }, "widths": [640, 836], "fallback": "jpg" },
+  { "id": "ala-conversation-handoff", "source": "Valiance Capital/messages.png", "rect": { "x": 258, "y": 401, "width": 836, "height": 452 }, "widths": [640, 836], "fallback": "jpg" }
+]

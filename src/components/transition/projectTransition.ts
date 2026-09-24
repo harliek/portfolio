@@ -1,63 +1,48 @@
 import type { MouseEvent } from 'react'
-import { MOTION } from '../../config/motion'
+import { TRANSITION } from '../../config/carousel'
 import { getImage, srcSet } from '../../content/media'
 import { projectForPath } from '../../content/projects'
 import { prefersReducedMotion } from '../../hooks/useReducedMotion'
-import { prefetchRoute } from '../../routes'
-
-type Gsap = typeof import('gsap').gsap
-type Tween = ReturnType<Gsap['to']>
+import { prefetchRoute, routeChunks } from '../../routes'
 
 /**
- * Image continuity when a project is opened (a carousel tile, a next-project
- * link):
+ * Opening a project.
  *
- * 1. a flat copy of the clicked cover is laid exactly over it (fixed, outside
- *    React, aria-hidden) and the route changes at once; the copy stays on
- *    screen while the old page is replaced, so there is no blank beat and the
- *    site never fades to black;
- * 2. the destination's opening image (`[data-case-hero]`, hidden meanwhile
- *    via `isTransitionPending`) is waited for until it has decoded;
- * 3. the copy travels into the opening image's box; it has dissolved before
- *    the opening image fades in (MOTION.route.continuityMs, ≈280ms), so two
- *    different images are never seen at half opacity together (a portrait
- *    cover and a landscape screenshot would double-expose).
+ * From a carousel tile (the element passed as `source` carries
+ * `data-transition="tile"`, the tile's inner wrapper):
  *
- * Hovering or focusing a project link warms everything the transition needs
- * (warmProject): the route's code, GSAP (loaded on demand, not part of the
- * entry bundle) and the destination's opening image, so the wait in step 2
- * is usually just a decode and the whole move stays within 300–450ms.
+ * 1. the carousel freezes (ConcaveCarousel does this when openProject
+ *    returns 'tile'); the tile comes a little forward while it fades out
+ *    (TRANSITION in config/carousel.ts). No turn or flip, and no copy of the
+ *    tile travels over the new page;
+ * 2. the route changes once that has finished and the route's code has
+ *    loaded, and never later than TRANSITION.navigateCapMs after the click
+ *    (a failed chunk still navigates: RouteError handles it);
+ * 3. on the new page, the opening frame (`[data-case-hero]`, rendered hidden
+ *    while `isTransitionPending(path)`) appears in place once its image has
+ *    decoded (at most TRANSITION.heroWaitMs), with a short opacity and 1.5%
+ *    scale reveal. Its space is reserved by the page layout, and nothing is
+ *    ever laid over the new page: no floating copy crosses its text.
  *
- * If the destination image is not ready within MOTION.route.heroWaitMs, or
- * it is off screen, the copy simply fades. Back/Forward or another
- * navigation cancels everything. Reduced motion: ordinary navigation.
+ * From anything else (e.g. a next-project link): step 3 alone.
+ *
+ * Rapid clicks are ignored while a tile is leaving. Back/Forward or another
+ * navigation before the route change cancels it and restores the tile;
+ * after the route change it simply completes the reveal. Reduced motion:
+ * ordinary navigation. Modifier and middle clicks stay native (isPlainClick).
+ * Every inline style or animation this module adds is removed when it ends.
  */
-
-let gsapPromise: Promise<Gsap | null> | null = null
-
-/** GSAP, loaded once on demand (null if it cannot be loaded; the page then simply appears). */
-function loadGsap() {
-  gsapPromise ??= import('gsap').then(
-    (m) => m.gsap,
-    () => {
-      gsapPromise = null
-      return null
-    },
-  )
-  return gsapPromise
-}
 
 const warmed = new Set<string>()
 
 /**
- * Prepares a project transition ahead of the click: the route chunk, GSAP and
- * the destination's opening image (a preload with the same srcset and sizes
- * as the hero, so the browser picks the same file). Idempotent.
+ * Prepares a project ahead of the click (hover, focus, touch start): the
+ * route's code and the destination's opening image (a preload with the same
+ * srcset and sizes as the hero, so the browser picks the same file).
+ * Idempotent.
  */
 export function warmProject(path: string) {
   prefetchRoute(path)
-  if (prefersReducedMotion()) return
-  void loadGsap()
   const project = projectForPath(path)
   if (!project || warmed.has(path)) return
   warmed.add(path)
@@ -71,151 +56,216 @@ export function warmProject(path: string) {
   document.head.appendChild(link)
 }
 
+export const isPlainClick = (e: MouseEvent) => !e.defaultPrevented && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey
+
+type Phase = 'leave' | 'pending' | 'reveal'
+
 interface Active {
   path: string
-  overlay: HTMLImageElement
+  /** The pathname the transition started from (a different one means someone navigated elsewhere). */
+  from: string
+  phase: Phase
+  tile: HTMLElement | null
   hero: HTMLElement | null
+  /** The opening frame of the page being left (ignored while looking for the new one). */
+  previousHero: Element | null
+  revealMs: number
+  anims: Animation[]
+  timers: number[]
   frame: number
-  timer: number
-  tweens: Tween[]
-  gsap: Gsap | null
+  onCancel?: () => void
 }
 
 let active: Active | null = null
 
-/** True while a transition into `path` is waiting for its opening image (the hero renders hidden). */
+/** True while a transition into `path` has not revealed its opening frame yet (the hero renders hidden). */
 export function isTransitionPending(path: string) {
-  return active?.path === path
+  return active !== null && active.path === path && active.phase !== 'reveal'
 }
 
-export const isPlainClick = (e: MouseEvent) => !e.defaultPrevented && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey
+const onPopState = () => {
+  if (!active) return
+  if (active.phase === 'leave') cancel()
+  else finish()
+}
 
-function teardown() {
+/** Ends the transition and removes everything it added (the new page stays as it is). */
+function finish() {
   const t = active
   if (!t) return
   active = null
   cancelAnimationFrame(t.frame)
-  window.clearTimeout(t.timer)
-  t.tweens.forEach((tw) => tw.kill())
-  t.overlay.remove()
-  if (t.hero) {
-    delete t.hero.dataset.transitionPending
-    t.hero.style.removeProperty('opacity')
-  }
-  window.removeEventListener('popstate', teardown)
+  t.timers.forEach((id) => window.clearTimeout(id))
+  // Cancelling restores the tile if the old page is somehow still shown
+  // (after the route change it has unmounted, so this has no visible effect).
+  t.anims.forEach((a) => a.cancel())
+  if (t.hero) delete t.hero.dataset.transitionPending
+  window.removeEventListener('popstate', onPopState)
 }
 
-/** Wait until an image has decoded (or failed), whichever comes first. */
+/** Stops a transition before the route change and restores the tile (its animations are cancelled). */
+function cancel() {
+  const t = active
+  if (!t) return
+  finish()
+  t.onCancel?.()
+}
+
+const wait = (t: Active, ms: number) =>
+  new Promise<void>((resolve) => {
+    t.timers.push(window.setTimeout(resolve, ms))
+  })
+
+/** Resolves when an image has decoded, failed, or is missing. */
 function whenDecoded(img: HTMLImageElement | null): Promise<void> {
   if (!img) return Promise.resolve()
-  if (img.complete && img.naturalWidth) return img.decode().catch(() => {})
+  if (img.complete) return img.naturalWidth ? img.decode().catch(() => {}) : Promise.resolve()
   return new Promise((resolve) => {
-    const done = () => resolve()
-    img.addEventListener('load', () => void img.decode().catch(() => {}).then(done), { once: true })
-    img.addEventListener('error', done, { once: true })
+    img.addEventListener('load', () => void img.decode().catch(() => {}).then(() => resolve()), { once: true })
+    img.addEventListener('error', () => resolve(), { once: true })
   })
 }
 
-function fadeOut(t: Active) {
-  const { fallbackFadeMs } = MOTION.route
-  const gsap = t.gsap
-  if (!gsap) {
-    teardown()
-    return
-  }
-  if (t.hero) {
-    delete t.hero.dataset.transitionPending
-    t.tweens.push(gsap.fromTo(t.hero, { opacity: 0 }, { opacity: 1, duration: fallbackFadeMs / 1000, ease: 'power1.out', clearProps: 'opacity' }))
-  }
-  t.tweens.push(gsap.to(t.overlay, { opacity: 0, duration: fallbackFadeMs / 1000, ease: 'power1.out', onComplete: teardown }))
-}
-
-function fly(t: Active, hero: HTMLElement, from: DOMRect) {
-  if (active !== t) return
-  const to = hero.getBoundingClientRect()
-  const onScreen = to.width > 0 && to.bottom > 0 && to.top < window.innerHeight
-  if (!onScreen) {
-    fadeOut(t)
-    return
-  }
-  const gsap = t.gsap
-  if (!gsap) {
-    teardown()
-    return
-  }
-  const { continuityMs, continuityEase, overlayFadeShare, heroFadeFrom } = MOTION.route
-  const d = continuityMs / 1000
-  // Uniform scale (no distortion): match the destination's height, centred on it.
-  const scale = Math.min(to.height / from.height, to.width / from.width)
-  const dx = to.left + to.width / 2 - (from.left + from.width / 2)
-  const dy = to.top + to.height / 2 - (from.top + from.height / 2)
-  delete hero.dataset.transitionPending
-  // The copy has dissolved (first part of the move) before the opening image
-  // appears (last part), so the two images never sit at half opacity together.
-  t.tweens.push(
-    gsap.to(t.overlay, { x: dx, y: dy, scale, duration: d, ease: continuityEase, onComplete: teardown }),
-    gsap.to(t.overlay, { opacity: 0, duration: d * overlayFadeShare, ease: 'power1.in' }),
-    gsap.fromTo(hero, { opacity: 0 }, { opacity: 1, duration: d * (1 - heroFadeFrom), delay: d * heroFadeFrom, ease: 'power1.out', clearProps: 'opacity' }),
+/** The route's code (resolves on failure too: RouteError handles a failed chunk after navigation). */
+function loadChunk(path: string): Promise<void> {
+  const load = (routeChunks as Record<string, (() => Promise<unknown>) | undefined>)[path]
+  if (!load) return Promise.resolve()
+  return load().then(
+    () => undefined,
+    () => undefined,
   )
 }
 
-export interface OpenProjectOptions {
-  path: string
-  /** The clicked element containing the cover image. */
-  source: HTMLElement | null
-  navigate: (path: string) => void
-}
-
-export function openProject({ path, source, navigate }: OpenProjectOptions) {
-  warmProject(path)
-  teardown()
-  const img = source?.querySelector('img') ?? null
-  const from = img?.getBoundingClientRect()
-  if (prefersReducedMotion() || !img || !from || !img.complete || !img.naturalWidth || from.width < 8) {
-    navigate(path)
-    return
-  }
-
-  const overlay = document.createElement('img')
-  overlay.src = img.currentSrc || img.src
-  overlay.alt = ''
-  overlay.decoding = 'sync'
-  overlay.draggable = false
-  overlay.className = 'transition-image'
-  overlay.setAttribute('aria-hidden', 'true')
-  Object.assign(overlay.style, { left: `${from.left}px`, top: `${from.top}px`, width: `${from.width}px`, height: `${from.height}px` })
-  document.body.appendChild(overlay)
-
-  const previousHero = document.querySelector<HTMLElement>('[data-case-hero]')
-  const t: Active = { path, overlay, hero: null, frame: 0, timer: 0, tweens: [], gsap: null }
-  active = t
-  window.addEventListener('popstate', teardown)
-  t.timer = window.setTimeout(() => {
-    if (active !== t) return
-    void loadGsap().then((gsap) => {
-      if (active !== t) return
-      t.gsap = gsap
-      fadeOut(t)
-    })
-  }, MOTION.route.heroWaitMs)
-
-  navigate(path)
-
+/** Step 3: find the new page's opening frame, wait for its image, reveal it in place. */
+function revealDestination(t: Active) {
+  const started = performance.now()
   const poll = () => {
     if (active !== t) return
-    const hero = document.querySelector<HTMLElement>('[data-case-hero]')
-    if (hero && hero !== previousHero && window.location.pathname === path) {
+    const hero = Array.from(document.querySelectorAll<HTMLElement>('[data-case-hero]')).find((h) => h !== t.previousHero)
+    if (hero && window.location.pathname === t.path) {
       t.hero = hero
       hero.dataset.transitionPending = 'true'
-      void Promise.all([whenDecoded(hero.querySelector('img')), loadGsap()]).then(([, gsap]) => {
+      void Promise.race([whenDecoded(hero.querySelector('img')), wait(t, TRANSITION.heroWaitMs)]).then(() => {
         if (active !== t) return
-        window.clearTimeout(t.timer)
-        t.gsap = gsap
-        fly(t, hero, from)
+        t.phase = 'reveal'
+        delete hero.dataset.transitionPending
+        const box = hero.getBoundingClientRect()
+        if (box.width === 0 || box.bottom < 0 || box.top > window.innerHeight) {
+          finish()
+          return
+        }
+        const anim = hero.animate(
+          [
+            { opacity: 0, transform: `scale(${TRANSITION.revealScale})` },
+            { opacity: 1, transform: 'none' },
+          ],
+          { duration: t.revealMs, easing: TRANSITION.ease },
+        )
+        t.anims.push(anim)
+        anim.finished.then(
+          () => {
+            if (active === t) finish()
+          },
+          () => {},
+        )
       })
+      return
+    }
+    if (performance.now() - started > TRANSITION.heroFindMs) {
+      finish()
       return
     }
     t.frame = requestAnimationFrame(poll)
   }
   t.frame = requestAnimationFrame(poll)
+}
+
+function start(path: string, phase: Phase, tile: HTMLElement | null, revealMs: number, onCancel?: () => void): Active {
+  const t: Active = {
+    path,
+    from: window.location.pathname,
+    phase,
+    tile,
+    hero: null,
+    previousHero: document.querySelector('[data-case-hero]'),
+    revealMs,
+    anims: [],
+    timers: [],
+    frame: 0,
+    onCancel,
+  }
+  active = t
+  window.addEventListener('popstate', onPopState)
+  return t
+}
+
+export interface OpenProjectOptions {
+  path: string
+  /** The clicked tile's inner wrapper (`data-transition="tile"`), or any other element (plain reveal). */
+  source?: HTMLElement | null
+  navigate: (path: string) => void
+  /** Called if a tile transition is cancelled before the route change (Back, another navigation). */
+  onCancel?: () => void
+}
+
+/**
+ * Opens a project with the transition described above.
+ * Returns 'tile' when the tile sequence started (the caller freezes the
+ * carousel), 'reveal' for a plain opening-frame reveal, 'plain' for an
+ * ordinary navigation, 'ignored' when a tile transition is already running.
+ */
+export function openProject({ path, source, navigate, onCancel }: OpenProjectOptions): 'tile' | 'reveal' | 'plain' | 'ignored' {
+  if (active?.phase === 'leave') return 'ignored'
+  // A reveal still running on the current page completes at once.
+  finish()
+  warmProject(path)
+
+  if (prefersReducedMotion()) {
+    navigate(path)
+    return 'plain'
+  }
+
+  const tile = source?.dataset.transition === 'tile' ? source : null
+  const box = tile?.getBoundingClientRect()
+  if (!tile || !box || box.width < 8 || box.bottom < 0 || box.top > window.innerHeight) {
+    const t = start(path, 'pending', null, TRANSITION.plainRevealMs)
+    navigate(path)
+    revealDestination(t)
+    return 'reveal'
+  }
+
+  const t = start(path, 'leave', tile, TRANSITION.revealMs, onCancel)
+  const { leaveMs, leaveScale, leaveLift } = TRANSITION
+  // From wherever the hover lift left it: a short move forward, fading out.
+  const current = getComputedStyle(tile).transform
+  const anim = tile.animate(
+    [
+      { transform: current === 'none' ? 'translateY(0) scale(1)' : current, opacity: 1 },
+      { offset: 0.45, transform: `translateY(${-leaveLift}px) scale(${leaveScale})`, opacity: 1 },
+      { transform: `translateY(${-leaveLift - 4}px) scale(${leaveScale + 0.03})`, opacity: 0 },
+    ],
+    // Stays hidden (forwards) until the old page unmounts; cancel() restores it.
+    { duration: leaveMs, easing: TRANSITION.ease, fill: 'forwards' },
+  )
+  t.anims.push(anim)
+
+  const ready = Promise.all([
+    anim.finished.then(
+      () => undefined,
+      () => undefined,
+    ),
+    loadChunk(path),
+  ])
+  void Promise.race([ready, wait(t, TRANSITION.navigateCapMs)]).then(() => {
+    if (active !== t) return
+    if (window.location.pathname !== t.from) {
+      // Someone navigated elsewhere meanwhile: stay there.
+      cancel()
+      return
+    }
+    t.phase = 'pending'
+    navigate(path)
+    revealDestination(t)
+  })
+  return 'tile'
 }

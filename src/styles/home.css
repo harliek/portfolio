@@ -1,259 +1,384 @@
 /*
- * Homepage: introduction, the concave carousel (ConcaveCarousel.tsx), the
- * Selected work index and a small contact link. Carousel geometry and speed
- * live in src/config/carousel.ts; tile sizes are the custom properties below.
+ * Homepage: the image-tile carousel (ConcaveCarousel.tsx) directly under the
+ * header, then the compact footer (About has its own page and tile).
+ * Carousel geometry and speed live in src/config/carousel.ts; the .arc*
+ * rules below belong to the carousel.
+ * The page-level .home / .home-* rules are in the block at the end.
  */
 
 /* ----------------------------------------------------------------------- */
-/* Introduction                                                             */
+/* Image-tile carousel (.arc*, .arc-row*, .arc-tile* and .arc-caption*)     */
 /* ----------------------------------------------------------------------- */
 
-.home-intro {
-  display: grid;
-  justify-items: start;
-  padding-top: clamp(var(--space-5), min(5vw, 6.5vh), var(--space-8));
-}
-
-.home-intro__name {
-  color: var(--stage-ivory);
-  font-size: clamp(2.125rem, 1.35rem + 3.2vw, 3.75rem);
-  line-height: 1.04;
-  letter-spacing: -0.035em;
-  font-weight: var(--weight-heading);
-}
-
-.home-intro__kicker {
-  margin-top: var(--space-3);
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-  font-weight: var(--weight-label);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-}
-
-.home-intro__lead {
-  max-width: 46rem;
-  margin-top: var(--space-2);
-  color: var(--color-text);
-  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
-  line-height: 1.45;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Concave carousel                                                         */
-/* ----------------------------------------------------------------------- */
-
-.home-carousel {
-  margin-top: clamp(var(--space-5), 4.5vh, var(--space-7));
-}
-
+/*
+ * Sizes. --body-h is the tile height; tiles are upright 3:4 and the image
+ * fills them. The arc and its captions fit in the first viewport at
+ * 1440×900, 1440×800, 1366×768 and 1280×720 (header 72px + 12px offset +
+ * stage ≈1.2×tile + 124px).
+ */
 .arc {
-  /* Desktop tiles 300–370px tall (3:4); tablets smaller. */
-  --tile-h: clamp(250px, min(25vw, 37vh), 368px);
-  --tile-w: calc(var(--tile-h) * 0.75);
-  --tile-gap: 28px;
-  /* Reserved caption space: the name is always visible; the description and link fill the rest on hover or focus. */
-  --caption-h: 112px;
-  /* Room above and below for edge tiles, which come closer and read taller. */
-  --pad-top: calc(var(--tile-h) * 0.12);
+  --body-h: clamp(250px, min(26.5vw, (100svh - 262px) / 1.245), 440px);
+  --canvas-h: var(--body-h);
+  --canvas-w: calc(var(--body-h) * 3 / 4);
+  --tile-r: 12px;
+  /* Room above the centre tile for the closer edge tiles and the hover lift. */
+  --pad-top: calc(var(--body-h) * 0.11 + 12px);
+  --cap-gap: 12px;
+  --cap-h: 100px;
+  --cap-w: 264px;
+  /*
+   * Invisible room above and below the stage (112px: a hovered edge tile rises ~50px and its halo reaches ~60px), so the soft glow of a lifted
+   * tile fades out before the stage's clip edge (it would otherwise show
+   * as a straight line). It sits under the header (z-index 50) and takes
+   * no pointer events.
+   */
+  --bleed: 112px;
   position: relative;
   width: 100%;
   max-width: 1760px;
-  margin-inline: auto;
-  overflow: hidden;
-  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
-}
-
-/* A subtle local pool of light under the arc's centre. */
-.arc::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: calc(var(--pad-top) + var(--tile-h) * 0.8);
-  width: min(900px, 70%);
-  height: calc(var(--tile-h) * 0.5);
-  transform: translateX(-50%);
-  background: radial-gradient(closest-side in oklch, color-mix(in oklch, var(--stage-violet) 14%, transparent), transparent);
+  margin: calc(12px - var(--bleed)) auto 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  /* Only the tiles and caption text take pointer events (the bleed overlaps the header and the About cue). */
   pointer-events: none;
 }
 
 .arc[data-mode='static'] {
-  /* Reduced motion: all six tiles stay in view on the frozen arc. */
-  --tile-h: min(260px, 17vw);
-  --tile-gap: 22px;
+  /* Reduced motion: all seven tiles stay in view on the frozen arc (a clear gap between neighbours). */
+  --body-h: clamp(170px, min(15vw, (100svh - 262px) / 1.245), 250px);
 }
 
 .arc__stage {
   position: relative;
-  /* Extra room at the bottom for edge tiles, which come closer, so their captions never meet the clip. */
-  height: calc(var(--pad-top) * 2 + var(--tile-h) * 1.08 + var(--caption-h));
+  height: calc(var(--bleed) * 2 + var(--pad-top) + var(--canvas-h) / 2 + var(--body-h) * 0.56 + var(--cap-gap) + var(--cap-h));
+  margin-bottom: calc(var(--bleed) * -1);
+  overflow: clip;
+  /* Tiles enter and leave through soft edges (CAROUSEL.edgeMask). */
+  mask-image: linear-gradient(to right, transparent, #000 4.5%, #000 95.5%, transparent);
 }
 
-/* The list is the tiles' direct parent, so it carries the perspective (set in px from the measured tile width). */
 .arc__list {
   position: absolute;
   inset: 0;
+  margin: 0;
+  padding: 0;
   list-style: none;
-  perspective-origin: 50% calc(var(--pad-top) + var(--tile-h) / 2);
 }
 
-.arc__tile {
+/* Every item and link spans the stage but takes no pointer events itself: only the tile and caption do. */
+.arc__item {
   position: absolute;
-  left: 50%;
-  top: var(--pad-top);
-  width: var(--tile-w);
-  margin-left: calc(var(--tile-w) / -2);
-  backface-visibility: hidden;
-  will-change: transform;
-  /* The caption is turned back to face the viewer inside the tile's 3D space. */
-  transform-style: preserve-3d;
+  inset: 0;
+  pointer-events: none;
+}
+
+.arc__item[data-active] {
+  z-index: 2;
 }
 
 .arc__link {
+  position: absolute;
+  inset: 0;
   display: block;
   color: inherit;
   text-decoration: none;
-  transform-style: preserve-3d;
+  pointer-events: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .arc__link:focus-visible {
   outline: none;
 }
 
-.arc__card {
-  position: relative;
-  display: block;
-  aspect-ratio: 3 / 4;
-  border-radius: 14px;
+/* The positioning element: every tile shares this box at the stage centre (ConcaveCarousel.tsx writes its transform). */
+.arc__tile {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--bleed) + var(--pad-top));
+  width: var(--canvas-w);
+  height: var(--canvas-h);
+  margin-left: calc(var(--canvas-w) / -2);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* ----------------------------------------------------------------------- */
+/* The tile artwork (arc and swipe row)                                     */
+/* ----------------------------------------------------------------------- */
+
+/* Grounding: a soft shadow under the tile's lower edge. */
+.arc-tile__floor {
+  position: absolute;
+  left: 50%;
+  top: 96%;
+  width: 104%;
+  height: 9%;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.22) 55%, transparent);
+  pointer-events: none;
+}
+
+/* The inner wrapper: hover lift and the route transition act here, never on the positioning element. */
+.arc-tile__lift {
+  position: absolute;
+  inset: 0;
+  /* The lower edge stays put while the tile grows and lifts, so the caption below is never covered. */
+  transform-origin: 50% 100%;
+  transition: transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/*
+ * The tile: the image fills a gently rounded frame. Framing is light: a
+ * thin violet-white luminous edge (the ::after ring, drawn over the image's
+ * outer pixel so it stays crisp) and a soft violet halo in two layers (a
+ * rectangle, so box-shadow follows it exactly), over a grounding shadow.
+ * Hover makes the edge and halo about 50% stronger; the image itself is
+ * never tinted beyond a few pixels at its edge. Never a thick border.
+ */
+.arc-tile__frame {
+  --edge: rgb(226 218 255 / 0.5);
+  --edge-inner: rgb(186 168 255 / 0.2);
+  --halo-near: rgb(168 146 255 / 0.36);
+  --halo-far: rgb(132 110 255 / 0.2);
+  position: absolute;
+  inset: 0;
   overflow: hidden;
-  background: var(--color-surface);
+  border-radius: var(--tile-r, 12px);
+  background: #12131c;
   box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.08),
-    0 28px 50px -26px rgb(0 0 0 / 0.9);
-  transition: box-shadow var(--dur-highlight) var(--ease-out);
+    0 0 0 1px var(--edge),
+    0 0 14px 1px var(--halo-near),
+    0 0 38px 4px var(--halo-far),
+    0 18px 34px -16px rgb(0 0 0 / 0.7);
+  transition: box-shadow 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: auto;
+  cursor: pointer;
 }
 
-.arc__card .picture,
-.arc__card img {
-  width: 100%;
-  height: 100%;
-}
-
-/* Restrained edge reflection: a faint top highlight and a violet rim at the lower edge. */
-.arc__card::after {
+/* The luminous edge over the image: a crisp 1px violet-white line with a faint inner glow of a few pixels. */
+.arc-tile__frame::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(to bottom in oklch, rgb(255 255 255 / 0.07), transparent 10%, transparent 84%, color-mix(in oklch, var(--stage-violet) 14%, transparent));
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.14),
-    inset 0 -1px 0 color-mix(in oklch, var(--stage-violet) 40%, transparent);
+    inset 0 0 0 1px var(--edge),
+    inset 0 0 6px 0 var(--edge-inner);
+  pointer-events: none;
+  transition: box-shadow 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.arc-tile__frame .picture,
+.arc-tile__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.arc__item[data-off] .arc-tile__frame {
   pointer-events: none;
 }
 
-.arc__tile[data-accent='green'] .arc__card::after {
-  background: linear-gradient(to bottom in oklch, rgb(255 255 255 / 0.07), transparent 10%, transparent 84%, color-mix(in oklch, var(--stage-green) 14%, transparent));
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.14),
-    inset 0 -1px 0 color-mix(in oklch, var(--stage-green) 40%, transparent);
+/* Hover or keyboard focus: forward, larger, lifted, a stronger glow, the description. No bounce. */
+.arc__item[data-active] .arc-tile__lift {
+  transform: translateY(-10px) scale(1.08);
 }
 
-.arc__tile[data-accent='warm'] .arc__card::after {
-  background: linear-gradient(to bottom in oklch, rgb(255 255 255 / 0.07), transparent 10%, transparent 84%, color-mix(in oklch, var(--stage-amber) 14%, transparent));
+/* Hover (hover-capable pointers only) and keyboard focus: edge and halo about 50% stronger. */
+.arc__item[data-active] .arc-tile__frame,
+.arc-row__link:focus-visible .arc-tile__frame {
+  --edge: rgb(236 230 255 / 0.75);
+  --edge-inner: rgb(196 180 255 / 0.3);
+  --halo-near: rgb(176 156 255 / 0.54);
+  --halo-far: rgb(140 118 255 / 0.3);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.14),
-    inset 0 -1px 0 color-mix(in oklch, var(--stage-amber) 40%, transparent);
+    0 0 0 1px var(--edge),
+    0 0 20px 2px var(--halo-near),
+    0 0 54px 6px var(--halo-far),
+    0 24px 42px -18px rgb(0 0 0 / 0.75);
 }
 
-/* Hover or focus: the edge lights up. No scale change, no movement. */
-.arc__tile:hover .arc__card,
-.arc__link:focus-visible .arc__card {
-  box-shadow:
-    0 0 0 1px color-mix(in oklch, var(--stage-violet) 70%, transparent),
-    0 0 30px -8px color-mix(in oklch, var(--stage-violet) 50%, transparent),
-    0 28px 50px -26px rgb(0 0 0 / 0.9);
+@media (hover: hover) and (pointer: fine) {
+  .arc-row__link:hover .arc-tile__frame {
+    --edge: rgb(236 230 255 / 0.75);
+    --edge-inner: rgb(196 180 255 / 0.3);
+    --halo-near: rgb(176 156 255 / 0.54);
+    --halo-far: rgb(140 118 255 / 0.3);
+    box-shadow:
+      0 0 0 1px var(--edge),
+      0 0 20px 2px var(--halo-near),
+      0 0 54px 6px var(--halo-far),
+      0 24px 42px -18px rgb(0 0 0 / 0.75);
+  }
 }
 
-.arc__link:focus-visible .arc__card {
+.arc__link:focus-visible .arc-tile__frame,
+.arc-row__link:focus-visible .arc-tile__frame {
   outline: 2px solid var(--color-focus);
-  outline-offset: 4px;
+  outline-offset: 5px;
 }
 
-.arc__caption {
+html[data-motion='reduce'] .arc__item[data-active] .arc-tile__lift {
+  transform: none;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Captions: flat HTML under each tile, never rotated                       */
+/* ----------------------------------------------------------------------- */
+
+.arc-caption {
+  position: relative;
+  isolation: isolate;
   display: grid;
+  justify-items: center;
   align-content: start;
-  gap: var(--space-2);
-  height: var(--caption-h);
-  padding-top: var(--space-3);
-  /* ConcaveCarousel.tsx sets rotateY(θ), the opposite of the tile's turn, so the text is never slanted. */
-  transform-origin: 50% 0;
+  text-align: center;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.7),
+    0 0 16px rgb(5 6 9 / 0.9);
 }
 
-.arc__name {
+/*
+ * A soft, edgeless shade behind the caption text, so the room's bright floor
+ * line never cuts through a name or label. It is part of the caption, so it
+ * fades with it; it grows to cover the description when that is revealed.
+ */
+.arc-caption::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: -18px;
+  width: calc(100% + 48px);
+  height: 92px;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgb(5 6 9 / 0.66), rgb(5 6 9 / 0.4) 55%, rgb(5 6 9 / 0));
+  pointer-events: none;
+  transition: height 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.arc__item[data-active] .arc-caption::before,
+.arc-row__caption::before {
+  height: 150px;
+}
+
+.arc-caption__name,
+.arc-caption__cta {
+  padding: 1px 8px;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.arc-caption__name {
   color: var(--stage-ivory);
   font-size: 1rem;
   font-weight: var(--weight-heading);
-  line-height: 1.25;
+  line-height: 1.3;
   letter-spacing: -0.01em;
 }
 
-.arc__more {
-  display: grid;
-  gap: 6px;
-  opacity: 0;
-  transition: opacity var(--dur-highlight) var(--ease-out);
-}
-
-.arc__tile:hover .arc__more,
-.arc__link:focus-visible .arc__more {
-  opacity: 1;
-}
-
-.arc__desc {
-  color: var(--color-muted);
-  font-size: 0.875rem;
-  line-height: 1.4;
-}
-
-.arc__cta {
-  justify-self: start;
+/* Always visible: says what the link does before any hover. */
+.arc-caption__cta {
+  margin-top: 2px;
   color: var(--color-text);
   font-size: 0.875rem;
   font-weight: var(--weight-label);
+  line-height: 1.35;
   text-decoration: underline;
-  text-decoration-color: color-mix(in oklch, var(--stage-violet) 70%, transparent);
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in oklch, var(--color-text) 55%, transparent);
   text-underline-offset: 0.25em;
+  transition: text-decoration-color 200ms var(--ease-out);
 }
 
-@media (max-width: 1099.98px) {
-  .arc {
-    --tile-gap: 22px;
-    --caption-h: 104px;
-  }
+.arc-caption__desc {
+  max-width: 100%;
+  margin-top: 6px;
+  padding-inline: 4px;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-wrap: balance;
 }
 
-/* Short desktop windows (e.g. 1280×720): a little less space above, slightly larger tiles, captions still above the fold. */
-@media (max-height: 760px) and (min-width: 960px) {
-  .home-intro {
-    padding-top: var(--space-4);
-  }
+.arc__item[data-active] .arc-caption__cta,
+.arc-row__link:hover .arc-caption__cta,
+.arc-row__link:focus-visible .arc-caption__cta {
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 2px;
+}
 
-  .home-carousel {
-    margin-top: var(--space-3);
-  }
+.arc__link:focus-visible .arc-caption__name,
+.arc-row__link:focus-visible .arc-caption__name {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 
-  .arc {
-    --tile-h: clamp(280px, min(25vw, 40vh), 368px);
-    --pad-top: calc(var(--tile-h) * 0.1);
-  }
+/* In the arc, ConcaveCarousel.tsx positions each caption and sets --fade (0 at the stage edges). */
+.arc__caption {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--cap-w);
+  opacity: var(--fade, 1);
+  will-change: transform, opacity;
+}
+
+/* A caption faded out at the stage edge (opacity 0) is not a pointer target either. */
+.arc__item[data-off] .arc-caption__name,
+.arc__item[data-off] .arc-caption__cta {
+  pointer-events: none;
+}
+
+.arc__caption .arc-caption__desc {
+  opacity: 0;
+  transition:
+    opacity 240ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    translate 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.arc__item[data-active] .arc__caption {
+  opacity: 1;
+  transition: opacity 200ms var(--ease-out);
+}
+
+.arc__item[data-active] .arc__caption .arc-caption__desc {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* Opening a project (projectTransition.ts): the chosen caption goes at once, the other tiles dim. */
+.arc__item {
+  transition: opacity 200ms var(--ease-out);
+}
+
+.arc[data-leaving] .arc__item:not([data-selected]) {
+  opacity: 0.4;
+}
+
+.arc[data-leaving] .arc__item[data-selected] .arc__caption {
+  opacity: 0;
+  transition: opacity 140ms var(--ease-out);
 }
 
 /* ----------------------------------------------------------------------- */
-/* Touch (and narrow reduced motion): a static, swipeable row               */
+/* Touch, narrow windows, narrow reduced motion: a static, swipeable row     */
 /* ----------------------------------------------------------------------- */
 
 .arc-row {
+  --body-h: clamp(240px, min(76vw, 100svh - 330px), 340px);
+  --canvas-h: var(--body-h);
+  --canvas-w: calc(var(--body-h) * 3 / 4);
+  --tile-r: 12px;
+  /* 8px of space, less the list's 40px top padding that holds the halo (the layout does not move). */
+  margin-top: -32px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
@@ -265,10 +390,9 @@
   display: none;
 }
 
-/* With a mouse (e.g. a narrow window, or reduced motion on a mid-size screen), a thin scrollbar shows there is more to the side. */
+/* With a mouse (a narrow window, or reduced motion on a mid-size screen), a thin scrollbar shows there is more to the side. */
 @media (pointer: fine) {
   .arc-row {
-    padding-bottom: var(--space-2);
     scrollbar-width: thin;
     scrollbar-color: rgb(238 234 226 / 0.35) transparent;
   }
@@ -286,191 +410,97 @@
 
 .arc-row__list {
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-2);
   width: max-content;
-  padding-inline: var(--gutter);
-  padding-bottom: var(--space-2);
+  margin: 0;
+  /* Vertical room inside the scroll container so the tile halo is not cut off. */
+  padding: 40px var(--gutter) var(--space-3);
   list-style: none;
 }
 
 .arc-row__item {
-  width: min(62vw, 264px);
+  width: min(64vw, 260px);
   scroll-snap-align: start;
 }
 
 .arc-row__link {
   display: grid;
-  gap: var(--space-2);
+  justify-items: center;
   color: inherit;
   text-decoration: none;
+  pointer-events: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .arc-row__link:focus-visible {
   outline: none;
 }
 
-.arc-row__link:focus-visible .arc-row__card {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 3px;
-}
-
-.arc-row__card {
+.arc-row__tile {
   position: relative;
   display: block;
-  aspect-ratio: 3 / 4;
-  margin-bottom: var(--space-1);
-  border-radius: 14px;
-  overflow: hidden;
-  background: var(--color-surface);
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.08),
-    inset 0 -1px 0 color-mix(in oklch, var(--stage-violet) 40%, transparent),
-    0 22px 40px -24px rgb(0 0 0 / 0.9);
+  width: var(--canvas-w);
+  height: var(--canvas-h);
 }
 
-.arc-row__card .picture,
-.arc-row__card img {
+/* Pressed: a small, immediate response on touch. */
+.arc-row__link:active .arc-tile__lift {
+  transform: scale(0.98);
+  transition-duration: 80ms;
+}
+
+.arc-row__caption {
   width: 100%;
-  height: 100%;
+  margin-top: 4px;
 }
 
-.arc-row__name {
-  color: var(--stage-ivory);
-  font-size: 1rem;
-  font-weight: var(--weight-heading);
-  line-height: 1.25;
+/* In the row nothing overlaps, so the whole caption block is part of the link. */
+.arc-row__caption {
+  pointer-events: auto;
+  cursor: pointer;
 }
 
-.arc-row__desc {
-  color: var(--color-muted);
-  font-size: 0.875rem;
-  line-height: 1.4;
+/* ======================================================================= */
+/* Home page: the carousel, then the compact footer (About is at /about)   */
+/* ======================================================================= */
+
+.home {
+  position: relative;
 }
 
-/* ----------------------------------------------------------------------- */
-/* Selected work index                                                      */
-/* ----------------------------------------------------------------------- */
-
-.selected-work {
-  margin-top: clamp(var(--space-7), 6vw, var(--space-8));
-  /* Added to the root's scroll-padding-top (header + 16px, base.css). */
-  scroll-margin-top: var(--space-2);
+/* The carousel section adds no spacing of its own: the arc sets its offset under the header. */
+.home-carousel {
+  position: relative;
 }
 
-.selected-work:focus {
-  outline: none;
+
+/*
+ * The homepage is the carousel and the compact footer, filling the screen:
+ * the page is one column (header, main, footer) at least the viewport tall,
+ * the footer sits at the bottom, and any spare height is shared above and
+ * below the carousel (centred) instead of leaving an empty band.
+ */
+#root:has(.home) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
 }
 
-.selected-work__title {
-  color: var(--stage-ivory);
-  font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+.site-main:has(.home) {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  min-height: 0;
 }
 
-.selected-work__list {
-  margin-top: var(--space-4);
-  border-top: 1px solid rgb(238 234 226 / 0.14);
-  list-style: none;
-  /* Dark enough that the floor highlight never shows through the rows. */
-  background: linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.72), rgb(5 6 9 / 0.78));
-  border-radius: 0 0 var(--radius-inner) var(--radius-inner);
+.site-main:has(.home) > .route-reveal {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.selected-work__link {
-  display: grid;
-  grid-template-columns: minmax(0, 13rem) minmax(0, 1fr) 6.5rem auto;
-  align-items: baseline;
-  gap: var(--space-2) var(--space-6);
-  padding: var(--space-4) var(--space-3);
-  border-bottom: 1px solid rgb(238 234 226 / 0.1);
-  color: inherit;
-  text-decoration: none;
-  transition: background-color var(--dur-feedback) var(--ease-out);
-}
-
-.selected-work__link:hover {
-  background: rgb(238 234 226 / 0.04);
-}
-
-.selected-work__link:focus-visible {
-  outline-offset: -2px;
-  border-radius: var(--radius-inner);
-}
-
-.selected-work__name {
-  color: var(--stage-ivory);
-  font-size: 1.0625rem;
-  font-weight: var(--weight-heading);
-  line-height: 1.3;
-}
-
-.selected-work__summary {
-  max-width: 62ch;
-  color: var(--color-muted);
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-.selected-work__year {
-  color: var(--color-muted);
-  font-size: 0.9375rem;
-}
-
-.selected-work__go {
-  color: var(--color-text);
-  font-size: 0.9375rem;
-  font-weight: var(--weight-label);
-  white-space: nowrap;
-}
-
-.selected-work__arrow {
-  display: inline-block;
-  transition: transform var(--dur-feedback) var(--ease-out);
-}
-
-.selected-work__link:hover .selected-work__arrow {
-  transform: translateX(3px);
-}
-
-@media (max-width: 959.98px) {
-  .selected-work__link {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--space-1) var(--space-4);
-    padding-inline: var(--space-2);
-  }
-
-  .selected-work__summary {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
-  .selected-work__go {
-    display: none;
-  }
-}
-
-/* ----------------------------------------------------------------------- */
-/* Small contact link                                                       */
-/* ----------------------------------------------------------------------- */
-
-.home-contact {
-  margin-top: var(--space-6);
-}
-
-.home-contact__link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  color: var(--color-text);
-  font-size: 1rem;
-  font-weight: var(--weight-label);
-  text-decoration: underline;
-  text-decoration-color: rgb(238 234 226 / 0.3);
-  text-underline-offset: 0.25em;
-}
-
-.home-contact__link:hover {
-  text-decoration-color: currentColor;
+.site-main:has(.home) + .site-footer {
+  margin-top: 8px;
+  padding-top: var(--space-6);
 }

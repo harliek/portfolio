@@ -17,6 +17,8 @@
  *   node scripts/prepare-media.mjs social     # link-preview image only
  *   node scripts/prepare-media.mjs traction   # Jumpstart pitch traction excerpt only
  *   node scripts/prepare-media.mjs phones     # carousel phone PNGs (normalized), CafePress monitor, art video
+ *   node scripts/prepare-media.mjs crops [page]  # focused evidence crops from scripts/crops/<page>.json
+ *   node scripts/prepare-media.mjs tiles      # carousel tile artwork (final tiles/, 3:4 focal-point crops)
  *
  * Requires: ffmpeg/ffprobe, poppler (pdftoppm, pdfimages), sharp, and
  * Playwright's Chromium (for the typographic cover and social image).
@@ -111,6 +113,10 @@ const FRAMES = [
   ['sheet-list', 'Spreadsheet Agent/Spreadsheet Video.mov', 35.5],
   ['sheet-start', 'Spreadsheet Agent/Spreadsheet Video.mov', 1.5],
   ['sheet-plan', 'Spreadsheet Agent/Spreadsheet Video.mov', 20.5],
+  // Sources of the Spreadsheet Agent case crops (scripts/crops/spreadsheet-agent.json).
+  ['sheet-request-typed', 'Spreadsheet Agent/Spreadsheet Video.mov', 17.7],
+  ['sheet-plan-review', 'Spreadsheet Agent/Spreadsheet Video.mov', 21.7],
+  ['sheet-list-new', 'Spreadsheet Agent/Spreadsheet Video.mov', 34.0],
   ['merch-replenish', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 12.0],
   ['merch-ask', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 46.0],
   ['merch-promotions', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 36.5],
@@ -651,6 +657,97 @@ async function phones() {
   }
   writeFileSync(join(CACHE, 'phones.json'), JSON.stringify(dims, null, 2))
 }
+
+/* ------------------------------------------------------------------ */
+/* Focused crops (case-study walkthroughs)                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Real crops of full-resolution evidence, so a focused view of one
+ * interface detail is sharp instead of a magnified, downscaled screenshot.
+ * One JSON file per page in scripts/crops/<page>.json:
+ *   [{ "id": "sheet-plan-crop", "source": ".media-cache/frames/sheet-plan.png",
+ *      "rect": { "x": 1500, "y": 90, "width": 1440, "height": 900 },
+ *      "widths": [640, 960, 1280], "fallback": "jpg" }]
+ * `rect` is in source pixels. Widths larger than the crop are dropped (no
+ * upscaling). Register every id in src/content/crops/<page>.ts with the
+ * printed dimensions. Usage: node scripts/prepare-media.mjs crops [page]
+ */
+async function crops() {
+  const dir = join(ROOT, 'scripts', 'crops')
+  const files = readdirSync(dir).filter((f) => f.endsWith('.json') && (!process.argv[3] || f === `${process.argv[3]}.json`))
+  ensure(join(CACHE, 'crops'))
+  for (const file of files) {
+    const list = JSON.parse(readFileSync(join(dir, file), 'utf8'))
+    const dims = {}
+    for (const c of list) {
+      const source = src(c.source)
+      if (!existsSync(source)) throw new Error(`${file}: missing source ${c.source}`)
+      const meta = await sharp(source).metadata()
+      const r = c.rect
+      if (r.x < 0 || r.y < 0 || r.x + r.width > meta.width || r.y + r.height > meta.height) {
+        throw new Error(`${file}: ${c.id} rect ${JSON.stringify(r)} outside ${meta.width}×${meta.height}`)
+      }
+      const out = join(CACHE, 'crops', `${c.id}.png`)
+      await sharp(source).extract({ left: r.x, top: r.y, width: r.width, height: r.height }).png().toFile(out)
+      const widths = (c.widths ?? [640, 960, 1280]).filter((w) => w <= r.width)
+      if (widths.length === 0 || widths[widths.length - 1] < Math.min(r.width, 1600)) widths.push(Math.min(r.width, 1600))
+      dims[c.id] = await variants(c.id, out, [...new Set(widths)].sort((a, b) => a - b), { fallback: c.fallback ?? 'jpg', quality: c.quality ?? 'ui' })
+    }
+    writeFileSync(join(CACHE, 'crops', file), JSON.stringify(dims, null, 2))
+    console.log(`${file}\n${JSON.stringify(dims)}`)
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Carousel tile artwork                                                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One supplied image per project (final tiles/, matched by content), plus
+ * the headshot for the About Me tile, cut to
+ * the carousel's upright 3:4 tile. The crop keeps the full width of the
+ * narrower sources and only trims height (or width, for sources wider than
+ * 3:4) around a per-image focal point, so no important content is lost and
+ * nothing is stretched. Originals are never modified.
+ */
+const TILES = [
+  { id: 'tile-cafepress-uk', src: 'final tiles/cp uk.png', focusY: 0.47 },
+  { id: 'tile-merchandising-platform', src: 'final tiles/merch.png', focusY: 0.5 },
+  { id: 'tile-spreadsheet-agent', src: 'final tiles/speadsheet.png', focusY: 0.5 },
+  { id: 'tile-ai-leasing-agent', src: 'final tiles/valiance.png', focusY: 0.5 },
+  { id: 'tile-jumpstart-finance', src: 'final tiles/jump.png', focusY: 0.45 },
+  { id: 'tile-client-work', src: 'final tiles/shift.png', focusY: 0.55 },
+  // The About Me tile: the existing headshot at full height, centred on the face (x ≈ 315 of 644).
+  { id: 'tile-about', src: 'personal assets/headshot copy.PNG', focusX: 0.49 },
+]
+const TILE_RATIO = 3 / 4
+const TILE_WIDTHS = [320, 480, 640, 960]
+
+async function tiles() {
+  ensure(join(CACHE, 'tiles'))
+  const dims = {}
+  for (const t of TILES) {
+    if (!only(t.id)) continue
+    const input = src(t.src)
+    const { width: w, height: h } = await sharp(input).metadata()
+    let rect
+    if (w / h > TILE_RATIO) {
+      const cw = Math.round(h * TILE_RATIO)
+      const left = Math.round(Math.min(Math.max((t.focusX ?? 0.5) * w - cw / 2, 0), w - cw))
+      rect = { left, top: 0, width: cw, height: h }
+    } else {
+      const ch = Math.round(w / TILE_RATIO)
+      const top = Math.round(Math.min(Math.max((t.focusY ?? 0.5) * h - ch / 2, 0), h - ch))
+      rect = { left: 0, top, width: w, height: ch }
+    }
+    const out = join(CACHE, 'tiles', `${t.id}.png`)
+    await sharp(input).extract(rect).png().toFile(out)
+    report.push(`${t.id}: ${w}×${h} crop ${JSON.stringify(rect)}`)
+    dims[t.id] = { ...(await variants(t.id, out, TILE_WIDTHS, { quality: 'photo' })), crop: rect }
+  }
+  writeFileSync(join(CACHE, 'tiles.json'), JSON.stringify(dims, null, 2))
+}
 /* ------------------------------------------------------------------ */
 
 const task = process.argv[2] ?? 'all'
@@ -666,5 +763,7 @@ if (task === 'covers' || task === 'all') await covers3x4()
 if (task === 'social') await social()
 if (task === 'traction') await jumpstartTraction()
 if (task === 'phones' || task === 'all') await phones()
+if (task === 'crops' || task === 'all') await crops()
+if (task === 'tiles' || task === 'all') await tiles()
 console.log(report.join('\n'))
 if (existsSync(join(CACHE, 'dimensions.json'))) console.log('dimensions → .media-cache/dimensions.json')

@@ -9,25 +9,20 @@ import { isTransitionPending } from '../transition/projectTransition'
 /*
  * The shared case-study layout (docs/site-structure.md, section Case studies).
  *
- *   <CaseLayout project>            article, page meta, accent
- *     <CaseOpening … />             title, subtitle, description, role,
- *                                   timeframe, status, one representative
- *                                   image, result summary, section links
- *     <CaseSection id="context" title="Context and role">…</CaseSection>
- *     <CaseSection id="problem" title="Problem">…</CaseSection>
- *     <CaseSection id="approach" title="Approach" wide>
- *       <StickyVisual … />          the one short sticky visual section
- *     </CaseSection>
- *     <Results>…</Results>          ordinary document flow
- *     <NextProject current />       normal spacing after the results
+ *   <CaseLayout project className="page-x">   article, page meta, accent colour
+ *     <CaseScroll … />                         opening + sections beside one sticky
+ *                                              media region (see CaseScroll.tsx)
+ *     <Results figure={…}>…</Results>          compact, 56–72px after the grid
+ *     <NextProject current={project.id} />     one "Next project · Name ↗" row
  *   </CaseLayout>
  *
- * Desktop: content ≈1200px; text column ≈38% on the left, media ≈57% on the
- * right, gap ≈56px; body 17–18px / 1.55; title ≤44px; section headings
- * 22–28px; captions 14px. Below 960px everything stacks in reading order.
- * Nothing waits for an entrance animation.
+ * CaseOpening, CaseSection, SectionLinks, CaseFacts and CaseHeroFigure below
+ * are LEGACY (the pill row, "Context and role" sections and the separate
+ * opening are gone from the new design). They stay only until every page
+ * has moved to CaseScroll; do not use them in new work.
  */
 
+/** @deprecated Legacy section pill row; CaseScroll pages have no section links. */
 export const SECTION_LINKS = [
   { id: 'context', label: 'Context and role' },
   { id: 'problem', label: 'Problem' },
@@ -98,6 +93,7 @@ function onSectionLink(e: MouseEvent<HTMLAnchorElement>, id: string) {
   window.history.replaceState(window.history.state, '', `#${id}`)
 }
 
+/** @deprecated Legacy (see the note at the top of this file). */
 export function SectionLinks({ links = SECTION_LINKS }: { links?: ReadonlyArray<{ id: string; label: string }> }) {
   return (
     <nav className="section-links" aria-label="On this page">
@@ -134,6 +130,7 @@ interface CaseOpeningProps {
   children?: ReactNode
 }
 
+/** @deprecated Legacy: use CaseScroll. */
 export function CaseOpening({ project, subtitle, description, facts, note, summary, hero, links = SECTION_LINKS, children }: CaseOpeningProps) {
   const { pathname } = useLocation()
   return (
@@ -168,6 +165,7 @@ interface CaseSectionProps {
   children: ReactNode
 }
 
+/** @deprecated Legacy: use CaseScroll sections. */
 export function CaseSection({ id, title, aside, wide = false, className, children }: CaseSectionProps) {
   const headingId = `${id}-title`
   return (
@@ -184,7 +182,7 @@ export function CaseSection({ id, title, aside, wide = false, className, childre
   )
 }
 
-/** The representative image with its caption (used as `hero`). */
+/** @deprecated Legacy: the representative image with its caption (CaseOpening `hero`). */
 export function CaseHeroFigure({ children, caption }: { children: ReactNode; caption?: ReactNode }) {
   return (
     <figure className="case-hero">

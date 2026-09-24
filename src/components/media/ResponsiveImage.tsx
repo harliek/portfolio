@@ -12,13 +12,17 @@ export interface ResponsiveImageProps {
   alt?: string
   className?: string
   fit?: 'contain' | 'cover'
+  /** Overrides the loading mode (default: eager with `priority`, else lazy). */
+  loading?: 'lazy' | 'eager'
+  /** Overrides the fetch priority (default: high with `priority`, else auto). */
+  fetchPriority?: 'high' | 'low' | 'auto'
 }
 
 /**
  * AVIF → WebP → JPEG/PNG picture with intrinsic dimensions (no layout shift).
  * On load failure the space is kept and replaced with a quiet text notice.
  */
-export function ResponsiveImage({ image, sizes, priority, decorative, alt, className, fit = 'contain' }: ResponsiveImageProps) {
+export function ResponsiveImage({ image, sizes, priority, decorative, alt, className, fit = 'contain', loading, fetchPriority }: ResponsiveImageProps) {
   const asset = getImage(image)
   const [failed, setFailed] = useState(false)
   const altText = decorative ? '' : (alt ?? asset.alt)
@@ -47,9 +51,9 @@ export function ResponsiveImage({ image, sizes, priority, decorative, alt, class
         width={asset.width}
         height={asset.height}
         alt={altText}
-        loading={priority ? 'eager' : 'lazy'}
+        loading={loading ?? (priority ? 'eager' : 'lazy')}
         decoding={priority ? 'sync' : 'async'}
-        fetchPriority={priority ? 'high' : 'auto'}
+        fetchPriority={fetchPriority ?? (priority ? 'high' : 'auto')}
         data-fit={fit}
         onError={() => setFailed(true)}
       />

@@ -1,0 +1,45 @@
+/* Figure additions (src/components/media/Figure.tsx): transparent artwork and the visible Enlarge control. */
+
+/* Transparent artwork (phones, device mockups) keeps its alpha: no backing panel, edge or clipping. */
+.media-frame[data-transparent] {
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.figure__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* VideoFigure: the labelled play control on the poster looks like the primary button before any hover. */
+.video-facade__cta {
+  position: absolute;
+  left: var(--space-4);
+  bottom: var(--space-4);
+  max-width: calc(100% - 2 * var(--space-4));
+  pointer-events: none;
+}
+
+.video-facade__cta .video-facade__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.video-facade__cta .video-facade__time {
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.video-facade:hover .video-facade__cta {
+  --btn-bg: var(--btn-primary-bg-hover);
+  --btn-border: var(--btn-primary-bg-hover);
+  transform: translateY(-1px);
+}
+
+.video-facade:active .video-facade__cta {
+  --btn-bg: var(--btn-primary-bg-active);
+  --btn-border: var(--btn-primary-bg-active);
+  transform: none;
+}

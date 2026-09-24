@@ -8,36 +8,57 @@ export type StageRoute = keyof typeof STAGE.background.rate
 const MOBILE_QUERY = `(max-width: ${STAGE.background.mobileBelow - 0.02}px)`
 
 /**
- * The persistent set: a full-viewport architectural video behind every page,
- * mounted ONCE in PageShell so the same <video> keeps playing through route
- * changes and project openings. The poster is painted first and content never
- * waits for the video; the muted loop fades in over it once frames play. One
- * file per device class, chosen once. Reduced motion (OS or the footer's
- * "Reduce motion" toggle): poster only, no video request. A dark overlay per
- * route and a restrained violet floor light are CSS (src/styles/stage.css).
- * Decorative: aria-hidden; pauses while the document is hidden.
+ * The persistent set: a full-viewport architectural video behind every
+ * professional page, mounted ONCE in PageShell so the same <video> keeps
+ * playing through route changes and project openings (it never restarts).
+ * The poster is painted first and content never waits for the video; the
+ * muted loop fades in over it once frames play. One file per device class,
+ * chosen once.
+ *
+ * Readability (src/styles/stage.css): broad gradients only, no boxes. A
+ * base shade per route; a reading layer that is strongest behind the text
+ * column on interior pages and, on the homepage, deepens as the visitor
+ * scrolls from the carousel into About (`--read`, 0 → 1); and a soft band
+ * that dims the bright floor line wherever it sits in the viewport.
+ *
+ * Reduced motion (OS or the footer's "Reduce motion"): poster only, no video
+ * request. The video pauses while the tab is hidden, while an image is
+ * enlarged or the small-screen menu is open, and while anything is
+ * fullscreen. Decorative: aria-hidden.
  */
 export function StageBackground({ route }: { route: StageRoute }) {
   const reduced = useReducedMotion()
-  const [file] = useState(() => (window.matchMedia(MOBILE_QUERY).matches ? STAGE_MEDIA.background.mobile : STAGE_MEDIA.background.desktop))
+  const [mobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches)
+  const file = mobile ? STAGE_MEDIA.background.mobile : STAGE_MEDIA.background.desktop
   const [playing, setPlaying] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  // Play while the document is visible.
+  // Play only while it can be seen: the tab is visible, no image dialog or
+  // small-screen menu covers the page, nothing is fullscreen.
   useEffect(() => {
     const video = videoRef.current
     if (reduced || !video) return
+    const root = document.documentElement
     const sync = () => {
-      const want = document.visibilityState === 'visible'
+      const covered = root.classList.contains('is-dialog-open') || root.classList.contains('is-menu-open')
+      const want = document.visibilityState === 'visible' && !document.fullscreenElement && !covered
       if (want && video.paused) video.play().catch(() => {})
       else if (!want && !video.paused) video.pause()
     }
+    const classes = new MutationObserver(sync)
+    classes.observe(root, { attributes: true, attributeFilter: ['class'] })
     document.addEventListener('visibilitychange', sync)
+    document.addEventListener('fullscreenchange', sync)
     sync()
-    return () => document.removeEventListener('visibilitychange', sync)
+    return () => {
+      classes.disconnect()
+      document.removeEventListener('visibilitychange', sync)
+      document.removeEventListener('fullscreenchange', sync)
+    }
   }, [reduced])
 
-  // Calmer set on About, Art and Film: the same element, a slower loop.
+  // Calmer set on About: the same element, a slower loop.
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
@@ -46,14 +67,44 @@ export function StageBackground({ route }: { route: StageRoute }) {
     video.playbackRate = rate
   }, [route, reduced])
 
+  // Homepage: the reading treatment follows the scroll from the carousel
+  // (a lighter room) into About (the interior-page treatment).
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el) return
+    if (route !== 'home') {
+      el.style.removeProperty('--read')
+      return
+    }
+    const { start, span } = STAGE.homeReading
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const h = window.innerHeight
+      const p = Math.min(1, Math.max(0, (window.scrollY - h * start) / (h * span)))
+      el.style.setProperty('--read', p.toFixed(3))
+    }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+    }
+  }, [route])
+
   const desktop = getImage(STAGE_MEDIA.background.desktop.poster)
-  const mobile = getImage(STAGE_MEDIA.background.mobile.poster)
+  const phone = getImage(STAGE_MEDIA.background.mobile.poster)
 
   return (
-    <div className="stage-bg" data-route={route} aria-hidden="true">
+    <div ref={rootRef} className="stage-bg" data-route={route} data-file={mobile ? 'mobile' : 'desktop'} aria-hidden="true">
       <picture className="stage-bg__poster">
-        <source media={MOBILE_QUERY} type="image/avif" srcSet={srcSet(mobile, 'avif')} />
-        <source media={MOBILE_QUERY} type="image/webp" srcSet={srcSet(mobile, 'webp')} />
+        <source media={MOBILE_QUERY} type="image/avif" srcSet={srcSet(phone, 'avif')} />
+        <source media={MOBILE_QUERY} type="image/webp" srcSet={srcSet(phone, 'webp')} />
         <source type="image/avif" srcSet={srcSet(desktop, 'avif')} />
         <source type="image/webp" srcSet={srcSet(desktop, 'webp')} />
         <img src={fallbackSrc(desktop)} alt="" width={desktop.width} height={desktop.height} decoding="async" fetchPriority="high" />
@@ -82,6 +133,8 @@ export function StageBackground({ route }: { route: StageRoute }) {
       )}
       <div className="stage-bg__shade" />
       <div className="stage-bg__reflection" />
+      <div className="stage-bg__read" />
+      <div className="stage-bg__band" />
     </div>
   )
 }

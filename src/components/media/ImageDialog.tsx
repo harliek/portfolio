@@ -1,8 +1,18 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { getImage, largestSrc, PROVENANCE_LABEL, type ImageId } from '../../content/media'
 
+export interface OpenOptions {
+  /**
+   * The images to page through. Defaults to every zoomable image on the page
+   * (`[data-zoom-id]`, document order); pass `[id]` for a single image.
+   */
+  gallery?: ImageId[]
+  /** Caption for the opened image (default: its manifest caption), e.g. the caption shown beside it on the page. */
+  caption?: ReactNode
+}
+
 interface DialogApi {
-  open: (id: ImageId, trigger: HTMLElement) => void
+  open: (id: ImageId, trigger: HTMLElement, options?: OpenOptions) => void
 }
 
 const ImageDialogContext = createContext<DialogApi | null>(null)
@@ -22,9 +32,12 @@ function galleryFrom(trigger: HTMLElement): ImageId[] {
 
 /**
  * One shared native <dialog> for image enlargement.
- * - showModal() contains focus; Escape closes (native cancel event).
- * - Focus returns to the activating control on close.
+ * - A visible, labelled Close button (focused on open); Escape and a click on
+ *   the backdrop also close (native cancel event).
+ * - showModal() contains focus; focus returns to the activating control.
  * - Page scrolling is locked while open.
+ * - Previous/Next buttons and the arrow keys appear only when there is more
+ *   than one image.
  * - "Actual size" switches to a scrollable detail view for dense artifacts.
  */
 export function ImageDialogProvider({ children }: { children: ReactNode }) {
@@ -35,10 +48,12 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   const [index, setIndex] = useState(0)
   const [detail, setDetail] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [override, setOverride] = useState<{ id: ImageId; caption: ReactNode } | null>(null)
 
-  const open = useCallback((id: ImageId, trigger: HTMLElement) => {
-    const list = galleryFrom(trigger)
+  const open = useCallback((id: ImageId, trigger: HTMLElement, options?: OpenOptions) => {
+    const list = options?.gallery ?? galleryFrom(trigger)
     triggerRef.current = trigger
+    setOverride(options?.caption ? { id, caption: options.caption } : null)
     setGallery(list.length ? list : [id])
     setIndex(Math.max(0, list.indexOf(id)))
     setDetail(false)
@@ -93,6 +108,7 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
         aria-labelledby={current ? 'image-dialog-caption' : undefined}
         onClose={onClose}
         onKeyDown={(e) => {
+          if (count < 2) return
           if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1) }
           if (e.key === 'ArrowRight') { e.preventDefault(); go(1) }
         }}
@@ -110,18 +126,21 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
               <div className="image-dialog__controls">
                 {count > 1 && (
                   <>
-                    <button type="button" className="button button--quiet" onClick={() => go(-1)} disabled={index === 0}>
+                    <button type="button" className="button button--secondary button--small" onClick={() => go(-1)} disabled={index === 0}>
                       <span aria-hidden="true">←</span> Previous image
                     </button>
-                    <button type="button" className="button button--quiet" onClick={() => go(1)} disabled={index >= count - 1}>
+                    <button type="button" className="button button--secondary button--small" onClick={() => go(1)} disabled={index >= count - 1}>
                       Next image <span aria-hidden="true">→</span>
                     </button>
                   </>
                 )}
-                <button type="button" className="button button--quiet" onClick={() => setDetail((d) => !d)}>
+                <button type="button" className="button button--secondary button--small" onClick={() => setDetail((d) => !d)}>
                   {detail ? 'Fit to screen' : 'Actual size'}
                 </button>
-                <button ref={closeRef} type="button" className="button" aria-label="Close image" onClick={close}>
+                <button ref={closeRef} type="button" className="button button--small" onClick={close}>
+                  <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                    <path d="m3.5 3.5 9 9m0-9-9 9" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
                   Close
                 </button>
               </div>
@@ -153,7 +172,7 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
                   <span className="provenance-sep"> · </span>
                 </>
               )}
-              {current.caption ?? current.alt}
+              {override && override.id === current.id ? override.caption : (current.caption ?? current.alt)}
             </p>
           </div>
         )}

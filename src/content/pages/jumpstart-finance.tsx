@@ -1,104 +1,152 @@
-import type { VisualStep } from '../../components/case/StickyVisual'
+import type { Section, Visual } from '../../components/case/CaseScroll'
+import type { ImageId } from '../media'
 
 /**
- * Jumpstart Finance (route /work/jumpstart): copy from the client's brief
- * (Page 5), used verbatim where the brief gives text.
+ * Jumpstart Finance (route /work/jumpstart), CaseScroll. Latest brief,
+ * section 22: role, program context and status clear; "Product premise"
+ * (the evidence describes an idea, not a validated problem); lessons,
+ * progression and community in one consistently sized phone frame; the
+ * sign-up figure qualified as a program-pitch result beside the pitch
+ * evidence; pricing only in the supplementary disclosure.
  *
- * Evidence
+ * Evidence (docs/content-provenance.md, Jumpstart Finance)
  * - Résumé: Founder & Product Lead, European Innovation Academy, Porto,
- *   Jun–Jul 2024, five-person international team (dates shown in the
- *   opening facts from projects.ts).
- * - Program pitch (JumpStart Finance/jumpstart presentation.pdf.pdf):
- *   p. 6 "Solution" lists gamified learning, personalized education and
- *   forums; p. 7 the four business model tiers; p. 10 "Traction &
- *   Validation" gives "150 sign-ups in 24 hours" (shown in Results as an
- *   excerpt of the title and that line only; the slide's second bullet,
- *   "Encouraging customer interviews", is not verified and is left out).
- * - Prototype screens proto 1–4: home (topics), profile (level path),
- *   lessons (search, lesson cards, start learning, start the test),
- *   community (a question, replies, each member's level).
+ *   June to July 2024; "Led a 5-person international team from customer
+ *   discovery to prototype and pitch". Customer discovery and user research
+ *   are not published (no evidence in the folder).
+ * - Pitch (JumpStart Finance/jumpstart presentation.pdf.pdf), the only
+ *   documented design reasoning:
+ *     p. 4 Competitors: Jumpstart, Robinhood, Zogo and Acorn against
+ *       Educational, Forum, Gamified and Real-time market data. The team
+ *       marked Forum as missing for all three competitors (Robinhood has
+ *       only real-time data; Zogo educational and gamified; Acorn
+ *       educational and real-time data).
+ *     p. 5 Solution: "Gamified learning leads to increased engagement.";
+ *       "Personalized education based on experience and goals."
+ *     p. 6 "Build your network through forums as you compete and learn
+ *       personal finance."
+ *     p. 7 Business model (four tiers), p. 10 "150 sign-ups in 24 hours".
+ * - Prototype screens (proto 1–4): home with topics, lessons with a search
+ *   field and Start learning / Start the test, profile with a numbered level
+ *   path, community with questions, replies and each member's level.
  *
- * The problem sentence is the team's premise, not a research finding. No
- * testing results are claimed. The pitch's anxiety statistic, market size,
- * milestones and funding ask are not used. Three phones appear together only
- * in the opening overview; the sticky section shows one phone at a time.
+ * Not used: the pitch's anxiety statistic, market size, milestones, funding
+ * ask, team photos, "Encouraging customer interviews", and the redrawn
+ * presentation mockups (jumpstart-mockup-*), which add details the 2024
+ * prototype did not have. Every frame here is an original prototype screen.
  */
+
 export const JUMPSTART_FINANCE = {
-  subtitle: 'Financial education startup concept',
-  description: (
+  situation: (
     <p>
-      A student venture in financial education, developed at the European Innovation Academy in Porto, with a mobile prototype built around
-      short lessons, levels, and a community space.
+      Jumpstart Finance was a student venture for <strong>mobile financial education</strong>, developed at the European Innovation Academy in
+      Porto. As Founder and Product Lead, I led a <strong>five-person international team</strong> from the product concept to a prototype and a
+      program pitch.
     </p>
   ),
-  summary: (
-    <p>
-      150 sign-ups in 24 hours, as reported in the team’s program pitch. An early indication of interest, not evidence of retention, revenue, or
-      product-market fit.
-    </p>
-  ),
-  heroCaption: 'Three prototype screens. Lessons, the home screen with learning topics, and the profile with numbered levels.',
-  context: (
-    <p>
-      I was Founder and Product Lead on a five-person international team at the European Innovation Academy in Porto. We developed a financial
-      education concept and mobile prototype during the 2024 program.
-    </p>
-  ),
-  problem: <p>We explored how short lessons, visible progress, and community features could support a financial learning experience.</p>,
-  steps: [
+  opening: {
+    kind: 'image',
+    image: 'jf-screen-home',
+    caption: 'Home screen from the team’s 2024 prototype. The balance and events are sample content.',
+  } satisfies Visual,
+  sections: [
     {
-      id: 'lessons',
-      title: 'Lessons',
-      body: (
-        <p>
-          The prototype grouped educational material into short lessons. The lessons screen pairs a search field with lesson cards. The first
-          card introduces the basics of personal finance and offers a choice to start learning or take a test.
-        </p>
-      ),
-      image: 'jumpstart-proto-3',
-      caption: 'The lessons screen, with a search field and lesson cards.',
+      id: 'premise',
+      title: 'Product premise',
+      blocks: [
+        {
+          id: 'premise-idea',
+          body: (
+            <>
+              <p>
+                The pitch rested on a premise rather than a tested problem. Its solution slide states that{' '}
+                <strong>gamified learning leads to increased engagement</strong>. It also proposed education matched to each person’s experience
+                and goals, and forums where members learn alongside each other.
+              </p>
+              <p>These were the team’s proposals. The project materials include no research that tested them.</p>
+            </>
+          ),
+        },
+      ],
     },
     {
-      id: 'progress',
-      title: 'Progress',
-      body: (
-        <p>
-          The profile showed progression through levels. It shows the member’s current level above a winding path of numbered levels. The
-          team’s pitch listed gamified learning as part of the proposed solution.
-        </p>
-      ),
-      image: 'jumpstart-proto-2',
-      caption: 'The profile screen, with the current level and a path of numbered levels.',
+      id: 'decisions',
+      title: 'Design decisions',
+      blocks: [
+        {
+          id: 'role',
+          body: (
+            <p>
+              I worked with the team on the <strong>product concept, positioning, prototype, and business model</strong>. The prototype carries
+              the pitch’s proposals across four screens, from the home screen’s learning topics to lessons, a profile, and a community space.
+            </p>
+          ),
+        },
+        {
+          id: 'lessons',
+          title: 'Lessons',
+          body: (
+            <p>
+              The pitch’s first proposal was game-like learning. In the prototype, financial education is broken into{' '}
+              <strong>short lessons</strong>, and each lesson card pairs the reading with a test.
+            </p>
+          ),
+          visual: {
+            kind: 'image',
+            image: 'jf-screen-lessons',
+            caption: 'The lessons screen, with a lesson search and a card offering Start learning or Start the test.',
+          },
+        },
+        {
+          id: 'progression',
+          title: 'Progression',
+          body: (
+            <p>
+              Progress appears as a <strong>path of numbered levels</strong> on the profile. The same level is shown beside each member’s name in
+              the community, in line with the pitch’s description of members who “compete and learn” together, so a level is a personal record
+              that other members can also see.
+            </p>
+          ),
+          visual: {
+            kind: 'image',
+            image: 'jf-screen-progress',
+            caption: 'The profile screen, with the member’s current level above a path of numbered levels.',
+          },
+        },
+        {
+          id: 'community',
+          title: 'Community',
+          body: (
+            <p>
+              The third proposal was a forum where members <strong>build a network while they learn</strong>. In the pitch’s 2024 comparison
+              with Robinhood, Zogo, and Acorn, forums were the one feature the team marked as missing from all three.
+            </p>
+          ),
+          visual: {
+            kind: 'image',
+            image: 'jf-screen-community',
+            caption: 'The community screen, with a question about investing, replies from other members, and each member’s level.',
+          },
+        },
+      ],
     },
-    {
-      id: 'community',
-      title: 'Community',
-      body: (
-        <p>
-          A separate space supported the proposed community experience. The screen shows a member’s question about investing, replies from
-          other members, and each member’s level beside their name. The pitch described forums as a way to build a network while learning
-          personal finance.
-        </p>
-      ),
-      image: 'jumpstart-proto-4',
-      caption: 'The proposed community space, with a question, replies, and each member’s level.',
-    },
-  ] satisfies VisualStep[],
+  ] satisfies Section[],
   results: (
     <p>
-      The team reported 150 sign-ups in 24 hours in its program pitch. This was an early indication of interest and did not establish retention,
-      revenue, or product-market fit.
+      The team’s program pitch reported <strong>150 sign-ups in 24 hours</strong>, without stating what people signed up for. It was an early
+      signal of interest presented at the program, not evidence of retention, revenue, or product-market fit.
     </p>
   ),
-  resultsFigureCaption: 'Excerpt of the traction slide from the team’s 2024 program pitch.',
-  /** Optional supporting material after the results. */
+  resultsFigure: {
+    image: 'jumpstart-traction',
+    caption: 'Excerpt of the Traction and Validation slide from the team’s 2024 program pitch.',
+  } satisfies { image: ImageId; caption: string },
+  /** Optional supplementary material after the results (a labelled disclosure). */
   businessModel: {
-    label: 'Supporting material',
-    title: 'Proposed business model',
     body: (
       <p>
-        The pitch proposed free access to basic features and educational content, with paid options for in-app purchases and a monthly or yearly
-        premium subscription. These tiers were business model assumptions, not revenue results.
+        The pitch proposed free basic features and educational content, with paid in-app purchases and a monthly or yearly premium
+        subscription. These tiers were <strong>business-model assumptions</strong>, not sales or revenue.
       </p>
     ),
     caption: 'The four proposed tiers from the 2024 program pitch.',

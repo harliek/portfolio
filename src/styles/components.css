@@ -1,45 +1,229 @@
 /* Shared components: buttons, figures, media frames, dialog, video, notes. */
 
-/* Buttons */
+/*
+ * Controls. One coherent set, legible on the moving video before any hover:
+ *
+ *   .button                 primary action: solid near-white surface, dark text
+ *   .button--secondary      visible dark fill + clear light outline
+ *   .button--quiet          alias of --secondary (older markup)
+ *   .button--small          40px, for frame controls ("Enlarge image")
+ *   .text-link              link in prose: persistent underline
+ *   .nav-chip               in-page jump navigation; [aria-current] = selected
+ *
+ * States: hover (brighter + 1px lift), pressed (no lift, darker), keyboard
+ * focus (2px ring, 3px offset), selected (aria-pressed / aria-current =
+ * solid fill), disabled (45% opacity, not-allowed). None relies on glow or
+ * colour alone. Pair icons with words; "↗" follows labels that open a new
+ * page or context ("View résumé ↗").
+ */
 .button {
+  --btn-bg: var(--btn-primary-bg);
+  --btn-fg: var(--btn-primary-fg);
+  --btn-border: var(--btn-primary-bg);
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  padding: 0 var(--space-4);
-  border: 0;
-  border-radius: var(--radius-button);
-  background: var(--color-raised);
-  box-shadow: inset 0 0 0 1px var(--color-line);
-  color: var(--color-text);
-  font-size: var(--text-small);
-  font-weight: var(--weight-label);
+  gap: var(--control-gap);
+  min-height: var(--control-height);
+  padding: 0 var(--control-pad);
+  border: 1.5px solid var(--btn-border);
+  border-radius: var(--radius-control);
+  background: var(--btn-bg);
+  box-shadow: var(--shadow-control);
+  color: var(--btn-fg);
+  font-size: var(--control-font);
+  font-weight: var(--control-weight);
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  text-align: center;
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
   transition:
     background-color var(--dur-feedback) var(--ease-out),
+    border-color var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out),
     box-shadow var(--dur-feedback) var(--ease-out),
     transform var(--dur-feedback) var(--ease-out);
 }
 
-.button:hover:not(:disabled) {
-  background: #202436;
-  box-shadow: inset 0 0 0 1px #454b61;
+.button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
-.button:active:not(:disabled) {
-  transform: scale(var(--press-scale));
+.button:hover:not(:disabled, [aria-disabled='true']) {
+  --btn-bg: var(--btn-primary-bg-hover);
+  --btn-border: var(--btn-primary-bg-hover);
+  box-shadow: var(--shadow-control-hover);
+  transform: translateY(-1px);
 }
 
-.button:disabled {
-  cursor: default;
-  color: var(--color-subtle);
-  box-shadow: inset 0 0 0 1px rgb(48 53 69 / 0.6);
+/* Pressed: settles back down and darkens slightly. */
+.button:active:not(:disabled, [aria-disabled='true']) {
+  --btn-bg: var(--btn-primary-bg-active);
+  --btn-border: var(--btn-primary-bg-active);
+  box-shadow: var(--shadow-control);
+  transform: none;
 }
 
+.button:is(:disabled, [aria-disabled='true']) {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.button > svg,
+.button__icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+/* A trailing "↗" (or "↓") beside the label; hidden from screen readers in markup. */
+.button__arrow,
+.link-arrow {
+  display: inline-block;
+  font-weight: 500;
+  line-height: 1;
+  transition: transform var(--dur-feedback) var(--ease-out);
+}
+
+.button:hover .button__arrow,
+a:hover > .link-arrow {
+  transform: translate(1px, -1px);
+}
+
+/* Secondary: a visible dark surface with a clear light outline. */
+.button--secondary,
 .button--quiet {
-  background: transparent;
+  --btn-bg: var(--btn-secondary-bg);
+  --btn-fg: var(--btn-secondary-fg);
+  --btn-border: var(--btn-secondary-border);
+}
+
+.button--secondary:hover:not(:disabled, [aria-disabled='true']),
+.button--quiet:hover:not(:disabled, [aria-disabled='true']) {
+  --btn-bg: var(--btn-secondary-bg-hover);
+  --btn-border: var(--btn-secondary-border-hover);
+}
+
+.button--secondary:active:not(:disabled, [aria-disabled='true']),
+.button--quiet:active:not(:disabled, [aria-disabled='true']) {
+  --btn-bg: var(--btn-secondary-bg-active);
+  --btn-border: var(--btn-secondary-border);
+}
+
+/* Selected (a toggle that is on): the solid primary surface. */
+.button--secondary[aria-pressed='true'],
+.button--quiet[aria-pressed='true'] {
+  --btn-bg: var(--btn-primary-bg);
+  --btn-fg: var(--btn-primary-fg);
+  --btn-border: var(--btn-primary-bg);
+}
+
+.button--small {
+  --control-gap: 8px;
+  min-height: var(--control-height-small);
+  padding: 0 var(--control-pad-small);
+  font-size: 0.875rem;
+}
+
+.button--small > svg,
+.button--small .button__icon {
+  width: 14px;
+  height: 14px;
+}
+
+.button--block {
+  display: flex;
+  width: 100%;
+}
+
+/* Links in prose: a persistent underline, stronger on hover. */
+.text-link {
+  color: inherit;
+  font-weight: var(--weight-label);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--link-underline);
+  transition:
+    text-decoration-color var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out);
+}
+
+.text-link:hover {
+  color: var(--color-text);
+  text-decoration-color: currentColor;
+}
+
+.text-link:active {
+  opacity: 0.8;
+}
+
+.text-link:focus-visible {
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* A standalone link (not inside a sentence) gets a full 44px target. */
+.text-link--standalone {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+
+/* In-page jump navigation (e.g. the Client Work project row). */
+.nav-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1.5px solid var(--btn-secondary-border);
+  border-radius: 999px;
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-fg);
+  font-size: 0.875rem;
+  font-weight: var(--control-weight);
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-feedback) var(--ease-out),
+    border-color var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out),
+    transform var(--dur-feedback) var(--ease-out);
+}
+
+.nav-chip:hover {
+  background: var(--btn-secondary-bg-hover);
+  border-color: var(--btn-secondary-border-hover);
+  transform: translateY(-1px);
+}
+
+.nav-chip:active {
+  background: var(--btn-secondary-bg-active);
+  transform: none;
+}
+
+.nav-chip:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* Selected: the solid primary surface (not colour alone: fill + text contrast flip). */
+.nav-chip:is([aria-current='true'], [aria-current='location'], [aria-current='page'], [aria-current='step']) {
+  background: var(--btn-primary-bg);
+  border-color: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
 }
 
 /* Figures and media */
@@ -236,8 +420,10 @@
   gap: var(--space-2);
 }
 
-.image-dialog__controls .button--quiet {
-  background: var(--color-bg);
+/* Opaque inside the dialog (nothing behind them but the dark scrim). */
+.image-dialog__controls .button--quiet,
+.image-dialog__controls .button--secondary {
+  --btn-secondary-bg: var(--color-bg);
 }
 
 .image-dialog__stage {
@@ -358,20 +544,27 @@ html.is-dialog-open {
   align-items: center;
   gap: var(--space-2);
   max-width: calc(100% - 2 * var(--space-4));
-  min-height: 44px;
-  padding: 0 var(--space-4) 0 var(--space-3);
-  border-radius: 999px;
-  background: rgb(9 10 15 / 0.82);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.16);
-  color: var(--color-text);
-  font-size: var(--text-small);
-  font-weight: var(--weight-label);
-  transition: background-color var(--dur-feedback) var(--ease-out), box-shadow var(--dur-feedback) var(--ease-out);
+  min-height: var(--control-height);
+  padding: 0 18px 0 14px;
+  border-radius: var(--radius-control);
+  background: var(--btn-primary-bg);
+  box-shadow: var(--shadow-control);
+  color: var(--btn-primary-fg);
+  font-size: var(--control-font);
+  font-weight: var(--control-weight);
+  transition:
+    background-color var(--dur-feedback) var(--ease-out),
+    transform var(--dur-feedback) var(--ease-out);
 }
 
 .video-facade:hover .video-facade__chip {
-  background: rgb(25 28 40 / 0.94);
-  box-shadow: 0 0 0 1px rgb(170 180 255 / 0.45);
+  background: var(--btn-primary-bg-hover);
+  transform: translateY(-1px);
+}
+
+.video-facade:active .video-facade__chip {
+  background: var(--btn-primary-bg-active);
+  transform: none;
 }
 
 .video-facade__chip svg {
@@ -385,7 +578,8 @@ html.is-dialog-open {
 }
 
 .video-facade__time {
-  color: var(--color-muted);
+  color: rgb(11 12 19 / 0.68);
+  font-weight: var(--weight-label);
 }
 
 /* On phones the chip shows only play + duration; the button's accessible

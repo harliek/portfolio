@@ -1,0 +1,7 @@
+[
+  { "id": "cp-competitors", "source": ".media-cache/pdf/cp300-p-04.png", "rect": { "x": 120, "y": 60, "width": 2820, "height": 1586 }, "widths": [640, 960, 1280, 1600], "fallback": "jpg" },
+  { "id": "cp-header-brand", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 0, "y": 10, "width": 712, "height": 401 }, "widths": [640, 712], "fallback": "jpg" },
+  { "id": "cp-header-nav", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 960, "y": 10, "width": 712, "height": 401 }, "widths": [640, 712], "fallback": "jpg" },
+  { "id": "cp-storefront", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 0, "y": 0, "width": 1672, "height": 941 }, "widths": [640, 960, 1280, 1672], "fallback": "jpg" },
+  { "id": "cp-recommendations", "source": ".media-cache/pdf/cp300-p-09.png", "rect": { "x": 150, "y": 90, "width": 2700, "height": 1380 }, "widths": [640, 960, 1280], "fallback": "jpg" }
+]

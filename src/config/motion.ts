@@ -7,8 +7,8 @@
 export const MOTION = {
   feedback: { duration: 0.15, pressScale: 0.98 },
 
-  /** The Work shelf: the Work control shifts left while the shelf reveals horizontally. */
-  shelf: { durationMs: 250, workShiftPx: 6, itemOffsetPx: 28, itemStaggerMs: 16 },
+  /** The Work shelf: fades down from the header while its entries arrive from the Work side. */
+  shelf: { durationMs: 220, itemOffsetPx: 16, itemStaggerMs: 14 },
 
   /** Sticky visual sections: screenshot crossfade and interface highlight. */
   crossfadeMs: 250,
@@ -33,15 +33,21 @@ export const MOTION = {
     fallbackFadeMs: 180,
   },
 
-  /** Pointer trail (fine pointers only). */
+  /** Pointer trail (fine pointers only; src/components/layout/PointerTrail.tsx). */
   trail: {
-    /** Visible length of the line behind the pointer (px). */
-    lengthPx: 34,
-    /** The line fades out this long after the pointer stops (ms). */
-    fadeMs: 190,
-    coreWidth: 1.2,
-    haloWidth: 7,
-    /** Brightness over text (share of full brightness). */
-    overText: 0.4,
+    /** Longest visible trail behind the pointer (px); the tail is cut, never a long streak. */
+    lengthPx: 48,
+    /** Each point lives this long (ms): the tail retracts into the cursor and the trail is gone ~this long after the pointer stops. */
+    lifeMs: 150,
+    /** The crisp luminous centre line (px at the pointer end). */
+    coreWidth: 2.2,
+    /** The soft violet glow around it (px at the pointer end; drawn in three layers). */
+    haloWidth: 14,
+    /** Brightness over reading text, and over controls and video (share of full brightness). */
+    overText: 0.45,
+    overControl: 0.16,
+    /** Length over text and controls (share of lengthPx). */
+    shortShare: 0.6,
   },
+
 } as const

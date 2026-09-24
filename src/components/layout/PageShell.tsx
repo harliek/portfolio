@@ -9,22 +9,15 @@ import { RouteFocus } from './RouteFocus'
 import { StageBackground, type StageRoute } from './StageBackground'
 
 const routeOf = (pathname: string): StageRoute =>
-  pathname === '/'
-    ? 'home'
-    : pathname.startsWith('/work/')
-      ? 'case'
-      : pathname === '/about'
-        ? 'about'
-        : pathname === '/art' || pathname === '/film'
-          ? 'creative'
-          : 'other'
+  pathname === '/' ? 'home' : pathname.startsWith('/work/') ? 'case' : pathname === '/about' ? 'about' : 'other'
 
 /**
- * Root layout: the persistent background set (mounted once, outside the
- * keyed route content, so the same <video> keeps playing across every
- * navigation), skip link, header with the Work shelf, main (the new page
- * rises 6px as it settles; no blank beat), the footer with Contact and the
- * "Reduce motion" toggle on every page, and the pointer trail.
+ * Root layout of the professional site: the persistent background set
+ * (mounted once, outside the keyed route content, so the same <video> keeps
+ * playing across every navigation), skip link, header with the Work shelf,
+ * main (the new page rises 6px as it settles; no blank beat), the footer
+ * (the single contact area and the "Reduce motion" setting), and the
+ * pointer trail. The creative portfolio has its own layout.
  */
 export function PageShell() {
   const { pathname } = useLocation()

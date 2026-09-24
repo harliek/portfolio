@@ -105,10 +105,10 @@ a {
   outline: none;
 }
 
+/* The ring follows each element's own radius (never reshapes it on focus). */
 :focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
-  border-radius: 4px;
 }
 
 /* Programmatic focus targets (headings, main) should not show a ring. */

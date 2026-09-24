@@ -1,264 +1,513 @@
 import { useLayoutEffect, useRef, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CAROUSEL } from '../../config/carousel'
-import { PROJECTS, projectPath, type Project } from '../../content/projects'
+import { CAROUSEL_ITEMS, type CarouselItem } from '../../content/carousel'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { ResponsiveImage } from '../media/ResponsiveImage'
 import { isPlainClick, openProject, warmProject } from '../transition/projectTransition'
 
-const TILE_SIZES = '(min-width: 1100px) 290px, (min-width: 600px) 240px, 70vw'
-
-/** Arc length where the continuous motion was when the carousel last unmounted or changed mode. */
+/** Normalized arc position (in spacings) where the motion was when the carousel last unmounted. */
 let savedPhase: number | null = null
 
 /**
- * The homepage carousel.
+ * The homepage carousel: seven upright 3:4 image tiles (content/carousel.ts):
+ * the six projects, each with one supplied artwork (`project.cover`, from
+ * `final tiles/`), then About Me with the headshot, which opens /about.
  *
- * - `moving` (fine pointer, motion allowed): six tiles on a concave arc,
- *   travelling laterally at one constant linear speed.
- * - `static` (reduced motion on a wide screen): the same arc, frozen with all
- *   six tiles in view.
- * - `row` (touch or coarse pointers, windows narrower than
+ * - `moving` (fine pointer, motion allowed): the tiles stand on a shallow
+ *   concave arc and travel at one constant speed.
+ * - `static` (reduced motion on a wide screen): the same arc, frozen, with
+ *   all seven tiles in view.
+ * - the swipe row (touch or coarse pointers, windows narrower than
  *   CAROUSEL.arcMinWidth, reduced motion on narrower screens): a flat,
- *   horizontally swipeable row with names, labels and direct links.
+ *   horizontally swipeable row where every name, description and action
+ *   label is always visible and a tap opens the tile's page.
+ *
+ * Each tile is ONE link: the tile (the image fills it) and its caption.
+ * Names, labels and descriptions are live HTML outside the image.
  */
 export function ConcaveCarousel() {
   const reduced = useReducedMotion()
   const touch = useMediaQuery(CAROUSEL.touchQuery)
   const narrow = useMediaQuery(`(max-width: ${CAROUSEL.arcMinWidth - 0.02}px)`)
   const wide = useMediaQuery(`(min-width: ${CAROUSEL.staticArcMinWidth}px)`)
-  if (touch || narrow || (reduced && !wide)) return <SwipeRow />
-  return <Arc moving={!reduced} />
+  const row = touch || narrow || (reduced && !wide)
+  return row ? <SwipeRow /> : <Arc key={reduced ? 'static' : 'moving'} moving={!reduced} />
 }
 
-function TileText({ project, id, captionRef }: { project: Project; id: string; captionRef?: (el: HTMLElement | null) => void }) {
+/**
+ * The tile artwork: a soft grounding shadow, then the inner wrapper (hover
+ * lift and the route transition act on it, never on the positioning
+ * element) holding the rounded frame the image fills.
+ */
+function Tile({ item, sizes, priority, liftRef }: { item: CarouselItem; sizes: string; priority: boolean; liftRef?: (el: HTMLElement | null) => void }) {
   return (
-    <span ref={captionRef} className="arc__caption">
-      <span className="arc__name" id={`${id}-name`}>
-        {project.name}
-      </span>
-      <span className="arc__more" id={`${id}-more`}>
-        <span className="arc__desc">{project.label}</span>
-        <span className="arc__cta">
-          View project <span aria-hidden="true">→</span>
+    <>
+      <span className="arc-tile__floor" aria-hidden="true" />
+      <span ref={liftRef} className="arc-tile__lift" data-transition="tile">
+        <span className="arc-tile__frame">
+          <ResponsiveImage image={item.cover} sizes={sizes} decorative fit="cover" priority={priority} />
         </span>
+      </span>
+    </>
+  )
+}
+
+function Caption({ item, id, className, captionRef }: { item: CarouselItem; id: string; className: string; captionRef?: (el: HTMLElement | null) => void }) {
+  return (
+    <span ref={captionRef} className={className}>
+      <span className="arc-caption__name" id={`${id}-name`}>
+        {item.name}
+      </span>
+      <span className="arc-caption__cta" id={`${id}-cta`}>
+        {item.action}
+        <span aria-hidden="true"> ↗</span>
+      </span>
+      <span className="arc-caption__desc" id={`${id}-desc`}>
+        {item.description}
       </span>
     </span>
   )
 }
 
+const ARC_SIZES = '(min-width: 1100px) 400px, 300px'
+const STATIC_SIZES = '240px'
+const ROW_SIZES = '260px'
+
+interface Controls {
+  freeze: (i: number) => void
+  resume: (i: number) => void
+}
+
 /**
- * The concave arc. Geometry (config/carousel.ts): a wall of radius R around
- * the viewer; a tile at arc position s turns by θ = s / R and is placed with
- * `translateZ(R) rotateY(-θ) translateZ(-R)`, so the centre tile faces the
- * viewer at its natural size and edge tiles turn inward and come closer.
- * One phase (arc length) drives every tile; transforms are written directly
- * in an animation-frame loop (no React state per frame) that runs only while
- * the carousel moves: never while a tile or its caption is hovered, while
- * keyboard focus is inside, while the page is hidden or the carousel is off
- * screen.
+ * The concave arc. A tile at arc position s turns by θ = s / R and is
+ * placed with `perspective(p) translateZ(R) rotateY(-θ) translateZ(-R)`
+ * (every tile shares the same untransformed box at the stage centre, so
+ * they share one vanishing point): the centre tile faces the viewer at its
+ * natural size, tiles towards the edges turn inward and come closer. One
+ * phase (arc length) drives every tile; transforms are written directly in
+ * an animation-frame loop (no React state per frame). By default hovering
+ * does NOT stop the carousel (Harlie's instruction: the tiles keep moving;
+ * CAROUSEL.pauseOnHover switches this): the tile under the pointer lifts
+ * and shows its description while it passes, and drops back as it travels
+ * out from under the pointer. The loop stops while a tile has keyboard
+ * focus, while a project is opening, while the page is hidden or the
+ * carousel is off screen; motion resumes from the exact paused position.
  *
- * Captions are turned back by the tile's angle, so the name, the sentence
- * and "View project" always face the viewer (flat, never slanted).
+ * Captions are flat HTML placed under each tile's projected lower edge
+ * (never rotated), at a constant size. A caption fades out before its box
+ * reaches the stage edge, and a tile whose caption is hidden takes no
+ * pointer events. Tiles are recycled from one end of the wall to the other
+ * only where they are fully outside the stage (and faded, as a safety).
  *
- * Keyboard: only tiles wholly inside the clipped view are in the tab order
- * (updated as they travel, never while focus is inside), so a focused tile
- * is always fully visible and nothing moves while it has focus. Every
- * project is also in the Selected work index below.
+ * Keyboard: all seven links are in the tab order (tile order); focusing one
+ * pauses the carousel and, if that tile is outside the readable area,
+ * glides it in.
  */
 function Arc({ moving }: { moving: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null)
-  const stageRef = useRef<HTMLUListElement>(null)
-  const tileRefs = useRef<Array<HTMLLIElement | null>>([])
+  const itemRefs = useRef<Array<HTMLLIElement | null>>([])
+  const tileRefs = useRef<Array<HTMLElement | null>>([])
+  const liftRefs = useRef<Array<HTMLElement | null>>([])
   const captionRefs = useRef<Array<HTMLElement | null>>([])
   const linkRefs = useRef<Array<HTMLAnchorElement | null>>([])
-  const busyRef = useRef(false)
+  const controls = useRef<Controls | null>(null)
   const navigate = useNavigate()
 
   useLayoutEffect(() => {
     const root = rootRef.current
-    const stage = stageRef.current
-    const tiles = tileRefs.current.filter((t): t is HTMLLIElement => Boolean(t))
-    const captions = captionRefs.current
-    const links = linkRefs.current
-    if (!root || !stage || tiles.length === 0) return
-    const n = tiles.length
-    const g = { w: 0, spacing: 0, L: 0, R: 0, p: 0, half: 0, limit: 0 }
-    const state = { hover: false, focus: false, onScreen: true, pageVisible: document.visibilityState === 'visible' }
+    const n = CAROUSEL_ITEMS.length
+    const items = itemRefs.current.slice(0, n)
+    const tiles = tileRefs.current.slice(0, n)
+    const captions = captionRefs.current.slice(0, n)
+    const links = linkRefs.current.slice(0, n)
+    if (!root || items.some((x) => !x) || tiles.some((x) => !x) || captions.some((x) => !x) || links.some((x) => !x)) return
+    const stage = root.querySelector<HTMLElement>('.arc__stage') ?? root
+    const cfg = moving ? CAROUSEL.arc : CAROUSEL.still
+
+    // Geometry (px), from the measured stage and tile boxes.
+    const g = { W: 0, cw: 0, bh: 0, bw: 0, yc: 0, S: 1, L: 6, R: 1, p: 1, capW: 0, capGap: 0, speed: 0, sRead: 0, fadeEnd: 0, fadeLength: 1 }
+    const st = {
+      hover: -1,
+      focus: -1,
+      active: -1,
+      onScreen: true,
+      pageVisible: document.visibilityState === 'visible',
+      busy: false,
+      glide: null as null | { from: number; to: number; t0: number },
+    }
     let phase = 0
     let raf = 0
     let last = 0
-    let resumeTimer = 0
+    let grace = 0
+    const sOf = new Array<number>(n).fill(0)
+    const fadeOf = new Array<number>(n).fill(1)
+    const xOf = new Array<number>(n).fill(0)
+    /** Width of each caption's always-visible part (name and "View case study"), and of its description. */
+    const textW = new Array<number>(n).fill(0)
+    const descW = new Array<number>(n).fill(0)
+    const written = { tile: new Array<string>(n).fill(''), caption: new Array<string>(n).fill(''), fade: new Array<string>(n).fill(''), op: new Array<string>(n).fill('') }
+    const dpr = window.devicePixelRatio || 1
+    const snap = (v: number) => Math.round(v * dpr) / dpr
 
     const wrap = (s: number) => ((((s + g.L / 2) % g.L) + g.L) % g.L) - g.L / 2
+    /** Horizontal screen offset of the centre of a tile at angle θ (relative to the stage centre), per unit radius. */
+    const f = (theta: number) => (cfg.perspective * Math.sin(theta)) / (cfg.perspective - 1 + Math.cos(theta))
+    /** Screen position (relative to the stage centre and the tiles' centre line) of the point (u, v) on a tile at angle θ. */
+    const project = (u: number, v: number, theta: number) => {
+      const X = g.R * Math.sin(theta) + u * Math.cos(theta)
+      const Z = u * Math.sin(theta) + g.R * (1 - Math.cos(theta))
+      const k = g.p / (g.p - Z)
+      return { x: X * k, y: v * k }
+    }
+    /**
+     * Caption box and its fade for a tile at arc position s. The fade
+     * depends on the width of the visible text (`width`), so a name is fully
+     * readable or fully faded before it could meet the stage edge.
+     */
+    const captionAt = (s: number, width: number, fadeLength: number) => {
+      const theta = s / g.R
+      const cx = project(0, 0, theta).x
+      const bottom = Math.max(project(-g.bw / 2, g.bh / 2, theta).y, project(g.bw / 2, g.bh / 2, theta).y)
+      const room = g.W / 2 - Math.abs(cx) - width / 2 - g.fadeEnd
+      const fade = Math.max(0, Math.min(1, room / fadeLength))
+      return { x: g.W / 2 + cx - g.capW / 2, y: g.yc + bottom + g.capGap, fade }
+    }
 
     const measure = () => {
-      g.w = tiles[0].offsetWidth
-      const gap = parseFloat(getComputedStyle(root).getPropertyValue('--tile-gap')) || 24
-      g.spacing = g.w + gap
-      g.L = g.spacing * n
-      g.R = g.w * (moving ? CAROUSEL.radius : CAROUSEL.staticRadius)
-      g.p = g.R * CAROUSEL.perspective
-      g.half = root.clientWidth / 2
-      stage.style.perspective = `${g.p}px`
-      g.limit = visibleLimit()
-    }
-
-    const layout = () => {
-      for (let i = 0; i < n; i++) {
-        const s = wrap(i * g.spacing - phase)
-        const theta = s / g.R
-        tiles[i].style.transform = `translateZ(${g.R}px) rotateY(${-theta}rad) translateZ(${-g.R}px)`
-        tiles[i].dataset.side = s < -g.spacing / 2 ? 'left' : s > g.spacing / 2 ? 'right' : 'centre'
-        const caption = captions[i]
-        if (caption) caption.style.transform = `rotateY(${theta}rad)`
-        const link = links[i]
-        // The static arrangement shows all six and never moves: every tile is focusable.
-        const tab = !moving || Math.abs(s) <= g.limit ? 0 : -1
-        if (link && link.tabIndex !== tab) link.tabIndex = tab
+      const tile = tiles[0] as HTMLElement
+      g.W = stage.clientWidth
+      g.cw = tile.offsetWidth
+      const ch = tile.offsetHeight
+      // The image fills the tile, so the visible body is the whole box.
+      g.bh = ch
+      g.bw = g.cw
+      g.yc = tile.offsetTop + ch / 2
+      const cs = getComputedStyle(root)
+      g.capGap = parseFloat(cs.getPropertyValue('--cap-gap')) || 12
+      g.fadeEnd = CAROUSEL.captionFadeEnd + (g.W * CAROUSEL.edgeMask) / 2
+      captions.forEach((c, i) => {
+        const el = c as HTMLElement
+        const name = el.querySelector<HTMLElement>('.arc-caption__name')
+        const cta = el.querySelector<HTMLElement>('.arc-caption__cta')
+        const desc = el.querySelector<HTMLElement>('.arc-caption__desc')
+        textW[i] = Math.max(name?.offsetWidth ?? 0, cta?.offsetWidth ?? 0)
+        descW[i] = desc?.offsetWidth ?? 0
+      })
+      const widest = Math.max(...textW)
+      if (moving) {
+        g.capW = parseFloat(cs.getPropertyValue('--cap-w')) || CAROUSEL.captionWidth
+        g.fadeLength = CAROUSEL.captionFadeLength
+        g.S = Math.max(CAROUSEL.arc.spacing * g.W, CAROUSEL.arc.minSpacing * g.cw, widest + CAROUSEL.captionGap)
+        g.R = g.S / cfg.step
+      } else {
+        // All seven in view: the outer tiles (±3 spacings) keep their names inside the stage.
+        g.fadeLength = 8
+        const room = Math.max(g.W / 2 - widest / 2 - g.fadeEnd - g.fadeLength, 40)
+        g.R = room / f(((n - 1) / 2) * cfg.step)
+        g.S = cfg.step * g.R
+        g.capW = Math.min(CAROUSEL.still.maxCaption, g.S - 16)
+        root.style.setProperty('--cap-w', `${g.capW}px`)
+        captions.forEach((c, i) => {
+          descW[i] = (c as HTMLElement).querySelector<HTMLElement>('.arc-caption__desc')?.offsetWidth ?? 0
+        })
       }
-    }
-
-    /** Screen x of a tile's outer edge at arc position s ≥ 0 (relative to the centre). */
-    function outerEdge(s: number) {
-      const t = s / g.R
-      const x = g.R * Math.sin(t) + (g.w / 2) * Math.cos(t)
-      const z = g.R * (1 - Math.cos(t)) + (g.w / 2) * Math.sin(t)
-      return (x * g.p) / (g.p - z)
-    }
-
-    /** The largest |s| at which a whole tile is still inside the clipped viewport (clear of the edge fades). */
-    function visibleLimit() {
-      const edge = g.half * (1 - CAROUSEL.edgeFade * 2) - 8
+      g.p = cfg.perspective * g.R
+      g.L = n * g.S
+      g.speed = (CAROUSEL.speed * g.bh) / CAROUSEL.referenceBodyHeight
+      // The largest |s| at which every name is fully readable (keyboard focus glides a tile there).
       let lo = 0
       let hi = g.L / 2
       for (let k = 0; k < 24; k++) {
         const mid = (lo + hi) / 2
-        if (outerEdge(mid) <= edge) lo = mid
+        if (captionAt(mid, widest, g.fadeLength).fade >= 1) lo = mid
         else hi = mid
       }
-      return lo
+      g.sRead = lo
+      written.tile.fill('')
+      written.caption.fill('')
     }
 
-    const running = () => moving && !state.hover && !state.focus && state.onScreen && state.pageVisible && !busyRef.current
+    const layout = () => {
+      for (let i = 0; i < n; i++) {
+        const s = wrap(i * g.S - phase)
+        sOf[i] = s
+        const theta = s / g.R
+        const t = `perspective(${g.p.toFixed(1)}px) translateZ(${g.R.toFixed(2)}px) rotateY(${(-theta).toFixed(5)}rad) translateZ(${(-g.R).toFixed(2)}px)`
+        if (t !== written.tile[i]) {
+          ;(tiles[i] as HTMLElement).style.transform = t
+          written.tile[i] = t
+        }
+        // A safety fade just before the recycling point (normally far outside the stage).
+        const edge = g.L / 2 - Math.abs(s)
+        const op = Math.min(1, edge / (CAROUSEL.recycleFade * g.S))
+        const opText = op >= 1 ? '' : op.toFixed(3)
+        if (opText !== written.op[i]) {
+          ;(tiles[i] as HTMLElement).style.opacity = opText
+          written.op[i] = opText
+        }
+        const c = captionAt(s, textW[i], g.fadeLength)
+        xOf[i] = c.x
+        const ct = `translate3d(${snap(c.x)}px, ${snap(c.y)}px, 0)`
+        if (ct !== written.caption[i]) {
+          ;(captions[i] as HTMLElement).style.transform = ct
+          written.caption[i] = ct
+        }
+        const fade = Math.min(c.fade, op)
+        fadeOf[i] = fade
+        const fadeText = fade.toFixed(3)
+        if (fadeText !== written.fade[i]) {
+          ;(captions[i] as HTMLElement).style.setProperty('--fade', fadeText)
+          written.fade[i] = fadeText
+          // A tile whose caption is hidden (at the stage edges) is not interactive.
+          const item = items[i] as HTMLLIElement
+          if (fade <= 0.02) item.dataset.off = ''
+          else delete item.dataset.off
+        }
+      }
+    }
 
+    const running = () => moving && (!CAROUSEL.pauseOnHover || st.hover < 0) && st.focus < 0 && st.onScreen && st.pageVisible && !st.busy
+
+    const ease = (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2)
     const tick = (now: number) => {
       raf = 0
+      if (st.glide) {
+        const k = Math.min(1, (now - st.glide.t0) / CAROUSEL.focusGlideMs)
+        phase = st.glide.from + (st.glide.to - st.glide.from) * ease(k)
+        if (k >= 1) st.glide = null
+        layout()
+        shiftDescription()
+        savedPhase = phase / g.S
+        last = 0
+        raf = requestAnimationFrame(tick)
+        return
+      }
       if (!running()) {
         last = 0
         return
       }
       const dt = last ? Math.min((now - last) / 1000, CAROUSEL.maxStep) : 0
       last = now
-      phase += CAROUSEL.speed * dt
+      phase += g.speed * dt
       if (phase > g.L * 1000) phase -= g.L * 1000
-      savedPhase = phase
+      savedPhase = phase / g.S
       layout()
+      recheckHover()
+      shiftDescription()
       raf = requestAnimationFrame(tick)
     }
     const kick = () => {
-      if (!raf && running()) {
+      if (!raf && (running() || st.glide)) {
         last = 0
         raf = requestAnimationFrame(tick)
       }
     }
 
+    const descOf = (i: number) => (captions[i] as HTMLElement).querySelector<HTMLElement>('.arc-caption__desc')
+    /** Near the stage edges, the active tile's revealed description moves inward just enough to stay whole. */
+    let shifted = ''
+    const shiftDescription = () => {
+      const i = st.active
+      if (i < 0) return
+      const left = xOf[i] + (g.capW - descW[i]) / 2
+      const right = left + descW[i]
+      const shift = Math.round(Math.max(0, g.fadeEnd - left) - Math.max(0, right - (g.W - g.fadeEnd)))
+      const value = shift === 0 ? '' : `${shift}px 0`
+      if (value === shifted) return
+      shifted = value
+      if (value) descOf(i)?.style.setProperty('translate', value)
+      else descOf(i)?.style.removeProperty('translate')
+    }
+    /** Hover or keyboard focus: lift that tile and reveal its description (only keyboard focus pauses the motion). */
+    const update = () => {
+      const next = st.hover >= 0 ? st.hover : st.focus
+      if (next !== st.active) {
+        if (st.active >= 0) {
+          delete (items[st.active] as HTMLLIElement).dataset.active
+          descOf(st.active)?.style.removeProperty('translate')
+          shifted = ''
+        }
+        if (next >= 0) (items[next] as HTMLLIElement).dataset.active = ''
+        st.active = next
+        shiftDescription()
+      }
+      kick()
+    }
+
     measure()
-    phase = moving ? (savedPhase ?? CAROUSEL.startOffset * g.spacing) : ((n - 1) / 2) * g.spacing
+    phase = moving ? (savedPhase ?? CAROUSEL.startOffset) * g.S : ((n - 1) / 2) * g.S
     layout()
     root.dataset.ready = 'true'
 
-    // Hover: a tile and its caption are one region. Pausing is immediate
-    // (the exact phase is kept; nothing snaps or scales); after leaving, a
-    // short grace lets the pointer cross the gap to the next tile.
-    const onEnter = (e: PointerEvent) => {
-      if (e.pointerType === 'touch') return
-      window.clearTimeout(resumeTimer)
-      state.hover = true
+    // Pointer: a tile and its caption belong to one link. Hover does not
+    // pause the motion (unless CAROUSEL.pauseOnHover); it lifts the tile under the pointer. Because
+    // the tiles move under a still pointer, the tile under the pointer is
+    // also re-checked while the carousel moves (recheckHover, a few times a
+    // second). After leaving, a short grace lets the pointer cross between a
+    // tile and its caption without the lift dropping and returning.
+    const indexOf = (el: EventTarget | null) => {
+      const link = el instanceof Element ? el.closest('.arc__link') : null
+      return link ? links.indexOf(link as HTMLAnchorElement) : -1
     }
-    const onLeave = (e: PointerEvent) => {
-      if (e.pointerType === 'touch') return
-      window.clearTimeout(resumeTimer)
-      resumeTimer = window.setTimeout(() => {
-        state.hover = false
-        kick()
-      }, CAROUSEL.resumeGraceMs)
+    const pointer = { inside: false, x: 0, y: 0, checked: 0 }
+    const setHover = (i: number) => {
+      if (i >= 0) {
+        window.clearTimeout(grace)
+        if (st.hover !== i) {
+          st.hover = i
+          update()
+        }
+        return
+      }
+      if (st.hover < 0) return
+      const leaving = st.hover
+      window.clearTimeout(grace)
+      grace = window.setTimeout(() => {
+        if (st.hover === leaving) st.hover = -1
+        update()
+      }, CAROUSEL.hoverGraceMs)
     }
-    tiles.forEach((t) => {
-      t.addEventListener('pointerenter', onEnter)
-      t.addEventListener('pointerleave', onLeave)
-    })
+    function recheckHover() {
+      if (!pointer.inside || st.busy) return
+      const now = performance.now()
+      if (now - pointer.checked < 80) return
+      pointer.checked = now
+      setHover(indexOf(document.elementFromPoint(pointer.x, pointer.y)))
+    }
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return
+      pointer.inside = true
+      pointer.x = e.clientX
+      pointer.y = e.clientY
+    }
+    const onLeaveRoot = () => {
+      pointer.inside = false
+      setHover(-1)
+    }
+    const onOver = (e: PointerEvent) => {
+      if (e.pointerType === 'touch' || st.busy) return
+      onMove(e)
+      const i = indexOf(e.target)
+      if (i >= 0) setHover(i)
+    }
+    const onOut = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return
+      const i = indexOf(e.target)
+      if (i < 0 || indexOf(e.relatedTarget) === i) return
+      setHover(indexOf(e.relatedTarget))
+    }
+    root.addEventListener('pointerover', onOver)
+    root.addEventListener('pointerout', onOut)
+    root.addEventListener('pointermove', onMove)
+    root.addEventListener('pointerleave', onLeaveRoot)
 
-    // Keyboard focus freezes the carousel (only tiles wholly in view can be
-    // focused, see layout). Focus from a mouse or a right-click does not:
-    // the pointer's hover already pauses it and leaving resumes it.
+    // Keyboard focus pauses, so the focused link stays in view and can be
+    // opened (focus from a pointer click does not pause).
     const onFocusIn = (e: FocusEvent) => {
-      if (!(e.target instanceof Element) || !e.target.matches(':focus-visible')) return
-      state.focus = true
+      const i = indexOf(e.target)
+      if (i < 0 || !(e.target instanceof Element) || !e.target.matches(':focus-visible')) return
+      st.focus = i
+      if (moving && fadeOf[i] < 1 && Math.abs(sOf[i]) > g.sRead) {
+        const target = Math.sign(sOf[i]) * g.sRead * 0.98
+        st.glide = { from: phase, to: phase + (sOf[i] - target), t0: performance.now() }
+      }
+      update()
     }
     const onFocusOut = (e: FocusEvent) => {
-      if (root.contains(e.relatedTarget as Node | null)) return
-      state.focus = false
-      kick()
+      if (e.relatedTarget instanceof Node && root.contains(e.relatedTarget)) return
+      st.focus = -1
+      update()
     }
     root.addEventListener('focusin', onFocusIn)
     root.addEventListener('focusout', onFocusOut)
 
     const io = new IntersectionObserver(([entry]) => {
-      state.onScreen = entry.isIntersecting
+      st.onScreen = entry.isIntersecting
       kick()
     })
     io.observe(root)
     const onVisibility = () => {
-      state.pageVisible = document.visibilityState === 'visible'
+      st.pageVisible = document.visibilityState === 'visible'
       kick()
     }
     document.addEventListener('visibilitychange', onVisibility)
     const ro = new ResizeObserver(() => {
+      const at = phase / g.S
       measure()
-      if (!moving) phase = ((n - 1) / 2) * g.spacing
+      phase = at * g.S
       layout()
     })
-    ro.observe(root)
+    ro.observe(stage)
+    // Caption widths change once the web font has loaded (the stage size does not).
+    let disposed = false
+    void document.fonts?.ready.then(() => {
+      if (disposed) return
+      const at = phase / g.S
+      measure()
+      phase = at * g.S
+      layout()
+    })
+
+    controls.current = {
+      // A project is opening: everything stops where it is; the others dim.
+      freeze: (i) => {
+        st.busy = true
+        st.glide = null
+        window.clearTimeout(grace)
+        root.dataset.leaving = ''
+        ;(items[i] as HTMLLIElement).dataset.selected = ''
+      },
+      // The opening was cancelled (Back, another navigation): carry on.
+      resume: (i) => {
+        if (!root.isConnected) return
+        st.busy = false
+        delete root.dataset.leaving
+        delete (items[i] as HTMLLIElement).dataset.selected
+        kick()
+      },
+    }
 
     kick()
     return () => {
+      disposed = true
       cancelAnimationFrame(raf)
-      window.clearTimeout(resumeTimer)
+      window.clearTimeout(grace)
       io.disconnect()
       ro.disconnect()
+      controls.current = null
       document.removeEventListener('visibilitychange', onVisibility)
+      root.removeEventListener('pointerover', onOver)
+      root.removeEventListener('pointerout', onOut)
+      root.removeEventListener('pointermove', onMove)
+      root.removeEventListener('pointerleave', onLeaveRoot)
       root.removeEventListener('focusin', onFocusIn)
       root.removeEventListener('focusout', onFocusOut)
-      tiles.forEach((t) => {
-        t.removeEventListener('pointerenter', onEnter)
-        t.removeEventListener('pointerleave', onLeave)
-      })
     }
   }, [moving])
 
-  const onOpen = (e: MouseEvent<HTMLAnchorElement>, path: string) => {
+  const onOpen = (e: MouseEvent<HTMLAnchorElement>, i: number, path: string) => {
     if (!isPlainClick(e)) return
     e.preventDefault()
-    busyRef.current = true
-    openProject({ path, source: e.currentTarget.querySelector<HTMLElement>('.arc__card'), navigate })
+    const result = openProject({ path, source: liftRefs.current[i], navigate, onCancel: () => controls.current?.resume(i) })
+    if (result === 'tile') controls.current?.freeze(i)
   }
 
   return (
     <div ref={rootRef} className="arc" data-mode={moving ? 'moving' : 'static'}>
       <div className="arc__stage">
-        <ul ref={stageRef} className="arc__list" role="list">
-          {PROJECTS.map((p, i) => {
-            const path = projectPath(p)
+        <ul className="arc__list" role="list">
+          {CAROUSEL_ITEMS.map((p, i) => {
+            const path = p.path
             const id = `arc-${p.id}`
             return (
               <li
                 key={p.id}
                 ref={(el) => {
-                  tileRefs.current[i] = el
+                  itemRefs.current[i] = el
                 }}
-                className="arc__tile"
+                className="arc__item"
                 data-accent={p.accent}
               >
                 <a
@@ -267,18 +516,32 @@ function Arc({ moving }: { moving: boolean }) {
                   }}
                   href={path}
                   className="arc__link"
-                  aria-labelledby={`${id}-name`}
-                  aria-describedby={`${id}-more`}
-                  onClick={(e) => onOpen(e, path)}
+                  draggable={false}
+                  aria-labelledby={`${id}-name ${id}-cta`}
+                  aria-describedby={`${id}-desc`}
+                  onClick={(e) => onOpen(e, i, path)}
                   onPointerEnter={() => warmProject(path)}
                   onFocus={() => warmProject(path)}
                 >
-                  <span className="arc__card">
-                    <ResponsiveImage image={p.cover} sizes={TILE_SIZES} decorative fit="cover" priority={i < 4} />
+                  <span
+                    ref={(el) => {
+                      tileRefs.current[i] = el
+                    }}
+                    className="arc__tile"
+                  >
+                    <Tile
+                      item={p}
+                      sizes={moving ? ARC_SIZES : STATIC_SIZES}
+                      priority={i < 4}
+                      liftRef={(el) => {
+                        liftRefs.current[i] = el
+                      }}
+                    />
                   </span>
-                  <TileText
-                    project={p}
+                  <Caption
+                    item={p}
                     id={id}
+                    className="arc-caption arc__caption"
                     captionRef={(el) => {
                       captionRefs.current[i] = el
                     }}
@@ -293,33 +556,44 @@ function Arc({ moving }: { moving: boolean }) {
   )
 }
 
-/** Touch and narrow reduced-motion layout: a static, swipeable row. Nothing depends on hover. */
+/** Touch, narrow windows and narrow reduced motion: a static, swipeable row. Nothing depends on hover. */
 function SwipeRow() {
   const navigate = useNavigate()
+  const liftRefs = useRef<Array<HTMLElement | null>>([])
   return (
     <div className="arc-row">
       <ul className="arc-row__list" role="list">
-        {PROJECTS.map((p, i) => {
-          const path = projectPath(p)
+        {CAROUSEL_ITEMS.map((p, i) => {
+          const path = p.path
+          const id = `arc-row-${p.id}`
           return (
             <li key={p.id} className="arc-row__item" data-accent={p.accent}>
               <a
                 href={path}
                 className="arc-row__link"
+                draggable={false}
+                aria-labelledby={`${id}-name ${id}-cta`}
+                aria-describedby={`${id}-desc`}
                 onClick={(e) => {
                   if (!isPlainClick(e)) return
                   e.preventDefault()
-                  openProject({ path, source: e.currentTarget.querySelector<HTMLElement>('.arc-row__card'), navigate })
+                  openProject({ path, source: liftRefs.current[i], navigate })
                 }}
                 onPointerEnter={() => warmProject(path)}
                 onPointerDown={() => warmProject(path)}
                 onFocus={() => warmProject(path)}
               >
-                <span className="arc-row__card">
-                  <ResponsiveImage image={p.cover} sizes={TILE_SIZES} decorative fit="cover" priority={i < 2} />
+                <span className="arc-row__tile">
+                  <Tile
+                    item={p}
+                    sizes={ROW_SIZES}
+                    priority={i < 2}
+                    liftRef={(el) => {
+                      liftRefs.current[i] = el
+                    }}
+                  />
                 </span>
-                <span className="arc-row__name">{p.name}</span>
-                <span className="arc-row__desc">{p.label}</span>
+                <Caption item={p} id={id} className="arc-caption arc-row__caption" />
               </a>
             </li>
           )

@@ -2,32 +2,37 @@ import type { ReactNode } from 'react'
 import { Figure } from '../../media/Figure'
 
 interface BusinessModelProps {
-  label: string
-  title: string
   body: ReactNode
   caption: ReactNode
 }
 
-const SIZES = '(min-width: 1100px) 600px, (min-width: 960px) 52vw, (min-width: 660px) 600px, calc(100vw - 40px)'
+const SIZES = '(min-width: 960px) 560px, calc(100vw - 32px)'
 
 /**
- * Optional supporting material after the results: the pitch's proposed tiers.
- * Kept as its own row (text left, slide right) so it never reads as evidence
- * for the sign-up figure in the Results paragraph.
+ * Optional supplementary material after the results: the pitch's proposed
+ * pricing tiers, behind a clearly labelled disclosure (a secondary button
+ * look with a chevron and "Show" / "Hide"). It sits apart from the Results
+ * figure, so the tiers never read as evidence for the sign-up figure.
  */
-export function BusinessModel({ label, title, body, caption }: BusinessModelProps) {
+export function BusinessModel({ body, caption }: BusinessModelProps) {
   return (
-    <section className="case-shell jf-support" aria-labelledby="business-model-title">
-      <div className="jf-support__text reading-scrim">
-        <p className="jf-support__label">{label}</p>
-        <h3 id="business-model-title" className="jf-support__title">
-          {title}
-        </h3>
-        <div className="case-prose">{body}</div>
-      </div>
-      <div className="jf-support__media">
-        <Figure image="jumpstart-business-model" sizes={SIZES} caption={caption} zoom />
-      </div>
+    <section className="jf-supplement" aria-labelledby="jf-supplement-title">
+      <h2 id="jf-supplement-title" className="jf-supplement__label">
+        Supplementary material
+      </h2>
+      <details className="jf-supplement__details">
+        <summary className="button button--secondary jf-supplement__summary">
+          <svg className="jf-supplement__chevron" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path d="m6 3.5 4.5 4.5L6 12.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="jf-supplement__show">Show proposed business model</span>
+          <span className="jf-supplement__hide">Hide proposed business model</span>
+        </summary>
+        <div className="jf-supplement__body">
+          <div className="case-prose">{body}</div>
+          <Figure image="jumpstart-business-model" sizes={SIZES} caption={caption} zoom />
+        </div>
+      </details>
     </section>
   )
 }

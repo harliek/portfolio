@@ -47,9 +47,7 @@ export interface Project {
   description: string
   /** Compact case metadata ("Company:", "Role:", "Dates:", "Project status:"). */
   meta: { company: string; role: string; dates: string; status: string }
-  /** Transparent PNG phone mockup for the homepage carousel (presentation artwork). */
-  phone: ImageId
-  /** 3:4 cover composition (carousel tile, shelf thumbnail, next project). */
+  /** 3:4 tile artwork from `final tiles/` (carousel tile, Work shelf thumbnail, next project). */
   cover: ImageId
   /**
    * The first image inside the case opening's [data-case-hero], with the
@@ -78,8 +76,7 @@ export const PROJECTS: Project[] = [
     status: 'Research and prototype',
     description: 'UK market research and a localized storefront prototype.',
     meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
-    phone: 'phone-cafepress-uk',
-    cover: 'cover-cafepress-uk',
+    cover: 'tile-cafepress-uk',
     hero: { image: 'planetart-uk', sizes: HERO_SIZES },
     accent: 'violet',
     next: 'merchandising-platform',
@@ -103,8 +100,7 @@ export const PROJECTS: Project[] = [
     status: 'Independent prototype',
     description: 'Product, inventory, and replenishment information in one prototype.',
     meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Prototype with synthetic data' },
-    phone: 'phone-merchandising-platform',
-    cover: 'cover-merchandising-platform',
+    cover: 'tile-merchandising-platform',
     hero: { image: 'merch-overview', sizes: HERO_SIZES },
     accent: 'violet',
     next: 'spreadsheet-agent',
@@ -128,8 +124,7 @@ export const PROJECTS: Project[] = [
     status: 'Independent prototype',
     description: 'A request, a reviewable plan, and an editable spreadsheet.',
     meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Prototype with simulated AI responses' },
-    phone: 'phone-spreadsheet-agent',
-    cover: 'cover-spreadsheet-agent',
+    cover: 'tile-spreadsheet-agent',
     hero: { image: 'sheet-returned', sizes: HERO_SIZES },
     accent: 'violet',
     next: 'ai-leasing-agent',
@@ -153,8 +148,7 @@ export const PROJECTS: Project[] = [
     status: 'Adopted across 18 properties',
     description: 'Requirements and testing for recurring leasing questions.',
     meta: { company: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'October 2024 to June 2025', status: 'Adopted across 18 properties' },
-    phone: 'phone-ai-leasing-agent',
-    cover: 'cover-ai-leasing-agent',
+    cover: 'tile-ai-leasing-agent',
     hero: { image: 'valiance-messages', sizes: HERO_SIZES },
     accent: 'violet',
     next: 'jumpstart-finance',
@@ -178,8 +172,7 @@ export const PROJECTS: Project[] = [
     status: 'Venture concept and prototype',
     description: 'A student venture exploring mobile financial education.',
     meta: { company: 'European Innovation Academy, Porto', role: 'Founder & Product Lead', dates: 'June to July 2024', status: 'Program concept and prototype' },
-    phone: 'phone-jumpstart-finance',
-    cover: 'cover-jumpstart-finance',
+    cover: 'tile-jumpstart-finance',
     hero: { image: 'jumpstart-proto-3', sizes: '(min-width: 960px) 190px, 26vw' },
     accent: 'green',
     next: 'client-work',
@@ -203,8 +196,7 @@ export const PROJECTS: Project[] = [
     status: 'Agency client work',
     description: 'Production and campaign support at Shift Content.',
     meta: { company: 'Shift Content, London', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', status: 'Agency productions with a team' },
-    phone: 'phone-client-work',
-    cover: 'cover-client-work',
+    cover: 'tile-client-work',
     hero: { image: 'nickleby-poster', sizes: '(min-width: 1320px) 720px, (min-width: 960px) 58vw, calc(100vw - 40px)' },
     accent: 'warm',
     next: 'cafepress-uk',

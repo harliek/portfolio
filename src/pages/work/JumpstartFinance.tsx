@@ -1,43 +1,34 @@
 import '../../styles/pages/jumpstart-finance.css'
-import { CaseLayout, CaseOpening, CaseSection } from '../../components/case/CaseLayout'
+import { CaseLayout } from '../../components/case/CaseLayout'
+import { CaseScroll } from '../../components/case/CaseScroll'
 import { NextProject } from '../../components/case/NextProject'
 import { Results } from '../../components/case/Results'
-import { StickyVisual } from '../../components/case/StickyVisual'
-import { DiagramSlot } from '../../components/media/DiagramSlot'
 import { BusinessModel } from '../../components/pages/jumpstart-finance/BusinessModel'
-import { PhonesHero } from '../../components/pages/jumpstart-finance/PhonesHero'
 import { JUMPSTART_FINANCE as C } from '../../content/pages/jumpstart-finance'
 import { projectById } from '../../content/projects'
 
 const project = projectById('jumpstart-finance')
 
 /**
- * Jumpstart Finance (route /work/jumpstart). The opening overview is the only
- * place the three phones appear together; the Approach section shows one
- * phone at a time (Lessons, Progress, Community). Green is the local accent.
+ * Every frame is one of the four original prototype screens, cropped to the
+ * same 600×1210 canvas (src/content/crops/jumpstart-finance.ts), so the phone
+ * keeps one size while the screens change.
+ */
+const FRAME_RATIO = '600 / 1210'
+/** Keep in step with projects.ts `hero.sizes` for the opening screen (jf-screen-home). */
+const SIZES = '(min-width: 960px) 360px, 300px'
+
+/**
+ * Jumpstart Finance (route /work/jumpstart): opening → Product premise →
+ * Design decisions (lessons, progression, community) → Results with the pitch
+ * excerpt → the proposed business model as optional supplementary material →
+ * next project. Green is the local accent.
  */
 export default function JumpstartFinance() {
   return (
     <CaseLayout project={project} className="page-jumpstart-finance">
-      <CaseOpening
-        project={project}
-        subtitle={C.subtitle}
-        description={C.description}
-        summary={C.summary}
-        hero={<PhonesHero caption={C.heroCaption} />}
-      />
-      <CaseSection id="context" title="Context and role">
-        {C.context}
-      </CaseSection>
-      <CaseSection id="problem" title="Problem">
-        {C.problem}
-      </CaseSection>
-      <CaseSection id="approach" title="Approach" wide>
-        <StickyVisual steps={C.steps} ratio="628 / 1232" sizes="(min-width: 960px) 320px, 260px">
-          <DiagramSlot id="jumpstart-finance-diagram" sizes="(min-width: 960px) 55vw, 100vw" />
-        </StickyVisual>
-      </CaseSection>
-      <Results figure={{ image: 'jumpstart-traction', caption: C.resultsFigureCaption }}>{C.results}</Results>
+      <CaseScroll project={project} situation={C.situation} opening={C.opening} sections={C.sections} frameRatio={FRAME_RATIO} sizes={SIZES} />
+      <Results figure={C.resultsFigure}>{C.results}</Results>
       <BusinessModel {...C.businessModel} />
       <NextProject current={project.id} />
     </CaseLayout>

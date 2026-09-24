@@ -1,0 +1,8 @@
+[
+  { "id": "mp-overview", "source": ".media-cache/frames/merch-overview.png", "rect": { "x": 440, "y": 0, "width": 2477, "height": 1486 }, "widths": [640, 960, 1280, 1600], "fallback": "jpg" },
+  { "id": "mp-catalog", "source": ".media-cache/frames/merch-catalog-top.png", "rect": { "x": 440, "y": 0, "width": 2477, "height": 1486 }, "widths": [640, 960, 1280, 1600], "fallback": "jpg" },
+  { "id": "mp-economics", "source": ".media-cache/frames/merch-economics.png", "rect": { "x": 1904, "y": 597, "width": 1036, "height": 622 }, "widths": [640, 960, 1036], "fallback": "jpg" },
+  { "id": "mp-working", "source": ".media-cache/frames/merch-working.png", "rect": { "x": 1904, "y": 605, "width": 1036, "height": 622 }, "widths": [640, 960, 1036], "fallback": "jpg" },
+  { "id": "mp-inventory", "source": ".media-cache/frames/merch-inventory.png", "rect": { "x": 440, "y": 0, "width": 2477, "height": 1486 }, "widths": [640, 960, 1280, 1600], "fallback": "jpg" },
+  { "id": "mp-ask", "source": ".media-cache/frames/merch-ask.png", "rect": { "x": 462, "y": 0, "width": 1167, "height": 700 }, "widths": [640, 960, 1167], "fallback": "jpg" }
+]

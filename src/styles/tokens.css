@@ -52,9 +52,10 @@
   --stage-ivory: #eeeae2;
   --stage-room: #050609;
   --stage-edge: rgb(255 255 255 / 0.1);
-  /* Pointer trail: thin ivory core, soft violet halo. */
-  --trail-core: rgb(238 234 226);
-  --trail-halo: rgb(165 140 240);
+  /* Pointer trail: crisp near-white core, violet-white inner glow, soft violet halo. */
+  --trail-core: rgb(250 248 255);
+  --trail-glow: rgb(214 202 255);
+  --trail-halo: rgb(160 132 255);
   --glow-soft: 0 0 24px rgb(165 140 240 / 0.28);
 
   /* Typography */
@@ -115,6 +116,34 @@
   /* Focus */
   --focus-ring: 2px solid var(--color-focus);
   --focus-offset: 3px;
+
+  /*
+   * Controls (src/styles/components.css). Primary = a solid, near-white
+   * surface with dark text; secondary = a dark translucent fill with a clear
+   * light outline, so neither disappears into the video background.
+   */
+  --control-height: 46px;
+  --control-height-small: 40px;
+  --control-pad: 20px;
+  --control-pad-small: 14px;
+  --control-gap: 10px;
+  --radius-control: 10px;
+  --control-font: 0.9375rem;
+  --control-weight: 600;
+  --btn-primary-bg: #f3f2fb;
+  --btn-primary-bg-hover: #ffffff;
+  --btn-primary-bg-active: #d6d4e6;
+  --btn-primary-fg: #0b0c13;
+  --btn-secondary-bg: rgb(10 11 18 / 0.8);
+  --btn-secondary-bg-hover: rgb(38 40 56 / 0.88);
+  --btn-secondary-bg-active: rgb(22 23 33 / 0.94);
+  --btn-secondary-border: rgb(255 255 255 / 0.6);
+  --btn-secondary-border-hover: rgb(255 255 255 / 0.92);
+  --btn-secondary-fg: #ffffff;
+  --shadow-control: 0 10px 24px -14px rgb(0 0 0 / 0.85);
+  --shadow-control-hover: 0 14px 30px -14px rgb(0 0 0 / 0.9);
+  /* Persistent underline for links in prose (60% of the text colour, full on hover). */
+  --link-underline: color-mix(in srgb, currentColor 60%, transparent);
 }
 
 @supports (color: oklch(0 0 0)) {

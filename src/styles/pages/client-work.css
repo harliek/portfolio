@@ -1,135 +1,51 @@
 /*
- * Client Work page (src/pages/work/ClientWork.tsx, FilmTabs.tsx).
- * Scope every selector under .page-client-work. Warm light for client imagery.
+ * Client Work page (src/pages/work/ClientWork.tsx, FilmScroll.tsx). Every
+ * selector is scoped under .page-client-work. Warm amber is the local accent
+ * (--case-accent comes from projects.ts).
  *
- * Desktop (≥960px): the intro and the film row share one grid, player ≈60% of
- * the row and details ≈36%, so the facts sit above the details column. The
- * player keeps one 16:9 frame for every film (the 4:3 Aristocracy film is
- * shown whole with dark side space) and is never taller than ≈520px.
+ * The page reuses the CaseScroll grid (.cs, case.css): 44% text, 6% gap, 50%
+ * media on desktop. The media column holds ONE sticky region (navigation
+ * row, 16:9 player, caption, controls). The player keeps the same 16:9 frame
+ * for every film; the 4:3 Aristocracy film is shown whole with dark side
+ * space. Below 960px each film sits in its own section.
  */
 
 .page-client-work {
-  --cw-cols: minmax(0, 60fr) minmax(0, 36fr);
-  --cw-fade: 220ms;
-  /* Upper bound for the player's height, shorter on short windows. */
-  --cw-max-h: clamp(300px, calc(100svh - var(--header-height) - 230px), 520px);
+  --cw-fade: 120ms;
   --cw-line: rgb(238 234 226 / 0.12);
-  /* About 45–65 characters per line (Inter's ch is a wide digit, so em is used). */
-  --cw-measure: 33em;
+  /* Room under the frame for the caption and the controls row. */
+  --cw-chrome: 150px;
+  --cw-nav-h: 58px;
 }
 
 /* ----------------------------------------------------------------------- */
-/* Introduction                                                             */
+/* Jump navigation                                                          */
 /* ----------------------------------------------------------------------- */
 
-.page-client-work .cw-intro {
-  display: grid;
-  row-gap: var(--space-5);
-  padding-top: clamp(var(--space-6), 4vw, 56px);
-}
-
-.page-client-work .cw-intro__text {
-  max-width: 660px;
-}
-
-.page-client-work .cw-intro__lead {
-  max-width: var(--cw-measure);
-  margin-top: var(--space-5);
-  color: var(--color-text);
-  font-size: var(--case-body);
-  line-height: 1.55;
-}
-
-.page-client-work .cw-intro__note {
-  max-width: var(--cw-measure);
-  margin-top: var(--space-4);
-  color: var(--color-muted);
-  font-size: 1rem;
-  line-height: 1.55;
-}
-
-.page-client-work .cw-intro__facts .case-facts {
-  margin-top: 0;
-}
-
-@media (min-width: 960px) {
-  .page-client-work .cw-intro {
-    grid-template-columns: var(--cw-cols);
-    column-gap: var(--case-gap);
-    align-items: start;
-  }
-
-  .page-client-work .cw-intro__facts {
-    padding-top: var(--space-1);
-  }
-
-  .page-client-work .cw-intro__facts .case-facts__row {
-    grid-template-columns: 6rem minmax(0, 1fr);
-  }
-}
-
-/* ----------------------------------------------------------------------- */
-/* Tabs, directly below the introduction                                    */
-/* ----------------------------------------------------------------------- */
-
-.page-client-work .cw-section {
-  margin-top: clamp(var(--space-6), 4vw, var(--space-7));
-}
-
-.page-client-work .cw-tabs {
+.page-client-work .cw-nav ul {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-bottom: var(--space-5);
+  list-style: none;
 }
 
-.page-client-work .cw-tab {
-  min-height: 44px;
-  padding: 0 var(--space-4);
-  border: 0;
-  border-radius: 999px;
-  background: rgb(9 10 15 / 0.55);
-  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.2);
-  color: var(--color-muted);
-  font-size: 0.9375rem;
-  font-weight: var(--weight-label);
-  cursor: pointer;
-  transition:
-    background-color var(--dur-feedback) var(--ease-out),
-    color var(--dur-feedback) var(--ease-out),
-    box-shadow var(--dur-feedback) var(--ease-out);
-}
-
-.page-client-work .cw-tab:hover {
-  color: var(--color-text);
-  box-shadow: inset 0 0 0 1px rgb(238 234 226 / 0.36);
-}
-
-.page-client-work .cw-tab[aria-selected='true'] {
-  background: color-mix(in oklch, var(--stage-amber) 16%, rgb(9 10 15 / 0.7));
-  box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--stage-amber) 75%, transparent);
-  color: var(--stage-ivory);
-}
-
-.page-client-work .cw-tab:focus-visible {
-  border-radius: 999px;
+.page-client-work .cw-nav-stacked {
+  margin-top: var(--space-6);
 }
 
 /* ----------------------------------------------------------------------- */
-/* Film row: player (≈60%) and details (≈36%)                               */
+/* Sticky media region (desktop)                                            */
 /* ----------------------------------------------------------------------- */
 
-.page-client-work .cw-row {
+.page-client-work .cw-media {
+  align-self: stretch;
+}
+
+.page-client-work .cw-sticky {
+  position: sticky;
+  top: var(--cs-top);
   display: grid;
-  row-gap: var(--space-6);
-}
-
-@media (min-width: 960px) {
-  .page-client-work .cw-row {
-    grid-template-columns: var(--cw-cols);
-    column-gap: var(--case-gap);
-    align-items: start;
-  }
+  gap: var(--space-4);
 }
 
 .page-client-work .cw-player {
@@ -138,49 +54,75 @@
   min-width: 0;
 }
 
-.page-client-work .cw-stage {
-  position: relative;
-  isolation: isolate;
-}
-
-/* A subtle local pool of warm light beneath the featured film. */
-.page-client-work .cw-stage::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: 6%;
-  right: 6%;
-  bottom: -34px;
-  height: 84px;
-  background: radial-gradient(closest-side in oklch, color-mix(in oklch, var(--stage-amber) 20%, transparent), transparent);
-  pointer-events: none;
+.page-client-work .cw-figure {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .page-client-work .cw-frame {
   position: relative;
-  width: min(100%, calc(var(--cw-max-h) * 16 / 9));
+  isolation: isolate;
+  width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 14px;
-  overflow: hidden;
+  border-radius: 12px;
   background: #040405;
   box-shadow:
     0 0 0 1px rgb(255 255 255 / 0.08),
-    0 30px 60px -30px rgb(0 0 0 / 0.9);
+    0 28px 56px -30px rgb(0 0 0 / 0.9);
+}
+
+/* The sticky frame never grows taller than the viewport leaves room for. */
+.page-client-work .cw-player[data-variant='sticky'] .cw-frame {
+  width: min(100%, calc((100vh - var(--cs-top) - var(--cw-nav-h) - var(--cw-chrome)) * 16 / 9));
+}
+
+/* A faint pool of warm light beneath the player. */
+.page-client-work .cw-frame::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 8%;
+  right: 8%;
+  bottom: -34px;
+  height: 80px;
+  background: radial-gradient(closest-side in oklch, color-mix(in oklch, var(--stage-amber) 18%, transparent), transparent);
+  pointer-events: none;
 }
 
 .page-client-work .cw-poster {
   position: absolute;
   inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: 12px;
   opacity: 0;
-  transition: opacity var(--cw-fade) var(--ease-out);
+  visibility: hidden;
 }
 
-.page-client-work .cw-poster[data-active] {
+/* The new poster fades in on top; the previous one stays fully visible underneath until it has. */
+.page-client-work .cw-poster[data-state='shown'] {
+  z-index: 2;
   opacity: 1;
+  visibility: visible;
+  animation: cw-poster-in var(--cw-fade) linear;
+}
+
+.page-client-work .cw-poster[data-state='under'] {
+  z-index: 1;
+  opacity: 1;
+  visibility: visible;
+}
+
+@keyframes cw-poster-in {
+  from {
+    opacity: 0;
+  }
 }
 
 .page-client-work .cw-poster .picture,
-.page-client-work .cw-poster img {
+.page-client-work .cw-poster img,
+.page-client-work .cw-poster .image-fallback {
   width: 100%;
   height: 100%;
 }
@@ -188,79 +130,194 @@
 .page-client-work .cw-video {
   position: absolute;
   inset: 0;
+  z-index: 3;
   width: 100%;
   height: 100%;
+  border-radius: 12px;
   background: #040405;
   object-fit: contain;
 }
 
 .page-client-work .cw-video:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: -2px;
-}
-
-.page-client-work .cw-play {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: flex-end;
-  padding: var(--space-4);
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
-
-@media (max-width: 599.98px) {
-  .page-client-work .cw-play {
-    padding: var(--space-2);
-  }
-
-  .page-client-work .cw-play__chip {
-    min-height: 40px;
-    padding-inline: var(--space-2) var(--space-3);
-  }
-}
-
-.page-client-work .cw-play:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: -4px;
-  border-radius: 14px;
-}
-
-.page-client-work .cw-play__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  padding: 0 var(--space-4) 0 var(--space-3);
-  border-radius: 999px;
-  background: rgb(9 10 15 / 0.84);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.18);
-  color: var(--color-text);
-  font-size: var(--text-small);
-  font-weight: var(--weight-label);
-  transition: box-shadow var(--dur-feedback) var(--ease-out);
-}
-
-.page-client-work .cw-play:hover .cw-play__chip,
-.page-client-work .cw-play:focus-visible .cw-play__chip {
-  box-shadow: 0 0 0 1.5px color-mix(in oklch, var(--stage-amber) 75%, transparent);
-}
-
-.page-client-work .cw-play__time {
-  margin-left: var(--space-1);
-  color: var(--color-muted);
+  outline: var(--focus-ring);
+  outline-offset: 3px;
 }
 
 .page-client-work .cw-caption {
-  margin-top: var(--space-1);
+  max-width: 64ch;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: 1.5;
 }
+
+.page-client-work .cw-player[data-variant='sticky'] .cw-caption {
+  min-height: 3em;
+}
+
+.page-client-work .cw-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  min-height: 40px;
+}
+
+.page-client-work .cw-controls__now {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: 1.4;
+}
+
+.page-client-work .cw-controls__name {
+  color: var(--color-text);
+  font-weight: var(--weight-label);
+}
+
+/* ----------------------------------------------------------------------- */
+/* Film sections                                                            */
+/* ----------------------------------------------------------------------- */
+
+.page-client-work .cw-film {
+  position: relative;
+  scroll-margin-top: var(--space-2);
+}
+
+.page-client-work .cw-film + .cw-film {
+  margin-top: clamp(56px, 5vw, 72px);
+}
+
+.page-client-work .cw-film__title {
+  margin-bottom: var(--space-2);
+}
+
+.page-client-work .cw-film__title:focus {
+  outline: none;
+}
+
+/* The current section (desktop): a short accent marker beside its heading. */
+.page-client-work .cw[data-layout='sticky'] .cw-film::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 0.35em;
+  width: 3px;
+  height: 24px;
+  border-radius: 2px;
+  background: var(--case-accent);
+  opacity: 0;
+  transform: scaleY(0.4);
+  transform-origin: 50% 0;
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 200ms var(--ease-out);
+}
+
+.page-client-work .cw[data-layout='sticky'] .cw-film[data-current]::before {
+  opacity: 1;
+  transform: none;
+}
+
+/*
+ * The last section keeps the player pinned while it is read: at least as tall
+ * as the sticky region, so the player is still in place when the section's
+ * heading reaches the top of the reading area. (It normally is already.)
+ */
+.page-client-work .cw[data-layout='sticky'] .cw-film[data-last] {
+  min-height: calc(var(--cw-media-h, 0px) + var(--space-6));
+}
+
+.page-client-work .cw-film__kind {
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.page-client-work .cw-film__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.page-client-work .cw-film__status {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.page-client-work .cw-inline {
+  margin-top: var(--space-5);
+}
+
+.page-client-work .cw-inline + .cw-film__actions {
+  margin-top: var(--space-4);
+}
+
+.page-client-work .cw-facts {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.page-client-work .cw-facts > div {
+  display: grid;
+  gap: 6px;
+}
+
+.page-client-work .cw-facts dt {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-weight: var(--weight-label);
+  line-height: 1.4;
+}
+
+/* A draft placeholder for Harlie's own evidence of her part (small, under the contribution). */
+.page-client-work .cw-evidence {
+  max-width: 400px;
+  margin-top: var(--space-5);
+}
+
+/* ----------------------------------------------------------------------- */
+/* Transcript: optional, secondary disclosure                               */
+/* ----------------------------------------------------------------------- */
 
 .page-client-work .cw-transcript {
-  margin-top: var(--space-2);
+  margin-top: var(--space-5);
 }
 
-/* Speaker names as small block labels (no colons in visitor copy). */
+.page-client-work .cw-transcript__summary {
+  list-style: none;
+}
+
+.page-client-work .cw-transcript__summary::-webkit-details-marker {
+  display: none;
+}
+
+.page-client-work .cw-transcript__chevron {
+  transition: transform var(--dur-feedback) var(--ease-out);
+}
+
+.page-client-work .cw-transcript[open] .cw-transcript__chevron {
+  transform: rotate(90deg);
+}
+
+.page-client-work .cw-transcript__hide,
+.page-client-work .cw-transcript[open] .cw-transcript__show {
+  display: none;
+}
+
+.page-client-work .cw-transcript[open] .cw-transcript__hide {
+  display: inline;
+}
+
+.page-client-work .cw-transcript__body {
+  max-width: 62ch;
+  margin-top: var(--space-4);
+  font-size: var(--text-small);
+  line-height: 1.55;
+}
+
+/* Speaker names as small block labels. */
 .page-client-work .transcript__body strong {
   display: block;
   color: var(--color-subtle);
@@ -271,178 +328,32 @@
 }
 
 /* ----------------------------------------------------------------------- */
-/* Details: the three text blocks share one cell so the row keeps its size  */
+/* Other agency work (the compact ending, in the Results slot)              */
 /* ----------------------------------------------------------------------- */
 
-.page-client-work .cw-details {
-  display: grid;
-  min-width: 0;
-}
-
-.page-client-work .cw-detail {
-  grid-area: 1 / 1;
-  display: grid;
-  align-content: start;
-  gap: var(--space-4);
-  min-width: 0;
-  opacity: 0;
-  visibility: hidden;
-}
-
-/* The new text fades in; the old text leaves at once so lines never overlap. */
-.page-client-work .cw-detail[data-active] {
-  opacity: 1;
-  visibility: visible;
-  transition: opacity var(--cw-fade) var(--ease-out);
-}
-
-@media (min-width: 960px) {
-  .page-client-work .cw-detail.reading-scrim {
-    --scrim-pad: 28px;
-    --scrim-pad-x: 36px;
-  }
-}
-
-.page-client-work .cw-detail__kind {
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-  font-weight: var(--weight-label);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-}
-
-.page-client-work .cw-detail__title {
-  margin-top: calc(-1 * var(--space-3));
-  color: var(--stage-ivory);
-  font-size: clamp(1.375rem, 1.25rem + 0.5vw, 1.625rem);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  font-weight: var(--weight-heading);
-}
-
-.page-client-work .cw-facts {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.page-client-work .cw-facts > div {
-  display: grid;
-  gap: var(--space-1);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--cw-line);
-}
-
-.page-client-work .cw-facts dt {
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  font-weight: var(--weight-label);
-}
-
-.page-client-work .cw-facts dd {
-  max-width: var(--cw-measure);
-  color: var(--color-text);
-  font-size: var(--case-body);
-  line-height: 1.55;
-}
-
-.page-client-work .cw-gallery {
+.page-client-work .cw-other {
   display: grid;
   gap: var(--space-2);
-  margin-top: var(--space-1);
-  container-type: inline-size;
+  padding-left: 1.1em;
 }
 
-.page-client-work .cw-gallery__label {
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  font-weight: var(--weight-label);
+.page-client-work .cw-other li::marker {
+  color: var(--case-accent);
 }
 
-/* Every row of thumbnails has the same height (two 16:9 frames across the
-   column; .cw-gallery is the size container), so portrait photographs never
-   make one tab taller than another. */
-.page-client-work .cw-stills {
-  --still-h: calc((100cqi - var(--space-2)) / 2 * 9 / 16);
-  display: flex;
-  gap: var(--space-2);
-  list-style: none;
+html[data-motion='reduce'] .page-client-work .cw-poster,
+html[data-motion='reduce'] .page-client-work .cw-film::before,
+html[data-motion='reduce'] .page-client-work .cw-transcript__chevron {
+  animation: none !important;
+  transition: none !important;
 }
 
-.page-client-work .cw-stills > li {
-  flex: none;
-}
-
-.page-client-work .cw-still {
-  width: auto;
-  height: var(--still-h);
-  aspect-ratio: 16 / 9;
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--color-surface);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08);
-}
-
-.page-client-work .cw-stills[data-shape='portrait'] .cw-still {
-  aspect-ratio: 3 / 4;
-}
-
-.page-client-work .cw-still .picture,
-.page-client-work .cw-still img {
-  width: 100%;
-  height: 100%;
-}
-
-.page-client-work .cw-still:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 2px;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Other agency work                                                        */
-/* ----------------------------------------------------------------------- */
-
-.page-client-work .cw-other__list {
-  display: grid;
-  list-style: none;
-}
-
-@media (min-width: 960px) {
-  .page-client-work .cw-other__list.reading-scrim {
-    --scrim-pad: 24px;
-    --scrim-pad-x: 40px;
+@media (max-width: 599.98px) {
+  .page-client-work .cw-nav ul {
+    gap: 6px;
   }
-}
 
-.page-client-work .cw-other__item {
-  display: grid;
-  gap: var(--space-1);
-  padding-block: var(--space-4);
-  border-top: 1px solid var(--cw-line);
-}
-
-.page-client-work .cw-other__item:first-child {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.page-client-work .cw-other__title {
-  color: var(--stage-ivory);
-  font-size: 1rem;
-  font-weight: var(--weight-label);
-  line-height: 1.4;
-}
-
-.page-client-work .cw-other__text {
-  max-width: var(--cw-measure);
-  color: var(--color-text);
-  font-size: var(--case-body);
-  line-height: 1.55;
-}
-
-@media (min-width: 720px) {
-  .page-client-work .cw-other__item {
-    grid-template-columns: 10rem minmax(0, 1fr);
-    column-gap: var(--space-5);
-    align-items: baseline;
+  .page-client-work .cw-nav__chip {
+    padding-inline: 12px;
   }
 }

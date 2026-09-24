@@ -1,0 +1,1226 @@
+/*
+ * The restored creative portfolio (/creative, /creative/art, /creative/film).
+ *
+ * Ported from the original portfolio's styles (old portfolio copy/src/
+ * styles/{tokens,header,home,about,creative}.css): the same tokens, type,
+ * grid, header, contact band, footer, film grid and art wall. Every rule is
+ * scoped under `.legacy-creative`, so nothing here reaches the professional
+ * site (this sheet stays loaded after a visit), and the resets below undo the
+ * professional base styles inside the scope. The only unscoped selectors are
+ * the `html:has(.legacy-creative)` rules, which apply only while a creative
+ * page is mounted, and keyframe names, which are prefixed `lc-`.
+ *
+ * Archive repairs are marked "repair:".
+ */
+
+/* ---- page ground while a creative page is mounted ----------------------- */
+
+html:has(.legacy-creative),
+html:has(.legacy-creative) body {
+  background: #0b0b10;
+}
+
+/* The original's anchors clear its own 62px bar (scroll-margin below), not
+   the professional header's scroll padding. */
+html:has(.legacy-creative) {
+  scroll-padding-top: 0;
+}
+
+/* ---- tokens (the original's material) ---------------------------------- */
+
+.legacy-creative {
+  --bg: #0b0b10;
+  --surface: #17161d;
+  --raised: #211f2a;
+
+  --ink-900: #09090d;
+  --ink-800: #0b0b10;
+  --ink-700: #0f0f15;
+  --ink-600: #17161d;
+  --ink-500: #1d1c25;
+  --ink-400: #211f2a;
+
+  --line: rgba(255, 255, 255, 0.07);
+  --line-2: rgba(255, 255, 255, 0.11);
+  --line-3: rgba(255, 255, 255, 0.17);
+
+  --paper: #f2efe8;
+  --text: #ded9d0;
+  --text-2: #b3afb8;
+  --text-3: #93909d;
+  --text-4: #7f7c8a;
+
+  --accent: #b9b4c4;
+  --accent-rgb: 185, 180, 196;
+
+  --max: 1680px;
+  --margin: clamp(20px, 4.4vw, 72px);
+  --gutter: clamp(14px, 1.5vw, 26px);
+
+  --r-tile: 16px;
+  --r-photo: 14px;
+  --r-ui: 10px;
+  --r-ui-sm: 7px;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast: 220ms;
+  --t: 380ms;
+
+  --header-h: 62px;
+  --accent-red: #d32f2f;
+
+  --font-serif: 'Playfair Display', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Inter', 'Inter Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow-x: clip;
+  background: var(--ink-800);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  font-feature-settings: normal;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  color-scheme: dark;
+}
+
+/* ---- reset (the original's, inside the scope) --------------------------- */
+
+.legacy-creative *,
+.legacy-creative *::before,
+.legacy-creative *::after {
+  box-sizing: border-box;
+}
+
+.legacy-creative * {
+  margin: 0;
+}
+
+.legacy-creative :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: inherit;
+  font-size: inherit;
+  text-wrap: wrap;
+}
+
+.legacy-creative :is(p, li, dd, figcaption) {
+  text-wrap: wrap;
+}
+
+.legacy-creative :is(img, video, svg, canvas, iframe) {
+  display: block;
+  max-width: 100%;
+}
+
+.legacy-creative :is(img, video) {
+  height: auto;
+}
+
+/* A <picture> only chooses the file; the <img> inside is what is laid out. */
+.legacy-creative .lc-picture {
+  display: contents;
+}
+
+.legacy-creative button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: inherit;
+}
+
+.legacy-creative a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.legacy-creative :is(ul, ol) {
+  list-style: none;
+  padding: 0;
+}
+
+.legacy-creative :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.legacy-creative :focus:not(:focus-visible) {
+  outline: none;
+}
+
+.legacy-creative ::selection {
+  background: rgba(var(--accent-rgb), 0.28);
+  color: var(--paper);
+}
+
+/* Anything the page jumps to clears the fixed bar. */
+.legacy-creative [id] {
+  scroll-margin-top: calc(var(--header-h) + 12px);
+}
+
+/* ---- type primitives ---------------------------------------------------- */
+
+.legacy-creative .lc-display {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  line-height: 0.88;
+  letter-spacing: -0.022em;
+  color: var(--paper);
+}
+
+.legacy-creative .lc-serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.016em;
+  color: var(--paper);
+}
+
+.legacy-creative .lc-label {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* ---- layout primitives -------------------------------------------------- */
+
+.legacy-creative .lc-shell {
+  width: 100%;
+  max-width: var(--max);
+  margin-inline: auto;
+  padding-inline: var(--margin);
+}
+
+/* ---- utility ------------------------------------------------------------ */
+
+.legacy-creative .lc-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.legacy-creative .lc-skip {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 200;
+  padding: 10px 16px;
+  border-radius: var(--r-ui-sm);
+  background: var(--ink-500);
+  color: var(--paper);
+  font-size: 13px;
+  transform: translateY(-160%);
+  transition: transform var(--t) var(--ease);
+}
+.legacy-creative .lc-skip:focus {
+  transform: none;
+}
+
+/* The route arrives, briefly. Opacity only, and `backwards` rather than
+   `both`, so nothing is left applied once it ends (a finished fill would keep
+   a stacking context around the page). */
+.legacy-creative .lc-route {
+  animation: lc-route-in 190ms var(--ease-out) backwards;
+}
+@keyframes lc-route-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ==================================================== header ============= */
+
+.legacy-creative .hd {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(115%);
+  backdrop-filter: blur(14px) saturate(115%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.legacy-creative .hd-in {
+  width: 100%;
+  max-width: 1800px;
+  margin-inline: auto;
+  padding-inline: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.legacy-creative .hd-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.legacy-creative .hd-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 7px 4px;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 260ms var(--ease-out);
+}
+.legacy-creative .hd-back svg {
+  flex: none;
+  transform: translateX(0);
+  transition: transform 300ms var(--ease-out);
+}
+.legacy-creative .hd-back:hover,
+.legacy-creative .hd-back:focus-visible {
+  color: #fff;
+}
+.legacy-creative .hd-back:hover svg,
+.legacy-creative .hd-back:focus-visible svg {
+  transform: translateX(-4px);
+}
+
+.legacy-creative .hd-nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(18px, 2.2vw, 32px);
+  flex: none;
+}
+
+/* small-caps lowercase at 0.1em; the current page in the original red,
+   lifted until it carries small type */
+.legacy-creative .hd-link {
+  position: relative;
+  padding-block: 12px;
+  margin-block: -12px;
+  font-size: 14px;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: #fff;
+  transition: color 500ms var(--ease);
+}
+.legacy-creative .hd-link:hover,
+.legacy-creative .hd-link:focus-visible,
+.legacy-creative .hd-link[data-on] {
+  color: #ef6a5f;
+}
+
+@media (max-width: 720px) {
+  .legacy-creative .hd-in {
+    gap: 12px;
+  }
+  .legacy-creative .hd-left {
+    gap: 10px;
+  }
+  .legacy-creative .hd-nav {
+    gap: 14px;
+  }
+  .legacy-creative .hd-link {
+    font-size: 13px;
+  }
+  .legacy-creative .hd-back {
+    padding: 8px 4px;
+    min-height: 36px;
+  }
+  .legacy-creative .hd-back span {
+    font-size: 12px;
+  }
+}
+
+/* The back label is the whole point of the control, so the home mark goes
+   first when space runs out. Home is still in the footer. */
+@media (max-width: 560px) {
+  .legacy-creative .hd[data-back] .hd-home {
+    display: none;
+  }
+  .legacy-creative .hd-back {
+    min-height: 44px;
+    padding: 0 4px;
+  }
+}
+
+@media (max-width: 430px) {
+  .legacy-creative .hd-back span {
+    display: none;
+  }
+  .legacy-creative .hd-back {
+    min-width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 360px) {
+  .legacy-creative .hd-nav {
+    gap: 16px;
+  }
+}
+
+/* ==================================================== creative =========== */
+
+.legacy-creative :is(.cv, .fl, .at) {
+  position: relative;
+  z-index: 2;
+}
+
+.legacy-creative .cv-head {
+  padding-top: calc(var(--header-h) + clamp(30px, 7vh, 82px));
+  padding-bottom: clamp(20px, 3.4vh, 38px);
+}
+.legacy-creative .cv-t {
+  font-size: clamp(38px, 4.6vw, 72px);
+}
+.legacy-creative .cv-d {
+  margin-top: 16px;
+  font-size: clamp(16px, 1.3vw, 18px);
+  font-weight: 300;
+  color: var(--text-2);
+  max-width: 46ch;
+}
+
+.legacy-creative .cv-grid {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: clamp(12px, 1.4vw, 24px);
+  padding-bottom: clamp(44px, 8vh, 100px);
+}
+
+.legacy-creative .cv-card {
+  position: relative;
+  display: block;
+  height: clamp(320px, 56vh, 600px);
+  border-radius: var(--r-tile);
+  overflow: hidden;
+  background: var(--ink-700);
+  box-shadow: inset 0 0 0 1px var(--line);
+  cursor: pointer;
+  transition: box-shadow 460ms var(--ease-out);
+}
+.legacy-creative .cv-card:hover,
+.legacy-creative .cv-card:focus-visible {
+  box-shadow:
+    inset 0 0 0 1px var(--line-2),
+    0 22px 56px -26px rgba(0, 0, 0, 0.92);
+}
+
+.legacy-creative .cv-media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+/* repair: max-width none. The original's global max-width capped this 106%
+   box at 100%, which left a dark strip down the right edge of each tile. */
+.legacy-creative .cv-fill {
+  position: absolute;
+  inset: -3%;
+  width: 106%;
+  height: 106%;
+  max-width: none;
+  object-fit: cover;
+  filter: saturate(0.94) brightness(0.8);
+  transition:
+    transform 1000ms var(--ease-out),
+    filter 640ms var(--ease-out);
+}
+.legacy-creative .cv-card:hover .cv-fill,
+.legacy-creative .cv-card:focus-visible .cv-fill {
+  transform: scale(1.05);
+  filter: saturate(1.04) brightness(0.98);
+}
+
+.legacy-creative .cv-face {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(22px, 2vw, 34px);
+  background: linear-gradient(to top, rgba(9, 9, 13, 0.9) 0%, rgba(9, 9, 13, 0.4) 56%, transparent 100%);
+}
+.legacy-creative .cv-text {
+  display: block;
+  min-width: 0;
+}
+.legacy-creative .cv-n {
+  display: block;
+  font-size: clamp(26px, 2.4vw, 40px);
+}
+.legacy-creative .cv-m {
+  display: block;
+  margin-top: 9px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+
+/* repair: a visible cue that the room is a link, before any hover */
+.legacy-creative .cv-go {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--r-ui);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #fff;
+  background: rgba(10, 10, 14, 0.55);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  transition:
+    background 260ms var(--ease-out),
+    box-shadow 260ms var(--ease-out);
+}
+.legacy-creative .cv-go svg {
+  transition: transform 300ms var(--ease-out);
+}
+.legacy-creative .cv-card:hover .cv-go,
+.legacy-creative .cv-card:focus-visible .cv-go {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+}
+.legacy-creative .cv-card:hover .cv-go svg,
+.legacy-creative .cv-card:focus-visible .cv-go svg {
+  transform: translateX(3px);
+}
+.legacy-creative .cv-card:active .cv-go {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+/* ---- film --------------------------------------------------------------- */
+
+.legacy-creative :is(.fl-head, .at-head) {
+  padding-top: calc(var(--header-h) + clamp(26px, 6vh, 70px));
+  padding-bottom: clamp(20px, 3.4vh, 40px);
+}
+.legacy-creative :is(.fl-crumb, .at-crumb) {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: clamp(14px, 2.4vh, 26px);
+}
+/* repair: the way back reads as a link before hover */
+.legacy-creative :is(.fl-crumb, .at-crumb) a {
+  padding-block: 12px;
+  margin-block: -7px;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+  text-decoration-color: rgba(147, 144, 157, 0.55);
+  transition:
+    color var(--t-fast) var(--ease),
+    text-decoration-color var(--t-fast) var(--ease);
+}
+.legacy-creative :is(.fl-crumb, .at-crumb) a:hover,
+.legacy-creative :is(.fl-crumb, .at-crumb) a:focus-visible {
+  color: var(--text);
+  text-decoration-color: currentColor;
+}
+.legacy-creative :is(.fl-crumb, .at-crumb) b {
+  font-weight: 400;
+  color: var(--text-2);
+}
+.legacy-creative :is(.fl-t, .at-t) {
+  font-size: clamp(38px, 4.6vw, 72px);
+}
+
+.legacy-creative .fl {
+  --accent: #d8c4a4;
+  --accent-rgb: 216, 196, 164;
+}
+
+.legacy-creative .fl-group {
+  padding-bottom: clamp(36px, 6vh, 74px);
+}
+.legacy-creative .fl-group-k {
+  display: block;
+  padding-bottom: 13px;
+  margin-bottom: clamp(16px, 2.4vh, 26px);
+  border-bottom: 1px solid var(--line);
+}
+
+.legacy-creative .fl-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(16px, 2vw, 34px) clamp(14px, 1.6vw, 26px);
+}
+
+.legacy-creative .fl-item button {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+
+.legacy-creative .fl-media {
+  position: relative;
+  display: block;
+  width: 100%;
+  border-radius: var(--r-photo);
+  overflow: hidden;
+  background: #0a0a0e;
+}
+.legacy-creative .fl-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.005);
+  filter: brightness(0.9) saturate(0.98);
+  transition:
+    transform 1100ms var(--ease-out),
+    filter 620ms var(--ease-out);
+}
+.legacy-creative .fl-item button:hover .fl-img,
+.legacy-creative .fl-item button:focus-visible .fl-img {
+  transform: scale(1.045);
+  filter: brightness(1.02) saturate(1.04);
+}
+
+/* repair: the play affordance is a labelled control, visible without hover
+   (it was an unlabelled circle that appeared only on hover) */
+.legacy-creative .fl-play {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 0 17px 0 15px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--paper);
+  background: rgba(12, 12, 17, 0.7);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.34);
+  transition:
+    background 300ms var(--ease-out),
+    box-shadow 300ms var(--ease-out),
+    transform 300ms var(--ease-out);
+}
+.legacy-creative .fl-item button:hover .fl-play,
+.legacy-creative .fl-item button:focus-visible .fl-play {
+  background: rgba(12, 12, 17, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  transform: translateY(-2px);
+}
+.legacy-creative .fl-item button:active .fl-play {
+  transform: none;
+  background: rgba(40, 40, 48, 0.92);
+}
+
+.legacy-creative .fl-copy {
+  display: block;
+  padding-top: 15px;
+}
+.legacy-creative .fl-name {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: clamp(19px, 1.9vw, 28px);
+  line-height: 1.1;
+  color: var(--text);
+  transition: color 360ms var(--ease-out);
+}
+.legacy-creative .fl-item button:hover .fl-name,
+.legacy-creative .fl-item button:focus-visible .fl-name {
+  color: var(--paper);
+}
+/* the credit comes before the description, because it is the fact */
+.legacy-creative .fl-role {
+  display: block;
+  margin-top: 7px;
+  font-size: 13px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.85;
+}
+/* repair: readable notes and credits (were 300 weight / quieter grey) */
+.legacy-creative .fl-note {
+  display: block;
+  margin-top: 8px;
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--text-2);
+  max-width: 54ch;
+}
+.legacy-creative .fl-awards {
+  display: block;
+  margin-top: 9px;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+}
+
+/* ---- art ---------------------------------------------------------------- */
+
+.legacy-creative .at {
+  --accent: #c9bcd6;
+  --accent-rgb: 201, 188, 214;
+}
+
+/* repair: the one-line introduction and the series links */
+.legacy-creative .at-intro {
+  margin-top: clamp(14px, 2vh, 20px);
+  font-size: clamp(16px, 1.3vw, 18px);
+  font-weight: 300;
+  color: var(--text-2);
+  max-width: 46ch;
+}
+.legacy-creative .at-nav {
+  margin-top: clamp(18px, 3vh, 28px);
+}
+.legacy-creative .at-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.legacy-creative .at-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--r-ui);
+  font-size: 14px;
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--line-3);
+  transition:
+    color 220ms var(--ease-out),
+    background 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
+}
+.legacy-creative .at-nav a::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-right: 1.3px solid currentColor;
+  border-bottom: 1.3px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.7;
+}
+.legacy-creative .at-nav a:hover,
+.legacy-creative .at-nav a:focus-visible {
+  color: var(--paper);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.34);
+}
+.legacy-creative .at-nav a:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.legacy-creative .at-series {
+  padding-bottom: clamp(44px, 7vh, 92px);
+}
+.legacy-creative .at-series-h {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(16px, 3vw, 46px);
+  align-items: baseline;
+  padding-bottom: 16px;
+  margin-bottom: clamp(18px, 3vh, 30px);
+  border-bottom: 1px solid var(--line);
+}
+.legacy-creative .at-series-n {
+  font-size: clamp(24px, 2.8vw, 40px);
+}
+/* repair: readable series note (was 300 weight in the quietest grey) */
+.legacy-creative .at-series-note {
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.65;
+  color: var(--text-2);
+  font-style: italic;
+  max-width: 62ch;
+}
+
+/* the wall: works keep their own proportions and are hung at their own size */
+.legacy-creative .at-wall {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(16px, 2.2vw, 40px);
+  align-items: end;
+}
+
+.legacy-creative .at-work {
+  margin: 0;
+}
+.legacy-creative .at-work button {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.legacy-creative .at-work img {
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+  filter: brightness(0.94);
+  transition:
+    filter 520ms var(--ease-out),
+    transform 620ms var(--ease-out);
+}
+.legacy-creative .at-work button:hover img,
+.legacy-creative .at-work button:focus-visible img {
+  filter: brightness(1.04);
+  transform: translateY(-3px);
+}
+
+/* repair: a visible enlargement control on every work */
+.legacy-creative .at-cue {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 15px;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--paper);
+  background: rgba(10, 10, 14, 0.66);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  transition:
+    background 260ms var(--ease-out),
+    box-shadow 260ms var(--ease-out),
+    transform 620ms var(--ease-out);
+}
+.legacy-creative .at-work button:hover .at-cue,
+.legacy-creative .at-work button:focus-visible .at-cue {
+  background: rgba(10, 10, 14, 0.88);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  transform: translateY(-3px);
+}
+
+/* repair: readable captions (were the quietest grey) */
+.legacy-creative .at-work figcaption {
+  margin-top: 11px;
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+  color: var(--text-2);
+  transition: color 380ms var(--ease-out);
+}
+.legacy-creative .at-work:has(button:hover, button:focus-visible) figcaption {
+  color: var(--paper);
+}
+
+/* a publication credit, where the work carries one */
+.legacy-creative :is(.at-work, .lb) figcaption i {
+  display: block;
+  margin-top: 3px;
+  font-style: normal;
+  font-size: 12.5px;
+  color: var(--accent);
+}
+
+/* ---- lightbox ----------------------------------------------------------- */
+
+.legacy-creative .lb {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  padding: clamp(16px, 4vw, 64px);
+  overflow-y: auto;
+  background: rgba(6, 6, 9, 0.96);
+  animation: lc-lb-in 260ms var(--ease-out);
+}
+@keyframes lc-lb-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.legacy-creative .lb-box {
+  position: relative;
+  /* centred; aligned to the top instead when taller than the window, so
+     nothing is pushed out of reach above it */
+  margin: auto;
+  width: fit-content;
+  max-width: min(1200px, 100%);
+  outline: none;
+}
+
+/* repair: a visible, labelled Close button (was an unlabelled 34px cross) */
+.legacy-creative .lb-x {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--r-ui);
+  font-size: 14.5px;
+  color: var(--paper);
+  background: rgba(20, 20, 26, 0.86);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  transition:
+    background var(--t-fast) var(--ease),
+    box-shadow var(--t-fast) var(--ease);
+}
+.legacy-creative .lb-x:hover,
+.legacy-creative .lb-x:focus-visible {
+  background: rgba(46, 46, 56, 0.95);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+.legacy-creative .lb-x:active {
+  background: rgba(60, 60, 72, 0.95);
+}
+
+.legacy-creative .fl-frame {
+  /* the whole player and its credits stay within a short window */
+  width: min(1100px, 86vw, (100vh - 280px) * 16 / 9);
+  width: min(1100px, 86vw, (100svh - 280px) * 16 / 9);
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: var(--r-ui);
+  background: #000;
+}
+.legacy-creative .fl-still img {
+  width: min(760px, 86vw, (100vh - 320px) * 1.79);
+  width: min(760px, 86vw, (100svh - 320px) * 1.79);
+  border-radius: var(--r-ui);
+}
+.legacy-creative .fl-still p {
+  margin-top: 12px;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+
+.legacy-creative .fl-lb-copy {
+  padding-top: 16px;
+  max-width: 68ch;
+}
+.legacy-creative .fl-lb-t {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--paper);
+}
+.legacy-creative .fl-lb-r {
+  margin-top: 6px;
+  font-size: 13px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.legacy-creative .fl-lb-n {
+  margin-top: 9px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
+.legacy-creative .at-lb {
+  margin: 0;
+}
+.legacy-creative .at-lb img {
+  max-width: min(1100px, 88vw);
+  max-height: min(76vh, calc(100vh - 250px));
+  max-height: min(76svh, calc(100svh - 250px));
+  width: auto;
+  height: auto;
+  border-radius: 2px;
+}
+.legacy-creative .at-lb figcaption {
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* repair: series navigation inside the enlarged view */
+.legacy-creative .lb-nav {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'prev count next';
+  align-items: center;
+  gap: 10px 16px;
+  margin-top: 14px;
+}
+.legacy-creative .lb-nav .lb-btn:first-child {
+  grid-area: prev;
+}
+.legacy-creative .lb-nav .lb-btn:last-child {
+  grid-area: next;
+}
+.legacy-creative .lb-count {
+  grid-area: count;
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+  text-align: center;
+}
+@media (max-width: 560px) {
+  .legacy-creative .lb-nav {
+    grid-template-columns: auto auto;
+    grid-template-areas:
+      'count count'
+      'prev next';
+    justify-content: space-between;
+  }
+  .legacy-creative .lb-count {
+    text-align: left;
+  }
+}
+.legacy-creative .lb-count span {
+  color: var(--text-3);
+}
+.legacy-creative .lb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--r-ui);
+  font-size: 14.5px;
+  color: var(--paper);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  transition:
+    background var(--t-fast) var(--ease),
+    box-shadow var(--t-fast) var(--ease),
+    opacity var(--t-fast) var(--ease);
+}
+.legacy-creative .lb-btn:hover:not(:disabled),
+.legacy-creative .lb-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+.legacy-creative .lb-btn:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+}
+.legacy-creative .lb-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ==================================================== contact band ======= */
+
+.legacy-creative .ct {
+  position: relative;
+  border-top: 1px solid var(--line-2);
+}
+.legacy-creative .ct-in {
+  padding-block: clamp(40px, 6.5vh, 72px);
+}
+.legacy-creative .ct-h {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(26px, 2.6vw, 34px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--paper);
+}
+.legacy-creative .ct-p {
+  margin: 12px 0 0;
+  max-width: 62ch;
+  font-size: 16.5px;
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.legacy-creative .ct-acts {
+  margin: clamp(22px, 3vh, 30px) 0 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.legacy-creative .ct-act {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 20px;
+  border-radius: 10px;
+  font-size: 15px;
+  color: var(--text-2);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  transition:
+    color 220ms var(--ease-out),
+    background 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
+}
+.legacy-creative .ct-act:hover,
+.legacy-creative .ct-act:focus-visible {
+  color: var(--paper);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px var(--line-3);
+}
+.legacy-creative .ct-act--go {
+  color: #fff;
+  background: var(--accent-red);
+  box-shadow: none;
+  font-weight: 500;
+}
+.legacy-creative .ct-act--go:hover,
+.legacy-creative .ct-act--go:focus-visible {
+  color: #fff;
+  background: #e03a3a;
+  box-shadow: 0 14px 40px -16px rgba(211, 47, 47, 0.8);
+}
+.legacy-creative .ct-act svg {
+  flex: none;
+}
+
+/* ==================================================== footer ============= */
+
+.legacy-creative .ft {
+  position: relative;
+  z-index: 2;
+  max-width: var(--max);
+  margin-inline: auto;
+  padding: clamp(26px, 4vh, 44px) var(--margin) clamp(32px, 5vh, 60px);
+  border-top: 1px solid var(--line);
+}
+.legacy-creative .ft > * {
+  position: relative;
+}
+.legacy-creative .ft-in {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.legacy-creative .ft-name {
+  font-family: var(--font-serif);
+  font-size: clamp(20px, 2vw, 28px);
+  color: var(--text-2);
+}
+.legacy-creative .ft-nav {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(14px, 1.8vw, 28px);
+  flex-wrap: wrap;
+  margin-block: -6px;
+}
+.legacy-creative .ft-nav a {
+  padding-block: 12px;
+  margin-block: -12px;
+  font-size: 13.5px;
+  letter-spacing: 0.03em;
+  color: var(--text-3);
+  transition: color var(--t-fast) var(--ease);
+}
+.legacy-creative .ft-nav a:hover,
+.legacy-creative .ft-nav a:focus-visible {
+  color: var(--paper);
+}
+.legacy-creative .ft-fine {
+  margin-top: 22px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-3);
+  max-width: 70ch;
+}
+
+/* ==================================================== narrow ============= */
+
+@media (max-width: 860px) {
+  .legacy-creative .cv-grid {
+    grid-template-columns: 1fr;
+  }
+  .legacy-creative .cv-card {
+    height: clamp(220px, 34vh, 320px);
+  }
+  .legacy-creative .fl-item {
+    grid-column: span 12 !important;
+  }
+  .legacy-creative .at-work {
+    grid-column: span 6 !important;
+  }
+  .legacy-creative .at-series-h {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 560px) {
+  .legacy-creative .cv-face {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .legacy-creative .fl-play {
+    left: 12px;
+    bottom: 12px;
+    min-height: 36px;
+    padding: 0 14px 0 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 520px) {
+  .legacy-creative .at-work {
+    grid-column: span 12 !important;
+  }
+}
+
+/* Touch: 44px targets on the small controls, and the hover states the
+   original relied on shown at rest. */
+@media (hover: none), (pointer: coarse) {
+  .legacy-creative .cv-card .cv-fill {
+    filter: saturate(1) brightness(0.92);
+  }
+  .legacy-creative .at-nav a {
+    min-height: 44px;
+  }
+}
+
+/* Reduced motion (the site-wide preference) is handled by base.css's
+   html[data-motion='reduce'] rule; the lifts are removed outright here. */
+html[data-motion='reduce'] .legacy-creative :is(.cv-fill, .fl-img, .at-work img, .fl-play, .at-cue, .cv-go svg) {
+  transform: none !important;
+}
+html[data-motion='reduce'] .legacy-creative .lc-route {
+  animation: none;
+}

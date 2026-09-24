@@ -12,6 +12,8 @@
  * a synthetic illustration, or a retrospective diagram.
  */
 
+import { CROP_IMAGES } from './crops'
+
 export type Provenance =
   | 'original-artifact'
   | 'independent-prototype'
@@ -27,6 +29,8 @@ export type Provenance =
   | 'art-directed-prop'
   /** A supplied presentation mockup (a device rendering for covers); not evidence of the product's format or content. */
   | 'presentation-mockup'
+  /** Supplied illustrative cover artwork for a project tile (not evidence). */
+  | 'cover-artwork'
 
 /** Visible caption label per provenance class (null = no label). */
 export const PROVENANCE_LABEL: Record<Provenance, string | null> = {
@@ -41,6 +45,7 @@ export const PROVENANCE_LABEL: Record<Provenance, string | null> = {
   'own-diagram': 'Diagram by Harlie',
   'art-directed-prop': 'Art-directed prop (AI-generated)',
   'presentation-mockup': 'Presentation mockup',
+  'cover-artwork': 'Illustrative cover artwork',
 }
 
 export interface ImageAsset {
@@ -108,6 +113,61 @@ const COVER_WIDTHS = [240, 480, 720, 960, 1200]
 const img = (a: Omit<ImageAsset, 'type'>): ImageAsset => ({ type: 'image', ...a })
 
 export const IMAGES = {
+  /*
+   * Carousel tiles (scripts/prepare-media.mjs, task `tiles`): one supplied
+   * image per project from `final tiles/`, matched by content and cut to an
+   * upright 3:4 tile around a focal point (originals untouched). Illustrative
+   * cover artwork, not evidence.
+   */
+  'tile-cafepress-uk': img({
+    id: 'tile-cafepress-uk', file: 'tile-cafepress-uk', width: 971, height: 1295, widths: [320, 480, 640, 960], fallback: 'jpg',
+    alt: 'CafePress Business UK branded products on a sunlit desk: a tote bag, water bottle, mugs, hoodie, notebooks, and a lanyard in green and white.',
+    provenance: 'cover-artwork', synthetic: true,
+    source: 'final tiles/cp uk.png', role: 'Homepage carousel tile, Work shelf thumbnail, next-project link',
+    crop: '3:4 crop, y 113 to 1408 of 971×1619',
+  }),
+  'tile-merchandising-platform': img({
+    id: 'tile-merchandising-platform', file: 'tile-merchandising-platform', width: 1086, height: 1448, widths: [320, 480, 640, 960], fallback: 'jpg',
+    alt: 'A laptop on a sunlit desk showing a merchandising dashboard with product totals, sales performance, inventory status, top categories, and recent orders.',
+    provenance: 'cover-artwork', synthetic: true,
+    source: 'final tiles/merch.png', role: 'Homepage carousel tile, Work shelf thumbnail, next-project link',
+    crop: '3:4 crop, full image (1086×1448)',
+  }),
+  'tile-spreadsheet-agent': img({
+    id: 'tile-spreadsheet-agent', file: 'tile-spreadsheet-agent', width: 1086, height: 1448, widths: [320, 480, 640, 960], fallback: 'jpg',
+    alt: 'A laptop showing a spreadsheet of marketing performance beside an assistant panel, with SheetAgent branding on a mug and a notebook.',
+    provenance: 'cover-artwork', synthetic: true,
+    source: 'final tiles/speadsheet.png', role: 'Homepage carousel tile, Work shelf thumbnail, next-project link',
+    crop: '3:4 crop, full image (1086×1448)',
+  }),
+  'tile-ai-leasing-agent': img({
+    id: 'tile-ai-leasing-agent', file: 'tile-ai-leasing-agent', width: 971, height: 1295, widths: [320, 480, 640, 960], fallback: 'jpg',
+    alt: 'An apartment listing card with photos and a monthly price beside a leasing assistant chat, over a sunlit residential courtyard.',
+    provenance: 'cover-artwork', synthetic: true,
+    source: 'final tiles/valiance.png', role: 'Homepage carousel tile, Work shelf thumbnail, next-project link',
+    crop: '3:4 crop, y 162 to 1457 of 971×1619',
+  }),
+  'tile-jumpstart-finance': img({
+    id: 'tile-jumpstart-finance', file: 'tile-jumpstart-finance', width: 971, height: 1295, widths: [320, 480, 640, 960], fallback: 'jpg',
+    alt: 'Hands sketching a Jumpstart Finance concept map on paper, with notes about financial education, a student journey, and saving goals.',
+    provenance: 'cover-artwork', synthetic: true,
+    source: 'final tiles/jump.png', role: 'Homepage carousel tile, Work shelf thumbnail, next-project link',
+    crop: '3:4 crop, y 81 to 1376 of 971×1619',
+  }),
+  'tile-client-work': img({
+    id: 'tile-client-work', file: 'tile-client-work', width: 941, height: 1255, widths: [320, 480, 640, 941], fallback: 'jpg',
+    alt: 'An interview being filmed in a studio: a man speaking in an armchair, lit by a softbox, with a camera and a crew member in the foreground.',
+    provenance: 'cover-artwork', synthetic: true,
+    source: 'final tiles/shift.png', role: 'Homepage carousel tile, Work shelf thumbnail, next-project link',
+    crop: '3:4 crop, y 292 to 1547 of 941×1672',
+  }),
+  'tile-about': img({
+    id: 'tile-about', file: 'tile-about', width: 566, height: 755, widths: [320, 480, 566], fallback: 'jpg',
+    alt: 'Portrait of Harlie Katz.',
+    provenance: 'portrait', synthetic: false,
+    source: 'personal assets/headshot copy.PNG', role: 'Homepage carousel About Me tile',
+    crop: '3:4 crop at full height, x 33 to 599 of 644×755 (centred on the face)',
+  }),
   /*
    * Carousel phones (scripts/prepare-media.mjs, task `phones`): the supplied
    * transparent PNG presentation mockups, normalized so every phone body is
@@ -765,6 +825,8 @@ export const IMAGES = {
     provenance: 'personal-work', synthetic: false,
     source: 'old portfolio copy/public/hope.png', role: 'Film page still',
   }),
+  // Focused evidence crops, one registry per case study (src/content/crops/).
+  ...CROP_IMAGES,
 } satisfies Record<string, ImageAsset>
 
 export type ImageId = keyof typeof IMAGES

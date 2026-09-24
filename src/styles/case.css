@@ -1,23 +1,628 @@
 /*
- * Shared case-study layout (src/components/case/*). Page-specific styles go
- * in src/styles/pages/<id>.css, scoped under the page class.
+ * Case studies (src/components/case/*). Page-specific styles go in
+ * src/styles/pages/<id>.css, scoped under the page class.
  *
- * Desktop: content ≈1200px; text ≈38% left, media ≈57% right, gap 56px;
- * body 17–18px / 1.55; title ≤44px; section headings 22–26px; captions 14px.
- * Below 960px: one column in reading order, body ≥16px, no sticky travel.
+ * CaseScroll (desktop ≥960px): one grid, max 1240px, 44% text / 6% gap /
+ * 50% media. Title ≤44px; metadata 14–15px; body 16–18px / 1.55; section
+ * headings 22–28px; block headings 19px; captions 14px. 32–48px between
+ * related blocks, 56–72px between sections. The media column holds ONE
+ * sticky region (frame, caption, controls) from the opening to the end of
+ * the last section. Below 960px: stacked in reading order, no sticky.
+ *
+ * Frame changes (CaseScroll.tsx, constant T; Web Animations): old
+ * highlight out 60ms, new layer in 120ms over the old one, new highlight in
+ * 150ms after it settles.
  */
 
 .case {
-  --case-max: 1200px;
-  --case-gap: 56px;
+  --case-max: 1240px;
+  --case-gap: 6%;
   --case-body: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
   --case-accent: var(--stage-violet);
-  padding-bottom: var(--space-4);
 }
+
+/* ----------------------------------------------------------------------- */
+/* Shared prose and captions                                                */
+/* ----------------------------------------------------------------------- */
+
+.case-prose {
+  display: grid;
+  gap: 0.9em;
+}
+
+.case-prose p,
+.case-prose li {
+  max-width: 62ch;
+  color: var(--color-text);
+  font-size: var(--case-body);
+  line-height: 1.55;
+}
+
+.case-prose strong {
+  color: var(--stage-ivory);
+  font-weight: 620;
+}
+
+.case-prose ul {
+  display: grid;
+  gap: 0.4em;
+  padding-left: 1.1em;
+}
+
+/* Links in prose are always underlined (visibly links before hover). */
+.case-prose a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in oklch, currentColor 60%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--dur-feedback) var(--ease-out);
+}
+
+.case-prose a:hover {
+  text-decoration-color: currentColor;
+}
+
+.case-caption {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+/* ----------------------------------------------------------------------- */
+/* CaseScroll: layout                                                       */
+/* ----------------------------------------------------------------------- */
+
+.cs {
+  /* Sticky offset: header + 24px. */
+  --cs-top: calc(var(--header-height) + var(--space-5));
+  /* Caption and controls under the frame; the frame's height leaves room for them. */
+  --cs-chrome: 150px;
+  width: 100%;
+  max-width: calc(var(--case-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: clamp(var(--space-5), 3.4vw, var(--space-7)) var(--gutter) 0;
+}
+
+@media (min-width: 960px) {
+  .cs[data-layout='sticky'] {
+    display: grid;
+    grid-template-columns: minmax(0, 44fr) minmax(0, 50fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'opening media'
+      'body media';
+    column-gap: var(--case-gap);
+  }
+
+  .cs[data-layout='sticky'] > .cs-opening {
+    grid-area: opening;
+    /* The first section always starts below the activation line (40% of the viewport) on arrival. */
+    min-height: calc(40vh - var(--header-height) - var(--space-5));
+  }
+
+  .cs[data-layout='sticky'] > .cs-media {
+    grid-area: media;
+  }
+
+  .cs[data-layout='sticky'] > .cs-body {
+    grid-area: body;
+  }
+}
+
+.cs-opening,
+.cs-body,
+.cs-media {
+  min-width: 0;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Opening: title, compact metadata, note, situation                        */
+/* ----------------------------------------------------------------------- */
+
+.cs-title {
+  color: var(--stage-ivory);
+  font-size: clamp(2rem, 1.55rem + 1.5vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: var(--weight-heading);
+}
+
+.cs-meta {
+  display: grid;
+  gap: 6px;
+  margin-top: var(--space-5);
+}
+
+.cs-meta__row {
+  display: grid;
+  grid-template-columns: 7.75rem minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: baseline;
+}
+
+.cs-meta dt {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.cs-meta dd {
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.cs-note {
+  margin-top: var(--space-4);
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--case-accent);
+}
+
+.cs-note p {
+  max-width: 62ch;
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.cs-situation {
+  margin-top: var(--space-5);
+}
+
+@media (max-width: 599.98px) {
+  .cs-meta__row {
+    grid-template-columns: 7rem minmax(0, 1fr);
+  }
+
+  .cs-note p {
+    font-size: 1rem;
+  }
+}
+
+/* ----------------------------------------------------------------------- */
+/* Sections and blocks                                                      */
+/* ----------------------------------------------------------------------- */
+
+.cs-body {
+  padding-top: clamp(var(--space-7), 5vw, 60px);
+}
+
+.cs-section + .cs-section {
+  margin-top: clamp(56px, 5vw, 72px);
+}
+
+.cs-section {
+  /* Added to the root's scroll-padding-top: headings land clear of the header. */
+  scroll-margin-top: var(--space-2);
+}
+
+.cs-heading {
+  margin-bottom: var(--space-5);
+  color: var(--stage-ivory);
+  font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: var(--weight-heading);
+}
+
+.cs-heading:focus {
+  outline: none;
+}
+
+.cs-block {
+  position: relative;
+}
+
+.cs-block + .cs-block {
+  margin-top: 40px;
+}
+
+.cs-block__title {
+  margin-bottom: 10px;
+  color: var(--stage-ivory);
+  font-size: 1.1875rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  font-weight: var(--weight-heading);
+}
+
+/* The active block: a short accent marker beside its first line (no long progress line). */
+.cs[data-layout='sticky'] .cs-block::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 0.2em;
+  width: 3px;
+  height: 24px;
+  border-radius: 2px;
+  background: var(--case-accent);
+  opacity: 0;
+  transform: scaleY(0.4);
+  transform-origin: 50% 0;
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 200ms var(--ease-out);
+}
+
+.cs[data-layout='sticky'] .cs-block[data-active]::before {
+  opacity: 1;
+  transform: none;
+}
+
+/*
+ * The last block keeps the media region pinned until it is active:
+ * sticky top + region height − activation line (40vh). --cs-media-h is
+ * measured by CaseScroll; nothing is added when the block is already tall
+ * enough, and no other block gets extra height.
+ */
+.cs[data-layout='sticky'] .cs-block[data-last] {
+  min-height: max(0px, calc(var(--cs-top) + var(--cs-media-h, 0px) - 40vh + var(--space-2)));
+}
+
+/* ----------------------------------------------------------------------- */
+/* Media region, frame and layers                                           */
+/* ----------------------------------------------------------------------- */
+
+.cs-media {
+  align-self: stretch;
+}
+
+.cs-sticky {
+  position: sticky;
+  top: var(--cs-top);
+}
+
+.cs-mf {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.cs-figure {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.cs-frame {
+  position: relative;
+  container-type: size;
+  width: 100%;
+  margin-inline: auto;
+}
+
+/* The sticky frame never grows taller than the viewport leaves room for (portrait frames narrow instead). */
+.cs-mf[data-variant='sticky'] .cs-frame {
+  width: min(100%, calc((100vh - var(--cs-top) - var(--cs-chrome)) * var(--cs-frame-r)));
+}
+
+/* Stacked figures: tall visuals (phones) are bounded by the viewport height. */
+.cs-mf[data-variant='inline'] .cs-frame {
+  width: min(100%, calc(72svh * var(--cs-frame-r)));
+}
+
+.cs-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  visibility: hidden;
+}
+
+/*
+ * States are set by CaseScroll's sequencer. A change: the new layer is
+ * 'shown' on top and fades in (Web Animation, 120ms) while the old one stays
+ * 'under' at full opacity; the old one is hidden only afterwards.
+ */
+.cs-layer[data-state='shown'] {
+  z-index: 2;
+  opacity: 1;
+  visibility: visible;
+}
+
+.cs-layer[data-state='under'] {
+  z-index: 1;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* The recording, while the demo is shown (React sets its state). */
+.cs-layer--video {
+  z-index: 3;
+}
+
+.cs-frame[data-demo] .cs-layer:not(.cs-layer--video) {
+  visibility: hidden;
+}
+
+/* The visual's own box, contained in the frame (highlights are placed in percent of it). */
+.cs-canvas {
+  position: relative;
+  width: min(100cqw, calc(100cqh * var(--r)));
+  aspect-ratio: var(--r);
+}
+
+.cs-canvas .picture,
+.cs-canvas img,
+.cs-canvas .image-fallback {
+  width: 100%;
+  height: 100%;
+}
+
+/* Opaque screenshots: a subtle radius and edge. Transparent artwork keeps its alpha: no panel, no edge. */
+.cs-layer:not([data-transparent]) .cs-canvas {
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 28px 56px -30px rgb(0 0 0 / 0.9);
+}
+
+.cs-layer[data-layer^='ph:'] .cs-canvas {
+  background: none;
+}
+
+/* One meaningful region: a thin accent outline, a soft glow and a mild dim outside it (opaque screenshots only). */
+.cs-hl {
+  position: absolute;
+  z-index: 1;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 2px var(--case-accent),
+    0 0 18px 2px color-mix(in oklch, var(--case-accent) 45%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cs-hl[data-dim] {
+  box-shadow:
+    0 0 0 2px var(--case-accent),
+    0 0 18px 2px color-mix(in oklch, var(--case-accent) 45%, transparent),
+    0 0 0 200vmax rgb(5 6 9 / 0.2);
+}
+
+/* Shown by the sequencer (fades are Web Animations: 60ms out, 150ms in). */
+.cs-hl[data-on] {
+  opacity: 1;
+}
+
+.cs-video {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  object-fit: contain;
+}
+
+.cs-video:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.cs-caption {
+  max-width: 64ch;
+  min-height: 3em;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.cs-mf[data-variant='inline'] .cs-caption {
+  min-height: 0;
+}
+
+.cs-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.cs-mf[data-variant='sticky'] .cs-controls {
+  min-height: 46px;
+}
+
+/* Portrait frames (phones) sit centred in the column with their caption and controls. */
+.cs-mf[data-portrait] .cs-caption {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.cs-mf[data-portrait] .cs-controls {
+  justify-content: center;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Stacked (below 960px)                                                    */
+/* ----------------------------------------------------------------------- */
+
+.cs[data-layout='stacked'] .cs-inline--opening {
+  margin-top: var(--space-6);
+}
+
+.cs[data-layout='stacked'] .cs-body {
+  padding-top: var(--space-8);
+}
+
+.cs[data-layout='stacked'] .cs-block + .cs-block {
+  margin-top: 44px;
+}
+
+.cs-block > .cs-inline {
+  margin-top: var(--space-5);
+}
+
+/* Reduced motion: every change is instant (the sequencer skips its fades and waits too). The global
+   1ms reduced-motion transition (base.css) would blend two layers for a frame, so it is switched off here. */
+html[data-motion='reduce'] .cs-layer,
+html[data-motion='reduce'] .cs-hl,
+html[data-motion='reduce'] .cs-block::before {
+  transition: none !important;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Results (compact) and next project (one actionable row)                  */
+/* ----------------------------------------------------------------------- */
+
+.case-results {
+  display: grid;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: calc(var(--case-max) + 2 * var(--gutter));
+  margin: 64px auto 0;
+  padding-inline: var(--gutter);
+  scroll-margin-top: var(--space-2);
+}
+
+@media (min-width: 960px) {
+  .case-results {
+    grid-template-columns: minmax(0, 44fr) minmax(0, 50fr);
+    column-gap: var(--case-gap);
+    align-items: start;
+  }
+}
+
+.case-results__text {
+  min-width: 0;
+}
+
+.case-results__heading {
+  margin-bottom: var(--space-4);
+  color: var(--stage-ivory);
+  font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: var(--weight-heading);
+}
+
+.case-results__figure {
+  min-width: 0;
+  max-width: 460px;
+}
+
+/* A small evidence figure: tall images (phones, slides) are capped in height instead of filling the column. */
+.case-results__figure .media-frame {
+  justify-self: start;
+  max-width: 100%;
+}
+
+.case-results__figure .picture,
+.case-results__figure .picture img {
+  width: auto;
+  max-width: 100%;
+  max-height: min(420px, 60vh);
+}
+
+.next-project {
+  width: 100%;
+  max-width: calc(var(--case-max) + 2 * var(--gutter));
+  margin: var(--space-7) auto 0;
+  padding-inline: var(--gutter);
+}
+
+.next-project__link {
+  display: grid;
+  gap: 2px;
+  max-width: 560px;
+  min-height: 64px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  background: rgb(10 11 18 / 0.72);
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.55);
+  color: var(--color-text);
+  text-decoration: none;
+  transition:
+    background-color var(--dur-feedback) var(--ease-out),
+    box-shadow var(--dur-feedback) var(--ease-out),
+    transform var(--dur-feedback) var(--ease-out);
+}
+
+.next-project__label {
+  color: var(--stage-ivory);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.next-project__arrow {
+  display: inline-block;
+  margin-left: 2px;
+  transition: transform var(--dur-feedback) var(--ease-out);
+}
+
+.next-project__desc {
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.next-project__link:hover {
+  background: rgb(26 28 42 / 0.86);
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.9);
+  transform: translateY(-1px);
+}
+
+.next-project__link:hover .next-project__arrow {
+  transform: translate(2px, -2px);
+}
+
+.next-project__link:active {
+  background: rgb(6 7 11 / 0.9);
+  transform: none;
+}
+
+.next-project__link:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-radius: 12px;
+}
+
+html[data-motion='reduce'] .next-project__link,
+html[data-motion='reduce'] .next-project__arrow {
+  transition: none;
+}
+
+/* A related-project line inside prose (legacy pages; new pages carry this in NextProject). */
+.related-project {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--space-5);
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.related-project__label {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-weight: var(--weight-label);
+}
+
+.related-project__link {
+  justify-self: start;
+  color: var(--color-text);
+  font-size: 1.0625rem;
+  font-weight: var(--weight-label);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in oklch, currentColor 60%, transparent);
+  text-underline-offset: 3px;
+}
+
+.related-project__link:hover {
+  text-decoration-color: currentColor;
+}
+
+/* ======================================================================= */
+/* LEGACY: CaseOpening / CaseSection / StickyVisual for pages that have not */
+/* moved to CaseScroll yet. Delete this block once no page imports them.    */
+/* ======================================================================= */
 
 .case-shell {
   width: 100%;
-  max-width: calc(var(--case-max) + 2 * var(--gutter));
+  max-width: calc(1200px + 2 * var(--gutter));
   margin-inline: auto;
   padding-inline: var(--gutter);
 }
@@ -28,14 +633,10 @@
   .sv-grid {
     display: grid;
     grid-template-columns: minmax(0, 38fr) minmax(0, 57fr);
-    column-gap: var(--case-gap);
+    column-gap: 56px;
     align-items: start;
   }
 }
-
-/* ----------------------------------------------------------------------- */
-/* Typography                                                               */
-/* ----------------------------------------------------------------------- */
 
 .case-title {
   color: var(--stage-ivory);
@@ -63,43 +664,6 @@
 
 .case-heading:focus {
   outline: none;
-}
-
-.case-prose {
-  display: grid;
-  gap: 0.9em;
-}
-
-.case-prose p,
-.case-prose li {
-  max-width: 62ch;
-  color: var(--color-text);
-  font-size: var(--case-body);
-  line-height: 1.55;
-}
-
-.case-prose ul {
-  display: grid;
-  gap: 0.4em;
-  padding-left: 1.1em;
-}
-
-.case-prose a {
-  color: var(--color-text);
-  text-decoration: underline;
-  text-decoration-color: color-mix(in oklch, var(--case-accent) 70%, transparent);
-  text-underline-offset: 0.2em;
-}
-
-.case-caption {
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  line-height: 1.5;
-  /* Captions can rest on the bright floor horizon (e.g. 1280×720): a soft dark halo keeps them at AA contrast. */
-  text-shadow:
-    0 0 2px var(--stage-room),
-    0 0 10px var(--stage-room),
-    0 0 18px color-mix(in oklch, var(--stage-room) 80%, transparent);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -295,7 +859,7 @@
 
   /* A wide section keeps its heading in the text column. */
   .case-section[data-wide] > .case-section__text {
-    width: calc((100% - var(--case-gap)) * 38 / 95);
+    width: calc((100% - 56px) * 38 / 95);
   }
 }
 
@@ -594,138 +1158,3 @@
   margin-top: var(--space-4);
 }
 
-/* ----------------------------------------------------------------------- */
-/* Results and next project                                                 */
-/* ----------------------------------------------------------------------- */
-
-.case-results__figure {
-  max-width: 440px;
-}
-
-.next-project {
-  display: grid;
-  justify-items: start;
-  gap: var(--space-3);
-  margin-top: clamp(var(--space-8), 7vw, var(--space-9));
-  padding-top: var(--space-6);
-  border-top: 1px solid rgb(238 234 226 / 0.12);
-}
-
-.next-project__eyebrow {
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-  font-weight: var(--weight-label);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-}
-
-.next-project__link {
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-5);
-  max-width: 600px;
-  margin: calc(-1 * var(--space-3));
-  padding: var(--space-3);
-  border-radius: 18px;
-  color: inherit;
-  text-decoration: none;
-  transition: background-color var(--dur-feedback) var(--ease-out);
-}
-
-.next-project__link:hover {
-  background: rgb(238 234 226 / 0.05);
-}
-
-.next-project__link:focus-visible {
-  border-radius: 18px;
-}
-
-.next-project__cover {
-  display: block;
-  width: 96px;
-  aspect-ratio: 3 / 4;
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--color-surface);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08);
-}
-
-.next-project__cover .picture,
-.next-project__cover img {
-  width: 100%;
-  height: 100%;
-}
-
-.next-project__text {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.next-project__name {
-  color: var(--stage-ivory);
-  font-size: 1.375rem;
-  font-weight: var(--weight-heading);
-  letter-spacing: -0.015em;
-}
-
-.next-project__label {
-  color: var(--color-muted);
-  font-size: 0.9375rem;
-  line-height: 1.45;
-}
-
-.next-project__cta {
-  margin-top: var(--space-1);
-  color: var(--color-text);
-  font-size: 0.9375rem;
-  font-weight: var(--weight-label);
-  text-decoration: underline;
-  text-decoration-color: color-mix(in oklch, var(--case-accent) 70%, transparent);
-  text-underline-offset: 0.25em;
-}
-
-.next-project__all {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  font-weight: var(--weight-label);
-  text-decoration: underline;
-  text-decoration-color: rgb(238 234 226 / 0.25);
-  text-underline-offset: 0.25em;
-}
-
-.next-project__all:hover {
-  color: var(--color-text);
-}
-
-.related-project {
-  display: grid;
-  gap: 2px;
-  margin-top: var(--space-5);
-  padding-top: var(--space-4);
-  border-top: 1px solid rgb(238 234 226 / 0.1);
-  color: var(--color-muted);
-  font-size: 0.9375rem;
-  line-height: 1.5;
-}
-
-.related-project__label {
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-  font-weight: var(--weight-label);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-}
-
-.related-project__link {
-  justify-self: start;
-  font-size: 1.0625rem;
-  color: var(--color-text);
-  font-weight: var(--weight-label);
-  text-decoration: underline;
-  text-decoration-color: color-mix(in oklch, var(--case-accent) 70%, transparent);
-  text-underline-offset: 0.2em;
-}

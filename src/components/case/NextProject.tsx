@@ -2,51 +2,58 @@ import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { projectById, projectPath, type ProjectId } from '../../content/projects'
 import { prefetchRoute } from '../../routes'
-import { ResponsiveImage } from '../media/ResponsiveImage'
 import { isPlainClick, openProject, warmProject } from '../transition/projectTransition'
 
+interface NextProjectProps {
+  current: ProjectId
+  /**
+   * Replaces the next project's one-sentence description, e.g. to say that
+   * the next project is a separate, later piece of work.
+   */
+  description?: ReactNode
+}
+
 /**
- * Next-project navigation after the results, with normal spacing: the next
- * project's cover, name and label as one link (its cover travels into the
- * next case's opening image), and a link back to the Selected work index.
+ * The one next-project row after Results: a single, clearly actionable link
+ * labelled "Next project · <Name> ↗" with the project's one-sentence
+ * description. A plain click (or Enter) opens the project through
+ * openProject, which gives the destination's opening frame a short reveal
+ * (nothing travels across text); modifier and middle clicks stay native.
  */
-export function NextProject({ current }: { current: ProjectId }) {
+export function NextProject({ current, description }: NextProjectProps) {
   const navigate = useNavigate()
   const next = projectById(projectById(current).next)
   const path = projectPath(next)
   return (
-    <nav className="case-shell next-project" aria-label="Next project">
-      <p className="next-project__eyebrow">Next project</p>
-      <a
-        href={path}
+    <nav className="next-project" aria-label="Next project">
+      <Link
+        to={path}
         className="next-project__link"
         onClick={(e) => {
           if (!isPlainClick(e)) return
           e.preventDefault()
-          openProject({ path, source: e.currentTarget.querySelector<HTMLElement>('.next-project__cover'), navigate })
+          openProject({ path, source: null, navigate })
         }}
         onPointerEnter={() => warmProject(path)}
         onFocus={() => warmProject(path)}
       >
-        <span className="next-project__cover">
-          <ResponsiveImage image={next.cover} sizes="120px" decorative fit="cover" />
-        </span>
-        <span className="next-project__text">
-          <span className="next-project__name">{next.name}</span>
-          <span className="next-project__label">{next.label}</span>
-          <span className="next-project__cta">
-            View project <span aria-hidden="true">→</span>
+        <span className="next-project__label">
+          Next project · {next.name}{' '}
+          <span className="next-project__arrow" aria-hidden="true">
+            ↗
           </span>
         </span>
-      </a>
-      <Link to={{ pathname: '/', hash: '#selected-work' }} className="next-project__all">
-        All work
+        <span className="next-project__desc">{description ?? next.description}</span>
       </Link>
     </nav>
   )
 }
 
-/** A small link to a related project (e.g. CafePress UK and Merchandising Platform). */
+/**
+ * A small inline link to a related project (legacy pages). New pages carry
+ * the relationship in NextProject's `description` instead, so there is
+ * exactly one related link.
+ */
 export function RelatedProject({ id, children }: { id: ProjectId; children?: ReactNode }) {
   const p = projectById(id)
   const path = projectPath(p)

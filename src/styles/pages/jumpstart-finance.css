@@ -1,186 +1,127 @@
 /*
  * Jumpstart Finance page (src/pages/work/JumpstartFinance.tsx). Every selector
  * is scoped under .page-jumpstart-finance. Green is the local accent
- * (--case-accent comes from projects.ts). Glow appears only as a subtle pool
- * of light beneath the featured phones. The phone screenshots carry their own
- * device frames and original colours, so they get no box, outline or tint.
+ * (--case-accent comes from projects.ts).
+ *
+ * The case frame holds the original prototype screens (transparent phone
+ * frames, one 600×1210 canvas each), so the phone keeps one size while the
+ * screens change. The screens get no box, outline or tint: only a soft shadow
+ * that follows the phone's silhouette and a faint pool of green light below.
  */
 
 .page-jumpstart-finance {
-  --jf-pool: color-mix(in oklch, var(--stage-green) 26%, transparent);
-  --jf-phone-shadow: drop-shadow(0 22px 28px rgb(0 0 0 / 0.5));
-  --jf-hero-main: 236px;
-  --jf-hero-side: 190px;
-  --jf-inline-phone: min(260px, 70%);
+  --jf-pool: color-mix(in oklch, var(--stage-green) 22%, transparent);
+  --jf-phone-shadow: drop-shadow(0 18px 26px rgb(0 0 0 / 0.55));
 }
 
 /* ----------------------------------------------------------------------- */
-/* Opening overview, the only place three phones appear together            */
+/* The phone frame                                                          */
 /* ----------------------------------------------------------------------- */
 
-.page-jumpstart-finance .case-hero__frame {
-  background: none;
-  box-shadow: none;
-  overflow: visible;
-  border-radius: 0;
+.page-jumpstart-finance .cs-layer[data-transparent] img {
+  filter: var(--jf-phone-shadow);
 }
 
-/* The pool of light sits under the phones (below), not under the caption. */
-.page-jumpstart-finance .case-opening__media::after {
-  content: none;
-}
-
-.page-jumpstart-finance .jf-phones {
-  position: relative;
+.page-jumpstart-finance .cs-frame {
   isolation: isolate;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(10px, 2.2vw, 28px);
-  padding-block: var(--space-3) var(--space-6);
 }
 
-.page-jumpstart-finance .jf-phones::after {
+/* A faint pool of light beneath the phone (never behind its screen). */
+.page-jumpstart-finance .cs-frame::after {
   content: '';
   position: absolute;
   z-index: -1;
-  left: 6%;
-  right: 6%;
-  bottom: 0;
-  height: 96px;
+  left: -18%;
+  right: -18%;
+  bottom: -26px;
+  height: 84px;
   background: radial-gradient(closest-side in oklch, var(--jf-pool), transparent);
   pointer-events: none;
 }
 
-.page-jumpstart-finance .jf-phones__main {
-  flex: 0 1 var(--jf-hero-main);
-  min-width: 0;
-}
-
-.page-jumpstart-finance .jf-phones__side {
-  flex: 0 1 var(--jf-hero-side);
-  min-width: 0;
-}
-
-.page-jumpstart-finance .jf-phones img {
-  filter: var(--jf-phone-shadow);
-}
-
-.page-jumpstart-finance .case-hero .case-caption {
-  max-width: 52ch;
-  margin-inline: auto;
-  text-align: center;
+/* Stacked: the phone can fill most of a narrow screen, so the pool stays within its width. */
+.page-jumpstart-finance .cs-mf[data-variant='inline'] .cs-frame::after {
+  left: 0;
+  right: 0;
+  bottom: -18px;
+  height: 64px;
 }
 
 /* ----------------------------------------------------------------------- */
-/* Approach, one phone at a time                                            */
+/* Results: the pitch excerpt stays small beside the text                   */
 /* ----------------------------------------------------------------------- */
 
-.page-jumpstart-finance .sv-frame[data-transparent] {
-  isolation: isolate;
-}
-
-.page-jumpstart-finance .sv-frame[data-transparent]::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: -30%;
-  right: -30%;
-  bottom: -40px;
-  height: 110px;
-  background: radial-gradient(closest-side in oklch, var(--jf-pool), transparent);
-  pointer-events: none;
-}
-
-.page-jumpstart-finance .sv-frame[data-transparent] img {
-  filter: var(--jf-phone-shadow);
-}
-
-/* The Enlarge control sits beside the phone, never over its screen. */
-.page-jumpstart-finance .sv-frame[data-transparent] .sv-zoom {
-  right: calc(-36px - var(--space-4));
-  bottom: var(--space-2);
-}
-
-.page-jumpstart-finance .sv-sticky .sv-caption {
-  justify-content: center;
-  max-width: 44ch;
-  margin-inline: auto;
-  text-align: center;
-}
-
-/* Stacked layout (below 960px): each phone follows its paragraph at a steady size. */
-.page-jumpstart-finance .sv-inline .sv-frame[data-transparent] {
-  width: var(--jf-inline-phone);
-}
-
-.page-jumpstart-finance .sv-inline .sv-frame[data-transparent]::after {
-  left: -8%;
-  right: -8%;
-  bottom: -24px;
-  height: 72px;
-}
-
-.page-jumpstart-finance .sv-inline .sv-caption {
-  justify-content: center;
-  text-align: center;
+.page-jumpstart-finance .case-results__figure {
+  max-width: 440px;
 }
 
 /* ----------------------------------------------------------------------- */
-/* Supporting material, the proposed business model                         */
+/* Supplementary material: the proposed business model (a disclosure)       */
 /* ----------------------------------------------------------------------- */
 
-.page-jumpstart-finance .jf-support {
-  margin-top: clamp(var(--space-7), 5vw, var(--space-8));
+.page-jumpstart-finance .jf-supplement {
+  width: 100%;
+  max-width: calc(var(--case-max) + 2 * var(--gutter));
+  margin: var(--space-7) auto 0;
+  padding-inline: var(--gutter);
 }
 
-.page-jumpstart-finance .jf-support__text {
-  min-width: 0;
-}
-
-.page-jumpstart-finance .jf-support__label {
+.page-jumpstart-finance .jf-supplement__label {
+  margin-bottom: var(--space-3);
   color: var(--color-muted);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: var(--weight-label);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
 }
 
-.page-jumpstart-finance .jf-support__title {
-  margin-block: var(--space-2) var(--space-3);
-  color: var(--stage-ivory);
-  font-size: 1.1875rem;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  font-weight: var(--weight-heading);
+.page-jumpstart-finance .jf-supplement__details {
+  max-width: 620px;
 }
 
-.page-jumpstart-finance .jf-support__media {
-  min-width: 0;
-  max-width: 600px;
+.page-jumpstart-finance .jf-supplement__summary {
+  list-style: none;
+}
+
+.page-jumpstart-finance .jf-supplement__summary::-webkit-details-marker {
+  display: none;
+}
+
+.page-jumpstart-finance .jf-supplement__chevron {
+  transition: transform var(--dur-feedback) var(--ease-out);
+}
+
+.page-jumpstart-finance .jf-supplement__details[open] .jf-supplement__chevron {
+  transform: rotate(90deg);
+}
+
+.page-jumpstart-finance .jf-supplement__hide,
+.page-jumpstart-finance .jf-supplement__details[open] .jf-supplement__show {
+  display: none;
+}
+
+.page-jumpstart-finance .jf-supplement__details[open] .jf-supplement__hide {
+  display: inline;
+}
+
+.page-jumpstart-finance .jf-supplement__body {
+  display: grid;
+  gap: var(--space-5);
   margin-top: var(--space-5);
 }
 
-@media (min-width: 960px) {
-  .page-jumpstart-finance .jf-support {
-    display: grid;
-    grid-template-columns: minmax(0, 38fr) minmax(0, 57fr);
-    column-gap: var(--case-gap);
-    align-items: start;
-  }
-
-  .page-jumpstart-finance .jf-support__media {
-    margin-top: 0;
-    padding-top: var(--space-2);
-  }
+html[data-motion='reduce'] .page-jumpstart-finance .jf-supplement__chevron {
+  transition: none;
 }
 
 @media (max-width: 599.98px) {
   .page-jumpstart-finance {
-    --jf-phone-shadow: drop-shadow(0 14px 18px rgb(0 0 0 / 0.5));
+    --jf-phone-shadow: drop-shadow(0 12px 18px rgb(0 0 0 / 0.5));
   }
 
-  .page-jumpstart-finance .jf-phones {
-    padding-bottom: var(--space-5);
+  /* The label can wrap on a narrow phone instead of overflowing. */
+  .page-jumpstart-finance .jf-supplement__summary {
+    white-space: normal;
+    text-align: left;
   }
 }

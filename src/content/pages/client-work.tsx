@@ -91,7 +91,7 @@ export const CLIENT_WORK = {
       video: 'aristocracy',
       body: (
         <p>
-          I helped run a <strong>two-day shoot</strong> for Aristocracy London’s spring and summer campaign, ahead of its Manchester store opening,
+          I helped run a two-day shoot for Aristocracy London’s spring and summer campaign, ahead of its Manchester store opening,
           handling lighting, setup, and on-set coordination. I also filmed behind-the-scenes footage for the agency’s marketing.
         </p>
       ),

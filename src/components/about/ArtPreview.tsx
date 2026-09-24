@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getVideo } from '../../content/media'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { ResponsiveImage } from '../media/ResponsiveImage'
 
@@ -8,31 +9,39 @@ const VIDEO = getVideo('art-portfolio')
 const SIZES = '(min-width: 1200px) 460px, (min-width: 960px) 38vw, calc(100vw - 40px)'
 
 /**
- * The silent loop of the original creative homepage's Art tile, inside the
- * About page's "Open creative portfolio" link (AboutContent.tsx).
+ * The original creative homepage's Art tile, inside the About page's "Open
+ * creative portfolio" link (AboutContent.tsx): a quiet way into /creative/,
+ * so the section's one dominant visual stays An Artistic End beside it.
+ *
+ * At rest it shows the poster (the loop's first frame). Its silent loop plays
+ * only while the enclosing link is hovered or focused, and fades back to the
+ * poster when that ends. On devices that hover, the video element is added
+ * (metadata only) once the frame nears the viewport, so a hover starts at
+ * once; elsewhere it is added on focus, and a tap simply follows the link.
+ * Reduced motion (OS setting or the footer toggle): the poster only, and no
+ * video request at all.
  *
  * Decorative (the link's text and the sentence after it carry the meaning),
- * so it is hidden from assistive technology. The poster is painted first. The video
- * element is added only when the frame is about to enter the viewport and
- * then loads only its metadata; the file itself streams once the frame is at
- * least a third on screen (and the page is visible), when it plays. A
- * visitor who never scrolls to it downloads nothing but the poster. It
- * fades in over the poster once frames play. Reduced motion (OS setting or
- * the footer toggle): the poster only, and no video request at all.
- * `data-ambient` keeps it out of the site's one-film-at-a-time rule
- * (useMediaPlayback), so it never pauses a film and a film never counts it.
+ * so it is hidden from assistive technology. `data-ambient` keeps it out of
+ * the site's one-film-at-a-time rule (useMediaPlayback), so it never pauses
+ * a film and a film never counts it.
  */
 export function ArtPreview() {
   const reduced = useReducedMotion()
+  const canHover = useMediaQuery('(hover: hover)')
   const frameRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [near, setNear] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
   const [playing, setPlaying] = useState(false)
+  const active = !reduced && (hovered || focused)
+  const mounted = !reduced && (near || hovered || focused)
 
-  // Add the video element only once the frame is within 100px of the viewport.
+  // Hover-capable devices: add the video element once the frame is within 100px of the viewport.
   useEffect(() => {
     const frame = frameRef.current
-    if (reduced || near || !frame) return
+    if (reduced || !canHover || near || !frame) return
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) setNear(true)
@@ -41,45 +50,55 @@ export function ArtPreview() {
     )
     io.observe(frame)
     return () => io.disconnect()
-  }, [reduced, near])
+  }, [reduced, canHover, near])
 
-  // Play only while in view and visible; pause otherwise. Never under reduced motion.
+  // Hover (mouse or pen) and focus on the enclosing link.
   useEffect(() => {
-    const frame = frameRef.current
+    const link = frameRef.current?.closest('a')
+    if (!link) return
+    const enter = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') setHovered(true)
+    }
+    const leave = () => setHovered(false)
+    const focus = () => setFocused(true)
+    const blur = () => setFocused(false)
+    link.addEventListener('pointerenter', enter)
+    link.addEventListener('pointerleave', leave)
+    link.addEventListener('focus', focus)
+    link.addEventListener('blur', blur)
+    return () => {
+      link.removeEventListener('pointerenter', enter)
+      link.removeEventListener('pointerleave', leave)
+      link.removeEventListener('focus', focus)
+      link.removeEventListener('blur', blur)
+    }
+  }, [])
+
+  // Play while hovered or focused and the page is visible; pause (back to the poster) otherwise.
+  useEffect(() => {
     const video = videoRef.current
-    if (reduced || !near || !frame || !video) return
-    let inView = false
+    if (!video) return
+    if (!active) {
+      video.pause()
+      return
+    }
     const sync = () => {
-      const want = inView && document.visibilityState === 'visible'
-      if (want && video.paused) {
+      if (document.visibilityState === 'visible') {
         video.muted = true
         video.play().catch(() => {
-          /* Autoplay refused: the poster stays. */
+          /* Refused or interrupted: the poster stays. */
         })
-      } else if (!want && !video.paused) {
-        video.pause()
-      }
+      } else video.pause()
     }
-    const io = new IntersectionObserver(
-      (entries) => {
-        inView = entries.some((e) => e.isIntersecting && e.intersectionRatio >= 0.34)
-        sync()
-      },
-      { threshold: [0, 0.34, 0.66, 1] },
-    )
-    io.observe(frame)
+    sync()
     document.addEventListener('visibilitychange', sync)
-    return () => {
-      io.disconnect()
-      document.removeEventListener('visibilitychange', sync)
-      video.pause()
-    }
-  }, [reduced, near])
+    return () => document.removeEventListener('visibilitychange', sync)
+  }, [active, mounted])
 
   return (
-    <div ref={frameRef} className="about-portfolio__frame" aria-hidden="true" data-playing={(playing && !reduced) || undefined}>
+    <div ref={frameRef} className="about-portfolio__frame" aria-hidden="true" data-playing={(playing && active) || undefined}>
       <ResponsiveImage image={VIDEO.poster} sizes={SIZES} decorative fit="cover" className="about-portfolio__poster" />
-      {!reduced && near && (
+      {mounted && (
         <video
           ref={videoRef}
           className="about-portfolio__video"
@@ -95,6 +114,7 @@ export function ArtPreview() {
           tabIndex={-1}
           data-ambient=""
           onPlaying={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
         />
       )}
     </div>

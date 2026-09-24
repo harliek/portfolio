@@ -27,8 +27,8 @@ import { ResponsiveImage } from './ResponsiveImage'
  * - While "Play demo" is offered, the poster image lies over the player, so a
  *   seek or a closed larger view never replaces it with an arbitrary frame;
  *   likewise while the first seek to the start time is under way.
- * - Expand (a small button inside the player, top right, never on the native
- *   control bar): a larger view continues from the same time; the inline copy
+ * - Expand (a small button at the right end of the caption row, never on the
+ *   recording): a larger view continues from the same time; the inline copy
  *   is paused first, so two copies never play. Closing restores the inline
  *   copy at the expanded view's time, playing if the expanded one was
  *   playing, paused (as the visitor's own pause) if it was paused. Focus
@@ -303,8 +303,8 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
   }
 
   return (
-    <figure className="cs-figure cs-demo" data-variant={variant}>
-      <div ref={stageRef} className="cs-stage" data-kind="video" data-status={status} style={{ '--stage-r': ratio } as CSSProperties}>
+    <figure className="cs-figure cs-demo" data-variant={variant} style={{ '--stage-r': ratio } as CSSProperties}>
+      <div ref={stageRef} className="cs-stage" data-kind="video" data-status={status}>
         {/* Drawn underneath until the recording has a frame (the stage is never empty), and over it while "Play demo" is offered. */}
         {(!hasFrame || showPlay || covering) && (
           <ResponsiveImage
@@ -350,10 +350,11 @@ export function DemoVideo({ video: id, poster, sizes, variant, caption }: DemoVi
             </button>
           </span>
         )}
-        <button ref={expandRef} type="button" className="cs-demo__expand" aria-label="Expand video" onClick={openExpanded}>
-          <ExpandIcon />
-        </button>
       </div>
+      {/* At the right end of the caption row, off the recording (case.css .cs-expand). */}
+      <button ref={expandRef} type="button" className="cs-expand" aria-label="Expand video" onClick={openExpanded}>
+        <ExpandIcon />
+      </button>
       <figcaption id={captionId} className="cs-caption">
         {label}
       </figcaption>

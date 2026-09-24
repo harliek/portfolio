@@ -23,8 +23,9 @@ export default function JumpstartFinance() {
         media={C.media}
         sections={C.sections}
         outcome={C.outcome}
-        // The upright phone reads small at the default scale beside the wide covers of other pages.
-        coverScale={0.86}
+        // Smaller than the default: the cover phone is the same kind of object as the prototype phone on the stage,
+        // so it stays a small identifier and the original screens lead.
+        coverScale={0.6}
       />
       <NextProject current={project.id} />
     </CaseLayout>

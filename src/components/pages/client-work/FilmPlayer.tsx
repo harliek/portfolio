@@ -29,7 +29,7 @@ import { FilmDialog, type FilmState } from './FilmDialog'
  * Autoplay refused, reduced motion, a player without previews, or a paused
  * preview: the poster with one obvious Watch film button (a direct gesture,
  * so it plays with sound). `silenced` (another film was opened) pauses this
- * one. Expand (inside the frame, never on the native control bar) opens a
+ * one. Expand (at the right end of the caption row, never on the film) opens a
  * larger view from the same time and pauses this copy; closing it restores
  * the time and state here. On a phone or a touch screen, Expand puts this
  * film itself in the browser's full screen instead (a dialog would be no
@@ -469,10 +469,7 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
             <span className="visually-hidden">Watch {name} from the start with sound</span>
           </button>
         )}
-        <button ref={expandRef} type="button" className="fp-expand" aria-label={`Expand ${name} film`} onClick={openExpanded} disabled={!isAttached}>
-          <ExpandIcon />
-        </button>
-        {/* After the frame controls in the DOM, so Tab reaches Watch and Expand before the native controls. */}
+        {/* After the frame controls in the DOM, so Tab reaches Watch before the native controls. */}
         {isAttached && (
           <video
             key={front.id}
@@ -497,6 +494,10 @@ export function FilmPlayer({ films, film, variant, preview, opened, silenced, on
           />
         )}
       </div>
+      {/* At the right end of the caption row, off the film (case.css .cs-expand, client-work.css). */}
+      <button ref={expandRef} type="button" className="cs-expand fp-expand" aria-label={`Expand ${name} film`} onClick={openExpanded} disabled={!isAttached}>
+        <ExpandIcon />
+      </button>
       <figcaption id={captionId} className="fp-caption">
         {filmCaption(front)}
       </figcaption>

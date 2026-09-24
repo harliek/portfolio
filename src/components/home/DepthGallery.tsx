@@ -126,13 +126,20 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
     let boost: number[] = new Array<number>(N).fill(1)
     const nameHalf = new Float64Array(N)
     const subHalf = new Float64Array(N)
-    /** The subtitle's top within its label (px), and the height of a name's line. */
+    /** The name's and the subtitle's top and height within their label (px), and the height of a name's line. */
+    const nameTop = new Float64Array(N)
+    const nameH = new Float64Array(N)
     const subTop = new Float64Array(N)
+    const subH = new Float64Array(N)
     let nameRow = 24
     /** Per frame: each name's centre, top and opacity before names give way to nearer ones. */
     const nameX = new Float64Array(N)
     const nameY = new Float64Array(N)
     const nameOp = new Float64Array(N)
+    /** Per frame: each subtitle's centre, each label's final opacity, and whether a neighbour's subtitle may show on touch. */
+    const subX = new Float64Array(N)
+    const labelOp = new Float64Array(N)
+    const subCand = new Array<boolean>(N).fill(false)
     /** Per frame: how much each object counts as an obstacle for the names beside it, and its lowest wide part (px). */
     const obstacle = new Float64Array(N)
     const bodyBottom = new Float64Array(N)
@@ -159,10 +166,14 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
 
     const measureLabels = () => {
       labels.forEach((label, i) => {
+        const name = label.querySelector<HTMLElement>('.gobj__name')
         const sub = label.querySelector<HTMLElement>('.gobj__sub')
-        nameHalf[i] = (label.querySelector<HTMLElement>('.gobj__name')?.offsetWidth ?? 120) / 2
+        nameHalf[i] = (name?.offsetWidth ?? 120) / 2
+        nameTop[i] = name?.offsetTop ?? 2
+        nameH[i] = name?.offsetHeight ?? 21
         subHalf[i] = (sub?.offsetWidth ?? 240) / 2
         subTop[i] = sub?.offsetTop ?? 24
+        subH[i] = sub?.offsetHeight ?? 18
       })
       nameRow = Math.max(...labels.map((label) => label.querySelector<HTMLElement>('.gobj__name')?.offsetHeight ?? 24))
     }
@@ -194,7 +205,7 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
       place(pos, widths, boost, scene, P)
       const { u, W, H, cls } = scene
       const persp = (GALLERY.perspective * u).toFixed(0)
-      const { gap, gapDepth, edgeFade, edgeMargin, clear, rise, phoneFade } = GALLERY.label
+      const { gap, gapDepth, edgeFade, edgeMargin, clear, rise, phoneFade, touchSubs: touchSubsCfg } = GALLERY.label
       const phone = cls === 'phone'
       if (phone) {
         // A neighbour's name shows only if, at rest, its object stands wholly
@@ -213,7 +224,10 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
       }
       let nearest = 0
       for (let i = 1; i < N; i++) if (P[i].a < P[nearest].a) nearest = i
-      const touchSubs = root.hasAttribute('data-touch') && !phone
+      // Touch screens show the neighbours' subtitles too, only where the window is wide
+      // enough for three captions side by side; narrower (portrait tablets), only the
+      // featured subtitle shows, as on phones.
+      const touchSubs = root.hasAttribute('data-touch') && !phone && W >= touchSubsCfg.minWidth
       // Objects at (or passing) the front: the names standing beside them keep
       // clear of them. Each counts fully until halfway to the next position
       // and not at all once it rests beside the front, so the names move
@@ -294,13 +308,10 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
           const w = weight(i, j, sy)
           if (w > 0) subCrowd = Math.max(subCrowd, w * intrusion(i, j, sh, sx))
         }
-        // On touch (tablets and larger) the neighbours show their subtitles too, where they fit.
-        const subFits = touchSubs && tier === 1 && subCrowd < 1 && sx - sh >= edgeMargin && sx + sh <= W - edgeMargin && p.x - p.hw >= 0 && p.x + p.hw <= W
-        if (subFits !== written.fits[i]) {
-          if (subFits) items[i].dataset.subFits = ''
-          else delete items[i].dataset.subFits
-          written.fits[i] = subFits
-        }
+        // On wide touch screens a neighbour may show its subtitle too, where it fits
+        // beside the objects and inside the window (and, below, clear of every other label).
+        subX[i] = sx
+        subCand[i] = touchSubs && tier === 1 && subCrowd < 1 && sx - sh >= edgeMargin && sx + sh <= W - edgeMargin && p.x - p.hw >= 0 && p.x + p.hw <= W
         const inView = (Math.min(p.x + p.hw, W) - Math.max(p.x - p.hw, 0)) / Math.max(1, 2 * p.hw)
         const edge = clamp((inView - edgeFade[0]) / (edgeFade[1] - edgeFade[0]), 0, 1)
         // Phones: the front object's name fades out well before the next one's
@@ -348,6 +359,7 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
         }
         const p = P[i]
         const lop = nameOp[i] * give
+        labelOp[i] = lop
         const lo = lop.toFixed(3)
         if (lo !== written.lo[i]) {
           labels[i].style.opacity = lo
@@ -362,6 +374,38 @@ export function DepthGallery({ children }: { children?: ReactNode }) {
           if (off & 2) items[i].dataset.labelOff = ''
           else delete items[i].dataset.labelOff
           written.off[i] = off
+        }
+      }
+      // A neighbour's subtitle shows only where its line keeps `subGap` clear of
+      // every other shown name and subtitle beside it, and never on the featured
+      // name's line (the three captions never run together into one line).
+      const { subGap } = touchSubsCfg
+      const beside = (aT: number, aB: number, aL: number, aR: number, bT: number, bB: number, bL: number, bR: number) =>
+        aB > bT && aT < bB && aL < bR + subGap && aR > bL - subGap
+      for (let i = 0; i < N; i++) {
+        let fits = subCand[i] && labelOp[i] >= 0.45
+        if (fits) {
+          const sT = nameY[i] + subTop[i]
+          const sB = sT + subH[i]
+          const sL = subX[i] - subHalf[i]
+          const sR = subX[i] + subHalf[i]
+          for (let j = 0; j < N && fits; j++) {
+            if (j === i || labelOp[j] < 0.05) continue
+            const nT = nameY[j] + nameTop[j]
+            const nB = nT + nameH[j]
+            // (6px early, so a subtitle nearing the featured name's line has faded before it gets there.)
+            if (j === nearest && nB + 6 > sT && nT - 6 < sB) fits = false
+            else if (beside(sT, sB, sL, sR, nT, nB, nameX[j] - nameHalf[j], nameX[j] + nameHalf[j])) fits = false
+            else if (j === nearest || subCand[j]) {
+              const tT = nameY[j] + subTop[j]
+              if (beside(sT, sB, sL, sR, tT, tT + subH[j], subX[j] - subHalf[j], subX[j] + subHalf[j])) fits = false
+            }
+          }
+        }
+        if (fits !== written.fits[i]) {
+          if (fits) items[i].dataset.subFits = ''
+          else delete items[i].dataset.subFits
+          written.fits[i] = fits
         }
       }
       if (nearest !== featured) {

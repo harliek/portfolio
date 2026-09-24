@@ -26,8 +26,8 @@
  * - `media.kind: 'video'` (Merchandising Platform, Spreadsheet Agent): the real recording
  *   (DemoVideo) autoplays muted with native controls when 35% visible, keeps playing while the text
  *   scrolls, pauses when fully offscreen, respects a visitor's pause, falls back to the poster with
- *   "Play demo" when autoplay is refused or motion is reduced, and has an expand control inside the
- *   player. Section `visual`s are ignored in this mode (the recording is the one visual).
+ *   "Play demo" when autoplay is refused or motion is reduced, and has an expand control at the end
+ *   of its caption row. Section `visual`s are ignored in this mode (the recording is the one visual).
  * - `media.kind: 'states'` (CafePress UK, AI Leasing Agent, Jumpstart Finance): the stage shows
  *   `opening`, then each section's `visual` while that section is active (no `visual` = keep the
  *   current one; the outcome may carry one too). `frameRatio` is the stage's ONE stable ratio: use
@@ -39,7 +39,10 @@
  *   conversation'; state a qualification once). The desktop stage shows the label with every
  *   state; the stacked figures show it only the first time it appears; the enlarged view always.
  * - Every stage image is itself the zoom control (hover: 1.5% larger with an accent edge; click or
- *   Enter opens the shared ImageDialog; Escape or Close returns focus).
+ *   Enter opens the shared ImageDialog; Escape or Close returns focus). The expand icon sits at the
+ *   right end of the caption row, never on the image (hover and focus with a mouse; always on touch).
+ * - Beside the story, a stage limited by the window's height keeps the media at the column's left
+ *   edge, and its caption row takes the media's width (a caption never runs past its media).
  * - Ids: section ids become DOM ids (the h2 is `${id}-title`); keep them unique on the page.
  * - Bold one or two meaningful phrases per paragraph at most. No colons or em dashes in copy.
  * - The accent (CaseLayout sets --accent from project.accent) marks the active section heading,

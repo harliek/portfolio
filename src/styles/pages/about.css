@@ -30,6 +30,17 @@
   --about-gap: clamp(40px, 6.5vw, 88px);
   --about-block-gap: clamp(72px, 8vw, 112px);
   --about-rule: rgb(238 234 226 / 0.12);
+  /*
+   * Three text sizes: primary (the opening, the school and role sentences,
+   * the film note; 18px at desktop), secondary (degrees, role titles,
+   * dates, coursework, links, meta; 15px) and the small uppercase label
+   * (13px). Headings carry the rest of the hierarchy.
+   */
+  --about-primary: clamp(1.0625rem, 1rem + 0.25vw, 1.125rem);
+  --about-primary-leading: 1.6;
+  /* Primary paragraphs keep to about 60 characters a line, whatever their column's width. */
+  --about-measure: 30em;
+  --about-secondary: 0.9375rem;
   width: 100%;
   max-width: calc(var(--content-max) + 2 * var(--gutter));
   margin-inline: auto;
@@ -174,10 +185,10 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
 }
 
 .about-content .about-intro__para {
-  max-width: 58ch;
+  max-width: var(--about-measure);
   color: var(--color-text);
-  font-size: clamp(1.0625rem, 1rem + 0.25vw, 1.125rem);
-  line-height: 1.62;
+  font-size: var(--about-primary);
+  line-height: var(--about-primary-leading);
   text-wrap: pretty;
 }
 
@@ -223,7 +234,7 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   display: grid;
   gap: 4px;
   padding-top: var(--space-1);
-  font-size: 1rem;
+  font-size: var(--about-secondary);
   line-height: 1.5;
 }
 
@@ -245,20 +256,18 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
 .about-content .about-school__source {
   display: block;
   color: var(--color-muted);
-  font-size: 0.9375rem;
 }
 
 .about-content .about-school__dates {
   margin-top: var(--space-2);
   color: var(--color-muted);
-  font-size: 0.9375rem;
 }
 
 .about-content .about-school__text {
   max-width: 46ch;
   color: var(--color-text);
-  font-size: 1.0625rem;
-  line-height: 1.6;
+  font-size: var(--about-primary);
+  line-height: var(--about-primary-leading);
   text-wrap: pretty;
 }
 
@@ -274,7 +283,7 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 7px var(--space-5);
   color: var(--color-muted);
-  font-size: 0.9375rem;
+  font-size: var(--about-secondary);
   line-height: 1.4;
   list-style: none;
 }
@@ -326,7 +335,7 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   grid-area: dates;
   align-self: baseline;
   color: var(--color-muted);
-  font-size: 0.9375rem;
+  font-size: var(--about-secondary);
   line-height: 1.35;
   text-align: right;
   white-space: nowrap;
@@ -336,17 +345,17 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   grid-area: title;
   margin-top: 2px;
   color: var(--color-muted);
-  font-size: 1rem;
+  font-size: var(--about-secondary);
   line-height: 1.45;
 }
 
 .about-content .about-role__text {
   grid-area: text;
-  max-width: 60ch;
+  max-width: var(--about-measure);
   margin-top: var(--space-3);
   color: var(--color-text);
-  font-size: 1.0625rem;
-  line-height: 1.55;
+  font-size: var(--about-primary);
+  line-height: var(--about-primary-leading);
   text-wrap: pretty;
 }
 
@@ -368,7 +377,7 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   min-height: 44px;
   margin-block: -6px -14px;
   color: var(--color-text);
-  font-size: 0.9375rem;
+  font-size: var(--about-secondary);
   font-weight: var(--weight-label);
   text-decoration-line: underline;
   text-decoration-thickness: 1px;
@@ -564,7 +573,7 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   max-width: 40ch;
   margin-top: -6px;
   color: var(--color-muted);
-  font-size: 1rem;
+  font-size: var(--about-secondary);
   line-height: 1.55;
   text-wrap: pretty;
 }
@@ -709,16 +718,16 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
 }
 
 .about-content .about-film__note {
-  max-width: 58ch;
+  max-width: var(--about-measure);
   color: var(--color-text);
-  font-size: 1.0625rem;
-  line-height: 1.55;
+  font-size: var(--about-primary);
+  line-height: var(--about-primary-leading);
   text-wrap: pretty;
 }
 
 .about-content .about-film__meta {
   color: var(--color-muted);
-  font-size: 0.9375rem;
+  font-size: var(--about-secondary);
   line-height: 1.5;
 }
 
@@ -759,7 +768,7 @@ html[data-cover-transition] .about-content .about-intro__portrait::before {
   align-items: center;
   min-height: 44px;
   color: var(--color-muted);
-  font-size: 1rem;
+  font-size: var(--about-secondary);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-decoration-color: rgb(176 180 195 / 0.35);

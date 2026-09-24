@@ -86,10 +86,15 @@ export const GALLERY = {
    * opening's featured object stands `portrait.band` of the window height
    * below the identity, but never closer than `portrait.belowLine` of the
    * height to the far floor line (the objects stay on the floor). The
-   * arrows stay at the bottom edge.
+   * arrows stay at the bottom edge. At laptop heights (tablets and wider)
+   * the floor stands `short.lift` px higher, taking the room from the empty
+   * band under the identity, so the featured caption ends well above the
+   * arrow row: fully between `short.ramp[1]` and `short.ramp[2]` px of
+   * window height, easing in from `ramp[0]` and out by `ramp[3]`.
    */
   floor: {
     bottom: { share: 0.145, min: 96, max: 150 },
+    short: { lift: 40, ramp: [560, 700, 900, 980] },
     phoneBottom: { share: 0.28, min: 96, max: 250 },
     horizonLift: 0.02,
     portrait: { band: 0.22, belowLine: 0.025 },
@@ -111,7 +116,11 @@ export const GALLERY = {
    * `phoneFade.front`; a neighbour's name (only where its object rests
    * wholly in the window with room for the name beside the front object)
    * fades in between `side[0]` and `side[1]` and out between `side[2]` and
-   * `side[3]`.
+   * `side[3]`. Touch screens at least `touchSubs.minWidth` px wide show
+   * the neighbours' subtitles too (narrower ones only the featured one, as
+   * phones do), each only while it keeps `touchSubs.subGap` px from every
+   * other shown name and subtitle at its height and stays off the featured
+   * name's line.
    */
   label: {
     gap: 12,
@@ -122,6 +131,7 @@ export const GALLERY = {
     rise: 24,
     foot: { monitor: 0.142 } as Partial<Record<ObjectKind, number>>,
     phoneFade: { front: 0.4, side: [0.8, 0.97, 1.03, 1.2] },
+    touchSubs: { minWidth: 900, subGap: 16 },
   },
 
   /** Very slow idle drift: items per second on average, and its wave (slower near each featured position, never stopped). */

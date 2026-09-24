@@ -49,7 +49,8 @@
   --stage-green: #5cc98a;
   --stage-coral: #ef8d74;
   --stage-amber: #e9b067;
-  --stage-ivory: #eeeae2;
+  /* Headings and bold text: a cool near-white in the body text's hue (size and weight carry the hierarchy). */
+  --stage-ivory: #eaebf1;
   --stage-room: #050609;
   --stage-edge: rgb(255 255 255 / 0.1);
   /* Pointer trail: crisp near-white core, violet-white inner glow, soft violet halo. */
@@ -185,7 +186,7 @@
     --stage-green: oklch(0.72 0.16 150);
     --stage-coral: oklch(0.72 0.14 35);
     --stage-amber: oklch(0.8 0.115 70);
-    --stage-ivory: oklch(0.9379 0.0115 84.58);
+    --stage-ivory: oklch(0.94 0.008 277);
     --stage-room: oklch(0.1016 0.0078 271.2);
     --glow-soft: 0 0 24px color-mix(in oklch, var(--stage-violet) 28%, transparent);
   }

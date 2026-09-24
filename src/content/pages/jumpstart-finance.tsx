@@ -50,7 +50,7 @@ export const JUMPSTART_FINANCE = {
   meta: ['Founder and Product Lead · Student venture, Porto', 'June to July 2024 · Prototype and academy pitch'],
   summary: (
     <p>
-      At the European Innovation Academy in Porto, I led a <strong>five-person team</strong> building Jumpstart, a financial education app for young
+      At the European Innovation Academy in Porto, I led a <strong>five&#8209;person team</strong> building Jumpstart, a financial education app for young
       adults.
     </p>
   ),
@@ -71,7 +71,7 @@ export const JUMPSTART_FINANCE = {
       body: (
         <p>
           Many young adults want to understand personal finance but struggle to stay engaged with conventional financial education. Our premise was
-          that <strong>gamified learning</strong> would keep them engaged.
+          that gamified learning would keep them engaged.
         </p>
       ),
       visual: {
@@ -84,8 +84,8 @@ export const JUMPSTART_FINANCE = {
       title: 'What we built',
       body: (
         <p>
-          In our comparison of Robinhood, Zogo, and Acorns, none offered a community forum and only Zogo was gamified. So we built the prototype around{' '}
-          <strong>gamified lessons, a level path, and a community</strong> where members answer each other’s questions. I led the product concept,
+          In our comparison of Robinhood, Zogo, and Acorns, none offered a community forum and only Zogo was gamified. So we built the prototype around gamified
+          lessons, a level path, and a community where members answer each other’s questions. I led the product concept,
           positioning, prototype, and business model.
         </p>
       ),
@@ -100,7 +100,7 @@ export const JUMPSTART_FINANCE = {
     title: 'The result',
     body: (
       <p>
-        We pitched Jumpstart at the academy, reporting <strong>150 sign-ups in 24 hours</strong>. The response gave us an early signal of demand for a more
+        We pitched Jumpstart at the academy, reporting <strong>150 sign&#8209;ups in 24 hours</strong>. The response gave us an early signal of demand for a more
         engaging way to learn personal finance.
       </p>
     ),

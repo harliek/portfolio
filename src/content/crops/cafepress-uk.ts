@@ -6,9 +6,10 @@ import type { ImageAsset } from '../media'
  * is a full ImageAsset (type: 'image') with the dimensions the task prints.
  *
  * One source, the storefront prototype itself (PlanetArt/cafepress uk/uk web.png,
- * 1672×941). The two header details (712×401 each) are 16:9, the
- * page's one stage ratio, cut at full resolution, so the interface text is
- * about 15px at the 645px desktop stage (0.9×). No presentation slide is used on this page
+ * 1672×941). Every crop is 16:9, the page's one stage ratio, cut at full
+ * resolution. The header detail (712×401) shows the interface text at about
+ * 15px at the 645px desktop stage (0.9×); the headline view (1040×585) is
+ * shown at 0.62×, so its large type stays sharp. No presentation slide is used on this page
  * (brief-v5 section 24); the deck's findings appear as written copy.
  */
 const crop = (a: Omit<ImageAsset, 'type' | 'file' | 'fallback' | 'provenance' | 'synthetic' | 'source'>): ImageAsset => ({
@@ -44,12 +45,12 @@ export const CAFEPRESS_UK_CROPS = {
   }),
   'cp-header-brand': crop({
     id: 'cp-header-brand',
-    width: 712,
-    height: 401,
-    widths: [640, 712],
-    alt: 'Detail of the storefront prototype. A Fast UK Delivery notice, the CafePress Business UK logo, the categories Clothing & Workwear, Drinkware and Bags, and the headline Branded Promotional Products for UK Businesses.',
+    width: 1040,
+    height: 585,
+    widths: [640, 960, 1040],
+    alt: 'Detail of the storefront prototype. Fast UK Delivery and Volume Discounts notices, the CafePress Business UK logo beside the search field, the categories Clothing & Workwear to Tech, and the headline Branded Promotional Products for UK Businesses above its subheading and the Shop Now and Bulk Orders buttons.',
     caption: 'The CafePress Business UK name and headline.',
     role: 'CafePress UK stage (the UK storefront concept)',
-    crop: 'x 0–712, y 6–407 of the 1672×941 screenshot (the next category and the subheading start just outside it)',
+    crop: 'x 0–1040, y 0–585 of the 1672×941 screenshot, the top left of the page, ending between the search field’s placeholder and its magnifier, after Tech in the category row, and below the buttons (round 3, R3-06, every word whole, the headline at about 1.6× the opening view)',
   }),
 } satisfies Record<string, ImageAsset>

@@ -73,15 +73,15 @@ interface WorkShelfProps {
 }
 
 /**
- * The Work shelf (desktop, 900px and wider): a compact row of the six
- * projects on a solid dark surface under the header, in project order (one
- * row from 1360px, two rows of three below). The page behind is dimmed so
- * the shelf reads as separate from it. Not a carousel: nothing moves.
+ * The Work shelf (desktop, 900px and wider): the six projects on one solid
+ * dark surface under the header, in project order, in two rows of three at
+ * every width. The page behind is dimmed so the shelf reads as separate
+ * from it. Not a carousel: nothing moves.
  *
  * Opening and closing live in Header.tsx (click toggles; Escape, a click
  * outside or focus leaving closes; following a link closes). Here: Arrow
  * Left/Right move between entries (Home/End jump to the ends), Arrow
- * Up/Down move between rows (two rows below 1360px), Arrow Up from the
+ * Up/Down move between the two rows, Arrow Up from the
  * first row closes the shelf and returns to Work, Tab works as usual, and
  * opening from the keyboard focuses the first entry.
  */

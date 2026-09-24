@@ -147,6 +147,11 @@ export function buildScene(W: number, H: number, file: 'desktop' | 'mobile', ide
   const bottom = cls === 'phone' ? GALLERY.floor.phoneBottom : GALLERY.floor.bottom
   const line = floorLine(W, H, file)
   let yb0 = H - clamp(bottom.share * H, bottom.min, bottom.max)
+  if (cls !== 'phone') {
+    // Laptop heights: the floor rises into the empty band under the identity (the arrows stay put).
+    const { lift, ramp } = GALLERY.floor.short
+    yb0 -= lift * clamp((H - ramp[0]) / (ramp[1] - ramp[0]), 0, 1) * clamp((ramp[3] - H) / (ramp[3] - ramp[2]), 0, 1)
+  }
   if (H > W && identityBottom > 0) {
     // The opening's featured object stands `band` of the height below the
     // identity, its base still on the floor in front of the far wall.

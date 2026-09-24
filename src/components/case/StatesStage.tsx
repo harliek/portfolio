@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react'
+import { useId, useLayoutEffect, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type Ref, type RefObject } from 'react'
 import { getImage } from '../../content/media'
 import { prefersReducedMotion, useReducedMotion } from '../../hooks/useReducedMotion'
 import { ExpandIcon } from '../media/ExpandIcon'
@@ -245,13 +245,15 @@ function HighlightBox({ rect, dim, on }: { rect: Rect; dim: boolean; on?: boolea
   return <span className="cs-hl" data-dim={dim || undefined} data-on={on ? '' : undefined} style={style} aria-hidden="true" />
 }
 
-/** The caption line: an optional label (e.g. "Illustrative conversation"), a space, then the caption. */
+/** The caption line: an optional label (e.g. "Illustrative conversation") and a middle dot, then the caption. */
 function Caption({ visual, showLabel = true }: { visual: Visual; showLabel?: boolean }) {
   return (
     <>
       {showLabel && visual.label && (
         <>
-          <span className="cs-label">{visual.label}</span>{' '}
+          <span className="cs-label">{visual.label}</span>
+          {/* A no-break space before the dot, so the dot never starts a line. */}
+          <span className="cs-label__sep">{' · '}</span>
         </>
       )}
       {visual.caption}
@@ -260,19 +262,15 @@ function Caption({ visual, showLabel = true }: { visual: Visual; showLabel?: boo
 }
 
 /**
- * The image's own zoom control: a real button laid exactly over the shown
- * image (same box as its canvas), labelled "Enlarge image" and described by
- * the caption. Hover and focus scale the image 1.5% and give it an accent
- * edge (case.css); a small expand icon appears in its top corner (always on touch).
- *
- * It opens `expandTo` (e.g. the whole conversation behind a crop). On a phone
- * that whole image would fit the screen smaller than the crop the visitor
- * tapped, so there the tapped image itself opens, a wide one at actual size.
+ * Opens the enlarged view of a visual: `expandTo` (e.g. the whole
+ * conversation behind a crop). On a phone that whole image would fit the
+ * screen smaller than the crop the visitor tapped, so there the tapped image
+ * itself opens, a wide one at actual size. Focus returns to `trigger`.
  */
-function ZoomButton({ visual, captionId }: { visual: Visual; captionId?: string }) {
+function useZoom(visual: Visual) {
   const dialog = useImageDialog()
   const target = expandTarget(visual)
-  const open = (trigger: HTMLElement) => {
+  return (trigger: HTMLElement) => {
     const phone = window.matchMedia(PHONE).matches
     const id = phone ? visual.image : target
     const { width, height } = getImage(id)
@@ -283,22 +281,49 @@ function ZoomButton({ visual, captionId }: { visual: Visual; captionId?: string 
       detail: phone && width > height && width > window.innerWidth,
     })
   }
+}
+
+/**
+ * The image's own zoom control: a real button laid exactly over the shown
+ * image (same box as its canvas), labelled "Enlarge image" and described by
+ * the caption. Hover and focus scale the image 1.5% and give it an accent
+ * edge (case.css). Nothing is drawn on the image itself.
+ */
+function ZoomButton({ visual, captionId, open, ref }: { visual: Visual; captionId?: string; open: (trigger: HTMLElement) => void; ref: Ref<HTMLButtonElement> }) {
   return (
     <span className="cs-zoomlayer">
       <button
+        ref={ref}
         type="button"
         className="cs-zoom"
         style={{ '--r': imageRatio(visual) } as CSSProperties}
-        data-zoom-id={target}
+        data-zoom-id={expandTarget(visual)}
         aria-label="Enlarge image"
         aria-describedby={captionId}
         onClick={(e) => open(e.currentTarget)}
-      >
-        <span className="cs-zoom__icon" aria-hidden="true">
-          <ExpandIcon />
-        </span>
-      </button>
+      />
     </span>
+  )
+}
+
+/**
+ * The visible expand icon at the right end of the caption row, outside the
+ * artwork (case.css .cs-expand): shown on hover and keyboard focus with a
+ * mouse, always on touch (44px). The image above is the accessible control,
+ * so this pointer and touch shortcut stays out of the tab order and the
+ * accessibility tree, and focus returns to the image when the view closes.
+ */
+function ExpandShortcut({ open, zoomRef }: { open: (trigger: HTMLElement) => void; zoomRef: RefObject<HTMLButtonElement | null> }) {
+  return (
+    <button
+      type="button"
+      className="cs-expand"
+      tabIndex={-1}
+      aria-hidden="true"
+      onClick={(e) => open(zoomRef.current ?? e.currentTarget)}
+    >
+      <ExpandIcon />
+    </button>
   )
 }
 
@@ -369,6 +394,8 @@ export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) 
   const frontKey = keys[view.front]
   const hlVisual = states[view.hl]
   const hlKey = keys[view.hl]
+  const zoomRef = useRef<HTMLButtonElement>(null)
+  const open = useZoom(front)
 
   // Unique layers, in order of first appearance (the opening first).
   const layers: Array<{ key: string; visual: Visual; index: number }> = []
@@ -377,8 +404,8 @@ export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) 
   })
 
   return (
-    <figure className="cs-figure" data-variant="sticky" data-portrait={stageR < 0.9 || undefined}>
-      <div ref={stageRef} className="cs-stage" data-kind="states" style={{ '--stage-r': stageR } as CSSProperties} data-state={view.front} data-target={target}>
+    <figure className="cs-figure" data-variant="sticky" data-portrait={stageR < 0.9 || undefined} style={{ '--stage-r': stageR } as CSSProperties}>
+      <div ref={stageRef} className="cs-stage" data-kind="states" data-state={view.front} data-target={target}>
         {layers.map(({ key, visual, index }) => {
           const isFront = key === frontKey
           const transparent = isTransparent(visual)
@@ -403,8 +430,9 @@ export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) 
             </div>
           )
         })}
-        <ZoomButton visual={front} captionId={captionId} />
+        <ZoomButton ref={zoomRef} visual={front} captionId={captionId} open={open} />
       </div>
+      <ExpandShortcut open={open} zoomRef={zoomRef} />
       <figcaption id={captionId} className="cs-caption" aria-live="polite">
         <Caption visual={front} />
       </figcaption>
@@ -427,20 +455,23 @@ export function StatesStage({ states, target, ratio, sizes }: StatesStageProps) 
  */
 export function InlineVisual({ visual, sizes, priority = false, showLabel = true }: { visual: Visual; sizes: string; priority?: boolean; showLabel?: boolean }) {
   const captionId = useId()
+  const zoomRef = useRef<HTMLButtonElement>(null)
+  const open = useZoom(visual)
   const transparent = isTransparent(visual)
   const r = imageRatio(visual)
   const hasCaption = Boolean(visual.caption || (showLabel && visual.label))
   return (
-    <figure className="cs-figure" data-variant="inline">
-      <div className="cs-stage" data-kind="inline" style={{ '--stage-r': r } as CSSProperties}>
+    <figure className="cs-figure" data-variant="inline" style={{ '--stage-r': r } as CSSProperties}>
+      <div className="cs-stage" data-kind="inline">
         <div className="cs-layer" data-state="shown" data-transparent={transparent || undefined}>
           <div className="cs-canvas" style={{ '--r': r } as CSSProperties}>
             <ResponsiveImage image={visual.image} sizes={sizes} fit="contain" priority={priority} alt={visual.alt} />
             {visual.highlight && <HighlightBox rect={visual.highlight} dim={!transparent} on />}
           </div>
         </div>
-        <ZoomButton visual={visual} captionId={hasCaption ? captionId : undefined} />
+        <ZoomButton ref={zoomRef} visual={visual} captionId={hasCaption ? captionId : undefined} open={open} />
       </div>
+      <ExpandShortcut open={open} zoomRef={zoomRef} />
       {hasCaption && (
         <figcaption id={captionId} className="cs-caption">
           <Caption visual={visual} showLabel={showLabel} />

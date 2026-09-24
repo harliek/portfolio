@@ -48,8 +48,8 @@ import type { CaseMedia, Rect, StorySection } from '../../components/case/CaseSc
 const ECO_CATEGORY: Rect = { x: 17.8, y: 42.9, w: 18.7, h: 10 }
 /** The UK phone number and hours, Sign in and Basket, in cp-header-nav. */
 const UK_CONTACT: Rect = { x: 24.7, y: 19.5, w: 67.4, h: 15.5 }
-/** The headline “Branded Promotional Products for UK Businesses”, in cp-header-brand. */
-const UK_HEADLINE: Rect = { x: 9, y: 69.6, w: 90.6, h: 27.9 }
+/** The headline “Branded Promotional Products for UK Businesses”, in cp-header-brand (source x 62–714, y 282–400; at least 60px inside every crop edge). */
+const UK_HEADLINE: Rect = { x: 6, y: 48.2, w: 62.7, h: 20.2 }
 
 const FULL = 'cp-storefront' as const
 
@@ -57,8 +57,8 @@ export const CAFEPRESS_UK = {
   meta: ['Product Operations and Merchandising Intern · PlanetArt', 'June to August 2026 · Market research and storefront prototype'],
   summary: (
     <p>
-      During my PlanetArt internship, I researched the UK B2B promotional-products market and coded a <strong>localized CafePress storefront prototype</strong>{' '}
-      for a potential UK launch.
+      During my PlanetArt internship, I researched the UK B2B promotional-products market and coded a localized CafePress storefront prototype for a
+      potential UK launch.
     </p>
   ),
   media: {
@@ -100,7 +100,7 @@ export const CAFEPRESS_UK = {
       title: 'What I made',
       body: (
         <p>
-          I turned the research into the coded storefront, with <strong>UK wording, local contact details</strong>, and a category structure for the B2B offer.
+          I turned the research into the coded storefront, with UK wording, local contact details, and a category structure for the B2B offer.
         </p>
       ),
       visual: {

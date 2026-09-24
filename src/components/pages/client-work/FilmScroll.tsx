@@ -30,8 +30,9 @@ import { FilmPlayer } from './FilmPlayer'
  * the film in the player; choosing another project there returns the player
  * to previews and scrolls to that project. A link to a project
  * (#aristocracy) selects it the same way on arrival. One film plays at a time.
- * Below 960px: title, metadata, summary, cover, the project navigation, then
- * each project with its own player (only the first previews by itself).
+ * Below 960px: title, metadata, summary, cover, then each project under its
+ * heading with its own player (only the first previews by itself); the
+ * project navigation is desktop only, where it controls the one player.
  */
 
 type FilmId = ClientFilm['id']
@@ -46,7 +47,7 @@ const PICK_HOLD = 600
 /* Pieces                                                                   */
 /* ----------------------------------------------------------------------- */
 
-/** The project navigation: links to the three projects; `current` marks the film in the player (desktop). */
+/** The project navigation (desktop): links to the three projects; `current` marks the film in the player. */
 function FilmNav({ films, current, onPick }: { films: ClientFilm[]; current: number; onPick: (id: FilmId) => void }) {
   const onClick = (e: MouseEvent<HTMLAnchorElement>, id: FilmId) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
@@ -74,7 +75,7 @@ function Transcript({ film }: { film: ClientFilm }) {
   if (!transcript) return null
   return (
     <details className="fs-transcript">
-      <summary className="button button--secondary button--small fs-transcript__summary">
+      <summary className="fs-transcript__summary">
         <svg className="fs-transcript__chevron" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
           <path d="m6 3.5 4.5 4.5L6 12.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -189,7 +190,8 @@ export function FilmScroll({ project, meta, summary, films, coverScale = 0.72 }:
         </div>
       </header>
 
-      {desktop ? (
+      {/* Stacked, each film's heading sits directly above its own player, so the project navigation is left out. */}
+      {desktop && (
         <div className="cs-media fs-media" ref={attachMedia}>
           <div className="cs-sticky fs-sticky" data-cover-reveal="">
             <FilmNav films={films} current={shown} onPick={pick} />
@@ -205,10 +207,6 @@ export function FilmScroll({ project, meta, summary, films, coverScale = 0.72 }:
               priority
             />
           </div>
-        </div>
-      ) : (
-        <div className="fs-nav-stacked" data-cover-reveal="">
-          <FilmNav films={films} current={-1} onPick={pick} />
         </div>
       )}
 

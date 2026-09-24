@@ -22,6 +22,9 @@ export default function MerchandisingPlatform() {
         media={{ kind: 'video', video: 'merch-console' }}
         sections={C.sections}
         outcome={C.outcome}
+        // Smaller than the default: the cover monitor's large headline would otherwise outweigh the recording, the
+        // page's evidence, so it stays a small identifier.
+        coverScale={0.6}
       />
       <NextProject current={project.id} />
     </CaseLayout>

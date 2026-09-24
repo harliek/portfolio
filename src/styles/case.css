@@ -35,12 +35,16 @@
   gap: 0.9em;
 }
 
+/* About 60 characters at 18px. A text-based measure (not the width of '0'), so the stacked layout on tablets keeps
+   the same line length as the narrower desktop column. */
 .case-prose p,
 .case-prose li {
-  max-width: 58ch;
+  max-width: 33rem;
   color: var(--color-text);
   font-size: var(--case-body);
   line-height: 1.55;
+  /* No single word alone on a paragraph's last line. */
+  text-wrap: pretty;
 }
 
 .case-prose strong {
@@ -85,7 +89,7 @@
    * the header with the last section beside it.
    */
   --cs-after: calc(var(--case-next-gap) + 100px + 85px);
-  /* The caption under the stage: a 12px gap and two reserved lines. */
+  /* The caption row under the stage: a 12px gap and two reserved lines (the expand control beside them is shorter). */
   --cs-caption: 54px;
   /* The stage's greatest height (never below 240px on a very short window). */
   --cs-stage-max: max(240px, calc(100svh - var(--cs-top) - var(--cs-after) - var(--cs-caption)));
@@ -93,6 +97,13 @@
   max-width: calc(var(--case-max) + 2 * var(--gutter));
   margin-inline: auto;
   padding: clamp(var(--space-5), 3.4vw, var(--space-7)) var(--gutter) 0;
+}
+
+/* Touch: the expand control at the end of the caption row is 44px, taller than two caption lines. */
+@media (hover: none) {
+  .cs {
+    --cs-caption: 56px;
+  }
 }
 
 @media (min-width: 960px) {
@@ -246,11 +257,70 @@
   }
 }
 
+/*
+ * A figure: the media across the full width, then the caption row, the caption and at its right end the expand
+ * control (outside the artwork, so it never covers the media's own content). With a mouse the control is a small
+ * 24px glyph (a 40px pointer target, .cs-expand::before), so a caption keeps nearly the stage's full width; on touch
+ * it is a 44px button. Stacked figures centre the caption and the control on each other; beside the sticky stage
+ * the caption keeps its two reserved lines and the control aligns with the first.
+ */
 .cs-figure {
+  --cs-expand: 24px;
   display: grid;
-  gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3) var(--space-2);
   min-width: 0;
   margin: 0;
+}
+
+@media (hover: none) {
+  .cs-figure {
+    --cs-expand: 44px;
+    column-gap: var(--space-3);
+  }
+}
+
+.cs-figure > .cs-stage {
+  grid-column: 1 / -1;
+}
+
+.cs-figure > .cs-caption {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+.cs-figure > .cs-expand {
+  grid-row: 2;
+  grid-column: 2;
+}
+
+/* Beside the story: the caption 12px under the media, the control level with its first line. */
+.cs-figure[data-variant='sticky'] {
+  align-items: start;
+}
+
+/*
+ * Beside the story, a stage limited by the window's height is narrower than its column: the figure takes the media's
+ * width, so the caption and its control end where the media ends, and it stays at the column's left edge (a constant
+ * gap to the text). The stage ratio (--stage-r) is set on the figure.
+ */
+.cs-figure[data-variant='sticky']:not([data-portrait]) {
+  width: min(100%, calc(var(--cs-stage-max) * var(--stage-r)));
+}
+
+/* A portrait phone is centred: the caption is centred under it, with the control just to its right. */
+.cs-figure[data-portrait] {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.cs-figure[data-portrait] > .cs-caption {
+  grid-column: 2;
+}
+
+.cs-figure[data-portrait] > .cs-expand {
+  grid-column: 3;
+  justify-self: start;
 }
 
 .cs-stage {
@@ -367,8 +437,8 @@
   pointer-events: none;
 }
 
-/* A landscape frame capped by the stage's height starts at the column's left edge, in line with its
-   caption (as the recordings do); a portrait phone stays centred with its centred caption. */
+/* A landscape image narrower than its stage starts at the stage's left edge, in line with its caption (as the
+   recordings do); a portrait phone stays centred with its centred caption. */
 .cs-figure[data-variant='sticky']:not([data-portrait]) :is(.cs-layer, .cs-zoomlayer) {
   justify-items: start;
 }
@@ -412,36 +482,67 @@
   filter: drop-shadow(0 0 1px rgb(var(--case-accent-rgb) / 0.85)) drop-shadow(0 0 12px rgb(var(--case-accent-rgb) / 0.35));
 }
 
-/* The small expand icon in the image's top corner, like the video's expand control (the highlights sit lower in the
-   images, so it never covers the region they point to): on hover and focus; always on touch. */
-.cs-zoom__icon {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+/*
+ * The expand control, at the right end of the caption row (images, recordings and films alike), never on the
+ * artwork. With a mouse it is a quiet glyph that appears while the figure is hovered or its media has keyboard
+ * focus (and stays while a recording is not playing), in the accent while the media is hovered; on touch it is an
+ * outlined 44px button, always there. For images the picture itself is the enlargement control, so this one is a
+ * pointer and touch shortcut; for recordings it is the control.
+ */
+.cs-expand {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: var(--cs-expand);
+  height: var(--cs-expand);
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  background: rgb(9 10 15 / 0.8);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.18);
-  color: var(--color-text);
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
   opacity: 0;
-  transition: opacity var(--dur-feedback) var(--ease-out);
+  transition:
+    opacity var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out),
+    box-shadow var(--dur-feedback) var(--ease-out);
 }
 
-.cs-zoom:is(:hover, :focus-visible) .cs-zoom__icon {
+/* A 40px pointer target around the small glyph (into the gap above the caption row, never over the media). */
+.cs-expand::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+}
+
+.cs-figure:hover > .cs-expand,
+.cs-figure:has(.cs-zoom:focus-visible) > .cs-expand,
+.cs-figure:has(> .cs-stage[data-kind='video']:is(:not([data-status='playing']), :focus-within)) > .cs-expand,
+.cs-expand:focus-visible {
   opacity: 1;
-  box-shadow: 0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.8);
+}
+
+.cs-expand:is(:hover, :focus-visible),
+.cs-figure:has(.cs-zoom:is(:hover, :focus-visible)) > .cs-expand,
+.cs-figure:has(> .cs-stage[data-kind='video']:is(:hover, :focus-within)) > .cs-expand {
+  color: color-mix(in oklch, var(--case-accent) 80%, var(--stage-ivory));
+}
+
+.cs-expand:focus-visible {
+  outline: 2px solid var(--case-accent);
+  outline-offset: 2px;
 }
 
 @media (hover: none) {
-  .cs-zoom__icon {
-    top: 8px;
-    right: 8px;
+  .cs-expand {
     opacity: 1;
-    width: 36px;
-    height: 36px;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22);
+    color: var(--color-text);
+  }
+
+  .cs-expand::before {
+    content: none;
   }
 }
 
@@ -449,15 +550,18 @@
 
 .cs-caption {
   max-width: 64ch;
-  /* Two lines reserved on the sticky stage, so a shorter caption never moves anything. */
-  min-height: 3em;
   color: var(--color-muted);
   font-size: var(--text-small);
   line-height: 1.5;
+  /* A caption that wraps breaks into even lines, never a short orphan. */
+  text-wrap: balance;
 }
 
-.cs-figure[data-variant='inline'] .cs-caption {
-  min-height: 0;
+/* Beside the story: the caption spans the stage's width (it ends where the media ends) with two lines reserved, so
+   a shorter caption never moves anything. */
+.cs-figure[data-variant='sticky'] .cs-caption {
+  max-width: none;
+  min-height: 3em;
 }
 
 .cs-figure[data-portrait] .cs-caption {
@@ -465,25 +569,23 @@
   text-align: center;
 }
 
-/* A short visible tag before the caption (e.g. Illustrative conversation). */
-/* Followed by a space in the text (Caption), so the label and the caption never run together. */
+/* A short label before the caption (e.g. Illustrative conversation), plain and a little heavier, then a middle dot:
+   the same treatment as in the enlarged view. */
 .cs-label {
-  display: inline-block;
-  margin-right: var(--space-1);
-  padding: 0 8px;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgb(var(--case-accent-rgb) / 0.55);
   color: var(--color-text);
-  font-size: 0.8125rem;
   font-weight: 600;
-  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.cs-label__sep {
+  color: var(--color-subtle);
 }
 
 /* ----------------------------------------------------------------------- */
 /* Video (DemoVideo)                                                        */
 /* ----------------------------------------------------------------------- */
 
-/* The recording's own ratio; on the sticky stage never taller than --cs-stage-max. */
+/* The recording's own ratio; on the sticky stage never taller than --cs-stage-max (the figure's width, above). */
 .cs-stage[data-kind='video'] {
   aspect-ratio: var(--stage-r);
   overflow: hidden;
@@ -493,10 +595,6 @@
     0 0 0 1px rgb(255 255 255 / 0.08),
     0 28px 56px -30px rgb(0 0 0 / 0.9);
   transition: box-shadow 200ms var(--ease-out);
-}
-
-.cs-figure[data-variant='sticky'] .cs-stage[data-kind='video'] {
-  width: min(100%, calc(var(--cs-stage-max) * var(--stage-r)));
 }
 
 /* Hover and keyboard focus inside the player: an accent edge (no scale, so the native controls never move). */
@@ -550,58 +648,6 @@
 
 .cs-demo__play {
   pointer-events: auto;
-}
-
-/* Expand: inside the player, top right (never on the native control bar). */
-.cs-demo__expand {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 3;
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: rgb(9 10 15 / 0.78);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.2);
-  color: var(--color-text);
-  cursor: pointer;
-  opacity: 0;
-  transition:
-    opacity var(--dur-feedback) var(--ease-out),
-    background-color var(--dur-feedback) var(--ease-out),
-    box-shadow var(--dur-feedback) var(--ease-out),
-    transform var(--dur-feedback) var(--ease-out);
-}
-
-.cs-stage:hover .cs-demo__expand,
-.cs-stage:not([data-status='playing']) .cs-demo__expand,
-.cs-demo__expand:focus-visible {
-  opacity: 1;
-}
-
-.cs-demo__expand:is(:hover, :focus-visible) {
-  background: rgb(22 24 34 / 0.92);
-  box-shadow:
-    0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.9),
-    0 0 16px rgb(var(--case-accent-rgb) / 0.35);
-  transform: scale(1.06);
-}
-
-.cs-demo__expand:focus-visible {
-  outline: 2px solid var(--case-accent);
-  outline-offset: 2px;
-}
-
-@media (hover: none) {
-  .cs-demo__expand {
-    width: 44px;
-    height: 44px;
-    opacity: 1;
-  }
 }
 
 /* The larger view (a native dialog styled like the image dialog, components.css .image-dialog). */
@@ -667,13 +713,12 @@
 /* Every change is instant (the sequencer skips its fades and waits too); the global 1ms reduced-motion
    transition (base.css) would blend two layers for a frame, so it is switched off here. Hover keeps
    its accent edge without the scale. */
-html[data-motion='reduce'] :is(.cs-layer, .cs-hl, .cs-heading, .cs-heading::before, .cs-canvas, .cs-zoom, .cs-demo__expand) {
+html[data-motion='reduce'] :is(.cs-layer, .cs-hl, .cs-heading, .cs-heading::before, .cs-canvas, .cs-zoom, .cs-expand) {
   transition: none !important;
 }
 
 html[data-motion='reduce'] .cs-zoom:is(:hover, :focus-visible),
-html[data-motion='reduce'] .cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .cs-layer[data-state='shown'] .cs-canvas,
-html[data-motion='reduce'] .cs-demo__expand:is(:hover, :focus-visible) {
+html[data-motion='reduce'] .cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .cs-layer[data-state='shown'] .cs-canvas {
   transform: none;
 }
 

@@ -1,5 +1,5 @@
 [
   { "id": "cp-storefront", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 0, "y": 0, "width": 1672, "height": 941 }, "widths": [640, 960, 1280, 1672], "fallback": "jpg" },
   { "id": "cp-header-nav", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 960, "y": 10, "width": 712, "height": 401 }, "widths": [640, 712], "fallback": "jpg" },
-  { "id": "cp-header-brand", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 0, "y": 6, "width": 712, "height": 401 }, "widths": [640, 712], "fallback": "jpg" }
+  { "id": "cp-header-brand", "source": "PlanetArt/cafepress uk/uk web.png", "rect": { "x": 0, "y": 0, "width": 1040, "height": 585 }, "widths": [640, 960, 1040], "fallback": "jpg" }
 ]

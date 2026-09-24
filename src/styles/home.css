@@ -482,7 +482,7 @@ html.home-scene .site-main {
   transition: opacity 220ms var(--ease-out);
 }
 
-/* Shown on hover or focus; by default for the featured object; on touch (tablets and larger) for the neighbours too where they fit. */
+/* Shown on hover or focus; by default for the featured object; on wide touch screens (900px and up) for the neighbours too, where they keep clear of every other label. */
 .gobj[data-active] .gobj__sub,
 .gallery:not([data-has-active]) .gobj[data-featured] .gobj__sub,
 .gallery[data-touch] .gobj[data-sub-fits] .gobj__sub {

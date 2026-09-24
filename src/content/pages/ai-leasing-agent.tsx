@@ -74,7 +74,7 @@ export const AI_LEASING_AGENT = {
       title: 'My contribution',
       body: (
         <p>
-          I defined <strong>what the assistant could answer</strong>, when it needed to check property data through the API, and when it should hand a
+          I defined what the assistant could answer, when it needed to check property data through the API, and when it should hand a
           conversation to the team. The production assistant ran on a third-party platform.
         </p>
       ),
@@ -85,8 +85,8 @@ export const AI_LEASING_AGENT = {
       title: 'Testing and rollout',
       body: (
         <p>
-          I tested questions about availability, pricing, tours, application status, and leasing policies. We introduced it in{' '}
-          <strong>lower-risk scenarios</strong>, then expanded its use.
+          I tested questions about availability, pricing, tours, application status, and leasing policies. We introduced it in lower-risk
+          scenarios, then expanded its use.
         </p>
       ),
       visual: view({ image: 'ala-live-check', caption: 'Current pricing and availability come from a live data check.', highlight: LIVE_CHECK }),

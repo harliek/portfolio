@@ -21,8 +21,8 @@ export function ExternalMark() {
 /**
  * One project entry: one ordinary link with a small thumbnail of the
  * project's PNG object (whole, never cropped), the project name and its
- * short category (shown where it fits on one line, layout.css). The current
- * project says "Current page" instead. Hover and focus use the project's
+ * one-line context (employer or independent work), the same in the shelf
+ * and the small-screen menu. The current project says "Current page" instead. Hover and focus use the project's
  * own accent and prepare the destination (code, cover, opening image).
  * A plain click opens the page with the transition module's short plain
  * reveal (no image travels from a 48px thumbnail); modified clicks stay
@@ -75,13 +75,13 @@ interface WorkShelfProps {
 /**
  * The Work shelf (desktop, 900px and wider): a compact row of the six
  * projects on a solid dark surface under the header, in project order (one
- * row from 1180px, two rows of three below). The page behind is dimmed so
+ * row from 1360px, two rows of three below). The page behind is dimmed so
  * the shelf reads as separate from it. Not a carousel: nothing moves.
  *
  * Opening and closing live in Header.tsx (click toggles; Escape, a click
  * outside or focus leaving closes; following a link closes). Here: Arrow
  * Left/Right move between entries (Home/End jump to the ends), Arrow
- * Up/Down move between rows (two rows below 1180px), Arrow Up from the
+ * Up/Down move between rows (two rows below 1360px), Arrow Up from the
  * first row closes the shelf and returns to Work, Tab works as usual, and
  * opening from the keyboard focuses the first entry.
  */

@@ -20,18 +20,23 @@ import type { CaseMedia, StorySection } from '../../components/case/CaseScroll'
  *   Validation, 150 sign-ups in 24 hours". The sign-ups were reported IN the
  *   pitch (they did not follow it), so the result says the pitch reported them.
  *   The problem's second sentence is the p. 5 premise, stated as a premise.
- *   The opening's second sentence follows the résumé ("from customer
- *   discovery to prototype and pitch"), without the discovery claim.
+ * - What we built (round 2, R2-02): the positioning decision from the pitch's
+ *   competitor comparison (p. 4, JumpStart Finance/competitors.png; the
+ *   slide itself is not shown). Of Robinhood, Zogo and Acorn(s), none has a
+ *   forum and only Zogo is gamified (Robinhood is not educational either).
+ *   The slide spells the brand "Acorn"; the page uses its name, Acorns. The
+ *   three features named are the three screens on the stage (lessons, the
+ *   profile's level path, the community). The earlier feature list, with the
+ *   unshown "personalized learning", and the summary's second sentence (the
+ *   metadata's status) were removed.
  * - Prototype screens (JumpStart Finance/proto 1–4.png, cropped to one
  *   600×1210 canvas each in src/content/crops/jumpstart-finance.ts): home
  *   with topics, lessons with Start learning and Start the test, a profile
  *   with a numbered level path, a community with questions, replies and
  *   each member's level. Captions only describe what each screen shows.
  *
- * Harlie's own statements kept as written and reported as not shown by the
- * sources: "young adults" (the pitch's problem slide speaks of adults),
- * "functional" prototype, and "personalized learning" (a pitch proposal;
- * the screens do not show it).
+ * Harlie's own statement kept as written and reported as not shown by the
+ * sources: "young adults" (the pitch's problem slide speaks of adults).
  *
  * No presentation slides (competitors, business model, traction) appear on
  * the page (brief-v5 section 24). The phone PNG in the opening is the
@@ -46,7 +51,7 @@ export const JUMPSTART_FINANCE = {
   summary: (
     <p>
       At the European Innovation Academy in Porto, I led a <strong>five-person team</strong> building Jumpstart, a financial education app for young
-      adults. We took it from concept to a mobile prototype and a pitch.
+      adults.
     </p>
   ),
   media: {
@@ -79,8 +84,9 @@ export const JUMPSTART_FINANCE = {
       title: 'What we built',
       body: (
         <p>
-          We built a functional mobile prototype with short lessons, personalized learning, visible progress, and community features. I led the{' '}
-          <strong>product concept, positioning, prototype, and business model</strong>.
+          In our comparison of Robinhood, Zogo, and Acorns, none offered a community forum and only Zogo was gamified. So we built the prototype around{' '}
+          <strong>gamified lessons, a level path, and a community</strong> where members answer each other’s questions. I led the product concept,
+          positioning, prototype, and business model.
         </p>
       ),
       visual: {
@@ -100,7 +106,7 @@ export const JUMPSTART_FINANCE = {
     ),
     visual: {
       image: 'jf-screen-community',
-      caption: 'In the community, members at different levels answer each other’s questions.',
+      caption: 'The community, with each member’s level beside their name.',
     },
   } satisfies StorySection,
 }

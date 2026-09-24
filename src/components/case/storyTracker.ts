@@ -8,21 +8,14 @@
  * snapshot changes only when the active section changes, so fast or backward
  * scrolling lands on the same state without a queue.
  *
- * The end of the story (desktop, when the media column is attached):
- * - The sticky region leaves with its column once the column's bottom reaches
- *   it. On a short viewport (a laptop) the region is usually taller than the
- *   last section, so without help it would start to leave while the last
- *   section is still low on the screen, and at the page end it would sit
- *   partly under the header beside text that is still being read. When the
- *   region cannot stay in full view down to the page end, the text column
- *   gets a tail (--cs-tail) of the region's height minus the last section's:
- *   the region stays pinned until the last section's top has reached the
- *   region's top, and then both leave together.
- * - When the region stays in view to the page end, there is no tail; the
- *   line moves down gradually near the end (never above 40%, at most to 75%
- *   of the viewport), so the last section still becomes active LAST_DWELL of
- *   the viewport before the region starts to move (or before the page end).
- *   The line is a pure function of the scroll position.
+ * The end of the story (desktop, when the media column is attached): the
+ * region's CSS caps its height so that it stays pinned in full view down to
+ * the page end, above the content after the story (case.css --cs-after), and
+ * the last section ends beside it. Near the end the line moves down
+ * gradually (never above 40%, at most to 75% of the viewport), so the last
+ * section still becomes active LAST_DWELL of the viewport before the page
+ * end (or before the region starts to move, should it ever be taller than
+ * the cap allows). The line is a pure function of the scroll position.
  */
 
 /** Share of the viewport height where a section becomes active. */
@@ -36,7 +29,6 @@ const RAMP = 3
 
 export class StoryTracker {
   private els: Array<HTMLElement | null> = []
-  private grid: HTMLElement | null = null
   private column: HTMLElement | null = null
   private sticky: HTMLElement | null = null
   private body: HTMLElement | null = null
@@ -47,7 +39,6 @@ export class StoryTracker {
   /** Layout values that do not change with scrolling are re-read after a resize or a content change. */
   private dirty = true
   private stickyTop = 0
-  private tail = 0
 
   setEl(i: number, el: HTMLElement | null) {
     this.els[i] = el
@@ -59,14 +50,12 @@ export class StoryTracker {
     this.els.length = n
   }
 
-  /** Ref callback for the media column (desktop only): its grid, sticky region and text column are found from it. Stable identity. */
+  /** Ref callback for the media column (desktop only): its sticky region and the text column are found from it. Stable identity. */
   attachMedia = (column: HTMLElement | null) => {
     if (column === this.column) return
-    this.setTail(0)
     this.column = column
-    this.grid = column?.parentElement ?? null
     this.sticky = column?.querySelector<HTMLElement>('.cs-sticky') ?? null
-    this.body = this.grid?.querySelector<HTMLElement>(':scope > .cs-body') ?? null
+    this.body = column?.parentElement?.querySelector<HTMLElement>(':scope > .cs-body') ?? null
     this.relayout()
   }
 
@@ -102,32 +91,6 @@ export class StoryTracker {
     this.schedule()
   }
 
-  private setTail(px: number) {
-    this.tail = px
-    if (px > 0) this.grid?.style.setProperty('--cs-tail', `${px}px`)
-    else this.grid?.style.removeProperty('--cs-tail')
-  }
-
-  /**
-   * The tail under the last section. None of these values depends on the tail
-   * itself (the content after the grid, the region's and the last section's
-   * heights), so setting it never feeds back into the next measurement.
-   */
-  private updateTail(vh: number, sticky: HTMLElement, lastEl: HTMLElement) {
-    const style = getComputedStyle(sticky)
-    this.stickyTop = Number.parseFloat(style.top) || 0
-    const header = Number.parseFloat(style.getPropertyValue('--header-height')) || 0
-    const region = sticky.offsetHeight
-    const grid = this.grid!
-    // Where the grid's bottom sits at the page end: above the next-project link and the footer.
-    const after = document.documentElement.scrollHeight - (grid.getBoundingClientRect().bottom + window.scrollY)
-    const endBottom = vh - after
-    // The region may rise into the gap above it and still be in full view; any more and it would slide under the header.
-    const fits = endBottom - region >= header
-    const tail = fits ? 0 : Math.max(0, Math.ceil(region - lastEl.getBoundingClientRect().height))
-    if (Math.abs(tail - this.tail) > 1) this.setTail(tail)
-  }
-
   /** The activation line (px from the viewport top) at the current scroll position. */
   private line(vh: number) {
     const base = vh * ACTIVATION_LINE
@@ -136,7 +99,7 @@ export class StoryTracker {
     if (!lastEl || !column || !sticky || !this.body) return base
     if (this.dirty) {
       this.dirty = false
-      this.updateTail(vh, sticky, lastEl)
+      this.stickyTop = Number.parseFloat(getComputedStyle(sticky).top) || 0
     }
     const y = window.scrollY
     const region = this.stickyTop + sticky.offsetHeight

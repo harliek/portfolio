@@ -47,9 +47,9 @@
  *
  * Desktop (≥960px): grid max 1240px, 42% text / 6% gap / 52% media. Left: title, metadata,
  * summary, cover, then the sections and the outcome (h2 each). Right: one sticky stage (top =
- * header + 24px) of stable size from the opening through the outcome: on a short viewport the
- * text column gets a tail, so the stage leaves only when the outcome has reached its top, and the
- * two leave together (storyTracker.ts). The document scrolls naturally. The active section is the
+ * header + 24px) of stable size from the opening through the outcome. Its height is capped so the
+ * stage and its caption stay pinned in full view down to the page end, above the next-project link
+ * and the footer (case.css --cs-after), with the outcome beside it. The document scrolls naturally. The active section is the
  * last one whose top has passed a line at 40% of the viewport (scroll position, rAF-throttled).
  * Below 960px: title, metadata, summary, a smaller cover, then the media next to its text (the
  * recording right after the opening; image states after their sections, only where the image
@@ -129,7 +129,7 @@ export function CaseScroll({ project, meta, summary, media, sections, outcome, c
   const story = [...sections, outcome]
   const count = story.length
   useEffect(() => tracker.setCount(count), [tracker, count])
-  // Stable, so re-renders never detach the media column (which would reset the tail).
+  // Stable, so re-renders never detach and re-measure the media column.
   const attachMedia = useCallback((el: HTMLDivElement | null) => tracker.attachMedia(el), [tracker])
 
   // States media: the opening, then every section that brings a visual; each section shows the latest state at or before it.

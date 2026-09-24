@@ -14,9 +14,9 @@
 .page-client-work {
   --fp-fade: 120ms;
   --fp-radius: 12px;
-  /* Room in the sticky region for the navigation row and the caption under the frame. */
+  /* Room in the sticky region for the navigation row and its gap, and for the one-line caption under the frame and its gap. */
   --fp-nav-h: 58px;
-  --fp-chrome: 96px;
+  --fp-caption: 33px;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -63,9 +63,10 @@
   transition: box-shadow 200ms var(--ease-out);
 }
 
-/* The sticky frame never grows taller than the viewport leaves room for. */
+/* The sticky region (navigation, frame, caption) stays pinned in full view down to the page end,
+   above the next-project link and the footer (case.css --cs-after); never below 240px tall. */
 .page-client-work .fp[data-variant='sticky'] .fp-frame {
-  width: min(100%, calc((100svh - var(--cs-top) - var(--fp-nav-h) - var(--fp-chrome)) * 16 / 9));
+  width: min(100%, calc(max(240px, 100svh - var(--cs-top) - var(--fp-nav-h) - var(--cs-after) - var(--fp-caption)) * 16 / 9));
 }
 
 /* Hover and keyboard focus inside the player: an accent edge (no scale, so the native controls never move). */

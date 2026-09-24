@@ -18,8 +18,9 @@ import { FilmPlayer } from './FilmPlayer'
  * transition.
  *
  * Desktop (≥960px): the media column holds ONE sticky region from the
- * opening until the last film's section has reached its top (on a short
- * viewport the text column gets a tail, storyTracker.ts): the project navigation
+ * opening down to the page end (its player is capped so the region stays in
+ * full view above the next-project link and the footer, case.css
+ * --cs-after, client-work.css): the project navigation
  * (Nickleby Capital, Aristocracy, The Night Club Global Tour) above one
  * stable 16:9 player (FilmPlayer). The page opens with a muted preview of the
  * Nickleby Capital film; while it only previews, scrolling moves the player

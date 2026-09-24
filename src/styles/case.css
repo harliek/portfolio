@@ -22,6 +22,8 @@
   --case-body: clamp(1.0625rem, 1.02rem + 0.12vw, 1.125rem);
   --case-accent: var(--accent, var(--stage-violet));
   --case-accent-rgb: var(--accent-rgb, 165 140 240);
+  /* Desktop: the space between the story and the next-project link. */
+  --case-next-gap: 48px;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -76,8 +78,17 @@
 .cs {
   /* Sticky offset: header + 24px. */
   --cs-top: calc(var(--header-height) + var(--space-5));
-  /* Room under the stage for its caption (two lines) and some air above the viewport's bottom edge. */
-  --cs-chrome: 96px;
+  /*
+   * Desktop: what follows the story at the page end, the gap, the next-project link (100px) and
+   * the compact footer (85px, no top margin on a case page). The stage is capped at the viewport
+   * minus --cs-top, this and its caption, so at the page end it is still pinned in full view below
+   * the header with the last section beside it.
+   */
+  --cs-after: calc(var(--case-next-gap) + 100px + 85px);
+  /* The caption under the stage: a 12px gap and two reserved lines. */
+  --cs-caption: 54px;
+  /* The stage's greatest height (never below 240px on a very short window). */
+  --cs-stage-max: max(240px, calc(100svh - var(--cs-top) - var(--cs-after) - var(--cs-caption)));
   width: 100%;
   max-width: calc(var(--case-max) + 2 * var(--gutter));
   margin-inline: auto;
@@ -105,10 +116,8 @@
     grid-area: media;
   }
 
-  /* --cs-tail: set by CaseScroll only when the stage is too tall for the outcome to become active while pinned. */
   .cs[data-layout='sticky'] > .cs-body {
     grid-area: body;
-    padding-bottom: var(--cs-tail, 0px);
   }
 }
 
@@ -251,12 +260,13 @@
 
 /*
  * States (desktop): ONE stable box for every state. Full column width, the
- * page's frame ratio, never taller than the viewport leaves room for. Each
- * image is contained and centred in it (a portrait phone keeps the column's
- * width and simply has space beside it), so nothing collapses or jumps.
+ * page's frame ratio, never taller than --cs-stage-max. Each image is
+ * contained in it (a landscape frame from its left edge, a portrait phone
+ * centred with the column's width kept and space beside it), so nothing
+ * collapses or jumps.
  */
 .cs-stage[data-kind='states'] {
-  height: min(calc(100cqi / var(--stage-r)), calc(100svh - var(--cs-top) - var(--cs-chrome)));
+  height: min(calc(100cqi / var(--stage-r)), var(--cs-stage-max));
   container-type: size;
 }
 
@@ -355,6 +365,12 @@
   display: grid;
   place-items: center;
   pointer-events: none;
+}
+
+/* A landscape frame capped by the stage's height starts at the column's left edge, in line with its
+   caption (as the recordings do); a portrait phone stays centred with its centred caption. */
+.cs-figure[data-variant='sticky']:not([data-portrait]) :is(.cs-layer, .cs-zoomlayer) {
+  justify-items: start;
 }
 
 /* Exactly the shown image's box (same formula as .cs-canvas). */
@@ -467,7 +483,7 @@
 /* Video (DemoVideo)                                                        */
 /* ----------------------------------------------------------------------- */
 
-/* The recording's own ratio; on the sticky stage never taller than the viewport leaves room for. */
+/* The recording's own ratio; on the sticky stage never taller than --cs-stage-max. */
 .cs-stage[data-kind='video'] {
   aspect-ratio: var(--stage-r);
   overflow: hidden;
@@ -480,7 +496,7 @@
 }
 
 .cs-figure[data-variant='sticky'] .cs-stage[data-kind='video'] {
-  width: min(100%, calc((100svh - var(--cs-top) - var(--cs-chrome)) * var(--stage-r)));
+  width: min(100%, calc(var(--cs-stage-max) * var(--stage-r)));
 }
 
 /* Hover and keyboard focus inside the player: an accent edge (no scale, so the native controls never move). */
@@ -670,6 +686,18 @@ html[data-motion='reduce'] .cs-demo__expand:is(:hover, :focus-visible) {
   max-width: calc(var(--case-max) + 2 * var(--gutter));
   margin: clamp(72px, 8vw, 112px) auto 0;
   padding-inline: var(--gutter);
+}
+
+/* Desktop: a compact end (--cs-after), so the sticky stage fits above it at the page end. The
+   footer follows the link directly on a case page; its own padding and rule separate them. */
+@media (min-width: 960px) {
+  .next-project {
+    margin-top: var(--case-next-gap);
+  }
+
+  .site-main:has(.case) + .site-footer {
+    margin-top: 0;
+  }
 }
 
 /* One link: the small PNG, "Next project" and the name. */

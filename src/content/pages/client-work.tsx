@@ -23,8 +23,14 @@ import type { VideoId } from '../media'
  * - The agency's project summaries (Shift Content/Film case studies.pdf):
  *   Nickleby, "All from one filming day", "five distinct testimonials, nine
  *   FAQ responses ... and a 60 second social mashup"; Aristocracy, "Over two
- *   days", "campaign video, e-commerce imagery, and social assets"; The Night
- *   Club Global Tour with Gymshark, women running "after dark".
+ *   days, we brought Aristocracy London’s Spring/Summer campaign to life
+ *   ahead of their Manchester store launch", "campaign video, e-commerce
+ *   imagery, and social assets"; The Night Club Global Tour "brought women
+ *   together to run after dark as a visible collective" with Gymshark.
+ * - Round 2 (R2-07): the Aristocracy and tour sections state the client's
+ *   purpose from those summaries in place of "fashion campaign shoot",
+ *   "branded run-club event" and "energy of the evening"; Harlie's part is
+ *   unchanged. Nickleby already states its need (one filming day).
  *
  * Harlie's own statements kept as written and reported as not shown by the
  * sources: interview "audio" (the sources say equipment and lighting),
@@ -32,9 +38,7 @@ import type { VideoId } from '../media'
  * Nickleby material being "for its site", and filming at the run-club event
  * for the final film (the sources say production support and event
  * coverage). The investment-firm shoot in the journal is not named, so
- * linking it to Nickleby Capital remains an inference. The run-club event
- * took place after dark, so the brief's "energy of the day" reads "energy of
- * the evening" here.
+ * linking it to Nickleby Capital remains an inference.
  *
  * Exactly three client films, Nickleby first. nickleby-640.mp4 is a remux of
  * "Nickleby Capital Video 1.mp4"; "Video 1" and "Video 2" never appear in
@@ -87,8 +91,8 @@ export const CLIENT_WORK = {
       video: 'aristocracy',
       body: (
         <p>
-          I helped run a <strong>two-day fashion campaign shoot</strong>, handling lighting, setup, and on-set coordination. I also filmed
-          behind-the-scenes footage for the agency’s marketing. We produced campaign, e-commerce, and social assets.
+          I helped run a <strong>two-day shoot</strong> for Aristocracy London’s spring and summer campaign, ahead of its Manchester store opening,
+          handling lighting, setup, and on-set coordination. I also filmed behind-the-scenes footage for the agency’s marketing.
         </p>
       ),
     },
@@ -100,8 +104,8 @@ export const CLIENT_WORK = {
       video: 'heck',
       body: (
         <p>
-          I filmed and supported production for the branded run-club event with Gymshark, capturing the participants and energy of the evening for the
-          final film.
+          I filmed and supported production for the tour with Gymshark, capturing the participants for the final film. The tour brought women together to
+          run after dark as a visible group.
         </p>
       ),
     },

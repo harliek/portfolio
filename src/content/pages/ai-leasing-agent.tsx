@@ -12,8 +12,11 @@ import type { CaseMedia, Rect, StorySection, Visual } from '../../components/cas
  * text that describes it. No other wording is changed.
  *
  * Sources: the résumé (Valiance Capital, Leasing & Operations Associate,
- * Oct 2024 to Jun 2025; “Defined development requirements for AI leasing
- * agent adopted across 18 properties”). The proposal, the workflow
+ * Oct 2024 to Jun 2025; “Managed CRM and leasing operations for a 1,000+
+ * tenant portfolio”, the problem's opening clause since round 2, R2-08, so
+ * the reader sees where and at what scale she saw the problem; “Defined
+ * development requirements for AI leasing agent adopted across 18
+ * properties”). The proposal, the workflow
  * documentation, the test cases, the API check, the phased rollout, the
  * third-party platform and the effect on the team's time are Harlie's own
  * statements (no file in the project documents them). No response-time or
@@ -60,8 +63,8 @@ export const AI_LEASING_AGENT = {
       title: 'The problem',
       body: (
         <p>
-          The leasing team spent time answering recurring questions while also managing leads and conversations that needed personal attention. Some answers
-          depended on live property information, and others required a decision from staff.
+          Managing CRM and leasing operations for more than 1,000 tenants, I saw the team spend time answering recurring questions while also handling leads
+          and conversations that needed personal attention. Some answers depended on live property information, and others required a decision from staff.
         </p>
       ),
       visual: view({ image: 'ala-chat-request', caption: 'One message asks about availability and a pet, and asks for a fee waiver and a unit hold.', highlight: REQUEST }),

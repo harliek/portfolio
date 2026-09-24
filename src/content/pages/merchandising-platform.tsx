@@ -10,8 +10,16 @@ import type { StorySection } from '../../components/case/CaseScroll'
  * the synthetic-data qualification (stated once, there); "What I built" opens
  * with the reorder calculation instead of repeating the summary's list, and
  * states the Ask design as a choice; the 240-product catalog is named in the
- * recording's caption (src/content/media.ts), next to the evidence. Word
- * counts: opening 21, The problem 30, What I built 35, The result 22.
+ * recording's caption (src/content/media.ts), next to the evidence. Round 2
+ * (R2-04): What I built states the two judgments with their reasons (the
+ * quantity shows its working, and the platform stops at an export so the
+ * merchandiser decides) instead of a feature list, and The result says what
+ * the prototype demonstrates without repeating it. Word counts: opening 21,
+ * The problem 30, What I built 48, The result 24.
+ *
+ * The recording starts at 11s on its first play (VIDEOS startAt), just before
+ * the Canyon Pouch drawer opens with its 200 unit quantity and “Show the
+ * working” (about 11.7 to 18s); its poster is that drawer at 12s.
  *
  * Every statement is checked against the recording
  * (PlanetArt/Merchandising Dashboard/Dashboard Video.mov, 57.3s, read frame by
@@ -33,10 +41,12 @@ import type { StorySection } from '../../components/case/CaseScroll'
  *    this quantity"; "Show the working" with the safety stock, reorder point
  *    and order-up-to arithmetic, "floored at the 200 unit MOQ").
  *  - Export: the drawer note "This is a calculation and a CSV export. The
- *    console does not place orders.", "Export order sheet" (Inventory) and
- *    "Export 240 rows" (Catalog). The recording shows CSV only and never runs
- *    an export; "or PDF" is Harlie's wording, kept per lead decision 6 and
- *    reported as not shown.
+ *    console does not place orders." (the platform stops at an export),
+ *    "Export order sheet" (Inventory) and "Export 240 rows" (Catalog). The
+ *    Overview lists the products that need a decision ("Raise a purchase
+ *    order for ..."). The recording shows CSV only and never runs an export;
+ *    "or PDF" is Harlie's wording, kept per lead decision 6 and reported as
+ *    not shown (R2-04 asks for Harlie's confirmation).
  *  - Ask: "It matches your question against a fixed set of query shapes and
  *    shows you the query it ran. There is no language model involved."
  *    (41.5 to 46s; eight query shapes).
@@ -71,8 +81,8 @@ export const MERCHANDISING_PLATFORM = {
       title: 'What I built',
       body: (
         <p>
-          The platform <strong>calculates reorder quantities</strong>, accounts for vendor minimum order quantities, and{' '}
-          <strong>shows the calculation</strong> before export. I kept Ask to a fixed set of query patterns so every answer shows the query it ran.
+          Each reorder quantity <strong>shows its working</strong>, including any vendor minimum that sets it, and the platform stops at an exported order
+          sheet rather than placing orders, so the merchandiser makes the call. I kept Ask to fixed query patterns so every answer shows the query it ran.
         </p>
       ),
     },
@@ -82,7 +92,7 @@ export const MERCHANDISING_PLATFORM = {
     title: 'The result',
     body: (
       <p>
-        In the working prototype, a merchandiser can check the reasoning behind each reorder and export the order sheet as CSV or PDF.
+        In the working prototype, a merchandiser goes from the products that need a decision to a checked order sheet, exported as CSV or PDF.
       </p>
     ),
   } satisfies StorySection,

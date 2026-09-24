@@ -10,8 +10,12 @@ import type { StorySection } from '../../components/case/CaseScroll'
  * qualification into the metadata's status line ("Prototype with simulated AI
  * responses") and removed the result's first sentence, which repeated the
  * opening. The opening adds the homepage sentence (brief-v5 section 9, "I
- * designed a review step before a request becomes a spreadsheet"). Word
- * counts: opening 28, The problem 37, My approach 40, The result 20.
+ * designed a review step before a request becomes a spreadsheet"). Round 2
+ * (R2-05): My approach gives the reason for the extra step, and The result
+ * states what the recording shows the prototype producing (25.3s) instead of
+ * restating the rationale; the synthetic dataset is visible in the recording
+ * and the metadata keeps the one qualification. Word counts: opening 28, The
+ * problem 37, My approach 40, The result 26.
  *
  * The recording starts at 16.5s on its first play (VIDEOS startAt), so the
  * build plan appears within about 3s; its poster is the plan at 21s.
@@ -64,8 +68,8 @@ export const SPREADSHEET_AGENT = {
       title: 'My approach',
       body: (
         <p>
-          The agent uses a synthetic dataset to create a plan from the request, listing the source, filters, columns, sort order, and any words it did not
-          use. The user can <strong>review how it interpreted the task</strong> before generating the sheet.
+          Before building anything, the agent shows <strong>a plan</strong> with its source, filters, columns, sort order, and any words it could not use.
+          The extra step means a wrong column or filter can be caught before the sheet exists, not after.
         </p>
       ),
     },
@@ -75,7 +79,7 @@ export const SPREADSHEET_AGENT = {
     title: 'The result',
     body: (
       <p>
-        Reviewing the plan first makes it easier to catch the wrong columns, filters, or interpretation before the sheet is created.
+        In the prototype, one written request becomes a reviewed plan and then a saved, editable sheet of 1,200 rows and six columns, with a CSV download.
       </p>
     ),
   } satisfies StorySection,

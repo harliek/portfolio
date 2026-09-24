@@ -434,12 +434,6 @@ a:focus-visible > .site-nav__mark {
   min-width: 0;
 }
 
-/* Entries are containers: the category line shows only where it fits on one line (not in the six-across shelf). */
-.work-shelf__entry,
-.site-menu__work > li {
-  container-type: inline-size;
-}
-
 .shelf-item__name {
   font-size: 0.9375rem;
   font-weight: 600;
@@ -453,23 +447,13 @@ a:focus-visible > .site-nav__mark {
   color: color-mix(in oklch, var(--_acc) 38%, #fff);
 }
 
+/* The context line (employer or independent work), in the shelf and the menu alike; it wraps where the six-across shelf is narrow. */
 .shelf-item__meta {
-  display: none;
   color: #b3b7c6;
   font-size: 0.8125rem;
   font-weight: var(--weight-label);
   line-height: 1.3;
-  white-space: nowrap;
-}
-
-.shelf-item[aria-current='page'] .shelf-item__meta {
-  display: block;
-}
-
-@container (min-width: 236px) {
-  .shelf-item__meta {
-    display: block;
-  }
+  text-wrap: balance;
 }
 
 /* The current project: its accent edge and a plain "Current page" line (text, not colour alone). */
@@ -541,7 +525,8 @@ a:focus-visible > .site-nav__mark {
   list-style: none;
 }
 
-@media (min-width: 1180px) {
+/* Six across only where the longest name ("Merchandising") fits its column; narrower, two rows of three. */
+@media (min-width: 1360px) {
   .work-shelf__list {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }

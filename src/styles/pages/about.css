@@ -113,95 +113,125 @@
 /* ------------------------------------------------------------------ */
 
 .about-content .about-intro {
-  /* The portrait's width; its frame is at least 1.29 times as tall (the cut-out plus a little headroom). */
-  --portrait-w: min(260px, 68vw);
   display: grid;
-  gap: var(--space-6);
+  grid-template-areas:
+    'head'
+    'portrait'
+    'bio';
+  gap: 28px;
   align-items: start;
 }
 
-@media (min-width: 720px) {
-  .about-content .about-intro {
-    --portrait-w: clamp(240px, 30vw, 300px);
-    grid-template-columns: auto minmax(0, 1fr);
-    column-gap: clamp(32px, 5vw, 56px);
-  }
-}
-
+/* Desktop: the portrait on the left (about 40%), the text on the right (about 60%), 72px apart, tops level. */
 @media (min-width: 960px) {
   .about-content .about-intro {
-    --portrait-w: clamp(300px, 24vw, 360px);
-    grid-template-columns: var(--about-cols);
-    column-gap: var(--about-gap);
+    grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+    grid-template-areas:
+      'portrait head'
+      'portrait bio';
+    column-gap: 72px;
+    row-gap: 28px;
   }
 }
 
-/*
- * The photograph of Harlie (brief v16: a real rectangular photo, never a
- * cut-out) in a quiet frame: a hairline and square-ish corners. The image is
- * a little taller than its frame so its slight scroll parallax (AboutContent)
- * never shows an edge.
- */
+.about-content .about-intro__head {
+  grid-area: head;
+  display: grid;
+  gap: 20px;
+}
+
+/* The photograph of Harlie: static, in the case studies' frame (a hairline, 6px corners). */
 .about-content .about-intro__portrait {
-  position: relative;
-  justify-self: start;
-  width: var(--portrait-w);
+  grid-area: portrait;
+  width: min(100%, 440px);
   aspect-ratio: 644 / 755;
   overflow: hidden;
-  border-radius: 3px;
+  border: 1px solid rgb(243 238 231 / 0.14);
+  border-radius: 6px;
   background: #121216;
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.1),
-    0 60px 120px -60px rgb(0 0 0 / 0.9);
 }
 
 .about-content .about-intro__portrait img {
   display: block;
   width: 100%;
-  height: 108%;
-  margin-top: -4%;
+  height: 100%;
   object-fit: cover;
 }
 
-@media (min-width: 720px) {
-  .about-content .about-intro__portrait {
-    margin-top: calc(var(--about-title) * 0.156);
-  }
-}
-
 @media (min-width: 960px) {
-  /* Beside the text rather than at the far edge of its column. */
   .about-content .about-intro__portrait {
-    justify-self: end;
+    width: 100%;
+    max-width: none;
   }
 }
 
-.about-content .about-intro__text {
-  display: grid;
-  align-content: start;
-  justify-items: start;
-  gap: var(--space-5);
+/* The greeting keeps its pink serif. */
+.about-content .about-intro__head .about-heading {
+  color: var(--red);
 }
 
-.about-content .about-intro__text .about-heading {
-  margin-bottom: var(--space-1);
-}
-
-.about-content .about-intro__para {
-  max-width: var(--about-measure);
-  color: var(--about-ink);
-  font-size: var(--about-primary);
-  line-height: var(--about-primary-leading);
+/* The lead: larger, about three lines at desktop width; its concrete follow-up a little quieter. */
+.about-content .about-intro__lead {
+  max-width: 34em;
+  margin: 0;
+  color: #f3eee7;
+  font-size: clamp(1.25rem, 1.05rem + 0.5vw, 1.5rem);
+  line-height: 1.45;
+  letter-spacing: -0.006em;
   text-wrap: pretty;
 }
 
-/* The first paragraph leads: larger and a little brighter, on the same measure (about 28em). */
-.about-content .about-intro__lead {
-  max-width: 28em;
+.about-content .about-intro__detail {
+  color: var(--about-ink-muted);
+}
+
+.about-content .about-intro__bio {
+  grid-area: bio;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.about-content .about-intro__para {
+  max-width: 60ch;
+  margin: 0;
+  color: var(--about-ink);
+  font-size: 1.125rem;
+  line-height: 1.5556;
+  text-wrap: pretty;
+}
+
+/* Selected experience: three factual sentences, close to the introduction. */
+.about-content .about-selected {
+  margin-top: 16px;
+}
+
+.about-content .about-selected__title {
+  margin: 0 0 8px;
+  color: var(--about-ink-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.about-content .about-selected__list {
+  display: grid;
+  max-width: 60ch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-content .about-selected__list li {
+  padding: 12px 0;
+  border-top: 1px solid rgb(243 238 231 / 0.12);
   color: var(--about-ink-strong);
-  font-size: var(--about-lead);
+  font-size: 1.0625rem;
   line-height: 1.5;
-  letter-spacing: -0.006em;
+}
+
+.about-content .about-selected__list li:last-child {
+  border-bottom: 1px solid rgb(243 238 231 / 0.12);
 }
 
 /* ------------------------------------------------------------------ */
@@ -625,6 +655,15 @@
   font-weight: var(--weight-heading);
   line-height: 1.3;
   letter-spacing: -0.01em;
+}
+
+/* Medium and contribution, 8px beneath the title (never over the artwork). */
+.about-content .about-work__line {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+  color: var(--about-ink-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
 }
 
 .about-content .about-work__aside {

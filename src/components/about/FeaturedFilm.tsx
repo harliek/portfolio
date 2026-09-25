@@ -82,6 +82,7 @@ export function FeaturedFilm() {
       </div>
       <div className="about-work__foot">
         <h3 className="about-work__title">{FILM.title}</h3>
+        <p className="about-work__line">{FILM.line}</p>
         {playing && (
           <a className="about-work__aside" href={watchUrl(FILM.youtubeId)} target="_blank" rel="noopener noreferrer">
             {FILM.youtube}

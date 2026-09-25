@@ -66,10 +66,21 @@ const FILM_POSTER: ImageId = 'film-artistic-end'
 export const ABOUT = {
   greeting: 'Hi, I’m Harlie.',
   /** The first paragraph is set as the lead. */
+  /** The larger introductory paragraph and its one concrete follow-up (about three lines at desktop width). */
+  lead: 'I turn fragmented workflows into tools people can understand and control.',
+  leadDetail:
+    'Recently that has meant a merchandising console that explains its reorder quantities, a spreadsheet agent that shows its plan before it builds, and the requirements for an AI leasing assistant.',
+  /** What I build; how cognitive science informs it; the work I want next. */
   bio: [
-    'I build around messy work. My projects usually begin with a fragmented process, an overloaded spreadsheet, or a system people have learned to work around.',
-    'I studied cognitive science at Berkeley, with a minor in data science, and it shapes how I build: I look at how people interpret, trust, and use technical systems, then design tools that show their reasoning and leave the decision with the person using them.',
-    'I want to work where research becomes a product decision, a working prototype, or a better way to operate. My experience spans product operations, enterprise AI research, leasing, and creative production.',
+    'I work on the everyday systems that decisions depend on, such as spreadsheets, handoffs, and lookups. I start from the workflow as it really runs and build the tool around it, as a working prototype or a clear set of requirements.',
+    'Studying cognitive science at Berkeley, with a minor in data science, taught me to ask how people interpret, trust, and use a technical system. That is why my tools show their reasoning and leave the decision with the person using them.',
+    'I’m interested in product and AI implementation work that connects research, prototyping, and day-to-day operations.',
+  ],
+  selectedTitle: 'Selected experience',
+  selected: [
+    'At Valiance Capital, I proposed an AI leasing agent, wrote its requirements, and developed test cases for its rollout. It was adopted across 18 properties.',
+    'At PlanetArt, I researched the UK market for CafePress and coded a localized storefront prototype from the findings.',
+    'At the European Innovation Academy, I led a five-person team from customer discovery to a prototype and pitch.',
   ],
   portraitLabel: 'Portrait of Harlie Katz',
 
@@ -81,10 +92,6 @@ export const ABOUT = {
     certificateSource: 'Sutardja Center',
     dates: 'August 2023 to May 2026',
     pace: 'Completed in three years',
-    text: [
-      'I studied intelligence across cognitive and computational systems, with coursework spanning machine learning, data science, computer science, user experience, and human cognition.',
-      'This gave me an interdisciplinary foundation for understanding how people think, how intelligent systems are built, and how technology can be designed around human behavior.',
-    ],
   },
 
   experienceTitle: 'Experience',
@@ -135,10 +142,14 @@ export const ABOUT = {
     /** The restored original creative homepage (a separate static build, outside the router). */
     href: '/creative/',
     title: 'Creative Portfolio',
+    /** Medium and contribution, beneath the title (brief v17). */
+    line: 'Drawing and short film · Artist and filmmaker',
     action: 'Open portfolio',
   },
   film: {
     title: 'An Artistic End',
+    /** Medium, role (as credited on the creative site) and runtime (4:54 on YouTube). */
+    line: 'Short film · Writer, director, cinematographer, and editor · 4:54',
     youtubeId: 'a2Vm1LFB_68',
     poster: FILM_POSTER,
     action: 'Play film',

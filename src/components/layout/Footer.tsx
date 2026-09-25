@@ -3,15 +3,16 @@ import { SITE } from '../../content/site'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 
 /**
- * The end of every page (brief v16): not a footer but the film again, at a
- * different moment (the figure standing in the dark, red gloves; 10.8s to
- * 16.4s of the opening film), with HARLIE KATZ set like the opening's
- * PORTFOLIO and one restrained way to get in touch. The beginning and the
- * end share one visual language, so the site closes the circle.
+ * The end of every page: a deliberate closing section (brief v17). A thin
+ * divider and generous space, a serif invitation, a prominent Email Harlie
+ * link with the address beside it as selectable text, LinkedIn and the
+ * résumé (no phone number in it). Behind it, the opening film at another
+ * moment (the figure standing in the dark; 10.8s to 16.4s), so the site
+ * still ends where it began (brief v16).
  *
  * The excerpt is muted, loops, has no controls, loads only as the end
  * approaches and plays only while it is on screen; reduced motion shows its
- * still. No résumé link, no phone number.
+ * still.
  */
 export function Footer() {
   const reduced = useReducedMotion()
@@ -54,18 +55,22 @@ export function Footer() {
         <div className="site-end__shade" />
       </div>
       <div className="site-end__content">
-        <p className="site-end__name" id="site-end-name">
-          {SITE.name}
+        <p className="site-end__name">{SITE.name}</p>
+        <p className="site-end__invite" id="site-end-name">
+          Let’s make complicated work easier.
         </p>
-        <div className="site-end__contact">
+        <div className="site-end__links">
           <a className="site-end__action" href={SITE.emailHref}>
-            Get in touch
+            Email Harlie <span aria-hidden="true">↗</span>
           </a>
-          <a className="site-end__link" href={SITE.emailHref}>
-            {SITE.email}
-          </a>
+          <p className="site-end__email">{SITE.email}</p>
           <a className="site-end__link" href={SITE.linkedin} target="_blank" rel="noopener noreferrer">
-            LinkedIn<span className="visually-hidden"> (opens in a new tab)</span>
+            LinkedIn <span aria-hidden="true">↗</span>
+            <span className="visually-hidden"> (opens in a new tab)</span>
+          </a>
+          <a className="site-end__link" href={SITE.resume} target="_blank" rel="noopener noreferrer">
+            Résumé <span className="site-end__small">PDF</span>
+            <span className="visually-hidden"> (opens in a new tab)</span>
           </a>
         </div>
         <p className="site-end__copy tabular">

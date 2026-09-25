@@ -1,12 +1,9 @@
 import '../../styles/pages/about.css'
-import { useLayoutEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { accentVars } from '../../content/accents'
 import { ABOUT } from '../../content/pages/about'
 import { projectById, projectPath } from '../../content/projects'
 import { prefetchRoute } from '../../routes'
-import { useReducedMotion } from '../../hooks/useReducedMotion'
-import { gsap } from '../../lib/gsap'
 import { ResponsiveImage } from '../media/ResponsiveImage'
 import { ArtPreview } from './ArtPreview'
 import { FeaturedFilm } from './FeaturedFilm'
@@ -24,13 +21,15 @@ const PORTRAIT_SIZES = '(min-width: 960px) 360px, (min-width: 720px) 300px, 260p
  * header's About link. One 40/60 grid on wide screens, stacked in reading
  * order on narrow ones:
  *
- * 1. Opening. The photograph of Harlie in a quiet rectangular frame (brief
- *    v16: no cutout), drifting a few pixels against the scroll, beside the
- *    greeting (the page H1), a lead paragraph and two more.
- * 2. Below a full-width divider, Education (about 40%) beside Experience
- *    (about 60%). Education keeps the verified degree, minor, certificate,
- *    school and dates and two short paragraphs (no separate coursework
- *    list). Each role has one first-person contribution and, where there is
+ * 1. Opening (brief v17). The photograph of Harlie, static, on the left
+ *    (about 40%), its top level with the pink serif greeting; on the right
+ *    (about 60%) the greeting, the lead and its concrete follow-up, three
+ *    short paragraphs (what I build, how cognitive science informs it, the
+ *    work I want next) and Selected experience in three factual sentences.
+ *    Phones: the greeting and lead, then the portrait, then the rest.
+ * 2. Below a full-width divider, Education (about 40%, a short block: the
+ *    school, degree, minor, certificate and dates) beside Experience (about
+ *    60%). Each role has one first-person contribution and, where there is
  *    one, a quiet text link to its case study.
  * 3. Creative work, below another divider. Two equal cards with the same
  *    frame, badge and title: the Creative Portfolio (its Art tile; opens the
@@ -39,41 +38,39 @@ const PORTRAIT_SIZES = '(min-width: 960px) 360px, (min-width: 720px) 300px, 260p
  *    the YouTube player requested only after that press).
  * Email and LinkedIn now live in the site's ending (Footer.tsx), right below.
  *
- * The page is deliberately still (brief v16): no pointer light, only the
- * portrait's slight parallax, none under reduced motion.
+ * The page is deliberately still: no pointer light and no parallax.
  */
 export function AboutContent() {
   const { education: edu } = ABOUT
-  const reduced = useReducedMotion()
-  const portraitRef = useRef<HTMLDivElement>(null)
-
-  useLayoutEffect(() => {
-    const frame = portraitRef.current
-    if (!frame || reduced) return
-    const tween = gsap.fromTo(
-      frame.querySelector('img'),
-      { yPercent: -3 },
-      { yPercent: 3, ease: 'none', scrollTrigger: { trigger: frame, start: 'top bottom', end: 'bottom top', scrub: true } },
-    )
-    return () => {
-      tween.scrollTrigger?.kill()
-      tween.kill()
-    }
-  }, [reduced])
 
   return (
     <div className="about-content">
       <div className="about-intro">
-        <div ref={portraitRef} className="about-intro__portrait about-photo">
+        <div className="about-intro__head">
+          <h1 className="about-heading">{ABOUT.greeting}</h1>
+          <p className="about-intro__lead">
+            {ABOUT.lead} <span className="about-intro__detail">{ABOUT.leadDetail}</span>
+          </p>
+        </div>
+        <div className="about-intro__portrait about-photo">
           <ResponsiveImage image="headshot" sizes={PORTRAIT_SIZES} alt={ABOUT.portraitLabel} priority />
         </div>
-        <div className="about-intro__text" data-cover-reveal="">
-          <h1 className="about-heading">{ABOUT.greeting}</h1>
-          {ABOUT.bio.map((p, i) => (
-            <p key={p} className={i === 0 ? 'about-intro__para about-intro__lead' : 'about-intro__para'}>
+        <div className="about-intro__bio">
+          {ABOUT.bio.map((p) => (
+            <p key={p} className="about-intro__para">
               {p}
             </p>
           ))}
+          <section className="about-selected" aria-labelledby="about-selected-title">
+            <h2 id="about-selected-title" className="about-selected__title">
+              {ABOUT.selectedTitle}
+            </h2>
+            <ul className="about-selected__list">
+              {ABOUT.selected.map((x) => (
+                <li key={x}>{x}</li>
+              ))}
+            </ul>
+          </section>
         </div>
       </div>
 
@@ -101,11 +98,6 @@ export function AboutContent() {
                 <span className="visually-hidden">, </span>
                 {edu.pace}
               </p>
-            </div>
-            <div className="about-school__text">
-              {edu.text.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
             </div>
           </section>
 
@@ -158,6 +150,7 @@ export function AboutContent() {
               </div>
               <div className="about-work__foot">
                 <h3 className="about-work__title">{ABOUT.portfolio.title}</h3>
+                <p className="about-work__line">{ABOUT.portfolio.line}</p>
               </div>
             </div>
             <FeaturedFilm />

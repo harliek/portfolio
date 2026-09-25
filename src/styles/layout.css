@@ -590,57 +590,14 @@ html.is-menu-open {
 /* The page and its ending sit above the fixed set. */
 .site-main,
 .site-end {
+  --end-edge: max(64px, calc((100vw - 1280px) / 2));
   position: relative;
-  z-index: 1;
-}
-
-/* A new page rises 6px while its opacity settles: never blank, never black. */
-.route-reveal {
-  animation: route-reveal var(--dur-route-reveal) var(--ease-arrive) both;
-}
-
-@keyframes route-reveal {
-  from {
-    opacity: 0.4;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/*
- * Not with reduced motion. (During a page transition the new page arrives
- * through the change instead; transition.css switches the rise off with
- * html[data-page-transition].)
- */
-html[data-motion='reduce'] .route-reveal {
-  animation: none;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Footer: compact, the copyright line                                      */
-/* ----------------------------------------------------------------------- */
-
-/*
- * About 48px after the page content, one quiet row. The darkening fades in
- * over its first 48px (no edge), so the room blends into a calm base.
- */
-/*
- * The ending (Footer.tsx, brief v16): the opening film at another moment,
- * full width and dark, with HARLIE KATZ set like PORTFOLIO and one quiet
- * way to get in touch. The name sits in the dark left third; the figure
- * stands centre-right.
- */
-.site-end {
-  --end-edge: clamp(20px, 6.2vw, 120px);
   display: grid;
-  min-height: max(520px, 86svh);
-  margin-top: clamp(96px, 12vw, 200px);
+  margin-top: clamp(96px, 9vw, 120px);
   overflow: hidden;
   isolation: isolate;
-  background: #020203;
+  border-top: 1px solid rgb(243 238 231 / 0.14);
+  background: #050507;
 }
 
 .site-end__film,
@@ -653,89 +610,112 @@ html[data-motion='reduce'] .route-reveal {
   z-index: 0;
 }
 
+/* The film on the right, falling off into darkness behind the text. */
 .site-end__video {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  top: 0;
+  right: 0;
+  width: 62%;
   height: 100%;
   object-fit: cover;
-  object-position: 26% 40%;
+  object-position: 50% 30%;
+  opacity: 0.8;
 }
 
 .site-end__shade {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to bottom, #020203, rgb(2 2 3 / 0) 22%, rgb(2 2 3 / 0) 70%, rgb(2 2 3 / 0.85)),
-    linear-gradient(90deg, rgb(0 0 0 / 0.7) 0%, rgb(0 0 0 / 0.3) 36%, rgb(0 0 0 / 0) 60%);
+    linear-gradient(90deg, #050507 0%, #050507 38%, rgb(5 5 7 / 0.6) 55%, rgb(5 5 7 / 0.15) 80%),
+    linear-gradient(to bottom, #050507, rgb(5 5 7 / 0) 30%, rgb(5 5 7 / 0) 75%, #050507);
 }
 
 .site-end__content {
   position: relative;
   z-index: 1;
   display: grid;
-  align-content: end;
-  gap: clamp(20px, 3svh, 36px);
-  padding: 0 var(--end-edge) clamp(28px, 5svh, 56px);
+  align-content: start;
+  gap: 20px;
+  padding: 80px var(--end-edge) 40px;
 }
 
 .site-end__name {
-  margin: 0 0 0 -0.04em;
-  font-family: var(--font-editorial);
-  font-size: clamp(3rem, 9.6vw, 12.5rem);
-  font-weight: 400;
-  line-height: 0.9;
-  letter-spacing: -0.012em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: #fff;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #aaa49c;
 }
 
-.site-end__contact {
+.site-end__invite {
+  max-width: 16em;
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(2.25rem, 1.6rem + 1.6vw, 3rem);
+  font-weight: 400;
+  line-height: 1.12;
+  color: #f3eee7;
+}
+
+.site-end__links {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 12px 28px;
+  margin-top: 12px;
 }
 
 .site-end__action {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 22px;
-  border: 1px solid rgb(255 255 255 / 0.4);
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 24px;
   border-radius: 999px;
+  background: #f3eee7;
   font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0a0a0c;
   text-decoration: none;
-  transition:
-    border-color var(--dur-1) var(--ease-standard),
-    background-color var(--dur-1) var(--ease-standard);
+  transition: background-color var(--dur-1) var(--ease-standard);
 }
 
 .site-end__action:hover {
-  border-color: rgb(255 255 255 / 0.8);
-  background: rgb(255 255 255 / 0.06);
+  background: var(--red);
+  color: #fff;
+}
+
+.site-end__email {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: #f3eee7;
+  user-select: text;
 }
 
 .site-end__link {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   min-height: 44px;
   font-family: var(--font-sans);
-  font-size: 0.875rem;
-  color: rgb(255 255 255 / 0.78);
+  font-size: 1rem;
+  color: #f3eee7;
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color var(--dur-1) var(--ease-standard);
 }
 
 .site-end__link:hover {
-  border-bottom-color: rgb(255 255 255 / 0.5);
+  border-bottom-color: rgb(243 238 231 / 0.5);
+}
+
+.site-end__small {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: #aaa49c;
 }
 
 .site-end__action:focus-visible,
@@ -745,25 +725,39 @@ html[data-motion='reduce'] .route-reveal {
 }
 
 .site-end__copy {
-  margin: 0;
+  margin: 56px 0 0;
   padding-top: 16px;
-  border-top: 1px solid rgb(255 255 255 / 0.1);
+  border-top: 1px solid rgb(243 238 231 / 0.1);
   font-family: var(--font-sans);
   font-size: 0.75rem;
-  color: rgb(255 255 255 / 0.5);
+  color: rgb(243 238 231 / 0.5);
 }
 
 @media (max-width: 699.98px) {
   .site-end {
-    min-height: max(480px, 78svh);
+    --end-edge: 24px;
   }
 
   .site-end__video {
-    object-position: 58% 40%;
+    width: 100%;
+    opacity: 0.45;
   }
 
-  .site-end__name {
-    font-size: 13.4vw;
+  .site-end__links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .site-end__action {
+    justify-content: center;
+  }
+
+  .site-end__email,
+  .site-end__link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
 }
 

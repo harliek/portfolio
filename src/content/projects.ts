@@ -25,11 +25,6 @@ export type ProjectId =
 /** Each project's accent (src/content/accents.ts). */
 export type ProjectAccent = AccentId
 
-/**
- * `sizes` of Creative Production's film posters (FilmScroll POSTER_SIZES uses
- * the same literal).
- */
-const FRAME_SIZES = '(min-width: 960px) 620px, calc(100vw - 32px)'
 
 /**
  * `sizes` of the case studies' media stage: CaseScroll STAGE_SIZES (the video
@@ -37,8 +32,6 @@ const FRAME_SIZES = '(min-width: 960px) 620px, calc(100vw - 32px)'
  */
 const STAGE_SIZES = '(min-width: 1368px) 645px, (min-width: 960px) 47vw, calc(100vw - 40px)'
 
-/** PhoneGroup PHONE_SIZES (Jumpstart Finance's three prototype phones). */
-const PHONE_SIZES = '(min-width: 1368px) 240px, (min-width: 960px) 18vw, 37vw'
 
 /** Where a page shows a different crop on phones (ConversationStage PHONE). */
 const WIDE = '(min-width: 600px)'
@@ -233,8 +226,8 @@ export const PROJECTS: Project[] = [
     description: 'Production and campaign support at Shift Content.',
     meta: { company: 'Shift Content, London', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', status: 'Three completed client films' },
     cover: 'obj-creative-production',
-    // The first film's poster (FilmScroll, Nickleby Capital).
-    hero: [{ image: 'nickleby-poster', sizes: FRAME_SIZES }],
+    // The opening is a moving frame (a video poster, not a registered image): nothing to warm.
+    hero: [],
     accent: 'creative-production',
     next: 'jumpstart-finance',
     seo: {
@@ -262,9 +255,9 @@ export const PROJECTS: Project[] = [
     cover: 'obj-jumpstart-finance',
     // The three original prototype screens of the phone group (PhoneGroup).
     hero: [
-      { image: 'jf-screen-lessons', sizes: PHONE_SIZES },
-      { image: 'jf-screen-progress', sizes: PHONE_SIZES },
-      { image: 'jf-screen-community', sizes: PHONE_SIZES },
+      { image: 'jf-screen-lessons', sizes: '(min-width: 1100px) 17vw, 34vw' },
+      { image: 'jf-screen-progress', sizes: '(min-width: 1100px) 17vw, 34vw' },
+      { image: 'jf-screen-community', sizes: '(min-width: 1100px) 17vw, 34vw' },
     ],
     accent: 'jumpstart-finance',
     next: 'merchandising-platform',

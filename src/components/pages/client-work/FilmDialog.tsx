@@ -1,3 +1,5 @@
+// The viewer's frame and bar styles (.cs-video-dialog, .cs-player) live with the case styles.
+import '../../../styles/case.css'
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import type { VideoAsset } from '../../../content/media'
 import { DemoControls } from '../../media/DemoControls'

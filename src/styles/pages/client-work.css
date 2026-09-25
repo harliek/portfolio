@@ -1,409 +1,265 @@
 /*
- * Creative Production page (src/pages/work/ClientWork.tsx, FilmScroll.tsx,
- * FilmPlayer.tsx). Every selector is scoped under .page-client-work; warm
- * amber is the page accent (--accent from CaseLayout).
- *
- * brief-v8 section 13: the case opening, small anchor links, then three
- * stacked project sections that scroll naturally, each pairing its own
- * description with its own film. Desktop (≥960px) uses the CaseScroll grid
- * (42% text, 6% gap, 52% media): the opening's text on the left and the camera
- * cover on the right (as on every case page, case.css: standing on the same
- * floor as the status line, its caption level with it), the anchor links
- * below the text, then each section with its heading level with the top of
- * its film. Every film keeps its own proportions (the Aristocracy film is 4:3)
- * in the case studies' player frame (case.css .cs-player), with the compact
- * bar below it that the product recordings use (DemoControls, case.css
- * .cs-controls): nothing over the picture. Below 960px: heading, film,
- * description.
+ * Creative Production (brief v16): each film composed for its footage. A
+ * wide moving frame with the title on it; Nickleby as a large 16:9 frame
+ * with text around it; Aristocracy as a vertical editorial set; The Night
+ * Club across the full width, scrubbed by the scroll.
  */
 
-.page-client-work {
-  --fp-fade: 120ms;
+/* Opening: a wide cinematic frame, the title set on its lower left. */
+.cw-hero {
+  padding: clamp(16px, 3svh, 40px) var(--cx-edge) 0;
 }
 
-/* ----------------------------------------------------------------------- */
-/* Opening and anchor links                                                 */
-/* ----------------------------------------------------------------------- */
-
-@media (min-width: 960px) {
-  /*
-   * The opening's pieces join the page grid: title, metadata, summary and status on the left with the cover beside
-   * them (it ends level with the status line), then the links under the text.
-   */
-  .page-client-work .cs.fs[data-layout='sticky'] {
-    grid-template-columns: minmax(0, 42fr) minmax(0, 52fr);
-    /* The lede's row is flexible, as in every case opening (case.css): a cover taller than the text adds its extra height below the lede. */
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
-    grid-template-areas:
-      'intro cover'
-      'lede cover'
-      'nav .'
-      'films films';
-  }
-
-  .page-client-work .fs[data-layout='sticky'] > .cs-opening {
-    display: contents;
-  }
-
-  .page-client-work .fs[data-layout='sticky'] > .cs-opening > .cs-intro {
-    grid-area: intro;
-  }
-
-  .page-client-work .fs[data-layout='sticky'] > .cs-opening > .cs-lede {
-    grid-area: lede;
-  }
-
-  /* The cover stands in the media column beside the opening text (sized and captioned by case.css). */
-  .page-client-work .fs[data-layout='sticky'] > .cs-opening > .cs-cover {
-    grid-area: cover;
-  }
-
-  .page-client-work .fs[data-layout='sticky'] > .fs-nav {
-    grid-area: nav;
-  }
-
-  .page-client-work .fs[data-layout='sticky'] > .fs-films {
-    grid-area: films;
-  }
-}
-
-.page-client-work .fs-nav {
-  margin-top: var(--space-5);
-}
-
-.page-client-work .fs-nav ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  list-style: none;
-}
-
-/* Small anchor links (the site's jump chips, compact): one row beside the cover on laptops, with a 44px target each. */
-.page-client-work .fs-nav__chip {
+.cw-hero__frame {
   position: relative;
-  min-height: 34px;
-  padding: 0 13px;
-  font-size: 0.8125rem;
+  overflow: hidden;
+  aspect-ratio: 920 / 440;
+  max-height: calc(100svh - var(--header-height) - 180px);
+  width: 100%;
+  border-radius: 3px;
+  background: #07070a;
+  box-shadow: 0 0 0 1px var(--cx-hair);
 }
 
-.page-client-work .fs-nav__chip::before {
+.cw-hero__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cw-hero__frame::after {
   content: '';
   position: absolute;
-  inset: -5px 0;
+  inset: 0;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.72), rgb(0 0 0 / 0.1) 55%, rgb(0 0 0 / 0));
+  pointer-events: none;
 }
 
-/* ----------------------------------------------------------------------- */
-/* Project sections                                                         */
-/* ----------------------------------------------------------------------- */
+.cw-hero__title {
+  position: absolute;
+  left: clamp(20px, 3.4vw, 56px);
+  right: clamp(20px, 3.4vw, 56px);
+  bottom: clamp(18px, 3.4vw, 52px);
+  z-index: 1;
+}
 
-.page-client-work .fs-films {
+.cw-hero__title .cx-meta {
+  color: rgb(255 255 255 / 0.78);
+}
+
+.cw-hero__text {
   display: grid;
-  gap: clamp(64px, 7vw, 104px);
-  padding-top: clamp(48px, 5vw, 80px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--cx-s2) clamp(28px, 4vw, 72px);
+  align-items: baseline;
+  padding-top: var(--cx-s3);
 }
 
-/* Added to the root's scroll-padding-top: an anchor link lands with the heading and the film's top clear of the header. */
-.page-client-work .fs-film {
-  scroll-margin-top: var(--space-5);
+.cw-hero__text .cx-lede {
+  max-width: 40ch;
 }
 
-@media (min-width: 960px) {
-  /* Heading and description on the left, the film on the right, their tops level; the next section starts below both. */
-  .page-client-work .fs[data-layout='sticky'] .fs-film {
-    display: grid;
-    grid-template-columns: minmax(0, 42fr) minmax(0, 52fr);
-    grid-template-rows: auto 1fr;
-    grid-template-areas:
-      'head media'
-      'body media';
-    column-gap: var(--case-gap);
-    align-items: start;
-  }
-
-  .page-client-work .fs[data-layout='sticky'] .fs-film__head {
-    grid-area: head;
-  }
-
-  .page-client-work .fs[data-layout='sticky'] .fs-film__media {
-    grid-area: media;
-  }
-
-  .page-client-work .fs[data-layout='sticky'] .fs-film__body {
-    grid-area: body;
-  }
-
-  /* The heading's capitals level with the film's top edge (its half-leading above them). */
-  .page-client-work .fs[data-layout='sticky'] .fs-film__title {
-    margin-top: -0.24em;
-  }
-}
-
-.page-client-work .fs-film__title {
-  margin-bottom: var(--space-1);
-}
-
-.page-client-work .fs-film__meta {
-  color: var(--color-muted);
-  font-size: 0.9375rem;
-  line-height: 1.45;
-}
-
-.page-client-work .fs-film__body {
-  margin-top: var(--space-4);
-}
-
-/* Stacked: heading, then the film (never taller than most of the screen), then the description. */
-.page-client-work .fs[data-layout='stacked'] .fs-film__media {
-  margin-top: var(--space-4);
-}
-
-.page-client-work .fs[data-layout='stacked'] .fp {
-  width: min(100%, calc(72svh * var(--film-r)));
-  margin-inline: auto;
-}
-
-.page-client-work .fs[data-layout='stacked'] .fs-film__body {
-  margin-top: var(--space-5);
-}
-
-/* ----------------------------------------------------------------------- */
-/* Player                                                                   */
-/* ----------------------------------------------------------------------- */
-
-.page-client-work .fp {
-  position: relative;
-  isolation: isolate;
-  min-width: 0;
+.cw-hero__text .cx-status {
   margin: 0;
 }
 
-/*
- * Beside its text: as wide as the column, never taller than the view below the navigation (with its bar). A film
- * narrower than 16:9 (Aristocracy, 4:3) is no taller than 1.15 times a 16:9 film in the same column, so its section
- * keeps the rhythm of the others and its text column is not left with a tall empty space beside it.
- */
-.page-client-work .fs[data-layout='sticky'] .fp {
-  width: min(100%, calc(100% * 9 / 16 * 1.15 * var(--film-r)), calc((100svh - var(--cs-top) - var(--space-6) - var(--cs-pbar)) * var(--film-r)));
+/* Each film: its name, Harlie's part, what the team delivered, and the way to watch it. */
+.cw-film {
+  padding: var(--cx-s5) var(--cx-edge) 0;
 }
 
-/* A faint pool of warm light beneath the player. */
-.page-client-work .fp::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: 8%;
-  right: 8%;
-  bottom: -34px;
-  height: 80px;
-  background: radial-gradient(closest-side in oklch, color-mix(in oklch, var(--case-accent) 16%, transparent), transparent);
-  pointer-events: none;
-}
-
-.page-client-work .fp-frame {
-  position: relative;
-  isolation: isolate;
-  width: 100%;
-  aspect-ratio: var(--film-r);
-  overflow: hidden;
-  background: #040405;
-}
-
-.page-client-work .fp-poster {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-
-.page-client-work .fp-poster .picture,
-.page-client-work .fp-poster img,
-.page-client-work .fp-poster .image-fallback {
-  width: 100%;
-  height: 100%;
-}
-
-.page-client-work .fp-video {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  object-fit: contain;
-  opacity: 0;
-  transition: opacity var(--fp-fade) linear;
-}
-
-/* Transparent over the poster until the recording has put a frame on screen (FilmPlayer data-has-frame), then a short
-   fade: never the black box of a playing video without a frame, and poster to film is a dissolve rather than a cut. */
-.page-client-work .fp-frame[data-has-frame] > .fp-video {
-  opacity: 1;
-}
-
-/* A click on the picture plays or pauses it (a pointer shortcut for the bar's first control). */
-.page-client-work .fp-video:not([controls]) {
-  cursor: pointer;
-}
-
-/* Poster: one obvious Watch film action. */
-.page-client-work .fp-center {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
+.cw-text {
   display: grid;
-  place-items: center;
-  background: radial-gradient(closest-side, rgb(5 6 9 / 0.5), rgb(5 6 9 / 0));
-  pointer-events: none;
+  gap: var(--cx-s2);
+  align-content: start;
 }
 
-.page-client-work .fp-watch {
-  pointer-events: auto;
+.cw-name {
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(2rem, 3.8vw, 4rem);
+  font-weight: 400;
+  line-height: 1.02;
+  color: #fff;
 }
 
-/* A preview's Watch with sound, in the compact bar after Pause: a small outlined pill (the bar's one labelled control). */
-.page-client-work .fp-sound {
-  position: relative;
-  flex: none;
+.cw-text .cx-body {
+  max-width: 42ch;
+}
+
+.cw-delivered {
+  max-width: 42ch;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--cx-dim);
+}
+
+.cw-delivered p {
+  margin: 0;
+}
+
+.cw-watch {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 30px;
-  margin-left: var(--space-1);
-  padding: 0 12px 0 10px;
-  border: 0;
+  gap: 12px;
+  justify-self: start;
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 0 18px 0 14px;
+  border: 1px solid rgb(255 255 255 / 0.28);
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.06);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
-  color: var(--color-text);
-  font-size: 0.8125rem;
-  font-weight: var(--control-weight);
-  line-height: 1.2;
-  white-space: nowrap;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fff;
   cursor: pointer;
   transition:
-    background-color var(--dur-feedback) var(--ease-out),
-    box-shadow var(--dur-feedback) var(--ease-out),
-    color var(--dur-feedback) var(--ease-out);
+    border-color var(--dur-1) var(--ease-standard),
+    background-color var(--dur-1) var(--ease-standard);
 }
 
-/* A 44px target around the compact pill. */
-.page-client-work .fp-sound::before {
-  content: '';
-  position: absolute;
-  inset: -7px -2px;
+.cw-watch:hover {
+  border-color: rgb(255 255 255 / 0.6);
+  background: rgb(255 255 255 / 0.06);
 }
 
-/* Hover and focus: the accent's edge and a faint tint, no glow (the precise edge the other player controls use). */
-.page-client-work .fp-sound:is(:hover, :focus-visible) {
-  background: rgb(var(--case-accent-rgb) / 0.14);
-  box-shadow: inset 0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.85);
-  color: color-mix(in oklch, var(--case-accent) 55%, var(--stage-ivory));
+.cw-watch:focus-visible {
+  outline: 1px solid var(--color-focus);
+  outline-offset: 3px;
 }
 
-.page-client-work .fp-sound:focus-visible {
-  outline: 2px solid var(--case-accent);
-  outline-offset: 2px;
+/* A small play triangle. */
+.cw-watch__mark {
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid currentColor;
 }
 
-@media (hover: none) {
-  .page-client-work .fp-sound {
-    min-height: 40px;
-  }
+.cw-watch__time {
+  color: var(--cx-dim);
+  letter-spacing: 0.08em;
 }
 
-/* ----------------------------------------------------------------------- */
-/* Transcript                                                               */
-/* ----------------------------------------------------------------------- */
-
-.page-client-work .fs-transcript {
-  margin-top: var(--space-4);
-}
-
-/*
- * The transcript disclosure: quiet text (a chevron and an underlined 15px/500 label, no box), with a 44px target
- * (the negative margins keep it from adding space). On hover and focus it takes the page accent (a colour change, no
- * glow).
- */
-.page-client-work .fs-transcript__summary {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: fit-content;
-  min-height: 44px;
-  margin-block: -11px;
-  color: var(--color-text);
-  font-size: 0.9375rem;
-  font-weight: var(--weight-label);
-  line-height: 1.5;
-  list-style: none;
-  cursor: pointer;
-  transition: color var(--dur-feedback) var(--ease-out);
-}
-
-.page-client-work .fs-transcript__summary::-webkit-details-marker {
-  display: none;
-}
-
-.page-client-work :is(.fs-transcript__show, .fs-transcript__hide) {
-  text-decoration-line: underline;
-  text-decoration-thickness: 1px;
-  text-decoration-color: rgb(244 245 250 / 0.3);
-  text-underline-offset: 4px;
-  transition: text-decoration-color var(--dur-feedback) var(--ease-out);
-}
-
-.page-client-work .fs-transcript__summary:is(:hover, :focus-visible) {
-  color: var(--case-accent);
-}
-
-.page-client-work .fs-transcript__summary:is(:hover, :focus-visible) :is(.fs-transcript__show, .fs-transcript__hide) {
-  text-decoration-color: currentColor;
-}
-
-.page-client-work .fs-transcript__summary:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-.page-client-work .fs-transcript__chevron {
-  flex: none;
-  transition: transform var(--dur-feedback) var(--ease-out);
-}
-
-.page-client-work .fs-transcript[open] .fs-transcript__chevron {
-  transform: rotate(90deg);
-}
-
-.page-client-work .fs-transcript__hide,
-.page-client-work .fs-transcript[open] .fs-transcript__show {
-  display: none;
-}
-
-.page-client-work .fs-transcript[open] .fs-transcript__hide {
-  display: inline;
-}
-
-.page-client-work .fs-transcript__body {
+/* Nickleby: the 16:9 frame large on the left, the text around its right edge. */
+.cw-nickleby {
   display: grid;
-  gap: 0.7em;
-  max-width: 62ch;
-  margin-top: var(--space-4);
-  font-size: var(--text-small);
-  line-height: 1.55;
+  grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+  gap: var(--cx-s3) clamp(28px, 4vw, 72px);
+  align-items: end;
 }
 
-/* Speaker names as small block labels. */
-.page-client-work .transcript__body strong {
+.cw-nickleby__frame video,
+.cw-aristocracy__film video {
   display: block;
-  color: var(--color-subtle);
-  font-size: 0.75rem;
-  font-weight: var(--weight-label);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
+  width: 100%;
+  height: auto;
 }
 
-html[data-motion='reduce'] .page-client-work :is(.fp-video, .fp-sound, .fs-transcript__summary, .fs-transcript__chevron) {
-  animation: none !important;
-  transition: none !important;
+/* Aristocracy: the text first, then a vertical set, the film tall between two photographs at different heights. */
+.cw-aristocracy {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.6fr);
+  gap: var(--cx-s3) clamp(28px, 4vw, 72px);
+  align-items: center;
+}
+
+.cw-aristocracy__set {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(12px, 1.6vw, 28px);
+  align-items: start;
+}
+
+.cw-aristocracy__photo img {
+  width: 100%;
+  height: auto;
+}
+
+.cw-aristocracy__photo--high {
+  margin-top: -6%;
+}
+
+.cw-aristocracy__photo--low {
+  margin-top: 22%;
+}
+
+/* The Night Club: the full width of the window, scrubbed by the scroll; text beneath in two columns. */
+.cw-night {
+  display: grid;
+  gap: var(--cx-s3);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.cw-strip {
+  margin: 0;
+  overflow: hidden;
+  aspect-ratio: 1280 / 536;
+  background: #07070a;
+}
+
+.cw-strip__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cw-night .cw-text {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: clamp(28px, 4vw, 72px);
+  padding: 0 var(--cx-edge);
+}
+
+.cw-night .cw-text > .cx-kicker,
+.cw-night .cw-text > .cw-name {
+  grid-column: 1;
+}
+
+.cw-night .cw-text > .cx-body,
+.cw-night .cw-text > .cw-delivered,
+.cw-night .cw-text > .cw-watch {
+  grid-column: 2;
+}
+
+.cw-night .cw-text > .cx-body {
+  grid-row: 1 / span 2;
+}
+
+@media (max-width: 899.98px) {
+  .cw-hero__frame {
+    aspect-ratio: 4 / 3;
+  }
+
+  .cw-hero__text,
+  .cw-nickleby,
+  .cw-aristocracy,
+  .cw-night .cw-text {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cw-night .cw-text > * {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+
+  .cw-aristocracy__set {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  }
+
+  .cw-aristocracy__photo--low {
+    display: none;
+  }
+
+  .cw-aristocracy__photo--high {
+    margin-top: 18%;
+  }
 }

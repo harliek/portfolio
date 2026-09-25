@@ -61,10 +61,15 @@ export interface ClientFilm {
   work: ReactNode
   /** What the Shift Content team delivered. */
   delivered: ReactNode
+  /** The moving frame on the page (a short muted excerpt; the full film opens with sound on request). */
+  clip: { src: string; poster: string; width: number; height: number }
 }
 
 export const CLIENT_WORK = {
-  meta: ['Creative Strategy and Client Solutions Intern · Shift Content, London', 'January to May 2026 · Three client films'],
+  title: 'Creative Production',
+  meta: ['Creative Strategy and Client Solutions Intern', 'Shift Content, London', 'January to May 2026'],
+  /** The opening's moving frame: Aristocracy's lit storefront set (75.5s to 84.5s, cropped wide above the subtitles). */
+  hero: { src: '/media/video/creative-hero-920.mp4', poster: '/media/img/creative-hero-poster.jpg', width: 920, height: 440 },
   summary: (
     <p>
       I worked directly with the founder on client films, from <strong>lighting and camera work on set</strong> to editing.
@@ -78,6 +83,7 @@ export const CLIENT_WORK = {
       name: 'Nickleby Capital',
       kind: 'Interview film',
       video: 'nickleby',
+      clip: { src: '/media/video/nickleby-loop-1138.mp4', poster: '/media/img/nickleby-loop-poster.jpg', width: 1138, height: 640 },
       work: (
         <p>
           For a one-day interview shoot, I set up lighting and audio and <strong>filmed B-roll during the interviews</strong>.
@@ -92,6 +98,7 @@ export const CLIENT_WORK = {
       name: 'Aristocracy',
       kind: 'Campaign film',
       video: 'aristocracy',
+      clip: { src: '/media/video/aristocracy-vertical-480.mp4', poster: '/media/img/aristocracy-vertical-poster.jpg', width: 480, height: 600 },
       work: (
         <p>
           I helped run a two-day shoot for Aristocracy London’s spring and summer campaign. I handled <strong>lighting, setup, and on-set coordination</strong>{' '}
@@ -105,6 +112,8 @@ export const CLIENT_WORK = {
       name: 'The Night Club Global Tour',
       kind: 'Event film',
       video: 'heck',
+      // Scrubbed by the scroll as it passes (a keyframe-dense 7s excerpt, 14.5s to 21.5s of the film).
+      clip: { src: '/media/video/heck-scrub-1280.mp4', poster: '/media/img/heck-scrub-poster.jpg', width: 1280, height: 536 },
       work: (
         <p>
           The tour, powered by Gymshark, brought women together to run after dark. I <strong>filmed the participants</strong> and supported the production team at

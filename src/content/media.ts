@@ -545,10 +545,10 @@ export const IMAGES = {
     crop: 'Trimmed to its content.',
   }),
   'sa-object': img({
-    id: 'sa-object', file: 'sa-object', width: 1599, height: 666, widths: [800, 1599], fallback: 'png', transparent: true,
-    alt: 'Spreadsheet Agent with a six-row B2B apparel assortment of products, vendors and categories beside the assistant panel holding the request that built it.',
+    id: 'sa-object', file: 'sa-object', width: 1407, height: 770, widths: [704, 1407], fallback: 'png', transparent: true,
+    alt: 'Spreadsheet Agent with a seven-row B2B apparel assortment of products, vendors and categories beside the assistant panel holding the request that built it.',
     provenance: 'independent-prototype', synthetic: true,
-    source: 'PNG Tiles/spreadsheet tile 2.png (supplied by Harlie, transparent; replaced 2026-09-25 14:25)', role: 'Spreadsheet Agent homepage tile',
+    source: 'PNG Tiles/spreadsheet tile 2.png (supplied by Harlie, transparent; replaced 2026-09-25 15:17)', role: 'Spreadsheet Agent homepage tile',
     crop: 'Trimmed to its content.',
   }),
   'cp-drinkware': img({

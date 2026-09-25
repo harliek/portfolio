@@ -92,7 +92,7 @@ export const FIELD: readonly FieldProject[] = [
     title: 'Spreadsheet Agent',
     line: 'A rules-based prototype for generating editable spreadsheets from written requests.',
     // Harlie's tile (PNG Tiles/spreadsheet tile.png, transparent), contained in the box at the shared scale.
-    media: { kind: 'cutouts', pieces: [{ image: 'sa-object', x: 3, y: 18.7, w: 94 }] },
+    media: { kind: 'cutouts', pieces: [{ image: 'sa-object', x: 3, y: 8.8, w: 94 }] },
     alt: 'Spreadsheet Agent with a generated B2B apparel assortment beside the assistant panel and its request',
   },
   {

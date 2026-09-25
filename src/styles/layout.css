@@ -853,59 +853,18 @@ html.is-menu-open {
   outline-offset: 3px;
 }
 
-/* The copyright sits just before About me and Next project; Previous project leads the row. */
-.site-end[data-pager] .site-end__pager--previous {
-  margin-right: 8px;
+/* A case study's buttons: their own row above the links; Previous project at the left, About me and Next project at the right. */
+.site-end__pagers {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
 }
 
-.site-end[data-pager] .site-end__pager--about {
-  margin-right: -16px;
-}
-
-.site-end__break {
-  display: none;
-}
-
-/* Narrow windows: Previous project on its own row, then About me and Next project together in the lower right corner. */
-@media (max-width: 899.98px) {
-  .site-end[data-pager] .site-end__pager {
-    order: 5;
-  }
-
-  .site-end[data-pager] .site-end__break {
-    display: block;
-    order: 6;
-    flex-basis: 100%;
-    height: 0;
-  }
-
-  .site-end[data-pager] .site-end__pager--about,
-  .site-end[data-pager] .site-end__pager--next {
-    order: 7;
-  }
-
-  .site-end[data-pager] .site-end__pager--previous {
-    margin-right: 0;
-  }
-
-  .site-end[data-pager] .site-end__pager--about {
-    margin-left: auto;
-    margin-right: 0;
-  }
-
-  .site-end[data-pager] .site-end__copy {
-    width: 100%;
-    margin-left: 0;
-  }
-
-  /* Both buttons fit on the last row together, down to 320px wide. */
-  .site-end[data-pager] .site-end__inner {
-    column-gap: 10px;
-  }
-
-  .site-end__pager {
-    padding: 0 12px;
-  }
+.site-end__pagers .site-end__pager--about {
+  margin-left: auto;
 }
 
 /* Not found / route error */

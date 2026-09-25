@@ -91,7 +91,13 @@ function Film({ film, index }: { film: ClientFilm; index: number }) {
   const id = `cw-${film.id}`
   return (
     <section className="cw-film" id={film.id} aria-labelledby={id} data-side={index % 2 ? 'right' : 'left'}>
-      <figure className="cw-frame" data-fill={film.clip.fill || undefined} {...(index === 0 ? { 'data-hero-media': '' } : { 'data-reveal': '' })}>
+      {/* A click on the film opens it larger, with sound, as Watch the film does (Harlie's request); keyboard users have the button. */}
+      <figure
+        className="cw-frame"
+        data-fill={film.clip.fill || undefined}
+        {...(index === 0 ? { 'data-hero-media': '' } : { 'data-reveal': '' })}
+        onClick={(e) => e.currentTarget.parentElement?.querySelector<HTMLButtonElement>('.cw-watch')?.click()}
+      >
         <Loop clip={film.clip} />
       </figure>
       <div className="cw-text">

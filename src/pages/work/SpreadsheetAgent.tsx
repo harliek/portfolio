@@ -23,6 +23,7 @@ export default function SpreadsheetAgent() {
           segments: C.segments,
           stills: C.stills,
           label: 'The Spreadsheet Agent prototype building a sheet from a written request',
+          play: true,
         }} />
     </CasePage>
   )

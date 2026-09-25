@@ -160,9 +160,10 @@
   }
 }
 
-/* Hovering a film enlarges it a little (Harlie's request). */
+/* Hovering a film enlarges it a little; a click opens it larger (Harlie's requests). */
 @media (hover: hover) and (pointer: fine) {
   .cw-frame {
+    cursor: zoom-in;
     transition: transform 420ms var(--ease-arrive);
   }
 

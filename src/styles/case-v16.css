@@ -773,3 +773,34 @@
     transform: none;
   }
 }
+
+/* Click the held picture to see it larger (Harlie's request): a transparent control over the whole picture. */
+.story__zoom {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.story__zoom:focus-visible {
+  outline: 1px solid var(--color-focus);
+  outline-offset: 4px;
+}
+
+/* The recording, larger: as big as the view allows, whole, with its own controls. */
+.story__video-dialog .image-dialog__stage {
+  place-items: center;
+}
+
+.story__video-large {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  background: #000;
+  pointer-events: auto;
+}

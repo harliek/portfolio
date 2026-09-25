@@ -3,6 +3,8 @@ import { getImage, type ImageId } from '../../content/media'
 import { prefersReducedMotion } from '../../hooks/useReducedMotion'
 import { ScrollTrigger } from '../../lib/gsap'
 import { ResponsiveImage } from '../media/ResponsiveImage'
+import { useImageDialog } from '../media/ImageDialog'
+import { closeOnCancel, closeWithFade } from '../media/dialogExit'
 import type { Project } from '../../content/projects'
 import { CaseTitle } from './CasePage'
 
@@ -51,7 +53,7 @@ export type Stage =
     }
   | { kind: 'layers'; aspect: number; layers: readonly StageLayer[]; show: readonly number[]; /** The laptop screen's colour around the pictures. */ screen?: string }
   | { kind: 'crops'; image: ImageId; regions: readonly (Region | null)[] }
-  | { kind: 'phones'; phones: readonly { image: ImageId; name: string; step: number }[] }
+  | { kind: 'phones'; phones: readonly { image: ImageId; name: string; step: number | readonly number[] }[] }
 
 /** The reading line (a share of the window's height from the top): a step becomes current when its top reaches it. */
 const line = () => (window.matchMedia('(max-width: 899.98px)').matches ? 0.66 : 0.5)
@@ -69,7 +71,7 @@ const STAGE_SIZES = '(min-width: 1296px) 560px, (min-width: 900px) 44vw, 72vw'
 const LAPTOP = { w: 1313, h: 734, x: 171.5, y: 70.5, sw: 971, sh: 578 }
 
 /** A recording or screenshot sitting in the laptop's screen, behind the laptop picture. */
-function Laptop({ aspect, screen, children }: { aspect: number; screen?: string; children: ReactNode }) {
+function Laptop({ aspect, screen, onZoom, children }: { aspect: number; screen?: string; onZoom?: (trigger: HTMLElement) => void; children: ReactNode }) {
   const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(4)}%`
   return (
     <div className="story__stage story__laptop" style={{ '--aspect': LAPTOP.w / LAPTOP.h } as CSSProperties}>
@@ -83,6 +85,7 @@ function Laptop({ aspect, screen, children }: { aspect: number; screen?: string;
         </div>
       </div>
       <ResponsiveImage image="device-laptop" sizes="(min-width: 1296px) 780px, (min-width: 900px) 62vw, 100vw" decorative priority className="story__laptop-frame" />
+      {onZoom && <ZoomButton onZoom={onZoom} />}
     </div>
   )
 }
@@ -190,14 +193,11 @@ export function CaseStory({
       const end = Math.max(1, document.documentElement.scrollHeight - vh)
       const raw = tops.map((top) => top - line() * vh)
       const lim = end - Math.min(0.35 * vh, 260)
-      if (raw[n - 1] > lim || raw[1] <= 0) {
-        // A short page: spread the changes over the scroll there is, never before the top (so the first step is
-        // current first), finishing with room left for the last step.
-        const start = Math.max(0, Math.min(raw[0], lim - (n - 1) * 80))
-        const stop = Math.max(start + (n - 1) * 20, Math.min(lim, end - 1))
-        const span = raw[n - 1] - raw[0] || 1
-        m.t = raw.map((r) => start + ((r - raw[0]) * (stop - start)) / span)
-      } else m.t = raw
+      // Crowded (a short page: a step would get only a sliver of scroll, or the last could not be reached): every
+      // step gets an equal share of the scroll there is, the first from the top, so none is skipped.
+      const share = end / n
+      const crowded = raw[n - 1] > lim || raw[1] <= 0 || raw.some((r, k) => k > 0 && r - raw[k - 1] < share * 0.6)
+      m.t = crowded ? raw.map((_, k) => share * k) : raw
       m.end = end
     }
     const update = () => {
@@ -306,7 +306,64 @@ export function CaseStory({
   )
 }
 
+/** A transparent control over the whole picture: a click opens it larger (Harlie's request). */
+function ZoomButton({ onZoom, label = 'View larger' }: { onZoom: (trigger: HTMLElement) => void; label?: string }) {
+  return <button type="button" className="story__zoom" aria-label={label} onClick={(e) => onZoom(e.currentTarget)} />
+}
+
+/**
+ * A recording opened larger: the site's larger view (the image dialog's look), the recording playing, looping and
+ * muted, with the browser's own controls. Close, Escape or a click outside close it; focus returns to the picture.
+ */
+function VideoDialog({ src, poster, label, trigger, onClose }: { src: string; poster: string; label: string; trigger: HTMLElement | null; onClose: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    const dialog = ref.current
+    if (!dialog) return
+    if (!dialog.open) dialog.showModal()
+    const root = document.documentElement
+    const was = root.style.overflow
+    root.style.overflow = 'hidden'
+    return () => {
+      root.style.overflow = was
+    }
+  }, [])
+  return (
+    <dialog
+      ref={ref}
+      className="image-dialog story__video-dialog"
+      aria-label={label}
+      onClose={() => {
+        onClose()
+        trigger?.focus({ preventScroll: true })
+      }}
+      onCancel={closeOnCancel}
+      onClick={(e) => {
+        if (e.target === ref.current) closeWithFade(ref.current)
+      }}
+    >
+      <div className="image-dialog__panel">
+        <div className="image-dialog__bar">
+          <p className="image-dialog__count t-small" />
+          <div className="image-dialog__controls">
+            <button type="button" className="button button--secondary button--small" onClick={() => closeWithFade(ref.current)} autoFocus>
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path d="m3.5 3.5 9 9m0-9-9 9" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+              Close
+            </button>
+          </div>
+        </div>
+        <div className="image-dialog__stage">
+          <video className="story__video-large" src={src} poster={poster} autoPlay muted loop playsInline controls disablePictureInPicture />
+        </div>
+      </div>
+    </dialog>
+  )
+}
+
 function StageView({ stage, active, bind }: { stage: Stage; active: number; bind: (fn: ((k: number, local: number) => void) | null) => void }) {
+  const dialog = useImageDialog()
   if (stage.kind === 'video') return <VideoStage stage={stage} bind={bind} />
   if (stage.kind === 'phones') {
     // Each phone's width follows its own proportions, so phones of different shapes stand at the same height.
@@ -318,19 +375,37 @@ function StageView({ stage, active, bind }: { stage: Stage; active: number; bind
           <div
             key={p.image}
             className="story__phone"
-            data-on={p.step === active || undefined}
+            data-on={(typeof p.step === 'number' ? p.step === active : p.step.includes(active)) || undefined}
             style={{ width: `${((aspects[k] / widest) * 100).toFixed(2)}%` }}
           >
             <ResponsiveImage image={p.image} sizes="(min-width: 1100px) 190px, 26vw" alt={`${p.name} screen`} priority />
           </div>
         ))}
+        <ZoomButton
+          label="View the screens larger"
+          onZoom={(trigger) => {
+            const ids = stage.phones.map((p) => p.image)
+            const lit = stage.phones.find((p) => (typeof p.step === 'number' ? p.step === active : p.step.includes(active)))
+            dialog.open(lit?.image ?? ids[0], trigger, { gallery: ids })
+          }}
+        />
       </div>
     )
   }
   if (stage.kind === 'crops') return <CropStage stage={stage} active={active} />
   const shown = stage.show[Math.max(0, active)] ?? 0
+  const layerIds = stage.layers.flatMap((l) => ('image' in l ? [l.image] : []))
+  const shownLayer = stage.layers[shown]
   return (
-    <Laptop aspect={stage.aspect} screen={stage.screen}>
+    <Laptop
+      aspect={stage.aspect}
+      screen={stage.screen}
+      onZoom={
+        layerIds.length
+          ? (trigger) => dialog.open(shownLayer && 'image' in shownLayer ? shownLayer.image : layerIds[0], trigger, { gallery: layerIds })
+          : undefined
+      }
+    >
       {stage.layers.map((layer, k) => (
         <div key={k} className="story__layer" data-on={k === shown || undefined} aria-hidden={k === shown ? undefined : true}>
           {'image' in layer ? <ResponsiveImage image={layer.image} sizes={STAGE_SIZES} priority={k === 0} alt={layer.alt} /> : layer.node}
@@ -343,6 +418,7 @@ function StageView({ stage, active, bind }: { stage: Stage; active: number; bind
 /** The recording, its time eased toward the scroll's (and one still per step under reduced motion). */
 function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>; bind: (fn: ((k: number, local: number) => void) | null) => void }) {
   const ref = useRef<HTMLVideoElement>(null)
+  const [zoomFrom, setZoomFrom] = useState<HTMLElement | null>(null)
 
   // Play mode (Merchandising): the recording plays on its own while on screen, looping, and runs faster while the page
   // is scrolled (up to four times, by the speed of the scroll), settling back to normal speed when scrolling stops.
@@ -422,7 +498,8 @@ function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>;
   }, [stage, bind])
 
   return (
-    <Laptop aspect={stage.width / stage.height}>
+    <Laptop aspect={stage.width / stage.height} onZoom={(trigger) => setZoomFrom(trigger)}>
+      {zoomFrom && <VideoDialog src={stage.src} poster={stage.poster} label={`${stage.label}, larger`} trigger={zoomFrom} onClose={() => setZoomFrom(null)} />}
       <video
         ref={ref}
         className="story__video"
@@ -449,8 +526,9 @@ function CropStage({ stage, active }: { stage: Extract<Stage, { kind: 'crops' }>
   const H = asset.height
   const layers = [null, ...stage.regions]
   const shown = active >= 0 ? active + 1 : 0
+  const dialog = useImageDialog()
   return (
-    <Laptop aspect={W / H}>
+    <Laptop aspect={W / H} onZoom={(trigger) => dialog.open(stage.image, trigger, { gallery: [stage.image] })}>
       {layers.map((r, k) => {
         let transform = 'none'
         if (r) {

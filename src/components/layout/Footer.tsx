@@ -45,10 +45,10 @@ function PagerLink({ to, dir }: { to: Project; dir: 'previous' | 'next' }) {
 /**
  * The end of every page (brief v18): one compact row, transparent and
  * without a line (Harlie's request). The email address, LinkedIn and the
- * résumé (checked: no phone number in it), and the copyright; no name link
- * (Harlie's request). On a case study it also carries a small "Previous
- * project" button in its lower left corner and, in its lower right, "About
- * me" beside "Next project", following the case studies' loop.
+ * résumé (checked: no phone number in it), and the copyright in the far
+ * right corner; no name link (Harlie's request). On a case study a row of
+ * buttons sits above it: "Previous project" at the left, and "About me"
+ * beside "Next project" at the right, following the case studies' loop.
  */
 export function Footer() {
   const year = new Date().getFullYear()
@@ -59,7 +59,16 @@ export function Footer() {
   return (
     <footer className="site-end" data-pager={current ? '' : undefined}>
       <div className="site-end__inner">
-        {previous && <PagerLink key={`p-${pathname}`} to={previous} dir="previous" />}
+        {/* A case study's buttons, on their own row above the links (Harlie's request). */}
+        {current && (
+          <div className="site-end__pagers">
+            {previous && <PagerLink key={`p-${pathname}`} to={previous} dir="previous" />}
+            <Link className="site-end__pager site-end__pager--about stateful" to="/about">
+              About me
+            </Link>
+            {next && <PagerLink key={`n-${pathname}`} to={next} dir="next" />}
+          </div>
+        )}
         <nav className="site-end__links" aria-label="Contact and elsewhere">
           <a className="site-end__link" href={SITE.emailHref}>
             {SITE.email}
@@ -71,17 +80,10 @@ export function Footer() {
             Résumé<span className="visually-hidden"> (PDF, opens in a new tab)</span>
           </a>
         </nav>
+        {/* The copyright in the far right corner. */}
         <p className="site-end__copy tabular">
           © {year} {SITE.name}
         </p>
-        {/* Phones only: ends the row after Previous project, so About me and Next project share the lower right corner. */}
-        {next && <span className="site-end__break" aria-hidden="true" />}
-        {next && (
-          <Link className="site-end__pager site-end__pager--about stateful" to="/about">
-            About me
-          </Link>
-        )}
-        {next && <PagerLink key={`n-${pathname}`} to={next} dir="next" />}
       </div>
     </footer>
   )

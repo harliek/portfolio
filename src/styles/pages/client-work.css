@@ -159,3 +159,20 @@
     grid-row: auto;
   }
 }
+
+/* Hovering a film enlarges it a little (Harlie's request). */
+@media (hover: hover) and (pointer: fine) {
+  .cw-frame {
+    transition: transform 420ms var(--ease-arrive);
+  }
+
+  .cw-frame:hover {
+    transform: scale(1.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cw-frame:hover {
+    transform: none;
+  }
+}

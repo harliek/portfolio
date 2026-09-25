@@ -28,9 +28,10 @@ export type StageLayer = { image: ImageId; alt?: string } | { node: ReactNode; l
 
 /**
  * What the fixed stage shows. Each kind holds one state per step:
- * - video: a real recording; its time follows the scroll through each step's segment;
+ * - video: a real recording; its time follows the scroll through each step's segment, or (`play`) it plays on
+ *   its own and speeds up while the page scrolls;
  * - layers: distinct artifacts, crossfading as the steps change (`show` picks the layer per step);
- * - crops: parts of one picture, crossfading as the steps change (null shows all of it); never panned or zoomed;
+ * - crops: parts of one picture, crossfading as the steps change (null shows all of it), at most gently enlarged;
  * - phones: the app's screens; the step's own screen comes forward (`step` on each phone).
  */
 export type Stage =
@@ -45,6 +46,8 @@ export type Stage =
       /** One still (seconds) per step, used under reduced motion. */
       stills: readonly number[]
       label: string
+      /** Plays on its own (looping) while on screen, and faster while the page scrolls, instead of following the scroll. */
+      play?: boolean
     }
   | { kind: 'layers'; aspect: number; layers: readonly StageLayer[]; show: readonly number[] }
   | { kind: 'crops'; image: ImageId; regions: readonly (Region | null)[] }
@@ -141,7 +144,9 @@ export function CaseStory({
   project?: Project
 }) {
   const listRef = useRef<HTMLOListElement>(null)
-  const [active, setActive] = useState(-1)
+  const [active, setActive] = useState(0)
+  const [atEnd, setAtEnd] = useState(false)
+  const resultOn = Boolean(result) && atEnd
   /** The stage's per-frame listener (a recording's time). */
   const follow = useRef<((k: number, local: number) => void) | null>(null)
 
@@ -185,9 +190,10 @@ export function CaseStory({
       const end = Math.max(1, document.documentElement.scrollHeight - vh)
       const raw = tops.map((top) => top - line() * vh)
       const lim = end - Math.min(0.35 * vh, 260)
-      if (raw[n - 1] > lim) {
-        // A short page: start earlier if need be, and finish the changes with room left for the last step.
-        const start = Math.min(raw[0], Math.max(-vh, lim - (n - 1) * 80))
+      if (raw[n - 1] > lim || raw[1] <= 0) {
+        // A short page: spread the changes over the scroll there is, never before the top (so the first step is
+        // current first), finishing with room left for the last step.
+        const start = Math.max(0, Math.min(raw[0], lim - (n - 1) * 80))
         const stop = Math.max(start + (n - 1) * 20, Math.min(lim, end - 1))
         const span = raw[n - 1] - raw[0] || 1
         m.t = raw.map((r) => start + ((r - raw[0]) * (stop - start)) / span)
@@ -196,9 +202,12 @@ export function CaseStory({
     }
     const update = () => {
       const y = window.scrollY
+      // At the very end of the page a result after the steps is the current one (Jumpstart).
+      setAtEnd(y >= m.end - 2)
+      // The first step is current from the start (Harlie's request), before it reaches the reading line.
       if (y < m.t[0]) {
-        setActive(-1)
-        follow.current?.(-1, 0)
+        setActive(0)
+        follow.current?.(0, 0)
         return
       }
       let k = 0
@@ -267,7 +276,7 @@ export function CaseStory({
       <div className="cs__body" data-hero-reveal>
         <ol ref={listRef} className="story__steps" role="list">
           {steps.map((s, k) => (
-            <li key={s.title} className="story__step" data-current={k === active || undefined}>
+            <li key={s.title} className="story__step" data-current={(k === active && !resultOn) || undefined}>
               <h2 className="story__title">{s.title}</h2>
               <p className="story__text">{s.text}</p>
               {s.quote && (
@@ -286,7 +295,7 @@ export function CaseStory({
           ))}
         </ol>
         {result && (
-          <section className="story__result" aria-label={result.title}>
+          <section className="story__result" aria-label={result.title} data-current={resultOn || undefined}>
             <h2 className="story__title">{result.title}</h2>
             <p className="story__text">{result.text}</p>
           </section>
@@ -335,9 +344,53 @@ function StageView({ stage, active, bind }: { stage: Stage; active: number; bind
 function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>; bind: (fn: ((k: number, local: number) => void) | null) => void }) {
   const ref = useRef<HTMLVideoElement>(null)
 
+  // Play mode (Merchandising): the recording plays on its own while on screen, looping, and runs faster while the page
+  // is scrolled (up to four times, by the speed of the scroll), settling back to normal speed when scrolling stops.
   useEffect(() => {
     const video = ref.current
-    if (!video) return
+    if (!video || !stage.play) return
+    bind(() => {})
+    if (prefersReducedMotion()) return () => bind(null)
+    let frame = 0
+    let rate = 1
+    let boost = 0
+    let lastY = window.scrollY
+    let lastT = performance.now()
+    let scrolledAt = 0
+    const tick = () => {
+      frame = 0
+      if (performance.now() - scrolledAt > 140) boost = 0
+      rate += (1 + boost - rate) * 0.18
+      if (Math.abs(rate - 1 - boost) < 0.01) rate = 1 + boost
+      video.playbackRate = Math.max(1, Math.min(4, rate))
+      if (rate > 1.005 || boost) frame = requestAnimationFrame(tick)
+    }
+    const onScroll = () => {
+      const now = performance.now()
+      const speed = Math.abs(window.scrollY - lastY) / Math.max(1, now - lastT)
+      lastY = window.scrollY
+      lastT = now
+      scrolledAt = now
+      boost = Math.min(3, speed * 2.2)
+      if (!frame) frame = requestAnimationFrame(tick)
+    }
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && document.visibilityState === 'visible') void video.play().catch(() => {})
+      else video.pause()
+    })
+    io.observe(video)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      bind(null)
+      io.disconnect()
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [stage, bind])
+
+  useEffect(() => {
+    const video = ref.current
+    if (!video || stage.play) return
     let target = stage.segments[0][0]
     let frame = 0
     const tick = () => {
@@ -378,6 +431,7 @@ function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>;
         width={stage.width}
         height={stage.height}
         muted
+        loop={stage.play || undefined}
         playsInline
         preload="auto"
         disablePictureInPicture
@@ -400,7 +454,8 @@ function CropStage({ stage, active }: { stage: Extract<Stage, { kind: 'crops' }>
       {layers.map((r, k) => {
         let transform = 'none'
         if (r) {
-          const s = Math.max(1, Math.min(W / r.w, H / r.h))
+          // At most a gentle enlargement (Harlie's request: not zoomed in so much), leaning towards the part.
+          const s = Math.max(1, Math.min(1.35, W / r.w, H / r.h))
           const clamp = (v: number, lo: number) => Math.min(0, Math.max(lo, v))
           const tx = clamp(W / 2 - (r.x + r.w / 2) * s, W - W * s)
           const ty = clamp(H / 2 - (r.y + r.h / 2) * s, H - H * s)

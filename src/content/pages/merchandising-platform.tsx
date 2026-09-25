@@ -9,7 +9,7 @@
  * Facts (the recording, PlanetArt/Merchandising Dashboard/Dashboard
  * Video.mov; footer: "Portfolio project. Synthetic catalog, no backend,
  * nothing leaves your browser."): an independent prototype with synthetic
- * data, built after the internship (Harlie, brief v5); Overview 0 to 6s;
+ * data, built during the internship (Harlie, v27); Overview 0 to 6s;
  * the Canyon Pouch panel with its working 11.5 to 20.4s ("The console does
  * not place orders."); Inventory with Export order sheet 20.4 to 25.5s (never
  * clicked); Ask with "There is no language model involved" at 39.4s.
@@ -20,7 +20,7 @@ export const MERCH = {
   meta: ['Product design and build', 'Independent project – 2026'],
   lede: (
     <p>
-      Following my PlanetArt internship, I designed and built an independent merchandising prototype that consolidates catalog, inventory, sales, and vendor
+      During my PlanetArt internship, I designed and built an independent merchandising prototype that consolidates catalog, inventory, sales, and vendor
       data to support replenishment decisions.
     </p>
   ),
@@ -35,7 +35,7 @@ export const MERCH = {
   decisions: [
     {
       title: 'Unified product data',
-      text: 'Each product record combines pricing, margin, inventory, vendor information, and 28-day sales. The overview prioritizes pending decisions by severity and financial exposure.',
+      text: 'Each product record combines pricing, margin, inventory, vendor information, and sales. The overview prioritizes pending decisions by severity and financial exposure.',
     },
     {
       title: 'Replenishment calculations',

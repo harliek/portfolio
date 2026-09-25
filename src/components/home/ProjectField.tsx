@@ -404,8 +404,8 @@ export function ProjectField() {
       if (Math.abs(dx) > Math.abs(dy)) {
         e.preventDefault()
         took()
-        // Scrolling right moves the projects right (Harlie's request), so the loop turns back the other way.
-        s.target -= pixels(dx, e.deltaMode) / slot()
+        // The projects move the way the scroll goes (Harlie's request): a swipe to the right carries them right.
+        s.target += pixels(dx, e.deltaMode) / slot()
         return
       }
       if (dy > 0 && atEnd()) {

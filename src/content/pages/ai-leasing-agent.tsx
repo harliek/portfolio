@@ -18,8 +18,7 @@ export const LEASING = {
   meta: ['Leasing and Operations Associate', 'Valiance Capital – 2024 to 2025'],
   lede: (
     <p>
-      At Valiance Capital, I proposed an AI leasing assistant to address recurring inquiries within operations serving more than 1,000 tenants. I documented
-      requirements, defined inquiry workflows, and developed test cases for deployment.
+      At Valiance Capital, I proposed an AI leasing assistant to address recurring inquiries within operations serving more than 1,000 tenants.
     </p>
   ),
   /**

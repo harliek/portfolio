@@ -29,6 +29,7 @@ export default function MerchandisingPlatform() {
           segments: C.segments,
           stills: C.stills,
           label: 'The Merchandising Platform prototype in use',
+          play: true,
         }}
       />
     </CasePage>

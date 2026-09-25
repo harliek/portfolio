@@ -744,6 +744,32 @@
   border-left: 2px solid var(--cx-hair);
 }
 
-.story__result .story__title {
-  color: var(--cx-text);
+.story__result {
+  transition: border-color 200ms var(--ease-standard);
+}
+
+/* At the end of the page the result is the current one (Harlie's request): the accent rule and a white heading. */
+.story__result[data-current] {
+  border-left-color: var(--cx-pink);
+}
+
+.story__result[data-current] .story__title {
+  color: #fff;
+}
+
+/* Hovering the held picture (the laptop, the phones) enlarges it a little (Harlie's request). */
+@media (hover: hover) and (pointer: fine) {
+  .story__hold > .story__stage {
+    transition: transform 420ms var(--ease-arrive);
+  }
+
+  .story__hold > .story__stage:hover {
+    transform: scale(1.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story__hold > .story__stage:hover {
+    transform: none;
+  }
 }

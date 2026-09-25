@@ -77,7 +77,7 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/nickleby-loop-trim-1138.mp4', poster: '/media/img/nickleby-loop-poster.jpg', width: 1138, height: 640 },
       work: (
         <p>
-          I supported lighting and equipment setup and <strong>filmed B&#8209;roll</strong> during a one&#8209;day interview shoot for Nickleby Capital. Five senior
+          I supported lighting and equipment setup and filmed B&#8209;roll during a one&#8209;day interview shoot for Nickleby Capital. Five senior
           team members drew question cards and answered on camera without a script, a game&#8209;show format that kept the testimonials and FAQ answers
           spontaneous.
         </p>
@@ -91,7 +91,7 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/aristocracy-loop-854.mp4', poster: '/media/img/aristocracy-loop-poster.jpg', width: 854, height: 640, fill: true },
       work: (
         <p>
-          I supported <strong>lighting, setup, and on-set coordination</strong> for Aristocracy London’s two&#8209;day spring/summer campaign shoot. I also filmed
+          I supported lighting, setup, and on-set coordination for Aristocracy London’s two&#8209;day spring/summer campaign shoot. I also filmed
           behind&#8209;the&#8209;scenes content for the agency’s marketing.
         </p>
       ),
@@ -104,7 +104,7 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/heck-loop-1138.mp4', poster: '/media/img/heck-loop-poster.jpg', width: 1138, height: 640 },
       work: (
         <p>
-          I <strong>filmed participants</strong> and supported event production for The Night Club Global Tour, powered by Gymshark.
+          I filmed participants and supported event production for The Night Club Global Tour, powered by Gymshark.
         </p>
       ),
     },

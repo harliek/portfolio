@@ -1,5 +1,5 @@
 import { useState, type MouseEvent } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { PROJECTS, projectById, projectForPath, projectPath, type Project } from '../../content/projects'
 import { SITE } from '../../content/site'
 import { isPlainClick, openProject, warmProject } from '../transition/projectTransition'
@@ -44,12 +44,11 @@ function PagerLink({ to, dir }: { to: Project; dir: 'previous' | 'next' }) {
 
 /**
  * The end of every page (brief v18): one compact row, transparent and
- * without a line (Harlie's request). Harlie's name (a mailto link, with a
- * label that says so), then the email address itself, LinkedIn and the
- * résumé (checked: no phone number in it), and the copyright. On a case
- * study it also carries a small "Previous project" button in its lower left
- * corner and "Next project" in its lower right (in place of the old
- * next-project block under the story), following the case studies' loop.
+ * without a line (Harlie's request). The email address, LinkedIn and the
+ * résumé (checked: no phone number in it), and the copyright; no name link
+ * (Harlie's request). On a case study it also carries a small "Previous
+ * project" button in its lower left corner and, in its lower right, "About
+ * me" beside "Next project", following the case studies' loop.
  */
 export function Footer() {
   const year = new Date().getFullYear()
@@ -61,9 +60,6 @@ export function Footer() {
     <footer className="site-end" data-pager={current ? '' : undefined}>
       <div className="site-end__inner">
         {previous && <PagerLink key={`p-${pathname}`} to={previous} dir="previous" />}
-        <a className="site-end__name" href={SITE.emailHref} aria-label={`Email Harlie Katz at ${SITE.email}`}>
-          {SITE.name}
-        </a>
         <nav className="site-end__links" aria-label="Contact and elsewhere">
           <a className="site-end__link" href={SITE.emailHref}>
             {SITE.email}
@@ -78,6 +74,13 @@ export function Footer() {
         <p className="site-end__copy tabular">
           © {year} {SITE.name}
         </p>
+        {/* Phones only: ends the row after Previous project, so About me and Next project share the lower right corner. */}
+        {next && <span className="site-end__break" aria-hidden="true" />}
+        {next && (
+          <Link className="site-end__pager site-end__pager--about stateful" to="/about">
+            About me
+          </Link>
+        )}
         {next && <PagerLink key={`n-${pathname}`} to={next} dir="next" />}
       </div>
     </footer>

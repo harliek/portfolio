@@ -308,7 +308,22 @@
     0 0 0 1px rgb(255 255 255 / 0.07),
     0 0 40px 12px rgb(4 4 6 / 0.55),
     0 36px 80px -30px rgb(0 0 0 / 0.95);
-  transition: box-shadow 220ms var(--ease-out);
+  transition:
+    box-shadow 220ms var(--ease-out),
+    transform 420ms var(--ease-arrive);
+}
+
+/* Hovering a card (the creative portfolio, the film, the art) enlarges it a little (Harlie's request). */
+@media (hover: hover) and (pointer: fine) {
+  .about-content .about-work__frame:hover {
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-content .about-work__frame:hover {
+    transform: none;
+  }
 }
 
 .about-content .about-work__frame:has(.about-work__hit:hover),

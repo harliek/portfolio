@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ABOUT } from '../../content/pages/about'
 import { ResponsiveImage } from '../media/ResponsiveImage'
+import { StatefulIcons } from '../ui/Stateful'
 import { CREATIVE_SIZES } from './creativeSizes'
 
 const FILM = ABOUT.film
@@ -52,16 +53,21 @@ export function FeaturedFilm() {
           <button
             type="button"
             className="about-work__hit about-film__play"
-            aria-label={`${FILM.action}, ${FILM.title}`}
+            aria-label={`${FILM.action}, ${FILM.title}, ${FILM.runtimeLabel}`}
             inert={playing}
             onClick={() => setPlaying(true)}
           >
             <ResponsiveImage image={FILM.poster} sizes={CREATIVE_SIZES} decorative fit="cover" className="about-work__image" />
-            <span className="about-work__badge" aria-hidden="true">
-              <svg viewBox="0 0 16 16" width="14" height="14" focusable="false">
-                <path d="M4.5 2.8v10.4a.5.5 0 0 0 .76.43l8.4-5.2a.5.5 0 0 0 0-.86l-8.4-5.2a.5.5 0 0 0-.76.43Z" fill="currentColor" />
-              </svg>
+            {/* Red stateful badge: the loader while the player loads, then the check. */}
+            <span className="about-work__badge stateful" aria-hidden="true" data-state={loaded ? 'done' : playing ? 'loading' : 'idle'}>
+              <StatefulIcons />
+              {!playing && (
+                <svg className="about-work__play" viewBox="0 0 16 16" width="14" height="14" focusable="false">
+                  <path d="M4.5 2.8v10.4a.5.5 0 0 0 .76.43l8.4-5.2a.5.5 0 0 0 0-.86l-8.4-5.2a.5.5 0 0 0-.76.43Z" fill="currentColor" />
+                </svg>
+              )}
               {FILM.action}
+              {!playing && <span className="about-work__time">{FILM.runtime}</span>}
             </span>
           </button>
         )}

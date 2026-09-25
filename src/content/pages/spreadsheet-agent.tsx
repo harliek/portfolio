@@ -1,12 +1,10 @@
-import type { ImageId } from '../media'
-
 /**
- * Spreadsheet Agent (brief v19): a compact page. The introduction and four
- * steps on the left (request, plan, generated sheet, the source detail of
- * one value); beside them, fixed, the whole interface in the matching state
- * (four authentic screenshots of the same build, captured 2026-09-25 at
+ * Spreadsheet Agent (brief v19; copy from Harlie's editorial pass, v23): a
+ * compact page. The introduction and four sections on the left (request
+ * interpretation, plan review, sheet generation, data provenance); beside
+ * them, fixed, the recording of the same build (captured 2026-09-25 at
  * 1440 × 900 from spreadsheetagent.netlify.app with a request its plan
- * answers exactly); one scope line.
+ * answers exactly), following the scroll; one scope note.
  *
  * Facts: the plan for “Create a sheet of B2B products with vendor, cost,
  * retail price, and margin” lists the Northwind product catalog (1,200
@@ -20,33 +18,43 @@ import type { ImageId } from '../media'
  */
 export const SHEET = {
   title: 'Spreadsheet Agent',
-  meta: ['Independent project', 'Product design and build', '2026'],
+  meta: ['Product design and build', 'Independent project 2026'],
   lede: (
     <p>
-      I built a prototype spreadsheet agent that turns a written request into a structured, editable sheet. It adds matching rows from a product catalog and
-      shows a plan to review before it builds anything.
+      I designed and built a spreadsheet prototype that converts written requests into reviewable plans and editable sheets using a synthetic product catalog.
     </p>
   ),
-  status: 'Working prototype, synthetic catalog. Its responses come from rules, not a live model.',
-  /** The four states of one build, the whole interface at 16:10 (spreadsheetagent.netlify.app, 2026-09-25). */
-  images: ['sa-ui-request', 'sa-ui-plan', 'sa-ui-sheet', 'sa-ui-detail'] as ImageId[],
+  /**
+   * The recording (sa-demo-scrub-1440.mp4, 24.7s): a fresh capture of spreadsheetagent.netlify.app at 1440x900
+   * on 2026-09-25 with this request. Typing starts 4.5s and is sent 8.97s; the plan is read until Build sheet at
+   * 13.2s; the sheet is complete at 15.47s; Atlas Goods is selected at 19.77s and its detail opens at 21.23s. The
+   * earlier recordings (request "Compare vendor prices across B2B products") are not used.
+   */
+  segments: [
+    [0, 8.97],
+    [8.97, 13.2],
+    [13.2, 18.83],
+    [18.83, 24.73],
+  ] as const,
+  stills: [8.6, 11.5, 17.2, 23.5],
+  /** Harlie's editorial pass (v23): the workflow's distinctions, the demonstrated request quoted on its own, one scope note. */
   steps: [
     {
-      title: 'A written request',
-      text: '“Create a sheet of B2B products with vendor, cost, retail price, and margin.” The request is written in plain language in the assistant panel.',
+      title: 'Request interpretation',
+      text: 'The prototype interprets a written request to identify the requested product fields.',
+      quote: '“Create a sheet of B2B products with vendor, cost, retail price, and margin.”',
     },
     {
-      title: 'Review the plan first',
-      text: 'A written request can be read more than one way, so the agent shows the source, columns, filters, and sort before building, and lists any words it could not use.',
+      title: 'Plan review',
+      text: 'Before generating a sheet, the prototype displays the data source, filters, columns, sorting, and row limit. Unsupported terms are identified for review.',
     },
     {
-      title: 'An editable sheet',
-      text: 'Building fills 1,200 rows and six columns from the synthetic catalog, and the reply confirms what was built.',
+      title: 'Sheet generation',
+      text: 'The demonstrated request generates an editable sheet containing 1,200 product records and six columns.',
     },
     {
-      title: 'Keep values traceable',
-      text: 'Any cell opens the dataset, record, and field behind it, with the reason its column was included.',
+      title: 'Data provenance',
+      text: 'Cell details identify the source dataset, version, record, and field definition, along with the reason the column was included.',
     },
   ],
-  note: 'Rules are predictable and easy to inspect but narrow, so a request outside their vocabulary is flagged in the plan rather than guessed.',
 }

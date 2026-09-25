@@ -1,25 +1,13 @@
 /*
- * The /about page (src/components/about/AboutContent.tsx). Every selector is
- * scoped under .about-content (or .page-about), except the light pool
- * (.about-light), which AboutLight.tsx appends to <body>. The page reads on
- * the quiet near-black ground (stage.css) in the homepage's pale
- * lavender-white type, with no boxes behind text.
- *
- * One grid on wide screens (960px and up): a 40% column and a 60% column
- * (2fr / 3fr) across the site's content width (tokens.css --content-max),
- * so About starts and ends on the same edges as the header, the footer and
- * the case studies.
- *   Opening      portrait (40%)            greeting, lead and paragraph (60%)
- *   ─────────    a full-width hairline
- *   Record       Education (40%)           Experience (60%)
- *   ─────────
- *   Creative     the heading (40%)         two equal cards (60%)
- * Email and LinkedIn are in the site's compact ending (Footer.tsx).
- * Narrow screens stack each block in reading order.
- *
- * The page accent (About's lavender, set on .page-about by About.tsx) marks
- * interactive things (links, focus, the cards' edges) and the pointer's
- * light pool. Edges are precise (1px), never glows.
+ * The /about page (src/components/about/AboutContent.tsx), brief v21: the
+ * old creative portfolio's About format on the professional site's ground.
+ *   Opening     the "About" label, the name, a descriptor, three short
+ *               paragraphs (left)          the colour portrait, 4:5 (right)
+ *   01          Education: the school block beside Harlie's two paragraphs
+ *   02          Creative work: two compact cards
+ * Email, LinkedIn and the résumé are in the site's ending (Footer.tsx).
+ * Narrow screens stack each block in reading order. Every selector is
+ * scoped under .about-content (or .page-about).
  */
 
 .page-about {
@@ -30,36 +18,18 @@
 .about-content {
   --about-accent: var(--accent, #c9b8ff);
   --about-accent-rgb: var(--accent-rgb, 201 184 255);
-  --about-cols: minmax(0, 2fr) minmax(0, 3fr);
-  --about-gap: clamp(40px, 6.5vw, 88px);
-  --about-block-gap: clamp(48px, 4.4vw, 64px);
-  /* Space between a divider and the section titles below it. */
-  --about-after-rule: clamp(32px, 3vw, 40px);
   --about-rule: rgb(236 232 250 / 0.12);
-  /*
-   * The homepage's pale lavender-white type: headings and names brightest,
-   * reading text a step softer, secondary lines (roles, dates, sources) a
-   * muted lavender grey (about 9:1 on the near-black ground).
-   */
   --about-ink-strong: #f3f0fb;
   --about-ink: #e4e0ef;
   --about-ink-muted: #b6b1c6;
-  /* The page title: 40 to 56px. */
-  --about-title: clamp(2.5rem, 1.55rem + 2.5vw, 3.5rem);
-  /*
-   * Text sizes: the lead (the opening's first paragraph; 21px at desktop),
-   * primary (the second paragraph, the school and role sentences; 18px),
-   * secondary (degrees, role titles, dates, links; 15px). Headings carry
-   * the rest of the hierarchy.
-   */
-  --about-lead: clamp(1.1875rem, 1.04rem + 0.42vw, 1.3125rem);
-  --about-primary: clamp(1.0625rem, 1rem + 0.25vw, 1.125rem);
-  --about-primary-leading: 1.6;
-  /* Primary paragraphs keep to about 60 characters a line, whatever their column's width. */
-  --about-measure: 30em;
+  --about-measure: 34em;
   --about-secondary: 0.9375rem;
+  --about-block-gap: clamp(48px, 5vw, 72px);
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--about-block-gap);
   width: 100%;
-  max-width: calc(var(--content-max) + 2 * var(--gutter));
+  max-width: calc(1120px + 2 * var(--gutter));
   margin-inline: auto;
   padding-inline: var(--gutter);
   color: var(--about-ink);
@@ -70,198 +40,139 @@
   font-weight: 600;
 }
 
-/* ------------------------------------------------------------------ */
-/* Type                                                                */
-/* ------------------------------------------------------------------ */
+/* Opening ------------------------------------------------------------------------------------ */
 
-/*
- * The page title: larger than a case-study title (40 to 56px), in the
- * homepage's pale lavender white. Crisp letters, no light behind them.
- */
-.about-content .about-heading {
-  color: var(--about-ink-strong);
-  font-family: var(--font-editorial);
-  font-size: calc(var(--about-title) * 1.12);
-  font-weight: 400;
-  line-height: 1.04;
-  letter-spacing: -0.01em;
-  text-wrap: balance;
-}
-
-.about-content .about-heading:focus {
-  outline: none;
-}
-
-.about-content .about-heading:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-  border-radius: 4px;
-}
-
-/* Section titles (Education, Experience, Creative work), each opening its block below a divider. */
-.about-content .about-subheading {
-  color: var(--about-ink-strong);
-  font-family: var(--font-editorial);
-  font-size: clamp(1.625rem, 1.4rem + 0.8vw, 2.25rem);
-  font-weight: 400;
-  line-height: 1.15;
-  letter-spacing: 0;
-}
-
-/* ------------------------------------------------------------------ */
-/* Opening: portrait beside the greeting                               */
-/* ------------------------------------------------------------------ */
-
-.about-content .about-intro {
+.about-content .about-hero {
   display: grid;
-  grid-template-areas:
-    'head'
-    'portrait'
-    'bio';
-  gap: 28px;
-  align-items: start;
+  gap: 32px;
+  align-items: center;
 }
 
-/* Desktop: the portrait on the left (about 40%), the text on the right (about 60%), 72px apart, tops level. */
-@media (min-width: 960px) {
-  .about-content .about-intro {
-    grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
-    grid-template-areas:
-      'portrait head'
-      'portrait bio';
-    column-gap: 72px;
-    row-gap: 28px;
+@media (min-width: 820px) {
+  .about-content .about-hero {
+    grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 344px);
+    column-gap: clamp(40px, 6vw, 96px);
   }
 }
 
-.about-content .about-intro__head {
-  grid-area: head;
-  display: grid;
-  gap: 20px;
+/* The small label with its rule, as on the creative site. */
+.about-content .about-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--about-ink-muted);
 }
 
-/* The photograph of Harlie: static, in the case studies' frame (a hairline, 6px corners). */
-.about-content .about-intro__portrait {
-  grid-area: portrait;
-  width: min(100%, 440px);
-  aspect-ratio: 644 / 755;
+.about-content .about-label::before {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--red);
+}
+
+.about-content .about-name {
+  margin: 18px 0 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(2.75rem, 1.6rem + 3.6vw, 5.25rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  color: var(--about-ink-strong);
+}
+
+.about-content .about-name:focus {
+  outline: none;
+}
+
+.about-content .about-descriptor {
+  margin: 16px 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  line-height: 1.6;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.about-content .about-hero__copy {
+  display: grid;
+  gap: 14px;
+  max-width: var(--about-measure);
+  margin-top: 24px;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--about-ink);
+  text-wrap: pretty;
+}
+
+.about-content .about-hero__copy p {
+  margin: 0;
+}
+
+/* The colour photograph, 4:5, in the site's frame (a hairline, 6px corners). */
+.about-content .about-portrait {
+  width: min(100%, 344px);
+  margin: 0;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
   border: 1px solid rgb(243 238 231 / 0.14);
   border-radius: 6px;
   background: #121216;
 }
 
-.about-content .about-intro__portrait img {
+.about-content .about-portrait .picture,
+.about-content .about-portrait img {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.about-content .about-portrait img {
   object-fit: cover;
+  object-position: 50% 30%;
 }
 
-@media (min-width: 960px) {
-  .about-content .about-intro__portrait {
-    width: 100%;
-    max-width: none;
-  }
-}
-
-/* The greeting keeps its pink serif. */
-.about-content .about-intro__head .about-heading {
-  color: var(--red);
-}
-
-/* The lead: larger, about three lines at desktop width; its concrete follow-up a little quieter. */
-.about-content .about-intro__lead {
-  max-width: 34em;
-  margin: 0;
-  color: #f3eee7;
-  font-size: clamp(1.125rem, 1.02rem + 0.3vw, 1.25rem);
-  line-height: 1.5;
-  letter-spacing: -0.004em;
-  text-wrap: pretty;
-}
-
-.about-content .about-intro__detail {
+/* Numbered section labels (01 Education, 02 Creative work), as on the creative site. */
+.about-content .about-section-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 28px;
+  padding-top: 32px;
+  border-top: 1px solid var(--about-rule);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
   color: var(--about-ink-muted);
 }
 
-.about-content .about-intro__bio {
-  grid-area: bio;
+.about-content .about-section-label__num {
+  color: var(--red);
+  letter-spacing: 0.12em;
+}
+
+/* Education ---------------------------------------------------------------------------------- */
+
+.about-content .about-education__grid {
   display: grid;
-  gap: 16px;
-  align-content: start;
+  gap: 24px;
 }
 
-.about-content .about-intro__para {
-  max-width: 60ch;
-  margin: 0;
-  color: var(--about-ink);
-  font-size: 1rem;
-  line-height: 1.65;
-  text-wrap: pretty;
-}
-
-/* ------------------------------------------------------------------ */
-/* Everything after the opening                                        */
-/* ------------------------------------------------------------------ */
-
-.about-content .about-rest {
-  display: grid;
-  gap: var(--about-block-gap);
-  margin-top: var(--about-block-gap);
-}
-
-/*
- * The dividers: a full-width hairline opens the record (Education and
- * Experience) and the creative work, with the block gap above it and a
- * little less below, so the introduction stands apart from what follows.
- */
-.about-content .about-record,
-.about-content .about-creative {
-  padding-top: var(--about-after-rule);
-  border-top: 1px solid var(--about-rule);
-}
-
-/* ------------------------------------------------------------------ */
-/* Education (40%) and Experience (60%)                                */
-/* ------------------------------------------------------------------ */
-
-.about-content .about-record {
-  display: grid;
-  gap: var(--space-8);
-  align-items: start;
-}
-
-@media (min-width: 960px) {
-  .about-content .about-record {
-    grid-template-columns: var(--about-cols);
-    column-gap: var(--about-gap);
-  }
-}
-
-.about-content .about-education,
-.about-content .about-experience {
-  display: grid;
-  align-content: start;
-  min-width: 0;
-}
-
-.about-content .about-education {
-  gap: var(--space-5);
-}
-
-/*
- * On desktop screens wide and tall enough to show all of it (its column is
- * about 400px or more wide, so it is about 560px tall at most), Education
- * stays beside the roles while Experience scrolls past (it is much
- * shorter), so the two read as a pair to the end of the list. It stops with
- * the record's grid row; nothing scrolls inside it. Narrower two-column
- * widths (960–1199px) wrap it taller, so it scrolls normally there.
- */
-@media (min-width: 1200px) and (min-height: 700px) {
-  .about-content .about-education {
-    position: sticky;
-    top: calc(var(--header-height) + var(--space-6));
+@media (min-width: 820px) {
+  .about-content .about-education__grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    column-gap: clamp(40px, 6vw, 96px);
+    align-items: start;
   }
 }
 
@@ -300,167 +211,18 @@
 .about-content .about-school__text {
   display: grid;
   gap: 12px;
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--about-rule);
   color: var(--about-ink);
   font-size: 1rem;
   line-height: 1.65;
   text-wrap: pretty;
 }
 
-/* The measure is on the paragraphs, so the rule above them spans the column like the others. */
 .about-content .about-school__text p {
   max-width: var(--about-measure);
   margin: 0;
 }
 
-.about-content .about-roles {
-  list-style: none;
-}
-
-.about-content .about-role {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas:
-    'org dates'
-    'title title'
-    'text text'
-    'more more';
-  column-gap: var(--space-5);
-  padding-block: var(--space-5);
-}
-
-/* A hairline between roles; the first starts right under the title, level with the school. */
-.about-content .about-role + .about-role {
-  border-top: 1px solid var(--about-rule);
-}
-
-.about-content .about-role:last-child {
-  padding-bottom: 0;
-}
-
-.about-content .about-role__org {
-  grid-area: org;
-  color: var(--about-ink-strong);
-  font-size: 1.125rem;
-  font-weight: var(--weight-heading);
-  line-height: 1.35;
-  letter-spacing: -0.005em;
-}
-
-.about-content .about-role__dates {
-  grid-area: dates;
-  align-self: baseline;
-  color: var(--about-ink-muted);
-  font-size: var(--about-secondary);
-  line-height: 1.35;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.about-content .about-role__title {
-  grid-area: title;
-  margin-top: 2px;
-  color: var(--about-ink-muted);
-  font-size: var(--about-secondary);
-  line-height: 1.45;
-}
-
-.about-content .about-role__text {
-  grid-area: text;
-  max-width: var(--about-measure);
-  margin-top: var(--space-3);
-  color: var(--about-ink);
-  font-size: var(--about-primary);
-  line-height: var(--about-primary-leading);
-  text-wrap: pretty;
-}
-
-.about-content .about-role__more {
-  grid-area: more;
-  margin-top: 2px;
-}
-
-/*
- * The related case study: a quiet underlined text link with a 44px target
- * (the negative margins let the target reach into the row's padding). On
- * hover and focus it takes that project's accent (set inline by
- * AboutContent), as the carousel and the case study do.
- */
-.about-content .about-role__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  margin-block: -6px -14px;
-  color: var(--about-ink);
-  font-size: var(--about-secondary);
-  font-weight: var(--weight-label);
-  text-decoration-line: underline;
-  text-decoration-thickness: 1px;
-  text-decoration-color: rgb(228 224 239 / 0.3);
-  text-underline-offset: 4px;
-  transition:
-    color var(--dur-feedback) var(--ease-out),
-    text-decoration-color var(--dur-feedback) var(--ease-out);
-}
-
-.about-content .about-role__link:hover,
-.about-content .about-role__link:focus-visible {
-  color: var(--accent, var(--about-accent));
-  text-decoration-color: currentColor;
-}
-
-.about-content .about-role__link:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-.about-content .about-role__arrow {
-  display: inline-block;
-  transition: transform var(--dur-feedback) var(--ease-out);
-}
-
-.about-content .about-role__link:hover .about-role__arrow,
-.about-content .about-role__link:focus-visible .about-role__arrow {
-  transform: translateX(2px);
-}
-
-@media (max-width: 479.98px) {
-  .about-content .about-role {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'org'
-      'title'
-      'dates'
-      'text'
-      'more';
-  }
-
-  .about-content .about-role__dates {
-    margin-top: 2px;
-    text-align: left;
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/* Creative work: two equal cards                                      */
-/* ------------------------------------------------------------------ */
-
-.about-content .about-creative {
-  display: grid;
-  gap: var(--space-6);
-}
-
-/* Wide screens: the heading in the 40% column, the two cards in the 60% column (the record's grid). */
-@media (min-width: 960px) {
-  .about-content .about-creative {
-    grid-template-columns: var(--about-cols);
-    column-gap: var(--about-gap);
-    align-items: start;
-  }
-}
+/* Creative work: two compact cards ------------------------------------------------------------ */
 
 .about-content .about-creative__grid {
   display: grid;
@@ -468,13 +230,20 @@
   align-items: start;
 }
 
-/* Two equal columns with aligned tops from 720px; one column (in reading order) below. */
-@media (min-width: 720px) {
+@media (min-width: 560px) {
   .about-content .about-creative__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: clamp(20px, 2.4vw, 32px);
   }
 }
+
+@media (min-width: 900px) {
+  .about-content .about-creative__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* The charcoal portrait is upright: the landscape frame shows the face. */
 
 /*
  * A card: the frame (the whole frame is the one control: a link to the
@@ -568,6 +337,58 @@
   transform: scale(1.015);
 }
 
+/*
+ * The Art card: three upright drawings, small and side by side on the dark
+ * ground, a little above the middle so the badge keeps its corner. Hover or
+ * focus on the one link lifts them slightly, as the other cards' pictures do.
+ */
+.about-content .about-art-strip {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  /* Room at the bottom for the badge, so it never covers a drawing. */
+  padding: 0 6% max(7%, 40px);
+  container-type: size;
+}
+
+.about-content .about-art-strip__piece {
+  position: relative;
+  flex: none;
+  /* A third of the row (less the two gaps), and never taller than about 70% of the card. */
+  width: min(calc((100cqw - 20px) / 3), 72cqh * 0.8);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 14px 28px -10px rgb(0 0 0 / 0.85);
+  transition: transform 260ms var(--ease-out);
+}
+
+.about-content .about-art-strip__image,
+.about-content .about-art-strip__image img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.about-content .about-work__hit:hover .about-art-strip__piece,
+.about-content .about-work__hit:focus-visible .about-art-strip__piece {
+  transform: translateY(-3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-content .about-art-strip__piece {
+    transition: none;
+  }
+}
+
 /* The action, in the frame's lower left corner: a small dark badge (the whole frame is the control). */
 .about-content .about-work__badge {
   position: absolute;
@@ -575,22 +396,18 @@
   left: clamp(12px, 2.6%, 18px);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
   min-height: 44px;
   padding: 0 17px 0 15px;
   border-radius: 999px;
-  background: rgb(8 8 12 / 0.74);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.3);
+  /* The red stateful pill (components.css .stateful). */
+  background: var(--red);
   color: #fff;
   font-size: 0.9375rem;
   font-weight: var(--control-weight);
   line-height: 1;
   white-space: nowrap;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   transition:
-    background-color var(--dur-feedback) var(--ease-out),
-    box-shadow var(--dur-feedback) var(--ease-out),
+    box-shadow 200ms var(--ease-standard),
     opacity 120ms var(--ease-out);
 }
 
@@ -600,14 +417,16 @@
 
 .about-content .about-work__arrow {
   display: inline-block;
+  margin-left: 8px;
   font-weight: 500;
   transition: transform var(--dur-feedback) var(--ease-out);
 }
 
 .about-content .about-work__hit:hover .about-work__badge,
 .about-content .about-work__hit:focus-visible .about-work__badge {
-  background: rgb(8 8 12 / 0.88);
-  box-shadow: 0 0 0 1px rgb(var(--about-accent-rgb) / 0.85);
+  box-shadow:
+    0 0 0 2px #0a0a0c,
+    0 0 0 4px var(--red);
 }
 
 .about-content .about-work__hit:hover .about-work__arrow,
@@ -632,6 +451,14 @@
   font-weight: var(--weight-heading);
   line-height: 1.3;
   letter-spacing: -0.01em;
+}
+
+/* The film's runtime on its play badge, after the action (as Watch the film shows its length on Creative Production). */
+.about-work__time {
+  margin-left: 10px;
+  color: rgb(255 255 255 / 0.8);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Medium and contribution, 8px beneath the title (never over the artwork). */
@@ -686,9 +513,9 @@
   opacity: 1;
 }
 
-/* Pressed: the poster waits for the player without its Play badge. */
-.about-content .about-film__frame[data-playing] .about-work__badge {
-  opacity: 0;
+/* The play mark keeps a little space from the label. */
+.about-content .about-work__play {
+  margin-right: 8px;
 }
 
 @media (max-width: 479.98px) {
@@ -699,69 +526,12 @@
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* The pointer's light pool (AboutLight.tsx, appended to <body>)        */
-/* ------------------------------------------------------------------ */
-
-/*
- * A fixed layer between the background set (z-index 0, earlier in the
- * document) and the page (z-index 1): one broad radial pool of lavender
- * light with a faint pink-violet rim, blended with `screen` so it lifts the
- * room like light rather than laying a tint over it. The pool (about 60%
- * of the viewport's width) is centred on a point that drifts after the
- * pointer (a transform, set by AboutLight). It is kept low (about 12% at
- * its centre) so text contrast barely changes, and it fades in and out.
- * Only mouse and trackpad users with motion allowed ever get one.
- */
-.about-light {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: 0;
-  mix-blend-mode: screen;
-  transition: opacity var(--about-light-fade, 700ms) var(--ease-out);
-}
-
-.about-light[data-on] {
-  opacity: 1;
-}
-
-.about-light__pool {
-  --pool: clamp(560px, 60vw, 1080px);
-  position: absolute;
-  top: calc(var(--pool) / -2);
-  left: calc(var(--pool) / -2);
-  width: var(--pool);
-  height: var(--pool);
-  border-radius: 50%;
-  background:
-    radial-gradient(closest-side in oklch, rgb(var(--accent-rgb, 201 184 255) / 0.12), rgb(var(--accent-rgb, 201 184 255) / 0.065) 42%, rgb(var(--accent-rgb, 201 184 255) / 0.02) 72%, transparent),
-    radial-gradient(closest-side in oklch, transparent 40%, rgb(214 150 232 / 0.035) 70%, transparent);
-  will-change: transform;
-}
-
-/* Not while anything is fullscreen, and never under reduced motion (AboutLight does not create it then either). */
-html:fullscreen .about-light,
-html[data-motion='reduce'] .about-light {
-  display: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .about-light {
-    display: none;
-  }
-}
-
 /* Reduced motion: hover and focus still change colour and edges, without scaling or sliding. */
 @media (prefers-reduced-motion: reduce) {
   .about-content .about-work__hit:hover :is(.about-work__image img, .about-work__video),
-  .about-content .about-work__hit:focus-visible :is(.about-work__image img, .about-work__video),
-  .about-content .about-work__hit:hover .about-work__arrow,
-  .about-content .about-work__hit:focus-visible .about-work__arrow,
-  .about-content .about-role__link:hover .about-role__arrow,
-  .about-content .about-role__link:focus-visible .about-role__arrow {
+.about-content .about-work__hit:focus-visible :is(.about-work__image img, .about-work__video),
+.about-content .about-work__hit:hover .about-work__arrow,
+.about-content .about-work__hit:focus-visible .about-work__arrow {
     transform: none;
   }
 }
@@ -769,8 +539,6 @@ html[data-motion='reduce'] .about-light {
 html[data-motion='reduce'] .about-content .about-work__hit:hover :is(.about-work__image img, .about-work__video),
 html[data-motion='reduce'] .about-content .about-work__hit:focus-visible :is(.about-work__image img, .about-work__video),
 html[data-motion='reduce'] .about-content .about-work__hit:hover .about-work__arrow,
-html[data-motion='reduce'] .about-content .about-work__hit:focus-visible .about-work__arrow,
-html[data-motion='reduce'] .about-content .about-role__link:hover .about-role__arrow,
-html[data-motion='reduce'] .about-content .about-role__link:focus-visible .about-role__arrow {
+html[data-motion='reduce'] .about-content .about-work__hit:focus-visible .about-work__arrow {
   transform: none;
 }

@@ -8,7 +8,7 @@ import { usePageMeta } from '../hooks/usePageMeta'
  * (link and focus states, the creative cards' edges, the pointer's light).
  */
 export default function About() {
-  usePageMeta('About', 'About Harlie Katz, with education, experience, creative work, and a short film.')
+  usePageMeta('About', 'About Harlie Katz, with education, creative work, and a short film.')
   return (
     <article className="page-about" style={accentVars('about')}>
       <AboutContent />

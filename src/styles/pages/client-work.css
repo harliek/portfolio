@@ -96,37 +96,25 @@
   margin: 0;
 }
 
+/* A red stateful button (components.css .stateful): the play mark, then a loader and a check when pressed. */
 .cw-watch {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
   justify-self: start;
   min-height: 44px;
   margin-top: 4px;
-  padding: 0 18px 0 14px;
-  border: 1px solid rgb(255 255 255 / 0.28);
-  border-radius: 999px;
-  background: transparent;
+  padding: 0 20px 0 16px;
   font-family: var(--font-sans);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #fff;
-  cursor: pointer;
-  transition:
-    border-color var(--dur-1) var(--ease-standard),
-    background-color var(--dur-1) var(--ease-standard);
-}
-
-.cw-watch:hover {
-  border-color: rgb(255 255 255 / 0.6);
-  background: rgb(255 255 255 / 0.06);
 }
 
 .cw-watch:focus-visible {
-  outline: 1px solid var(--color-focus);
-  outline-offset: 3px;
+  outline: none;
+}
+
+.cw-watch__mark {
+  margin-right: 12px;
 }
 
 /* A small play triangle. */
@@ -139,7 +127,8 @@
 }
 
 .cw-watch__time {
-  color: var(--cx-dim);
+  margin-left: 12px;
+  color: rgb(255 255 255 / 0.8);
   letter-spacing: 0.08em;
 }
 

@@ -7,20 +7,20 @@ const project = projectById('ai-leasing-agent')
 
 /**
  * AI Leasing Agent (brief v19; route /work/valiance): the introduction and
- * three passages on the left (responsibilities, testing, rollout, with the
- * 18 properties in a sentence); the illustrative conversation (labelled)
- * fixed on the right, moving to the part each passage is about.
+ * four sections on the left; the illustrative conversation (captioned as
+ * illustrative) fixed on the right, crossfading to the part each section is
+ * about; the implementation note after the sections.
  */
 export default function AILeasingAgent() {
   return (
     <CasePage project={project} className="page-ai-leasing-agent">
       <CaseStory
+        project={project}
         title={C.title}
         meta={C.meta}
         lede={C.lede}
         steps={C.sections}
-        stage={{ kind: 'zoom', image: 'valiance-messages', regions: C.regions }}
-        caption={C.conversationLabel}
+        stage={{ kind: 'crops', image: 'valiance-messages', regions: C.regions }}
       />
     </CasePage>
   )

@@ -394,9 +394,9 @@ html[data-page-transition] .route-reveal {
   display: block;
 }
 
-.frame-expand__media:not([data-kind='screens']) video,
-.frame-expand__media:not([data-kind='screens']) picture,
-.frame-expand__media:not([data-kind='screens']) img {
+.frame-expand__media:not([data-free]) video,
+.frame-expand__media:not([data-free]) picture,
+.frame-expand__media:not([data-free]) img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -404,8 +404,8 @@ html[data-page-transition] .route-reveal {
   object-fit: cover;
 }
 
-/* Jumpstart's three phones travel as themselves: no ground, no frame, each phone keeping its own shape and place. */
-.frame-expand[data-kind='screens'] {
+/* Free-standing tiles (phones, cutouts, the conversation) travel as themselves: no ground, no frame, each object keeping its own shape and place. */
+.frame-expand[data-free] {
   overflow: visible;
   background: transparent;
 }

@@ -7,9 +7,11 @@ import { ImageDialogProvider } from '../media/ImageDialog'
 import { FilmSlotContext } from './filmSlot'
 import { Footer } from './Footer'
 import { Header } from './Header'
+import { OrbBackground } from './OrbBackground'
 import { PointerTrail } from './PointerTrail'
 import { RouteFocus } from './RouteFocus'
 import { StageBackground } from './StageBackground'
+import { CursorLight } from '../ui/CursorLight'
 
 /**
  * Root layout of the professional site: the persistent background set
@@ -23,6 +25,7 @@ import { StageBackground } from './StageBackground'
  */
 export function PageShell() {
   const { pathname } = useLocation()
+  const route = stageRouteFor(pathname)
   const [filmSlot, setFilmSlot] = useState<HTMLDivElement | null>(null)
   useMediaPlayback()
   return (
@@ -31,7 +34,15 @@ export function PageShell() {
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <StageBackground route={stageRouteFor(pathname)} />
+        <StageBackground route={route} />
+        {/* Harlie's Orb shader behind About and the other pages; idle on the homepage (the film covers it) and on the case studies. */}
+        <OrbBackground active={route !== 'home' && route !== 'case'} />
+        {/* The case studies: pitch black, with the cursor's blue light. */}
+        {route === 'case' && (
+          <div className="case-ground" aria-hidden="true">
+            <CursorLight />
+          </div>
+        )}
         {/* The homepage portals its film here: outside the route wrapper, whose reveal animation would capture position: fixed. */}
         <div ref={setFilmSlot} id="stage-film" className="stage-film" />
         <Header />

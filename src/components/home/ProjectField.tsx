@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FIELD, FIELD_YEARS } from '../../content/field'
+import { FIELD, isFree } from '../../content/field'
 import { projectById, projectPath } from '../../content/projects'
 import { prefersReducedMotion, useReducedMotion } from '../../hooks/useReducedMotion'
-import { ScrollTrigger } from '../../lib/gsap'
+import { gsap } from '../../lib/gsap'
 import { expandFrame } from '../transition/expandFrame'
 import { isPlainClick, warmProject } from '../transition/projectTransition'
 import { PlaneMedia } from './PlaneMedia'
@@ -12,10 +12,10 @@ const N = FIELD.length
 const STORAGE_KEY = 'field-active'
 const HEADER = 61
 
-/** Scroll distance per project, as a share of the window's height: one ordinary wheel or trackpad gesture moves one project. */
-const STEP = 0.28
-/** Homepage footage plays at twice its speed (a quick preview, muted). */
-const PREVIEW_RATE = 2
+/** The collection's own steady drift to the left, in projects per second (one project about every 6.5s). */
+const SPEED = 1 / 6.5
+/** How quickly the drift eases to a stop (hover, focus) and back up again (s). */
+const EASE_V = 0.45
 
 interface Layout {
   w: number
@@ -62,10 +62,9 @@ const lerpSteps = (steps: number[], a: number) => {
   return steps[k] + (steps[k + 1] - steps[k]) * (a - k)
 }
 
-const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 /** v wrapped into [0, n). */
 const mod = (v: number, n: number) => ((v % n) + n) % n
-/** The shortest signed distance from b to a around a loop of n, in [-n/2, n/2). */
+/** The shortest signed distance from b to a around the loop, in [-N/2, N/2). */
 const around = (a: number, b: number) => mod(a - b + N / 2, N) - N / 2
 
 function readStored() {
@@ -78,27 +77,26 @@ function readStored() {
 }
 
 /**
- * Selected work (brief v19). The projects form a loop: the tile after the
- * last is the first, on both sides, with no reset, gap or reversal. Once the
- * collection reaches its place under the header it stays put (a sticky pin)
- * while vertical scrolling moves the tiles: the scroll position within the
- * pin maps to one full turn of the loop, about 28% of a window's height per
- * project, so an ordinary wheel or trackpad gesture moves one project
- * promptly, and the page settles on it in the direction of travel. After the
- * turn (back at the first project) the page continues to its end, and
- * scrolling up at the start returns to the title: no trap, no blank stretch,
- * no idle drift to fight the visitor.
+ * Selected work (Harlie's v23 request). The projects form a loop (after the
+ * last comes the first, both ways) that moves continuously to the left in one
+ * steady motion, easing to a stop while a tile is hovered or a tile's link
+ * has focus and easing back when it is left. The page ends here: the
+ * collection fills the window between the header and the footer, which sits
+ * just below it, so the page never scrolls further; scrolling on down from
+ * there (wheel, trackpad or a swipe) keeps moving the projects instead, so the
+ * scroll never ends. Dragging, swiping sideways, horizontal scrolling (a
+ * trackpad's sideways swipe or Shift with the wheel; right moves them right)
+ * and the arrow keys move the tiles too; the drift simply carries on from
+ * wherever they are left (no snapping).
  *
- * Drag, swipe, horizontal trackpad gestures and the arrow keys move the same
- * scroll position and wrap around the loop without end (the pin's two ends
- * show the same arrangement, so the jump between them is invisible). There
- * are no buttons and no counter. Each tile carries its own title and
- * one-sentence line. Clicking the centred tile opens its case study (the
- * picture travels into the page, expandFrame); clicking a neighbour brings
- * it to the centre. Keyboard: each tile is a link; focusing one centres it;
- * Enter opens it. Footage plays muted at twice its speed on the centred tile
- * and its neighbours only. Reduced motion: the same mapping without easing
- * or settling, and posters instead of footage.
+ * Hovering a tile (mouse or trackpad) enlarges it a little and lights it
+ * slightly (home.css); the cursor stays the system's own. Clicking any tile
+ * opens its case study (its picture travels into the page, expandFrame).
+ * There are no arrows, counter or visible label; a pause control appears for
+ * keyboard users when focused (before the tiles in the tab order). Footage
+ * plays muted at normal speed on the centred tile and its neighbours,
+ * continuing where it left off. Reduced motion: no drift, moves without
+ * animation, posters instead of footage.
  */
 export function ProjectField() {
   const navigate = useNavigate()
@@ -108,19 +106,32 @@ export function ProjectField() {
   const planeRefs = useRef<(HTMLAnchorElement | null)[]>([])
   const veilRefs = useRef<(HTMLSpanElement | null)[]>([])
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
+  const pinRef = useRef<HTMLDivElement>(null)
   const [initial] = useState(readStored)
   const [active, setActive] = useState(initial)
   const [running, setRunning] = useState(false)
+  const [userPaused, setUserPaused] = useState(false)
+  const [turning, setTurning] = useState(false)
   const m = useRef({
+    /** The displayed position and the position it follows (unwrapped; the loop is taken modulo N). */
     pos: initial,
     target: initial,
     active: initial,
     layout: null as Layout | null,
-    trigger: null as ScrollTrigger | null,
+    tween: null as gsap.core.Tween | null,
     frozen: false,
     dragEndedAt: 0,
-    /** Set while the arrow keys move focus, so the focus handler leaves the smooth move alone. */
+    /** The drift's current speed (projects per second), easing towards SPEED or 0. */
+    v: 0,
+    /** Reasons the drift eases to a stop. */
+    hover: false,
+    focus: false,
+    dragging: false,
+    userPaused: false,
+    /** Set while the arrow keys move focus, so the focus handler leaves the move alone. */
     keyed: false,
+    /** The tiles are on screen (horizontal scrolling anywhere on the page then moves them). */
+    visible: false,
   })
 
   const apply = useCallback(() => {
@@ -151,6 +162,36 @@ export function ProjectField() {
     }
   }, [])
 
+  /** Moves the followed position to `to` over `duration` seconds (at once under reduced motion). */
+  const glide = useCallback((to: number, duration: number, ease = 'power2.inOut') => {
+    const s = m.current
+    s.tween?.kill()
+    if (prefersReducedMotion() || duration <= 0) {
+      s.target = to
+      s.tween = null
+      return
+    }
+    s.tween = gsap.to(s, { target: to, duration, ease, overwrite: true, onComplete: () => (s.tween = null) })
+  }, [])
+
+  /** The visitor moved the tiles: any glide to a project gives way (the drift carries on from where they are). */
+  const took = useCallback(() => {
+    const s = m.current
+    s.tween?.kill()
+    s.tween = null
+  }, [])
+
+  /** Brings project i to the centre by the shorter way around the loop. */
+  const goTo = useCallback(
+    (i: number, duration = 0.6) => {
+      const s = m.current
+      const from = Math.round(s.target)
+      took()
+      glide(from + around(i, from), duration)
+    },
+    [glide, took],
+  )
+
   // Remember the project for Back.
   useEffect(() => {
     try {
@@ -160,14 +201,15 @@ export function ProjectField() {
     }
   }, [active])
 
-  // Footage plays (muted, at twice its speed) only on the centred tile and its neighbours, while the field is on screen.
+  // Footage plays (muted, at normal speed) only on the centred tile and its neighbours while the field is on
+  // screen; pausing keeps its place, so a film is never restarted by the turning and loops only at its end.
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return
       const near = Math.abs(around(i, active)) <= 1
       if (near && !video.getAttribute('src') && video.dataset.src) video.setAttribute('src', video.dataset.src)
-      video.defaultPlaybackRate = PREVIEW_RATE
-      video.playbackRate = PREVIEW_RATE
+      video.defaultPlaybackRate = 1
+      video.playbackRate = 1
       if (near && running && !reduced) void video.play().catch(() => {})
       else if (!video.paused) video.pause()
     })
@@ -189,85 +231,82 @@ export function ProjectField() {
     return () => window.removeEventListener('resize', measure)
   }, [apply])
 
-  // The pin's scroll range maps to one turn of the loop; the page settles on a project in the direction of travel.
+  // The page ends with the collection and the footer just below it: the footer's height is kept in --footer-h
+  // (home.css sizes the opening and the collection with it).
   useLayoutEffect(() => {
-    const section = sectionRef.current
-    if (!section) return
-    const s = m.current
-    const trigger = ScrollTrigger.create({
-      trigger: section,
-      start: `top top+=${HEADER}`,
-      end: 'bottom bottom',
-      onUpdate: (self) => {
-        s.target = self.progress * N
-      },
-      snap: prefersReducedMotion() ? undefined : { snapTo: 1 / N, directional: true, duration: { min: 0.18, max: 0.4 }, delay: 0.08, ease: 'power2.out', inertia: false },
-    })
-    s.trigger = trigger
-    s.target = trigger.progress * N
+    const home = sectionRef.current?.closest<HTMLElement>('.home')
+    const footer = document.querySelector<HTMLElement>('.site-end')
+    if (!home || !footer) return
+    const measure = () => home.style.setProperty('--footer-h', `${Math.ceil(footer.getBoundingClientRect().height)}px`)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(footer)
     return () => {
-      trigger.kill()
-      s.trigger = null
+      ro.disconnect()
+      home.style.removeProperty('--footer-h')
     }
   }, [])
 
-  // Visibility: the frame loop runs only while the field is near the viewport.
+  // Visibility: the frame loop and the turning run only while the field is near the viewport.
   useEffect(() => {
     const section = sectionRef.current
     if (!section) return
     const io = new IntersectionObserver(([e]) => setRunning(e.isIntersecting), { rootMargin: '15% 0px' })
     io.observe(section)
-    return () => io.disconnect()
+    // Any part of the tiles on screen, even peeking under the title, counts for horizontal scrolling.
+    const seen = new IntersectionObserver(([e]) => {
+      m.current.visible = e.isIntersecting
+    })
+    if (stageRef.current) seen.observe(stageRef.current)
+    return () => {
+      io.disconnect()
+      seen.disconnect()
+    }
   }, [])
 
-  // The frame loop: the displayed position eases toward the scroll's (instantly under reduced motion).
+  // The frame loop: the collection drifts steadily to the left (easing to a stop while it is held), and the
+  // displayed position follows the followed one (quickly; at once under reduced motion).
   useEffect(() => {
     if (!running) return
     const s = m.current
     let last = performance.now()
+    let wasTurning = false
     let frame = requestAnimationFrame(function tick(now) {
       frame = requestAnimationFrame(tick)
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
       if (s.frozen) return
-      // Around the loop by the shorter way, so the jump between the pin's two ends never shows.
-      const gap = around(s.target, s.pos)
-      const step = prefersReducedMotion() ? gap : gap * (1 - Math.exp(-dt / 0.08))
-      const settled = Math.abs(gap - step) < 0.0005
-      if (Math.abs(step) > 0.0002 || (settled && gap !== 0)) {
-        s.pos = mod(settled ? s.target : s.pos + step, N)
+      const reducedNow = prefersReducedMotion()
+      const held = s.hover || s.focus || s.dragging || s.userPaused || reducedNow || document.hidden
+      const want = held ? 0 : SPEED
+      s.v += (want - s.v) * (1 - Math.exp(-dt / EASE_V))
+      if (Math.abs(s.v - want) < 0.0005) s.v = want
+      if (!s.tween && s.v) s.target += s.v * dt
+      const turning = s.v > 0.01
+      if (turning !== wasTurning) {
+        wasTurning = turning
+        setTurning(turning)
+      }
+      const gap = s.target - s.pos
+      const step = reducedNow ? gap : gap * (1 - Math.exp(-dt / 0.06))
+      if (Math.abs(gap) > 0.0002) {
+        s.pos += step
+        apply()
+      } else if (s.pos !== s.target) {
+        s.pos = s.target
         apply()
       }
     })
-    return () => cancelAnimationFrame(frame)
+    return () => {
+      cancelAnimationFrame(frame)
+      setTurning(false)
+    }
   }, [running, apply])
 
-  /** Scrolls the page to project i by the shorter way around the loop (the pin maps it to the centre). */
-  const goTo = useCallback(
-    (i: number, smooth = true) => {
-      const s = m.current
-      const t = s.trigger
-      if (!t) {
-        s.target = mod(i, N)
-        return
-      }
-      const len = t.end - t.start
-      const now = ((window.scrollY - t.start) / len) * N
-      let dest = now + around(i, now)
-      // Past either end, continue from the other one (the same picture), so the loop never stops.
-      if (dest < -0.001 || dest > N + 0.001) {
-        const jump = dest < 0 ? now + N : now - N
-        window.scrollTo({ top: t.start + (len * clamp(jump, 0, N)) / N, behavior: 'auto' })
-        dest = mod(dest, N) === 0 && dest > 0 ? N : mod(dest, N)
-      }
-      window.scrollTo({ top: t.start + (len * clamp(dest, 0, N)) / N, behavior: smooth && !prefersReducedMotion() ? 'smooth' : 'auto' })
-    },
-    [],
-  )
-
-  /** Freezes the centred cover and carries it into the case study's hero; the rest recede and the captions fade first. */
+  /** Freezes the centred picture and carries it into the case study; the rest recede and the captions fade first. */
   const open = (i: number) => {
     const item = FIELD[i]
+    m.current.tween?.kill()
     expandFrame({
       media: planeRefs.current[i]?.querySelector<HTMLElement>('.plane__media') ?? null,
       path: projectPath(projectById(item.id)),
@@ -288,8 +327,7 @@ export function ProjectField() {
     if (!isPlainClick(e)) return
     e.preventDefault()
     if (m.current.frozen) return
-    if (i !== m.current.active) goTo(i)
-    else open(i)
+    open(i)
   }
 
   /** Space opens like Enter; the arrow keys move around the loop (focus follows the centred tile). */
@@ -308,97 +346,139 @@ export function ProjectField() {
     m.current.keyed = false
   }
 
-  // Drag and swipe (horizontal) and horizontal trackpad gestures move the same scroll position.
+  const togglePause = () => {
+    const next = !m.current.userPaused
+    m.current.userPaused = next
+    if (next) m.current.tween?.kill()
+    setUserPaused(next)
+  }
+
+  // Drag and swipe (horizontal) and horizontal trackpad gestures move the tiles directly, then settle.
   useEffect(() => {
     const stage = stageRef.current
     if (!stage) return
     const s = m.current
-    let drag: { id: number; x0: number; y0: number; y: number; moved: boolean } | null = null
-    const perPx = () => {
-      const t = s.trigger
-      const slot = s.layout?.x[1] || 400
-      return t ? (t.end - t.start) / N / slot : 1
-    }
-    /** Moves the page to y, wrapped around the pin (its two ends are the same picture), so dragging never stops. */
-    const wrapTo = (y: number) => {
-      const t = s.trigger
-      if (!t) return 0
-      const len = t.end - t.start
-      const w = t.start + mod(y - t.start, len)
-      window.scrollTo({ top: w, behavior: 'auto' })
-      return w - y
-    }
+    const slot = () => s.layout?.x[1] || 400
+    let drag: { id: number; x: number; y0: number; x0: number; moved: boolean } | null = null
     const down = (e: PointerEvent) => {
       if (e.button !== 0 || s.frozen || e.pointerType === 'touch') return
-      drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, y: window.scrollY, moved: false }
+      drag = { id: e.pointerId, x: e.clientX, x0: e.clientX, y0: e.clientY, moved: false }
     }
     const move = (e: PointerEvent) => {
       if (!drag || e.pointerId !== drag.id) return
-      const dx = e.clientX - drag.x0
       if (!drag.moved) {
-        if (Math.abs(dx) < 6 || Math.abs(dx) < Math.abs(e.clientY - drag.y0)) return
+        const dx0 = e.clientX - drag.x0
+        if (Math.abs(dx0) < 6 || Math.abs(dx0) < Math.abs(e.clientY - drag.y0)) return
         drag.moved = true
+        s.dragging = true
         stage.setPointerCapture(e.pointerId)
         stage.dataset.dragging = ''
       }
-      const to = drag.y - dx * perPx()
-      drag.y = to + wrapTo(to)
-      drag.x0 = e.clientX
+      const dx = e.clientX - drag.x
+      drag.x = e.clientX
+      took()
+      s.target -= dx / slot()
     }
     const up = (e: PointerEvent) => {
       if (!drag || e.pointerId !== drag.id) return
       if (drag.moved) {
         s.dragEndedAt = performance.now()
+        s.dragging = false
         delete stage.dataset.dragging
       }
       drag = null
     }
+    // The page's end: the collection is the last thing on the page, so scrolling down from there moves it on.
+    // A few pixels' tolerance: phones' toolbars and rounding can leave the last scroll position just short.
+    const atEnd = () => window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 8
+    const pixels = (d: number, mode: number) => (mode === 1 ? d * 16 : mode === 2 ? d * window.innerHeight : d)
+    // Horizontal scrolling (trackpad swipes, Shift + wheel) anywhere on the page while the tiles are on screen moves
+    // them the same way as the scroll (right moves them right), one to one; it never becomes the browser's back or
+    // forward gesture here. Scrolling down once the page has reached its end moves them on to the left.
     const wheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || s.frozen) return
-      e.preventDefault()
-      wrapTo(window.scrollY + e.deltaX * perPx() * 0.9)
+      if (!s.visible || s.frozen) return
+      const dx = e.deltaX || (e.shiftKey ? e.deltaY : 0)
+      const dy = e.shiftKey ? 0 : e.deltaY
+      if (Math.abs(dx) > Math.abs(dy)) {
+        e.preventDefault()
+        took()
+        // Scrolling right moves the projects right (Harlie's request), so the loop turns back the other way.
+        s.target -= pixels(dx, e.deltaMode) / slot()
+        return
+      }
+      if (dy > 0 && atEnd()) {
+        e.preventDefault()
+        took()
+        s.target += pixels(dy, e.deltaMode) / slot()
+      }
     }
-    // Touch: a horizontal swipe also moves between projects (vertical swipes scroll, which the pin maps the same way).
-    let touch: { x: number; y: number; sy: number; horizontal: boolean | null } | null = null
+    // Touch: a horizontal swipe moves between projects; vertical swipes scroll the page.
+    let touch: { x: number; y: number; horizontal: boolean | null } | null = null
     const tStart = (e: TouchEvent) => {
       const t = e.touches[0]
-      touch = { x: t.clientX, y: t.clientY, sy: window.scrollY, horizontal: null }
+      touch = { x: t.clientX, y: t.clientY, horizontal: null }
     }
     const tMove = (e: TouchEvent) => {
       if (!touch) return
       const t = e.touches[0]
       const dx = t.clientX - touch.x
-      const dy = t.clientY - touch.y
-      if (touch.horizontal === null && Math.hypot(dx, dy) > 8) touch.horizontal = Math.abs(dx) > Math.abs(dy)
-      if (touch.horizontal) {
-        const to = touch.sy - dx * perPx()
-        touch.sy = to + wrapTo(to)
-        touch.x = t.clientX
-      }
+      if (touch.horizontal === null && Math.hypot(dx, t.clientY - touch.y) > 8) touch.horizontal = Math.abs(dx) > Math.abs(t.clientY - touch.y)
+      if (!touch.horizontal) return
+      touch.x = t.clientX
+      s.dragging = true
+      took()
+      s.target -= dx / slot()
     }
     const tEnd = () => {
-      if (touch?.horizontal) s.dragEndedAt = performance.now()
+      if (touch?.horizontal) {
+        s.dragEndedAt = performance.now()
+        s.dragging = false
+      }
       touch = null
+    }
+    // A vertical swipe that would scroll on down past the page's end moves the projects on instead.
+    let lastY: number | null = null
+    const vStart = (e: TouchEvent) => {
+      lastY = e.touches[0]?.clientY ?? null
+    }
+    const vMove = (e: TouchEvent) => {
+      const y = e.touches[0]?.clientY
+      if (y === undefined || lastY === null || touch?.horizontal) {
+        lastY = y ?? null
+        return
+      }
+      const dy = lastY - y
+      lastY = y
+      if (dy > 0 && s.visible && !s.frozen && atEnd()) {
+        took()
+        s.target += dy / slot()
+      }
     }
     stage.addEventListener('pointerdown', down)
     stage.addEventListener('pointermove', move)
     stage.addEventListener('pointerup', up)
     stage.addEventListener('pointercancel', up)
-    stage.addEventListener('wheel', wheel, { passive: false })
+    window.addEventListener('wheel', wheel, { passive: false })
+    window.addEventListener('touchstart', vStart, { passive: true })
+    window.addEventListener('touchmove', vMove, { passive: true })
     stage.addEventListener('touchstart', tStart, { passive: true })
     stage.addEventListener('touchmove', tMove, { passive: true })
     stage.addEventListener('touchend', tEnd)
+    stage.addEventListener('touchcancel', tEnd)
     return () => {
       stage.removeEventListener('pointerdown', down)
       stage.removeEventListener('pointermove', move)
       stage.removeEventListener('pointerup', up)
       stage.removeEventListener('pointercancel', up)
-      stage.removeEventListener('wheel', wheel)
+      window.removeEventListener('wheel', wheel)
+      window.removeEventListener('touchstart', vStart)
+      window.removeEventListener('touchmove', vMove)
       stage.removeEventListener('touchstart', tStart)
       stage.removeEventListener('touchmove', tMove)
       stage.removeEventListener('touchend', tEnd)
+      stage.removeEventListener('touchcancel', tEnd)
     }
-  }, [])
+  }, [took])
 
   return (
     <section
@@ -407,13 +487,27 @@ export function ProjectField() {
       className="field"
       aria-labelledby="field-label"
       data-reduced={reduced || undefined}
-      style={{ '--field-steps': `${N * STEP * 100}svh` } as CSSProperties}
     >
-      <div className="field__pin">
-        <h2 className="field__label" id="field-label">
-          Selected work <span className="field__years">{FIELD_YEARS}</span>
+      <div ref={pinRef} className="field__pin">
+        {/* The section's name for screen readers; nothing shows over the tiles (Harlie's request). */}
+        <h2 className="visually-hidden" id="field-label">
+          Selected work
         </h2>
-        <div ref={stageRef} className="field__stage">
+        {!reduced && (
+          <button type="button" className="field__motion" aria-pressed={userPaused} onClick={togglePause}>
+            {userPaused ? 'Resume automatic rotation' : 'Pause automatic rotation'}
+          </button>
+        )}
+        <div
+          ref={stageRef}
+          className="field__stage"
+          onFocus={() => {
+            m.current.focus = true
+          }}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) m.current.focus = false
+          }}
+        >
           {FIELD.map((item, i) => {
             const project = projectById(item.id)
             return (
@@ -424,6 +518,7 @@ export function ProjectField() {
                 }}
                 className="plane"
                 data-kind={item.media.kind}
+                data-free={isFree(item.media) || undefined}
                 href={projectPath(project)}
                 aria-label={`${item.title}. ${item.alt}. Open the case study`}
                 aria-current={i === active ? 'true' : undefined}
@@ -431,14 +526,19 @@ export function ProjectField() {
                 onClick={(e) => onPlaneClick(e, i)}
                 onKeyDown={(e) => onPlaneKey(e, i)}
                 onFocus={(e) => {
-                  if (!m.current.keyed && e.currentTarget.matches(':focus-visible') && i !== m.current.active) goTo(i, false)
+                  if (!m.current.keyed && e.currentTarget.matches(':focus-visible') && i !== m.current.active) goTo(i, 0)
                 }}
                 onPointerEnter={(e) => {
-                  if (e.pointerType === 'mouse') warmProject(projectPath(project))
+                  if (e.pointerType !== 'mouse') return
+                  m.current.hover = true
+                  warmProject(projectPath(project))
+                }}
+                onPointerLeave={(e) => {
+                  if (e.pointerType === 'mouse') m.current.hover = false
                 }}
               >
                 <span className="plane__frame">
-                  <span className="plane__media" data-kind={item.media.kind}>
+                  <span className="plane__media" data-kind={item.media.kind} data-free={isFree(item.media) || undefined}>
                     <PlaneMedia
                       item={item}
                       videoRef={(el) => {
@@ -461,7 +561,8 @@ export function ProjectField() {
             )
           })}
         </div>
-        <p className="visually-hidden" aria-live="polite">
+        {/* Announced only while the collection is still (not on every automatic turn). */}
+        <p className="visually-hidden" aria-live={turning ? 'off' : 'polite'}>
           {FIELD[active].title}, {active + 1} of {N}
         </p>
       </div>

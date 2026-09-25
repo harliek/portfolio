@@ -6,6 +6,7 @@ import { fallbackSrc, getImage, getVideo } from '../../content/media'
 import { CLIENT_WORK as C, type ClientFilm } from '../../content/pages/client-work'
 import { projectById } from '../../content/projects'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
+import { StatefulIcons, useActionState } from '../../components/ui/Stateful'
 
 const project = projectById('client-work')
 
@@ -49,15 +50,24 @@ function Loop({ clip }: { clip: ClientFilm['clip'] }) {
 
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`
 
-/** The complete film, with sound, in the site's film viewer (a quiet button; no player on the page). */
+/** The complete film, with sound, in the site's film viewer: a red stateful button (a moment of loading, then the viewer opens and a check shows). */
 function WatchFilm({ film }: { film: ClientFilm }) {
   const [open, setOpen] = useState(false)
+  const [state, run] = useActionState()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const asset = getVideo(film.video)
   return (
     <>
-      <button ref={buttonRef} type="button" className="cw-watch" onClick={() => setOpen(true)}>
-        <span className="cw-watch__mark" aria-hidden="true" />
+      <button
+        ref={buttonRef}
+        type="button"
+        className="cw-watch stateful"
+        data-state={state}
+        aria-busy={state === 'loading' || undefined}
+        onClick={() => void run().then(() => setOpen(true))}
+      >
+        <StatefulIcons />
+        {state === 'idle' && <span className="cw-watch__mark" aria-hidden="true" />}
         Watch the film <span className="cw-watch__time">{clock(asset.duration)}</span>
       </button>
       {open && (
@@ -90,7 +100,6 @@ function Film({ film, index }: { film: ClientFilm; index: number }) {
           {film.name}
         </h2>
         <div className="cx-body">{film.work}</div>
-        <div className="cw-delivered">{film.delivered}</div>
         <WatchFilm film={film} />
       </div>
     </section>
@@ -113,7 +122,6 @@ export default function ClientWork() {
       <header className="cw-intro cx-wrap" data-hero-reveal>
         <CaseTitle title={C.title} meta={C.meta} />
         <div className="cx-lede">{C.summary}</div>
-        <p className="cx-status">{C.status}</p>
       </header>
       {C.films.map((film, i) => (
         <Film key={film.id} film={film} index={i} />

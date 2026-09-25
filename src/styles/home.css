@@ -15,7 +15,15 @@
   --enter: 0;
   --settle: 0;
   --edge: clamp(24px, 4.45vw, 64px);
-  --horizon: 42%;
+  /*
+   * Where the centred tile sits in the held view (its centre, as a share of
+   * the room under the header), and its height at this width (the same
+   * sizes as ProjectField's layoutFor). Brief v21: the tiles sit as low as
+   * the old creative portfolio's art tiles, peeking about 66px above the
+   * bottom edge on arrival and centred a little below the middle once held.
+   */
+  --horizon: 51%;
+  --tile-h: min(23.75vw, 100svh - 261px);
 
   position: relative;
   isolation: isolate;
@@ -32,23 +40,13 @@
 
 .home-film__poster,
 .home-film__poster img,
-.home-film__video,
-.home-film__canvas {
+.home-film__video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: 62% 50%;
-}
-
-.home-film__canvas {
-  opacity: 0;
-  transition: opacity 700ms var(--ease-arrive);
-}
-
-.home-film__canvas[data-ready] {
-  opacity: 1;
 }
 
 @media (max-aspect-ratio: 3 / 4) {
@@ -80,13 +78,21 @@
   opacity: 0.94;
 }
 
+/* The cursor's light (CursorLight, stage.css) goes out as the page leaves for a case study. */
+.home-film[data-leaving] .home-film__light {
+  opacity: 0;
+}
+
 /* The opening ---------------------------------------------------------------- */
 
 .hero {
   position: relative;
-  /* Well short of the window, so the selected work already shows beneath the title and pins after a short scroll. */
-  height: calc(100svh - var(--header-height) - 36svh);
-  min-height: 300px;
+  /*
+   * Sized so the centred tile's top edge arrives about 66px above the bottom
+   * of the window (as the old creative portfolio's art tiles do), whatever
+   * the window: tile top = hero + header + horizon x (window - header) - tile / 2.
+   */
+  height: calc((100svh - var(--header-height)) * 0.49 - 66px + var(--tile-h) / 2 + var(--footer-h, 0px) * 0.51);
 }
 
 /* The identity group sits about 38 to 40% down the opening, about 64px from the left. */
@@ -110,15 +116,28 @@
   font-weight: 400;
 }
 
+/* The name as on the old portfolio: a thin rule, then HARLIE KATZ in small, widely tracked capitals, well above PORTFOLIO. */
 .hero__name {
-  display: block;
-  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: clamp(18px, 2.6vw, 38px);
+  margin: 0 0 clamp(36px, 7vw, 104px);
   font-family: var(--font-sans);
-  font-size: 0.9375rem;
+  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.9375rem);
   font-weight: 400;
   line-height: 1.4;
-  letter-spacing: 0.02em;
-  color: rgb(243 238 231 / 0.82);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgb(243 238 231 / 0.86);
+}
+
+.hero__name::before {
+  content: '';
+  flex: none;
+  width: clamp(48px, 7.2vw, 104px);
+  height: 1px;
+  background: rgb(243 238 231 / 0.62);
 }
 
 /* PORTFOLIO: the original homepage's Playfair Display in white capitals. */
@@ -136,6 +155,121 @@
   -webkit-text-stroke: 0.008em currentColor;
 }
 
+/*
+ * The title types itself in, top to bottom (TypeLine; after Aceternity's
+ * TypewriterEffectSmooth): each line is revealed from the left at a steady
+ * pace behind a blinking bar, which hands over to the next line and stays
+ * blinking after the last. The clipping is only on while a line types, so
+ * nothing clips PORTFOLIO's letters afterwards.
+ */
+.type-line {
+  position: relative;
+  display: inline-block;
+}
+
+.type-line__text {
+  display: inline-block;
+  animation: type-reveal var(--type-dur) linear var(--type-delay) backwards;
+}
+
+@keyframes type-reveal {
+  from {
+    clip-path: inset(-20% 100% -20% 0);
+  }
+
+  to {
+    clip-path: inset(-20% 0 -20% 0);
+  }
+}
+
+.type-line__cursor {
+  position: absolute;
+  top: 12%;
+  bottom: 10%;
+  left: 100%;
+  width: max(3px, 0.045em);
+  margin-left: 0.08em;
+  visibility: hidden;
+  animation:
+    type-cursor var(--type-dur) linear var(--type-delay) backwards,
+    type-cursor-on 0s linear var(--type-delay) forwards;
+}
+
+.type-line:not([data-stays]) .type-line__cursor {
+  animation:
+    type-cursor var(--type-dur) linear var(--type-delay) backwards,
+    type-cursor-on 0s linear var(--type-delay) forwards,
+    type-cursor-off 0s linear var(--type-hide) forwards;
+}
+
+.type-line__cursor::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  background: #c4b5ec;
+  animation: type-blink 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes type-cursor {
+  from {
+    left: 0;
+  }
+
+  to {
+    left: 100%;
+  }
+}
+
+@keyframes type-cursor-on {
+  to {
+    visibility: visible;
+  }
+}
+
+@keyframes type-cursor-off {
+  to {
+    visibility: hidden;
+  }
+}
+
+@keyframes type-blink {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* PORTFOLIO's letters rise and grow a little under the pointer, one at a time, as on the original creative homepage. */
+.type-line__letter {
+  display: inline-block;
+  transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.type-line__letter:hover {
+  transform: translateY(-0.048em) scale(1.06);
+}
+
+/* The hidden copy is for screen readers only: copying the title gives each word once. */
+.type-line .visually-hidden {
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .type-line__text,
+  .type-line__cursor,
+  .type-line__cursor::before {
+    animation: none;
+  }
+
+  .type-line__letter {
+    transition: none;
+  }
+}
+
 .hero__line {
   max-width: 62ch;
   margin: 16px 0 0;
@@ -148,23 +282,31 @@
 
 /* The selected work ----------------------------------------------------------- */
 
+/*
+ * The end of the page (Harlie's request): the collection fills the window
+ * between the header and the footer (its height, --footer-h, is measured by
+ * ProjectField), so with the footer just below it the page never scrolls
+ * further; scrolling on moves the projects instead.
+ */
 .field {
   position: relative;
   z-index: 1;
-  /* The pin plus the scroll that moves through the projects (ProjectField --field-steps). */
-  height: calc(100svh - var(--header-height) + var(--field-steps, 200svh));
+  /* A #selected-work link lands with the collection under the header. */
+  scroll-margin-top: var(--header-height);
+  height: calc(100svh - var(--header-height) - var(--footer-h, 0px));
+  min-height: 360px;
 }
 
 .field__pin {
-  position: sticky;
-  top: var(--header-height);
-  height: calc(100svh - var(--header-height));
+  position: relative;
+  height: 100%;
   overflow: hidden;
 }
 
 .field__label {
   position: absolute;
-  top: clamp(16px, 3.4svh, 32px);
+  /* Just above the centred tile (its top edge is at --horizon less half its height). */
+  top: max(16px, calc(var(--horizon) - var(--tile-h) / 2 - 68px));
   left: var(--edge);
   z-index: 300;
   display: flex;
@@ -255,22 +397,50 @@
   pointer-events: none;
 }
 
-/* Jumpstart: the three phones float over the page like cutouts, with no ground, frame or shadowed card. */
-.plane[data-kind='screens'] .plane__frame {
+/* Free-standing tiles (phones, cutouts, the conversation) float over the page: no ground, frame or shadowed card. */
+.plane[data-free] .plane__frame {
   overflow: visible;
   border-color: transparent;
   background: none;
   box-shadow: none;
 }
 
-.plane[data-kind='screens'] .plane__veil {
+.plane[data-free] .plane__veil {
   display: none;
 }
 
-/* Receding like the other tiles, by dimming the phones themselves rather than laying a dark box over them. */
-.plane[data-kind='screens'] .plane__media {
+/* Receding like the other tiles, by dimming the objects themselves rather than laying a dark box over them. */
+.plane[data-free] .plane__media {
   overflow: visible;
   filter: brightness(calc(1 - var(--veil, 0)));
+}
+
+/* The pause for the automatic turning, for keyboard users: it appears when focused, before the tiles. */
+.field__motion:not(:focus-visible) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.field__motion:focus-visible {
+  position: absolute;
+  top: clamp(8px, 2.4svh, 24px);
+  right: var(--edge);
+  z-index: 300;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgb(255 255 255 / 0.4);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.6);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: #fff;
+  outline: 1px solid var(--color-focus);
+  outline-offset: 3px;
 }
 
 /* Each card's own caption: the title 20px below the cover, the line 8px below it, the same height for every card. */
@@ -292,6 +462,7 @@
 
 .plane__line {
   display: block;
+  text-wrap: pretty;
   min-height: calc(2 * 1.5em);
   max-width: 56ch;
   margin-top: 8px;
@@ -299,6 +470,54 @@
   font-size: clamp(0.875rem, 0.82rem + 0.15vw, 0.9375rem);
   line-height: 1.5;
   color: #b4aea6;
+}
+
+/*
+ * Hovering a tile (mouse or trackpad): the tile grows a little and lights
+ * up slightly, a soft lift in brightness with a faint blue violet glow (a
+ * glow around the frame for framed tiles; around the objects themselves for
+ * the free-standing phones, cutouts and conversation). The system cursor
+ * stays as it is. The frame scales inside the tile's own placement, so the
+ * carousel's positioning is untouched.
+ */
+@media (hover: hover) and (pointer: fine) {
+  .plane__frame {
+    transition:
+      transform 420ms var(--ease-arrive),
+      filter 420ms var(--ease-arrive),
+      border-color 420ms var(--ease-arrive),
+      box-shadow 420ms var(--ease-arrive);
+  }
+
+  .plane:hover .plane__frame {
+    transform: scale(1.045);
+    filter: brightness(1.12);
+  }
+
+  .plane:not([data-free]):hover .plane__frame {
+    border-color: rgb(243 238 231 / 0.3);
+    box-shadow:
+      0 40px 80px -40px rgb(0 0 0 / 0.9),
+      0 0 56px -12px rgb(160 150 235 / 0.42);
+  }
+
+  .plane[data-free]:hover .plane__frame {
+    filter: brightness(1.12) drop-shadow(0 0 22px rgb(160 150 235 / 0.34));
+  }
+
+  .plane:hover .plane__title {
+    color: #fff;
+  }
+
+  .home[data-leaving] .plane__frame {
+    transition: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: reduce) {
+  .plane:hover .plane__frame {
+    transform: none;
+  }
 }
 
 /* Leaving for a case study: everything but the chosen frame recedes. */
@@ -314,9 +533,20 @@
 }
 
 /* Phones: one tile and glimpses of its neighbours, captions directly beneath. */
+@media (min-width: 700px) and (max-width: 1099.98px) {
+  .home {
+    --tile-h: min(32.5vw, 100svh - 261px);
+  }
+}
+
 @media (max-width: 699.98px) {
   .home {
-    --horizon: 42%;
+    --tile-h: min(46.25vw, 100svh - 261px);
+  }
+
+  /* The tagline wraps on phones; the typing bar would stand beside both lines, so it is left out there. */
+  .hero__line .type-line__cursor {
+    display: none;
   }
 
   .hero__word {

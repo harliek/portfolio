@@ -1,7 +1,9 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import '../styles/home.css'
 import { HomeFilm } from '../components/home/HomeFilm'
+import { TypeLine } from '../components/ui/TypeLine'
 import { useFilmSlot } from '../components/layout/filmSlot'
 import { ProjectField } from '../components/home/ProjectField'
 import { SITE } from '../content/site'
@@ -9,10 +11,10 @@ import { usePageMeta } from '../hooks/usePageMeta'
 import { ScrollTrigger } from '../lib/gsap'
 
 /**
- * The homepage (brief v19): Harlie's original film, clearly visible, with
- * the identity group (name, PORTFOLIO, one line) about 39% down the opening;
- * the selected work already shows beneath it and pins after a short scroll
- * (no hold). As the opening scrolls out, the title eases up
+ * The homepage (brief v19; v23): Harlie's original film, clearly visible,
+ * with the identity group (name, PORTFOLIO, one line) about 39% down the
+ * opening; the selected work already shows beneath it, and the page ends
+ * with it (the footer just below), where scrolling moves the projects on. As the opening scrolls out, the title eases up
  * and fades a little (`--enter`), and the film dims only slightly behind
  * the work (`--settle`). Both are written by ScrollTrigger straight to the
  * root's style; nothing re-renders on scroll.
@@ -23,6 +25,18 @@ export function Home() {
   const heroRef = useRef<HTMLElement>(null)
   // The film goes to PageShell's fixed slot (outside the route wrapper, whose animation would capture position: fixed).
   const filmSlot = useFilmSlot()
+  const location = useLocation()
+  const toWork = Boolean((location.state as { toWork?: boolean } | null)?.toWork)
+
+  // Back from a case study opened directly (Header.tsx): the page's end, where the collection fills the window,
+  // with the project last looked at; again after fonts, so it lands exactly.
+  useEffect(() => {
+    if (!toWork) return
+    const land = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'auto' })
+    const frame = requestAnimationFrame(() => requestAnimationFrame(land))
+    void document.fonts?.ready.then(land)
+    return () => cancelAnimationFrame(frame)
+  }, [toWork])
 
   useLayoutEffect(() => {
     const root = rootRef.current
@@ -68,9 +82,17 @@ export function Home() {
         <div className="hero__stage">
           <div className="hero__group">
             <h1 className="hero__title" id="home-title">
-              <span className="hero__name">{SITE.name}</span> <span className="hero__word">Portfolio</span>
+              {/* Typed in from top to bottom: the name, then PORTFOLIO, then the line (TypeLine). */}
+              <span className="hero__name">
+                <TypeLine text={SITE.name} delay={0.15} duration={0.3} hideAt={0.45} />
+              </span>{' '}
+              <span className="hero__word">
+                <TypeLine text="Portfolio" delay={0.45} duration={0.55} hideAt={1.0} letters />
+              </span>
             </h1>
-            <p className="hero__line">AI implementation, product strategy, and working prototypes.</p>
+            <p className="hero__line">
+              <TypeLine text="AI implementation, product strategy, and software development" delay={1.0} duration={0.85} />
+            </p>
           </div>
         </div>
       </section>

@@ -56,10 +56,126 @@
   position: absolute;
   z-index: -1;
   inset: 0;
-  border-bottom: 1px solid rgb(255 255 255 / 0.1);
-  /* Solid, so the bar looks the same over the film, the tiles and every page (brief v18). */
-  background: #050507;
+  /* Transparent, with no line (Harlie's request): the cursor's light shows through it. */
+  background: transparent;
   pointer-events: none;
+}
+
+/* Phones, on the case studies: a black bar behind the header, so the steps passing under the held stage never show beside the menu. */
+@media (max-width: 899.98px) {
+  .site-header[data-route='case']::before,
+  .site-header[data-route='case'][data-floating]::before {
+    background: #000;
+    opacity: 1;
+  }
+}
+
+/*
+ * The resizable navbar (Header.tsx; after Aceternity's): past 100px of
+ * scroll the full-width bar fades and its contents gather into a narrower
+ * pill floating a few pixels below the top, on a blurred, translucent ground
+ * with a soft shadow. The header itself keeps its 61px.
+ */
+.site-header::before {
+  transition: opacity 320ms var(--ease-standard);
+}
+
+.site-header[data-floating]::before {
+  opacity: 0;
+}
+
+.site-header__inner {
+  position: relative;
+  width: 100%;
+  transition:
+    width 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    margin-top 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 560ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.site-header__inner::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background: rgb(10 10 12 / 0);
+  box-shadow: none;
+  pointer-events: none;
+  transition:
+    background-color 320ms var(--ease-standard),
+    box-shadow 320ms var(--ease-standard);
+}
+
+.site-header[data-floating] .site-header__inner {
+  /* As wide as its contents (Header.tsx measures --pill-w), never wider than the window allows. */
+  width: min(var(--pill-w, 720px), calc(100% - 32px));
+  height: 48px;
+  margin-top: 6px;
+  padding-inline: 8px;
+  border-radius: 999px;
+}
+
+/* The pill: a light, blurred ground (the light behind still glows through), a soft shadow and no outline. */
+.site-header[data-floating] .site-header__inner::before {
+  background: rgb(0 0 0 / 0.38);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 0.35);
+}
+
+@media (max-width: 899.98px) {
+  .site-header[data-floating] .site-header__inner {
+    width: min(var(--pill-w, 100%), calc(100% - 24px));
+    border-radius: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header::before,
+  .site-header__inner,
+  .site-header__inner::before {
+    transition: none;
+  }
+}
+
+/* The hover pill: one soft pill that glides to the navigation item under the pointer. */
+.site-nav {
+  position: relative;
+}
+
+.site-nav__pill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 0;
+  height: 36px;
+  margin-top: -18px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.09);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 180ms var(--ease-standard);
+}
+
+.site-nav__pill[data-on] {
+  opacity: 1;
+}
+
+/* With the pill, hover no longer draws the line under the words (keyboard focus keeps it). */
+.site-nav .site-nav__item:hover:not(:focus-visible)::after {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-nav__pill {
+    transition: opacity 120ms linear;
+  }
 }
 
 /*
@@ -78,6 +194,19 @@
   max-width: 1800px;
   margin-inline: auto;
   padding-inline: calc(var(--header-pad) - 12px);
+}
+
+/* The left group: ← Back (case studies and About) and HOME, in one fixed place so the bar never changes height. */
+.site-header__start {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.site-back__arrow {
+  font-variant-caps: normal;
+  letter-spacing: 0;
 }
 
 /* The original's 32px between the words (each item keeps its 44px target). */
@@ -382,15 +511,15 @@ a:focus-visible > .site-nav__mark {
 /* ----------------------------------------------------------------------- */
 
 /*
- * Positioned against the sticky header (its nearest positioned ancestor),
- * full width under it; the page never moves. The layer itself is clear: its
+ * Held just under the header (fixed at its 61px, whatever the navbar's
+ * shape), full width; the page never moves. The layer itself is clear: its
  * one solid panel (the list) sits at the right under the navigation, one
  * project per row, and the page below is dimmed while it is open, so the
  * menu never reads as part of the content behind it.
  */
 .work-shelf {
-  position: absolute;
-  top: 100%;
+  position: fixed;
+  top: var(--header-height);
   left: 0;
   right: 0;
   z-index: 1;
@@ -610,9 +739,9 @@ html.is-menu-open {
 }
 
 /* The ending: one compact row (Footer.tsx). */
+/* Transparent, with no line (Harlie's request): the ground and the cursor's light show through. */
 .site-end {
-  border-top: 1px solid rgb(243 238 231 / 0.12);
-  background: #050507;
+  background: transparent;
 }
 
 .site-end__inner {
@@ -644,7 +773,9 @@ html.is-menu-open {
 
 .site-end__links {
   display: flex;
-  gap: 4px 24px;
+  flex-wrap: wrap;
+  gap: 0 24px;
+  min-width: 0;
 }
 
 .site-end__link {
@@ -683,6 +814,72 @@ html.is-menu-open {
   .site-end__copy {
     margin-left: 0;
     width: 100%;
+  }
+}
+
+/* A case study's Previous and Next project buttons: small red pills in the footer's lower corners. */
+.site-end__pager {
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.site-end__pager .stateful__loader,
+.site-end__pager .stateful__check {
+  width: 0;
+}
+
+.site-end__pager[data-state='loading'] .stateful__loader {
+  width: 16px;
+  margin-right: 0;
+}
+
+.site-end__pager-arrow {
+  font-weight: 400;
+}
+
+.site-end__pager:focus-visible {
+  outline: 1px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+/* The copyright sits just before Next project; Previous project leads the row. */
+.site-end[data-pager] .site-end__pager--previous {
+  margin-right: 8px;
+}
+
+/* Narrow windows: the two buttons share the last row, one in each corner. */
+@media (max-width: 899.98px) {
+  .site-end[data-pager] .site-end__pager {
+    order: 5;
+  }
+
+  .site-end[data-pager] .site-end__pager--previous {
+    margin-right: 0;
+  }
+
+  .site-end[data-pager] .site-end__pager--next {
+    margin-left: auto;
+  }
+
+  .site-end[data-pager] .site-end__copy {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  /* Both buttons fit on the last row together, down to 320px wide. */
+  .site-end[data-pager] .site-end__inner {
+    column-gap: 10px;
+  }
+
+  .site-end__pager {
+    padding: 0 12px;
   }
 }
 

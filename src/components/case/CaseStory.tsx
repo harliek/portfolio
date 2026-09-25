@@ -3,11 +3,16 @@ import { getImage, type ImageId } from '../../content/media'
 import { prefersReducedMotion } from '../../hooks/useReducedMotion'
 import { ScrollTrigger } from '../../lib/gsap'
 import { ResponsiveImage } from '../media/ResponsiveImage'
+import type { Project } from '../../content/projects'
 import { CaseTitle } from './CasePage'
 
 export interface StoryStep {
   title: string
   text: ReactNode
+  /** A quotation shown on its own under the text (e.g. the demonstrated request, word for word). */
+  quote?: string
+  /** One or two specific points, only where useful. */
+  bullets?: readonly string[]
 }
 
 /** A rectangle of a picture, in its source pixels. */
@@ -18,12 +23,15 @@ export interface Region {
   h: number
 }
 
+/** One layer of a stage that changes by crossfading: a picture (contained, never cropped) or composed content. */
+export type StageLayer = { image: ImageId; alt?: string } | { node: ReactNode; label: string }
+
 /**
- * What the fixed stage shows, one state per step:
- * - video: the recording, its time following the scroll through each step's segment;
- * - images: one screenshot per step;
- * - phones: the three app screens, the step's own phone brought forward;
- * - zoom: one picture, moving to the part each step is about (null shows all of it).
+ * What the fixed stage shows. Each kind holds one state per step:
+ * - video: a real recording; its time follows the scroll through each step's segment;
+ * - layers: distinct artifacts, crossfading as the steps change (`show` picks the layer per step);
+ * - crops: parts of one picture, crossfading as the steps change (null shows all of it); never panned or zoomed;
+ * - phones: the app's screens; the step's own screen comes forward (`step` on each phone).
  */
 export type Stage =
   | {
@@ -38,33 +46,70 @@ export type Stage =
       stills: readonly number[]
       label: string
     }
-  | { kind: 'images'; images: readonly ImageId[] }
-  | { kind: 'phones'; phones: readonly { image: ImageId; name: string }[] }
-  | { kind: 'zoom'; image: ImageId; regions: readonly (Region | null)[] }
+  | { kind: 'layers'; aspect: number; layers: readonly StageLayer[]; show: readonly number[] }
+  | { kind: 'crops'; image: ImageId; regions: readonly (Region | null)[] }
+  | { kind: 'phones'; phones: readonly { image: ImageId; name: string; step: number }[] }
 
-/** The line in the window where a step becomes the current one (a share of the height from the top). */
-const line = () => (window.matchMedia('(max-width: 899.98px)').matches ? 0.72 : 0.55)
+/** The reading line (a share of the window's height from the top): a step becomes current when its top reaches it. */
+const line = () => (window.matchMedia('(max-width: 899.98px)').matches ? 0.66 : 0.5)
 
-const STAGE_SIZES = '(min-width: 1408px) 620px, (min-width: 900px) 46vw, calc(100vw - 48px)'
+/** The screen stages' picture width: the laptop's screen is 74% of the laptop's width. */
+const STAGE_SIZES = '(min-width: 1296px) 560px, (min-width: 900px) 44vw, 72vw'
 
 /**
- * A case study told in a few steps (brief v19). The introduction and then
- * the steps run down the left; the stage stays fixed on the right (sticky,
- * inside the content grid, sized to fit the window) and follows them: as
- * each step reaches the middle of the window it becomes the current one (the
- * others step back a little) and the stage shows its state at the same time.
- * A recording follows the scroll itself, through each step's segment:
- * faster when scrolling faster, holding when scrolling stops, backwards when
- * scrolling up. No timers, no buttons. Before the first step the stage shows
- * its opening state and every step reads at full strength.
+ * The laptop Harlie supplied (device-laptop, the third version, trimmed to
+ * its glow at 1313x734) and the transparent screen in it (x 172 to 1141,
+ * y 71 to 647), as shares of the whole. The screen box reaches half a pixel
+ * under the bezel on each side, so no seam shows between the picture and
+ * the frame.
+ */
+const LAPTOP = { w: 1313, h: 734, x: 171.5, y: 70.5, sw: 971, sh: 578 }
+
+/** A recording or screenshot sitting in the laptop's screen, behind the laptop picture. */
+function Laptop({ aspect, children }: { aspect: number; children: ReactNode }) {
+  const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(4)}%`
+  return (
+    <div className="story__stage story__laptop" style={{ '--aspect': LAPTOP.w / LAPTOP.h } as CSSProperties}>
+      <div
+        className="story__screen"
+        data-hero-media=""
+        style={{ left: pct(LAPTOP.x, LAPTOP.w), top: pct(LAPTOP.y, LAPTOP.h), width: pct(LAPTOP.sw, LAPTOP.w), height: pct(LAPTOP.sh, LAPTOP.h) }}
+      >
+        <div className="story__fit" style={{ '--media-aspect': aspect } as CSSProperties}>
+          {children}
+        </div>
+      </div>
+      <ResponsiveImage image="device-laptop" sizes="(min-width: 1296px) 780px, (min-width: 900px) 62vw, 100vw" decorative priority className="story__laptop-frame" />
+    </div>
+  )
+}
+
+/**
+ * A case study told in a few compact steps (brief v21). The introduction and
+ * three or four short groups (a heading, one explanation, at most two
+ * specific points) run down the left; the stage stays in place on the right
+ * (recordings and screenshots sit in the screen of Harlie's laptop picture,
+ * contained, behind the laptop; Jumpstart's phones stand free),
+ * below the header, centred in its column and never taller than about 58% of
+ * the window, so the whole composition sits inside the window with a gutter
+ * on each side. Its opening state is level with the introduction.
  *
- * Phones (below 900px): the introduction, then the stage held under the
- * header while the steps pass beneath it.
+ * A step becomes the current one when its top reaches the reading line, and
+ * the stage changes with it at that moment: a recording follows the scroll
+ * through that step's segment (faster when scrolling faster, holding when
+ * scrolling stops, backwards when scrolling up), artifacts and picture parts
+ * crossfade in about 220ms, a phone comes forward. Only the steps' own
+ * positions drive this; the length of the rest of the page never does
+ * (should the page end before the last step could reach the line, just
+ * enough space is added under the steps). The current step takes an accent
+ * rule and a brighter heading; the others stay fully readable.
  *
- * The stage is the landing point of the project opening (`data-hero-media`);
- * the introduction waits for it (`data-hero-reveal`). Reduced motion: the
- * stage changes state without easing, and a recording shows one still per
- * step.
+ * Phones (below 900px): the introduction, then a compact stage held under
+ * the header (at most about 30% of the screen), with the steps below it.
+ *
+ * The stage is the landing point of the project opening (`data-hero-media`).
+ * Reduced motion: no easing or crossfade, and a recording shows one still
+ * per step.
  */
 export function CaseStory({
   title,
@@ -74,6 +119,7 @@ export function CaseStory({
   steps,
   stage,
   caption,
+  captions,
   note,
 }: {
   title: string
@@ -84,8 +130,12 @@ export function CaseStory({
   stage: Stage
   /** A short line under the stage (what the picture is). */
   caption?: ReactNode
+  /** Or one line per step, following the current step (the first shows before any step is current). */
+  captions?: readonly ReactNode[]
   /** A scope line after the steps. */
   note?: ReactNode
+  /** The case study's project (the footer carries Previous and Next project). */
+  project?: Project
 }) {
   const listRef = useRef<HTMLOListElement>(null)
   const [active, setActive] = useState(-1)
@@ -95,50 +145,36 @@ export function CaseStory({
   useLayoutEffect(() => {
     const list = listRef.current
     if (!list) return
-    const m = { top: 0, height: 1, offsets: [0], r0: 0, r1: 1, line: 0 }
+    const n = steps.length
+    const m = { tops: [0], last: 1, line: 0, pad: 0 }
     const measure = () => {
-      const box = list.getBoundingClientRect()
-      m.top = box.top + window.scrollY
-      m.height = box.height || 1
-      m.offsets = [...list.children].map((el) => el.getBoundingClientRect().top - box.top)
-      m.offsets.push(m.height)
+      const y = window.scrollY
+      const items = [...list.children] as HTMLElement[]
+      m.tops = items.map((el) => el.getBoundingClientRect().top + y)
+      const lastBox = items[n - 1].getBoundingClientRect()
+      m.last = lastBox.height || 1
       m.line = line() * window.innerHeight
-      // Where the line falls in the list at the top and at the bottom of the page's scroll.
-      m.r0 = m.line - m.top
-      m.r1 = ScrollTrigger.maxScroll(window) + m.line - m.top
-    }
-    /**
-     * The point of the list under the line. One to one wherever the page allows; where the list already
-     * starts above the line, or the page ends before the line reaches the list's end, the first or last
-     * 240px of scrolling are stretched so the story still begins at its start and finishes at its end.
-     */
-    const place = () => {
-      const raw = window.scrollY + m.line - m.top
-      const { r0, r1, height: L } = m
-      const E = 240
-      if (r0 > 0 && r1 < L && r1 - r0 < 2 * E) return ((raw - r0) / Math.max(1, r1 - r0)) * L
-      let pos = raw
-      if (r0 > 0 && raw < r0 + E) pos = ((raw - r0) / E) * (r0 + E)
-      if (r1 < L && raw > r1 - E) pos = r1 - E + ((raw - (r1 - E)) / E) * (L - (r1 - E))
-      return pos
+      // The last step must be able to reach the line: add only the missing space under the steps.
+      const below = document.documentElement.scrollHeight - (lastBox.top + y) - m.pad
+      const need = Math.max(0, Math.ceil(window.innerHeight - m.line - below + 8))
+      if (need !== m.pad) {
+        m.pad = need
+        list.style.paddingBottom = need ? `${need}px` : ''
+        requestAnimationFrame(() => ScrollTrigger.refresh())
+      }
     }
     const update = () => {
-      const pos = place()
-      const n = steps.length
-      if (pos < 0) {
+      const at = window.scrollY + m.line
+      if (at < m.tops[0]) {
         setActive(-1)
         follow.current?.(-1, 0)
         return
       }
-      if (pos >= m.height) {
-        setActive(n - 1)
-        follow.current?.(n - 1, 1)
-        return
-      }
       let k = 0
-      while (k < n - 1 && pos >= m.offsets[k + 1]) k++
+      while (k < n - 1 && at >= m.tops[k + 1]) k++
+      const span = k < n - 1 ? m.tops[k + 1] - m.tops[k] : m.last
       setActive(k)
-      follow.current?.(k, Math.min(1, Math.max(0, (pos - m.offsets[k]) / (m.offsets[k + 1] - m.offsets[k] || 1))))
+      follow.current?.(k, Math.min(1, Math.max(0, (at - m.tops[k]) / (span || 1))))
     }
     const trigger = ScrollTrigger.create({
       start: 0,
@@ -149,27 +185,53 @@ export function CaseStory({
       },
       onUpdate: update,
     })
-    return () => trigger.kill()
+    return () => {
+      trigger.kill()
+      list.style.paddingBottom = ''
+    }
   }, [steps.length])
 
   const bind = useCallback((fn: ((k: number, local: number) => void) | null) => {
     follow.current = fn
   }, [])
 
+  // Wide windows: the stage is fixed in the window for the whole page (Harlie's request), so the footer rises
+  // beneath it at the end. Its holder takes the right column's place and width, measured from the column.
+  const mediaRef = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const col = mediaRef.current
+    if (!col) return
+    const place = () => {
+      const box = col.getBoundingClientRect()
+      col.style.setProperty('--hold-left', `${box.left.toFixed(1)}px`)
+      col.style.setProperty('--hold-width', `${box.width.toFixed(1)}px`)
+    }
+    place()
+    const ro = new ResizeObserver(place)
+    ro.observe(col)
+    window.addEventListener('resize', place)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', place)
+    }
+  }, [])
+
   return (
-    <div className="cs story cx-wrap" data-started={active >= 0 || undefined}>
+    <div className="cs story" data-started={active >= 0 || undefined}>
       <header className="cs__intro" data-hero-reveal>
         <CaseTitle title={title} meta={meta} />
         <div className="cx-lede">{lede}</div>
         {status && <p className="cx-status">{status}</p>}
       </header>
-      <div className="cs__media story__media">
-        <StageView stage={stage} active={active} bind={bind} />
-        {caption && (
-          <p className="cx-caption story__caption" data-hero-reveal>
-            {caption}
-          </p>
-        )}
+      <div ref={mediaRef} className="cs__media story__media">
+        <div className="story__hold">
+          <StageView stage={stage} active={active} bind={bind} />
+          {(captions ? captions[Math.max(0, Math.min(active, captions.length - 1))] : caption) && (
+            <div className="story__below">
+              <p className="cx-caption story__caption">{captions ? captions[Math.max(0, Math.min(active, captions.length - 1))] : caption}</p>
+            </div>
+          )}
+        </div>
       </div>
       <div className="cs__body" data-hero-reveal>
         <ol ref={listRef} className="story__steps" role="list">
@@ -177,6 +239,18 @@ export function CaseStory({
             <li key={s.title} className="story__step" data-current={k === active || undefined}>
               <h2 className="story__title">{s.title}</h2>
               <p className="story__text">{s.text}</p>
+              {s.quote && (
+                <blockquote className="story__quote">
+                  <p>{s.quote}</p>
+                </blockquote>
+              )}
+              {s.bullets && s.bullets.length > 0 && (
+                <ul className="story__points">
+                  {s.bullets.map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
         </ol>
@@ -188,31 +262,28 @@ export function CaseStory({
 
 function StageView({ stage, active, bind }: { stage: Stage; active: number; bind: (fn: ((k: number, local: number) => void) | null) => void }) {
   if (stage.kind === 'video') return <VideoStage stage={stage} bind={bind} />
-  if (stage.kind === 'images') {
-    const asset = getImage(stage.images[0])
-    const shown = Math.max(0, active)
-    return (
-      <div className="story__stage story__frame" data-hero-media="" style={{ '--aspect': asset.width / asset.height } as CSSProperties}>
-        {stage.images.map((id, k) => (
-          <div key={id} className="story__layer" data-on={k === shown || undefined} aria-hidden={k === shown ? undefined : true}>
-            <ResponsiveImage image={id} sizes={STAGE_SIZES} priority={k === 0} />
-          </div>
-        ))}
-      </div>
-    )
-  }
   if (stage.kind === 'phones') {
     return (
       <div className="story__stage story__phones" data-hero-media="" data-focus={active >= 0 || undefined}>
-        {stage.phones.map((p, k) => (
-          <div key={p.image} className="story__phone" data-on={k === active || undefined}>
-            <ResponsiveImage image={p.image} sizes="(min-width: 1100px) 190px, 28vw" alt={`${p.name} screen`} priority />
+        {stage.phones.map((p) => (
+          <div key={p.image} className="story__phone" data-on={p.step === active || undefined}>
+            <ResponsiveImage image={p.image} sizes="(min-width: 1100px) 190px, 26vw" alt={`${p.name} screen`} priority />
           </div>
         ))}
       </div>
     )
   }
-  return <ZoomStage stage={stage} active={active} />
+  if (stage.kind === 'crops') return <CropStage stage={stage} active={active} />
+  const shown = stage.show[Math.max(0, active)] ?? 0
+  return (
+    <Laptop aspect={stage.aspect}>
+      {stage.layers.map((layer, k) => (
+        <div key={k} className="story__layer" data-on={k === shown || undefined} aria-hidden={k === shown ? undefined : true}>
+          {'image' in layer ? <ResponsiveImage image={layer.image} sizes={STAGE_SIZES} priority={k === 0} alt={layer.alt} /> : layer.node}
+        </div>
+      ))}
+    </Laptop>
+  )
 }
 
 /** The recording, its time eased toward the scroll's (and one still per step under reduced motion). */
@@ -253,7 +324,7 @@ function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>;
   }, [stage, bind])
 
   return (
-    <div className="story__stage story__frame" data-hero-media="" style={{ '--aspect': stage.width / stage.height } as CSSProperties}>
+    <Laptop aspect={stage.width / stage.height}>
       <video
         ref={ref}
         className="story__video"
@@ -268,29 +339,37 @@ function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>;
         disableRemotePlayback
         aria-label={stage.label}
       />
-    </div>
+    </Laptop>
   )
 }
 
-/** One picture; each step moves it to its region (scaled to fit the frame, kept inside the picture's edges). */
-function ZoomStage({ stage, active }: { stage: Extract<Stage, { kind: 'zoom' }>; active: number }) {
+/** Parts of one picture, one per step, each shown whole in the same frame and crossfading (the picture is never panned or zoomed). */
+function CropStage({ stage, active }: { stage: Extract<Stage, { kind: 'crops' }>; active: number }) {
   const asset = getImage(stage.image)
   const W = asset.width
   const H = asset.height
-  const r = active >= 0 ? stage.regions[active] : null
-  let transform = 'none'
-  if (r) {
-    const s = Math.max(1, Math.min(W / r.w, H / r.h))
-    const clamp = (v: number, lo: number) => Math.min(0, Math.max(lo, v))
-    const tx = clamp(W / 2 - (r.x + r.w / 2) * s, W - W * s)
-    const ty = clamp(H / 2 - (r.y + r.h / 2) * s, H - H * s)
-    transform = `translate(${((tx / W) * 100).toFixed(3)}%, ${((ty / H) * 100).toFixed(3)}%) scale(${s.toFixed(4)})`
-  }
+  const layers = [null, ...stage.regions]
+  const shown = active >= 0 ? active + 1 : 0
   return (
-    <div className="story__stage story__frame" data-hero-media="" style={{ '--aspect': W / H } as CSSProperties}>
-      <div className="story__zoom" style={{ transform }}>
-        <ResponsiveImage image={stage.image} sizes="(min-width: 1408px) 1240px, (min-width: 900px) 92vw, 200vw" priority />
-      </div>
-    </div>
+    <Laptop aspect={W / H}>
+      {layers.map((r, k) => {
+        let transform = 'none'
+        if (r) {
+          const s = Math.max(1, Math.min(W / r.w, H / r.h))
+          const clamp = (v: number, lo: number) => Math.min(0, Math.max(lo, v))
+          const tx = clamp(W / 2 - (r.x + r.w / 2) * s, W - W * s)
+          const ty = clamp(H / 2 - (r.y + r.h / 2) * s, H - H * s)
+          transform = `translate(${((tx / W) * 100).toFixed(3)}%, ${((ty / H) * 100).toFixed(3)}%) scale(${s.toFixed(4)})`
+        }
+        const on = k === shown
+        return (
+          <div key={k} className="story__layer" data-on={on || undefined} aria-hidden={on ? undefined : true}>
+            <div className="story__crop" style={{ transform }}>
+              <ResponsiveImage image={stage.image} sizes="(min-width: 1296px) 1200px, (min-width: 900px) 80vw, 160vw" priority={k === 0} decorative={k > 0} />
+            </div>
+          </div>
+        )
+      })}
+    </Laptop>
   )
 }

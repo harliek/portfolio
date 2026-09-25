@@ -1,8 +1,9 @@
 /**
- * CafePress UK (brief v19): a compact page. The research question and three
- * short findings, with the storefront prototype fixed beside them, moving to
- * the part each finding is about (the header's UK details, the products, the
- * category row).
+ * CafePress UK (brief v19; copy from Harlie's editorial pass, v23): a
+ * compact page. The introduction and three short sections, with the
+ * storefront pictures fixed beside them, crossfading with each section (the
+ * internship's storefront prototype, then two later images, each captioned
+ * so the later ones are not presented as project work); one scope note.
  *
  * Sources: the internship deck (PlanetArt/planetart presentation.pdf,
  * "CafePress UK B2B Launch", 08/20/2026) and the storefront prototype
@@ -19,33 +20,26 @@
  */
 export const CAFEPRESS = {
   title: 'CafePress UK',
-  meta: ['Product Operations and Merchandising Intern', 'PlanetArt', 'June to August 2026'],
+  meta: ['Product Operations and Merchandising Intern', 'PlanetArt 2026'],
   lede: (
     <p>
-      Could CafePress bring its B2B storefront to the UK? I researched competitors, UK vendors and assortment, the site experience, and operational
-      readiness, then coded a localized storefront prototype from the findings.
+      At PlanetArt, I assessed the feasibility of a UK B2B storefront through competitor research, vendor evaluation, assortment planning, and operational
+      review. I also developed early storefront prototype elements.
     </p>
   ),
-  status: 'Research, recommendations, and a storefront prototype for a potential UK launch. Nothing was launched.',
-  caption: 'The storefront prototype, coded from the research.',
-  /** Where each finding sits in the storefront (source pixels; crops/cafepress-uk.ts): the header's UK details, the products, the category row. */
-  regions: [
-    { x: 960, y: 10, w: 712, h: 401 },
-    { x: 776, y: 228, w: 896, h: 444 },
-    { x: 0, y: 0, w: 1040, h: 585 },
-  ],
+  /** Harlie's editorial pass (v23): descriptive headings, a short supporting list, one scope note. */
   findings: [
     {
       title: 'Localization',
-      text: 'Small differences in wording and presentation matter to UK buyers. The prototype uses UK terms such as Basket, a UK phone number with office hours, and messages about fast UK delivery and UK-based support. I also recommended showing prices in pounds.',
+      text: 'I identified changes to terminology, pricing, and service information for a UK audience. Recommendations included UK product terminology and prices in pounds; prototype elements explored local contact and delivery messaging.',
     },
     {
-      title: 'Assortment',
-      text: 'Competitors featured recognizable brands and eco-friendly products. Using UK vendors including PF Concept and Ralawise, I curated potential launch items around UK-relevant brands, eco-friendly options, and common B2B categories.',
+      title: 'Vendor and assortment research',
+      text: 'I evaluated UK suppliers, including PF Concept and Ralawise, and selected potential launch products based on competitor assortments, recognizable brands, and eco-friendly options.',
     },
     {
-      title: 'Operations',
-      text: 'Competitor sites were category-led and close to the US model, so I recommended adapting the existing structure and preparing product data, vendor coordination, and merchandising workflows before any launch.',
+      title: 'Launch recommendations',
+      text: 'I recommended adapting the existing US B2B structure for the UK market, supported by localized product data, vendor coordination, and merchandising workflows.',
     },
   ],
 }

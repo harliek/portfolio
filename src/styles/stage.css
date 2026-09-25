@@ -191,6 +191,36 @@ html[data-motion='reduce'] .pointer-trail {
   font-weight: var(--weight-label);
 }
 
+/*
+ * Harlie's Orb shader (OrbBackground): a fixed layer over the ground and
+ * under the homepage film and every page's content; the canvas fills it
+ * absolutely. It fades in once drawn, and stays empty on the homepage.
+ */
+.orb-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.orb-bg__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 600ms var(--ease-arrive);
+}
+
+.orb-bg__canvas[data-ready] {
+  opacity: 1;
+}
+
+.orb-bg:not([data-active]) .orb-bg__canvas {
+  opacity: 0;
+}
+
 /* The homepage film's slot (HomeFilm portals into it): above the ground, below every page's content. */
 .stage-film {
   position: fixed;
@@ -201,4 +231,64 @@ html[data-motion='reduce'] .pointer-trail {
 
 .stage-film:empty {
   display: none;
+}
+
+/*
+ * The cursor's light (CursorLight): a soft blue violet circle (0.34 of the
+ * window's shorter side, a smoothstep falloff, as the Orb shader's spotlight) laid
+ * over what is behind it with screen blending, so it reads as light rather
+ * than a tint: on black it glows blue violet, over the film it lifts the darks.
+ * Moved by transform only; fades in and out.
+ */
+.cursor-light {
+  --r: calc(min(100vw, 100svh) * 0.34);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--r) * 2);
+  height: calc(var(--r) * 2);
+  margin: calc(var(--r) * -1) 0 0 calc(var(--r) * -1);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(118 104 255 / 0.38) 0%,
+    rgb(118 104 255 / 0.37) 10%,
+    rgb(118 104 255 / 0.34) 20%,
+    rgb(118 104 255 / 0.3) 30%,
+    rgb(118 104 255 / 0.245) 40%,
+    rgb(118 104 255 / 0.19) 50%,
+    rgb(118 104 255 / 0.135) 60%,
+    rgb(118 104 255 / 0.082) 70%,
+    rgb(118 104 255 / 0.04) 80%,
+    rgb(118 104 255 / 0.01) 90%,
+    rgb(118 104 255 / 0) 100%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transition: opacity 300ms var(--ease-arrive);
+}
+
+.cursor-light[data-on] {
+  opacity: 1;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .cursor-light {
+    display: none;
+  }
+}
+
+/*
+ * The case studies' ground (Harlie's request): pitch black, with only the
+ * cursor's light on it; the header and footer are transparent over it.
+ */
+.case-ground {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #000;
+  pointer-events: none;
 }

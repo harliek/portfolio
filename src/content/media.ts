@@ -508,6 +508,86 @@ export const IMAGES = {
     provenance: 'independent-prototype', synthetic: true,
     source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising decision 3 (x 430–2940, y 0–1255 of the 21.6s frame)', timestamp: 21.6,
   }),
+  // Brief v21: homepage tiles prepared by Harlie (PNG Tiles/), made free-standing: backgrounds outside the objects removed, nothing inside altered.
+  'jf-tile-home': img({
+    id: 'jf-tile-home', file: 'jf-tile-home', width: 901, height: 1672, widths: [450, 901], fallback: 'png', transparent: true,
+    alt: 'Jumpstart Finance home screen on a phone: total balance, a tip to diversify, shortcuts to portfolio, budget, banks, stocks, taxes and spending, and recent events.',
+    provenance: 'synthetic-example', synthetic: true,
+    source: 'PNG Tiles/jumpstart tile 1.png (supplied by Harlie)', role: 'Jumpstart homepage tile, phone 1',
+    crop: 'The white page around the phone removed (edge-connected fill; the rim anti-aliased toward the bezel).',
+  }),
+  'jf-tile-profile': img({
+    id: 'jf-tile-profile', file: 'jf-tile-profile', width: 902, height: 1672, widths: [451, 902], fallback: 'png', transparent: true,
+    alt: 'Jumpstart Finance profile screen on a phone: the learning journey with level 1 progress, 3 of 12 lessons, and the next levels.',
+    provenance: 'synthetic-example', synthetic: true,
+    source: 'PNG Tiles/jumpstart tile 2.png (supplied by Harlie)', role: 'Jumpstart homepage tile, phone 2',
+    crop: 'The white page around the phone removed (edge-connected fill; the rim anti-aliased toward the bezel).',
+  }),
+  'jf-tile-third': img({
+    id: 'jf-tile-third', file: 'jf-tile-third', width: 788, height: 1628, widths: [394, 788], fallback: 'png', transparent: true,
+    alt: 'Jumpstart Finance community screen on a phone: members asking and answering questions about investing.',
+    provenance: 'synthetic-example', synthetic: true,
+    source: 'PNG Tiles/jumpstart tile 3.png (supplied by Harlie, already transparent)', role: 'Jumpstart homepage tile, phone 3',
+    crop: 'Trimmed to its content.',
+  }),
+  'merch-object': img({
+    id: 'merch-object', file: 'merch-object', width: 1457, height: 868, widths: [729, 1457], fallback: 'png', transparent: true,
+    alt: 'An illustrative merchandising dashboard with sample product, vendor, inventory and promotion counts, a 30-day sales chart and revenue by category.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'PNG Tiles/merch png.png (supplied by Harlie, transparent; replaced 2026-09-25 13:58)', role: 'Merchandising homepage tile',
+    crop: 'Trimmed to its content.',
+  }),
+  'cp-object': img({
+    id: 'cp-object', file: 'cp-object', width: 1601, height: 904, widths: [801, 1601], fallback: 'png', transparent: true,
+    alt: 'An illustrative CafePress Business UK storefront mockup with a free UK delivery offer and a T-shirt, tote bag and mug priced in pounds.',
+    provenance: 'synthetic-example', synthetic: true,
+    source: 'PNG Tiles/cafepress uk.png (a mockup made for the tile by Harlie, transparent; replaced 2026-09-25 13:30)', role: 'CafePress UK homepage tile (illustrative)',
+    crop: 'Trimmed to its content.',
+  }),
+  'sa-object': img({
+    id: 'sa-object', file: 'sa-object', width: 1595, height: 726, widths: [798, 1595], fallback: 'png', transparent: true,
+    alt: 'Spreadsheet Agent with a five-row B2B apparel assortment of products, vendors and categories beside the assistant panel holding the request that built it.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'PNG Tiles/spreadsheet tile 2.png (supplied by Harlie, transparent; replaced 2026-09-25 13:16)', role: 'Spreadsheet Agent homepage tile',
+    crop: 'Trimmed to its content.',
+  }),
+  'cp-drinkware': img({
+    id: 'cp-drinkware', file: 'cp-drinkware', width: 1672, height: 941, widths: [640, 960, 1280, 1672], fallback: 'jpg',
+    alt: 'A later image of a CafePress Business UK drinkware page, not part of the original project, with a free UK delivery offer over £100, price and colour filters, and three drinkware products priced in pounds.',
+    provenance: 'synthetic-example', synthetic: true,
+    source: 'PlanetArt/cafepress uk/drinkware web.png (added by Harlie, 2026-09-25)', role: 'CafePress UK stage (a later image, captioned as not part of the original project)',
+  }),
+  'about-art': img({
+    id: 'about-art', file: 'about-art', width: 1440, height: 1796, widths: [480, 960, 1440], fallback: 'jpg',
+    alt: 'A charcoal portrait by Harlie of an elderly woman in a headscarf, drawn in white on black.',
+    provenance: 'original-artifact', synthetic: false,
+    source: 'public/creative/art/oldwoman.JPG (the creative portfolio’s Charcoal Art page)', role: 'About, Creative work: the Art card',
+  }),
+  'about-art-deluge': img({
+    id: 'about-art-deluge', file: 'about-art-deluge', width: 480, height: 600, widths: [240, 480], fallback: 'jpg',
+    alt: 'Deluge, a charcoal drawing by Harlie of a face with eyes closed, framed by long falling strokes, on light paper.',
+    provenance: 'personal-work', synthetic: false,
+    source: 'public/creative/art/tree.jpg (Deluge, the creative portfolio’s Charcoal Art page), cropped to 4:5', role: 'About, Creative work: the Art card',
+  }),
+  'about-art-soaked': img({
+    id: 'about-art-soaked', file: 'about-art-soaked', width: 480, height: 600, widths: [240, 480], fallback: 'jpg',
+    alt: 'Soaked in Silence, a charcoal drawing by Harlie of a close-up face with wet strands of hair across it.',
+    provenance: 'personal-work', synthetic: false,
+    source: 'public/creative/art/close.jpg (Soaked in Silence, the creative portfolio’s Charcoal Art page)', role: 'About, Creative work: the Art card',
+  }),
+  // The laptop the case studies' recordings and screenshots sit in (PNG Tiles/computer png.png, supplied by Harlie; replaced 13:36,
+  // trimmed to x 68 to 1380, y 179 to 912 of the 1448x1086 file). Its screen is transparent: x 172 to 1141, y 71 to 647 of the trimmed image.
+  'device-laptop': img({
+    id: 'device-laptop', file: 'device-laptop', width: 1313, height: 734, widths: [800, 1200, 1313], fallback: 'png', transparent: true,
+    alt: '', provenance: 'synthetic-example', synthetic: true,
+    source: 'PNG Tiles/computer png.png (supplied by Harlie)', role: 'Case study stage frame (decorative)',
+  }),
+  'cp-assistant': img({
+    id: 'cp-assistant', file: 'cp-assistant', width: 1672, height: 941, widths: [640, 960, 1280, 1672], fallback: 'jpg',
+    alt: 'A later image of the CafePress Business UK storefront with an AI assistant panel open, not part of the original project, beside drinkware products priced in pounds.',
+    provenance: 'synthetic-example', synthetic: true,
+    source: 'PlanetArt/cafepress uk/cafepress uk ai agent.png (added by Harlie, 2026-09-25)', role: 'CafePress UK stage (a later image, captioned as not part of the original project)',
+  }),
   // Brief v19: the Inventory screen as the homepage tile (the clearest replenishment view), main content with its right edge whole.
   'merch-tile': img({
     id: 'merch-tile', file: 'merch-tile', width: 2437, height: 1523, widths: [800, 1200, 1600, 2437], fallback: 'jpg',

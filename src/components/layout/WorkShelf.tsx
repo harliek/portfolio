@@ -91,7 +91,7 @@ interface WorkShelfProps {
 }
 
 /**
- * The Work menu (desktop, 900px and wider): the six projects on one solid
+ * The Projects menu (desktop, 900px and wider): the six projects on one solid
  * dark panel under the navigation, in project order, one per row with each
  * name on one line. The page behind is dimmed so the menu reads as separate
  * from it. Not a carousel: nothing moves.
@@ -160,7 +160,7 @@ export function WorkShelf({ id, open, focusFirst, thumbs, activeId, onNavigate, 
   return (
     <div id={id} className="work-shelf" data-open={open || undefined} inert={!open} style={style}>
       <div className="shell work-shelf__inner">
-        <ul ref={listRef} className="work-shelf__list" role="list" aria-label="Case studies" onKeyDown={onKeyDown}>
+        <ul ref={listRef} className="work-shelf__list" role="list" aria-label="Projects" onKeyDown={onKeyDown}>
           {PROJECTS.map((p, i) => (
             <li key={p.id} className="work-shelf__entry" style={{ '--i': i } as CSSProperties}>
               <ProjectLink project={p} current={p.id === activeId} thumbs={thumbs} className="shelf-item" onNavigate={onNavigate} />
@@ -193,7 +193,7 @@ export function MobileMenu({ id, open, activeId, aboutCurrent, creativeHref, onN
     <div id={id} className="site-menu" data-open={open || undefined} inert={!open}>
       <nav className="shell site-menu__inner" aria-label="Primary">
         <h2 className="site-menu__label" id={`${id}-work`}>
-          Work
+          Projects
         </h2>
         <ul className="site-menu__work" role="list" aria-labelledby={`${id}-work`}>
           {PROJECTS.map((p) => (

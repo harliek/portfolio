@@ -3,7 +3,9 @@ import type { VideoId } from '../media'
 
 /**
  * Creative Production (route /work/creative-production; the files keep the
- * older client-work name). Three stacked project sections, each pairing its
+ * older client-work name). Copy from Harlie's editorial pass (v23); the
+ * Nickleby line keeps the conservative wording (lighting and equipment, no
+ * audio), as the sources support. Three stacked project sections, each pairing its
  * own description with its own film (brief-v8 section 13; FilmScroll lays it
  * out). Copy is brief-v5 section 22, edited for the copy rules: each section
  * states Harlie's part first ("I ...") and then, separately, what the Shift
@@ -59,22 +61,16 @@ export interface ClientFilm {
   video: VideoId
   /** Harlie's part, first person. */
   work: ReactNode
-  /** What the Shift Content team delivered. */
-  delivered: ReactNode
   /** The moving frame on the page (a short muted excerpt, its whole frame; the full film opens with sound on request). */
   clip: { src: string; poster: string; width: number; height: number }
 }
 
 export const CLIENT_WORK = {
   title: 'Creative Production',
-  meta: ['Creative Strategy and Client Solutions Intern', 'Shift Content, London', 'January to May 2026'],
+  meta: ['Creative Strategy and Client Solutions Intern', 'Shift Content, London 2026'],
   summary: (
-    <p>
-      I worked directly with the founder on client films, from <strong>lighting and camera work on set</strong> to editing.
-    </p>
+    <p>At Shift Content, I supported client film production through lighting, camera setup, on&#8209;set coordination, B&#8209;roll capture, and editing.</p>
   ),
-  /** The one evidence distinction (brief-v8 section 8): the finished films are the team's work. */
-  status: 'Agency films produced by the Shift Content team',
   films: [
     {
       id: 'nickleby',
@@ -84,11 +80,8 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/nickleby-loop-trim-1138.mp4', poster: '/media/img/nickleby-loop-poster.jpg', width: 1138, height: 640 },
       work: (
         <p>
-          For a one-day interview shoot, I set up lighting and audio and <strong>filmed B-roll during the interviews</strong>.
+          I supported lighting and equipment setup and <strong>filmed B&#8209;roll</strong> during a one&#8209;day interview shoot.
         </p>
-      ),
-      delivered: (
-        <p>From that day, Shift Content delivered five testimonials, nine FAQ responses, and a 60&#8209;second social edit for the client’s content calendar.</p>
       ),
     },
     {
@@ -100,11 +93,10 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/aristocracy-loop-854.mp4', poster: '/media/img/aristocracy-loop-poster.jpg', width: 854, height: 640 },
       work: (
         <p>
-          I helped run a two-day shoot for Aristocracy London’s spring and summer campaign. I handled <strong>lighting, setup, and on-set coordination</strong>{' '}
-          and filmed behind-the-scenes footage for the agency’s marketing.
+          I supported <strong>lighting, setup, and on-set coordination</strong> for Aristocracy London’s two&#8209;day spring/summer campaign shoot. I also filmed
+          behind&#8209;the&#8209;scenes content for the agency’s marketing.
         </p>
       ),
-      delivered: <p>Shift Content delivered the campaign video, e-commerce imagery, and social assets ahead of the brand’s Manchester store opening.</p>,
     },
     {
       id: 'night-club',
@@ -115,11 +107,9 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/heck-loop-1138.mp4', poster: '/media/img/heck-loop-poster.jpg', width: 1138, height: 640 },
       work: (
         <p>
-          The tour, powered by Gymshark, brought women together to run after dark. I <strong>filmed the participants</strong> and supported the production team at
-          the event.
+          I <strong>filmed participants</strong> and supported event production for The Night Club Global Tour, powered by Gymshark.
         </p>
       ),
-      delivered: <p>Shift Content delivered the final event film.</p>,
     },
   ] satisfies ClientFilm[],
 }

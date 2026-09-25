@@ -15,13 +15,12 @@ export default function JumpstartFinance() {
   return (
     <CasePage project={project} className="page-jumpstart-finance">
       <CaseStory
+        project={project}
         title={C.title}
         meta={C.meta}
         lede={C.lede}
         steps={C.features}
         stage={{ kind: 'phones', phones: C.phones }}
-        caption={C.label}
-        note={C.result}
       />
     </CasePage>
   )

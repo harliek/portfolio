@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { accentVars } from '../../content/accents'
 import { projectForPath } from '../../content/projects'
+import { stageRouteFor } from '../../config/stage'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { ExternalMark, MobileMenu, WorkShelf } from './WorkShelf'
+
+/** Scroll (px) past which the bar gathers into the floating pill: early, so nothing passes under the transparent bar. */
+const FLOAT_AT = 12
 
 const SHELF_ID = 'work-shelf'
 const MENU_ID = 'site-menu'
@@ -51,14 +55,21 @@ function swallowPressClick() {
 /**
  * Header, styled after Harlie's original portfolio (brief v14): a near-black
  * bar with a hairline divider under it on every professional page, the same
- * on each route. HOME at the left (a link to "/"); the navigation at the
- * right. Every item is small capitals with wide tracking (layout.css); the
+ * on each route. Past 100px of scroll it becomes a resizable navbar (after
+ * Aceternity's): the bar's contents gather into a narrower floating pill with
+ * a blurred, translucent ground and a soft shadow, and back again near the
+ * top; the header keeps its height throughout. A pill glides behind the
+ * navigation item under the pointer. At the left, "← Back" on case studies and About (brief v21:
+ * it returns to the previous view in the site; opened from outside, it goes
+ * to the homepage's project collection, whose selected project is
+ * remembered), then HOME (a link to "/"); the navigation at the right. Every item is small capitals with wide tracking (layout.css); the
  * current page's item is set in the red accent (no glow), and hover and
  * keyboard focus draw a thin line under the words (the focus ring as well).
  *
- * - Work: a button that opens the Work shelf (WorkShelf.tsx). Click toggles;
- *   Escape, a click outside or focus leaving closes it (focus returns to
- *   Work); Arrow Down or keyboard activation moves focus to the first project.
+ * - Projects: a button that opens the Projects menu (WorkShelf.tsx). Click
+ *   toggles; Escape, a click outside or focus leaving closes it (focus
+ *   returns to Projects); Arrow Down or keyboard activation moves focus to the
+ *   first project.
  *   It is the current item on a case study.
  * - About: the dedicated About page (`/about`).
  * - Creative Portfolio: a plain link to the restored original creative
@@ -75,8 +86,12 @@ function swallowPressClick() {
  */
 export function Header() {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const desktop = useMediaQuery(DESKTOP_QUERY)
   const [open, setOpen] = useState(false)
+  // Resizable navbar (after Aceternity's): as soon as the page scrolls (the bar is transparent), it becomes a floating pill.
+  const [floating, setFloating] = useState(() => typeof window !== 'undefined' && window.scrollY > FLOAT_AT)
+  const pillRef = useRef<HTMLSpanElement>(null)
   // Keyboard opening moves focus into the shelf; a mouse click does not.
   const [focusFirst, setFocusFirst] = useState(false)
   // Shelf thumbnails load only once the visitor shows interest in Work (hover, focus or open).
@@ -131,6 +146,55 @@ export function Header() {
     }
   }, [open, desktop])
 
+  // The floating pill hugs its contents (Harlie's request: no big gap): the left group, a 40px gap, the navigation.
+  useEffect(() => {
+    const header = headerRef.current
+    if (!header) return
+    const measure = () => {
+      const start = header.querySelector<HTMLElement>('.site-header__start')
+      const end = header.querySelector<HTMLElement>('.site-nav, .menu-button')
+      if (!start || !end) return
+      header.style.setProperty('--pill-w', `${Math.ceil(start.scrollWidth + end.scrollWidth + 40 + 16)}px`)
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    header.querySelectorAll('.site-header__start, .site-nav, .menu-button').forEach((el) => ro.observe(el))
+    return () => ro.disconnect()
+  }, [desktop, pathname])
+
+  useEffect(() => {
+    let frame = 0
+    const onScroll = () => {
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        setFloating(window.scrollY > FLOAT_AT)
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [])
+
+  /** The hover pill glides to the item under the pointer (after Aceternity's NavItems) and fades when the pointer leaves. */
+  const hoverItem = (e: MouseEvent<HTMLElement>) => {
+    const pill = pillRef.current
+    const item = (e.target as HTMLElement).closest<HTMLElement>('.site-nav__item')
+    const list = e.currentTarget
+    if (!pill || !item || !list.contains(item)) return
+    const a = item.getBoundingClientRect()
+    const b = list.getBoundingClientRect()
+    pill.style.transform = `translateX(${(a.left - b.left).toFixed(1)}px)`
+    pill.style.width = `${a.width.toFixed(1)}px`
+    pill.dataset.on = ''
+  }
+  const leaveItems = () => {
+    const pill = pillRef.current
+    if (pill) delete pill.dataset.on
+  }
+
   // Mobile menu: the page behind is locked, Tab cycles within the header
   // (HOME, Menu, the panel's links), Escape closes and returns focus.
   useEffect(() => {
@@ -176,21 +240,43 @@ export function Header() {
   const active = projectForPath(pathname)
   const inWork = Boolean(active)
   const onAboutPage = pathname === '/about'
+  const canGoBack = inWork || onAboutPage
+
+  /** The previous view in the site when there is one (react-router numbers its entries); otherwise the project collection. */
+  const goBack = () => {
+    setOpen(false)
+    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0
+    if (idx > 0) navigate(-1)
+    else navigate('/', { state: { toWork: true } })
+  }
 
   return (
     <header
       ref={headerRef}
       className="site-header"
       data-open={open ? (desktop ? 'shelf' : 'menu') : undefined}
+      data-floating={floating || undefined}
+      data-route={stageRouteFor(pathname)}
       style={active ? accentVars(active.accent) : undefined}
     >
       <div className="site-header__inner">
-        <Link to="/" className="site-nav__item site-home" data-active={home} aria-current={home ? 'page' : undefined} onClick={onPageLink}>
-          Home
-        </Link>
+        <div className="site-header__start">
+          {canGoBack && (
+            <button type="button" className="site-nav__item site-back" onClick={goBack}>
+              <span className="site-back__arrow" aria-hidden="true">
+                ←
+              </span>
+              Back
+            </button>
+          )}
+          <Link to="/" className="site-nav__item site-home" data-active={home} aria-current={home ? 'page' : undefined} onClick={onPageLink}>
+            Home
+          </Link>
+        </div>
 
         {desktop ? (
-          <nav className="site-nav" aria-label="Primary">
+          <nav className="site-nav" aria-label="Primary" onMouseOver={hoverItem} onMouseLeave={leaveItems}>
+            <span ref={pillRef} className="site-nav__pill" aria-hidden="true" />
             <ul className="site-nav__list" role="list">
               <li>
                 <button
@@ -216,7 +302,7 @@ export function Header() {
                   onPointerEnter={() => setWarm(true)}
                   onFocus={() => setWarm(true)}
                 >
-                  Work
+                  Projects
                   <svg className="site-nav__chevron" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false">
                     <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>

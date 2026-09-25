@@ -1,10 +1,10 @@
 
 /**
- * Merchandising Platform (brief v19): a compact page. The introduction and
- * three decisions on the left; the recording fixed beside them, its time
- * following the scroll through each decision's segment (the Overview and
- * catalog, the Canyon Pouch panel and its working, Inventory with its order
- * sheet); one scope line.
+ * Merchandising Platform (brief v19; copy from Harlie's editorial pass,
+ * v23): a compact page. The introduction and three sections on the left;
+ * the recording fixed beside them, its time following the scroll through
+ * each section's segment (the Overview and catalog, the Canyon Pouch panel
+ * and its working, Inventory with its order sheet); one scope note.
  *
  * Facts (the recording, PlanetArt/Merchandising Dashboard/Dashboard
  * Video.mov; footer: "Portfolio project. Synthetic catalog, no backend,
@@ -17,14 +17,13 @@
  */
 export const MERCH = {
   title: 'Merchandising Platform',
-  meta: ['Independent project', 'Product design and build', '2026'],
+  meta: ['Product design and build', 'Independent project 2026'],
   lede: (
     <p>
-      After my PlanetArt internship, I built an independent prototype that brings catalog, stock, sales, and replenishment information into one workspace,
-      so a merchandiser can see what to reorder and why.
+      Following my PlanetArt internship, I designed and built an independent merchandising prototype that consolidates catalog, inventory, sales, and vendor
+      data to support replenishment decisions.
     </p>
   ),
-  status: 'Working prototype with synthetic data. It does not place orders.',
   /** The recording's segment for each decision (seconds), and one still per step for reduced motion. */
   segments: [
     [0, 11.5],
@@ -32,19 +31,19 @@ export const MERCH = {
     [20.4, 25.5],
   ] as const,
   stills: [0.5, 15.2, 21.6],
+  /** Harlie's editorial pass (v23): descriptive headings and one scope note. */
   decisions: [
     {
-      title: 'Bring information together',
-      text: 'Each catalog row joins product, vendor, stock, and trailing sales, and a product’s panel adds its unit economics, so a reorder can be judged in one place.',
+      title: 'Unified product data',
+      text: 'Each product record combines pricing, margin, inventory, vendor information, and 28-day sales. The overview prioritizes pending decisions by severity and financial exposure.',
     },
     {
-      title: 'Make recommendations understandable',
-      text: 'Every suggested quantity shows its working, from sales velocity and lead time to the supplier minimum that set it.',
+      title: 'Replenishment calculations',
+      text: 'Suggested order quantities include the underlying sales velocity, demand variability, supplier lead time, safety stock, and reorder point. Supplier minimums are included in the calculation.',
     },
     {
-      title: 'Keep the user in control',
-      text: 'The console ranks what needs replenishment and exports an order sheet for review. Deciding and ordering stay with the merchandiser.',
+      title: 'Review and order preparation',
+      text: 'Products at or below their reorder point are ranked by margin at risk. Merchandisers can export an order sheet for review; the prototype does not place orders.',
     },
   ],
-  note: 'Synthetic catalog. The Ask screen in the recording matches questions to fixed query patterns, with no language model involved.',
 }

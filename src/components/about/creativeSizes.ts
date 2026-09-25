@@ -3,4 +3,4 @@
  * two columns from 720px, each half the content width less half the gap;
  * one full-width column below that).
  */
-export const CREATIVE_SIZES = '(min-width: 1320px) 600px, (min-width: 720px) 46vw, calc(100vw - 40px)'
+export const CREATIVE_SIZES = '(min-width: 1320px) 360px, (min-width: 900px) 30vw, (min-width: 560px) 46vw, calc(100vw - 40px)'

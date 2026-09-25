@@ -3,15 +3,14 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 import { accentVars } from '../../content/accents'
 import type { Project } from '../../content/projects'
 import { usePageMeta } from '../../hooks/usePageMeta'
-import { NextCase } from './NextCase'
 
 /**
  * A case study (brief v16): consistency comes from the page margins, the
  * spacing scale, the type, the metadata treatment and the motion language
  * (src/styles/case-v16.css), never from one repeated layout. Each page
  * composes its own sequence from the pieces there (a hero, statements,
- * large visuals, a scroll-scrubbed demo, pinned sequences) and ends with
- * the next project, opened with the same expanding frame as the homepage.
+ * large visuals, a scroll-scrubbed demo, pinned sequences); the footer
+ * carries the Previous and Next project buttons.
  */
 export function CasePage({ project, className, children }: { project: Project; className?: string; children: ReactNode }) {
   usePageMeta(project.seo.title, project.seo.description)
@@ -37,7 +36,6 @@ export function CasePage({ project, className, children }: { project: Project; c
   return (
     <article ref={ref} className={['cx', className].filter(Boolean).join(' ')} data-project={project.id} style={accentVars(project.accent) as CSSProperties}>
       {children}
-      <NextCase current={project} />
     </article>
   )
 }

@@ -29,6 +29,9 @@
   --cx-pink-rgb: var(--red-rgb);
   --cx-hair: rgb(243 238 231 / 0.14);
   --cx-radius: 6px;
+  /* The told case's centred composition (CaseStory): gutters and the column gap. */
+  --story-gutter: clamp(24px, 4vw, 48px);
+  --story-gap: clamp(28px, 3vw, 40px);
   /* Older names, kept for pages that still use them. */
   --cx-edge: max(var(--cx-gutter), calc((100vw - var(--cx-max)) / 2));
   --cx-s1: 12px;
@@ -40,7 +43,8 @@
 
   position: relative;
   color: var(--cx-text);
-  background: #0a0a0c;
+  /* Transparent: Harlie's Orb shader (OrbBackground) is the ground behind the case studies. */
+  background: transparent;
 }
 
 @media (max-width: 699.98px) {
@@ -57,52 +61,91 @@
   padding: 0 var(--cx-gutter);
 }
 
-/* The compact case layout (CaseSplit, brief v18) ------------------------------------ */
+/* The told case (CaseStory, brief v21) ------------------------------------------------------ */
 
+/*
+ * One centred composition: about 1200px of content between gutters of at
+ * least 40px, the text in about 38% and the stage in about 62% (both
+ * columns can shrink), 40px apart. The stage is held under the header,
+ * centred in its column and never taller than about 58% of the window, so
+ * every edge of it stays inside the window.
+ */
 .cs {
+  --stage-h: 66svh;
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: var(--cx-gap);
+  grid-template-columns: minmax(0, 35fr) minmax(0, 65fr);
+  column-gap: var(--story-gap);
   align-items: start;
-  padding-top: clamp(40px, 5vw, 64px);
+  width: 100%;
+  max-width: calc(1200px + 2 * var(--story-gutter));
+  margin: 0 auto;
+  padding: clamp(32px, 4vw, 56px) var(--story-gutter) 0;
 }
 
 .cs__intro {
-  grid-column: 1 / span 5;
+  grid-column: 1;
   grid-row: 1;
   display: grid;
-  gap: 16px;
+  gap: 14px;
+  min-width: 0;
 }
 
-.cs__intro .cx-meta {
-  margin-top: 4px;
-}
-
+.cs__intro .cx-meta,
 .cs__intro .cx-status {
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .cs__body {
-  grid-column: 1 / span 5;
+  grid-column: 1;
   grid-row: 2;
   display: grid;
   gap: 28px;
-  margin-top: var(--cx-section);
+  min-width: 0;
+  margin-top: 30px;
 }
 
-/* One artifact, held beside the text while it is read. */
+/*
+ * The stage is held in place for the whole story and centred vertically in
+ * the window under the header (Harlie's request): the held box is the room
+ * under the header, and the stage sits in its middle.
+ */
 .cs__media {
-  grid-column: 7 / span 6;
+  grid-column: 2;
   grid-row: 1 / span 2;
-  position: sticky;
-  top: calc(var(--header-height) + 32px);
+  min-width: 0;
+}
+
+/* The holder: fixed in the window under the header, over the right column (CaseStory measures --hold-left and --hold-width). */
+.story__hold {
+  position: fixed;
+  top: var(--header-height);
+  left: var(--hold-left, 50%);
+  z-index: 1;
+  display: grid;
+  /* The stage alone sits on the middle line; a caption, if any, hangs below it. */
+  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  justify-items: center;
+  width: var(--hold-width, 50%);
+  height: calc(100svh - var(--header-height));
+}
+
+.story__hold > .story__stage {
+  grid-row: 2;
+}
+
+.story__hold > .story__below {
+  grid-row: 3;
   align-self: start;
+  display: grid;
+  justify-items: center;
+  width: 100%;
 }
 
 .cs__note {
   max-width: 60ch;
   margin: 0;
-  padding-top: 16px;
+  padding-top: 14px;
   border-top: 1px solid var(--cx-hair);
   font-family: var(--font-sans);
   font-size: 0.875rem;
@@ -110,45 +153,11 @@
   color: var(--cx-dim);
 }
 
-.cs__media .cx-caption {
-  margin-top: 10px;
-}
-
-@media (max-width: 899.98px) {
-  .cs__intro,
-  .cs__body,
-  .cs__media {
-    grid-column: 1 / -1;
-  }
-
-  .cs__media {
-    grid-row: 2;
-    position: static;
-    margin-top: var(--cx-inner);
-  }
-
-  .cs__body {
-    grid-row: 3;
-    margin-top: var(--cx-section);
-  }
-}
-
-/* The told case (CaseStory, brief v19): steps on the left, one fixed stage on the right ------ */
-
-.story .cs__media {
-  grid-column: 7 / -1;
-  min-width: 0;
-  top: calc(var(--header-height) + 24px);
-}
-
-.story .cs__body {
-  margin-top: 40px;
-}
-
-/* The stage never needs more height than the window has, nor more width than its columns. */
+/* The stage: its own proportions, contained, at most the stage height; centred in the column. */
 .story__stage {
   position: relative;
-  width: min(100%, calc((100svh - var(--header-height) - 140px) * var(--aspect, 1.6)));
+  width: min(100%, calc(var(--stage-h) * var(--aspect, 1.6)));
+  min-width: 0;
 }
 
 .story__frame {
@@ -170,47 +179,101 @@
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 360ms var(--ease-arrive);
+  transition: opacity 220ms var(--ease-standard);
 }
 
 .story__layer[data-on] {
   opacity: 1;
 }
 
-.story__layer .picture,
-.story__layer img,
-.story__zoom .picture,
-.story__zoom img {
+.story__layer > .picture,
+.story__layer > .picture img {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-.story__layer img {
+.story__layer > .picture img {
   object-fit: contain;
 }
 
-.story__zoom {
+/*
+ * The laptop (Harlie's picture): the recording or screenshot sits in its
+ * transparent screen, behind the laptop, contained (never cropped), centred
+ * on the screen's dark glass.
+ */
+.story__laptop {
+  aspect-ratio: var(--aspect);
+}
+
+.story__screen {
+  position: absolute;
+  overflow: hidden;
+  background: #060608;
+  container-type: size;
+}
+
+.story__fit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100cqw, calc(100cqh * var(--media-aspect, 1.6)));
+  aspect-ratio: var(--media-aspect, 1.6);
+  transform: translate(-50%, -50%);
+}
+
+.story__fit > .story__video {
+  position: absolute;
+  inset: 0;
+}
+
+.story__laptop-frame,
+.story__laptop-frame img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.story__laptop-frame {
+  z-index: 1;
+  filter: drop-shadow(0 24px 34px rgb(0 0 0 / 0.55));
+}
+
+/* A part of one picture: placed once (no animated movement), shown by crossfading its layer. */
+.story__crop {
   position: absolute;
   inset: 0;
   transform-origin: 0 0;
-  transition: transform 700ms var(--ease-exchange);
 }
 
-/* Jumpstart: the three phones as cutouts in one row, no ground behind them; the step's phone comes forward. */
+.story__crop .picture,
+.story__crop img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * Jumpstart: the three phones as cutouts in one row, no ground behind them.
+ * The row keeps room around each phone for the one brought forward (it grows
+ * 8% at most), so all three stay whole in every state.
+ */
 .story__phones {
+  --aspect: 1.36;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(12px, 1.6vw, 24px);
+  gap: clamp(14px, 1.8vw, 26px);
   align-items: center;
-  width: min(100%, calc((100svh - var(--header-height) - 160px) * 1.45));
-  padding: 12px 6px;
+  padding: 5% 4.5%;
 }
 
 .story__phone {
   transition:
-    transform 420ms var(--ease-arrive),
-    opacity 420ms var(--ease-arrive);
+    transform 320ms var(--ease-arrive),
+    opacity 320ms var(--ease-arrive);
 }
 
 .story__phone .picture,
@@ -221,48 +284,60 @@
 }
 
 .story__phone img {
-  filter: drop-shadow(0 20px 24px rgb(0 0 0 / 0.5));
+  filter: drop-shadow(0 18px 22px rgb(0 0 0 / 0.5));
 }
 
 /* Before the first step: the homepage tile's arrangement, the middle phone a step forward. */
 .story__phones:not([data-focus]) .story__phone:nth-child(2) {
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 
 .story__phones[data-focus] .story__phone {
-  opacity: 0.72;
+  opacity: 0.78;
   transform: scale(0.95);
 }
 
 .story__phones[data-focus] .story__phone[data-on] {
   z-index: 1;
   opacity: 1;
-  transform: translateY(-2%) scale(1.1);
+  transform: scale(1.08);
 }
 
 .story__caption {
+  align-self: stretch;
   margin-top: 10px;
+  text-align: center;
 }
 
-/* The steps: headed passages with a hairline beside them; the current one takes the accent, the others step back. */
+/* A quotation within a step (the demonstrated request): set apart by a hairline, in the body's own type. */
+.story__quote {
+  margin: 10px 0 0;
+  padding-left: 14px;
+  border-left: 1px solid var(--cx-hair);
+}
+
+.story__quote p {
+  max-width: 58ch;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #d8d2ca;
+}
+
+/* The steps: compact groups; the current one takes the accent rule and a brighter heading, the others stay readable. */
 .story__steps {
   display: grid;
+  gap: 32px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .story__step {
-  min-height: 34svh;
-  padding: 18px 0 18px 20px;
+  padding: 2px 0 2px 18px;
   border-left: 2px solid var(--cx-hair);
-  transition:
-    opacity 300ms var(--ease-arrive),
-    border-color 300ms var(--ease-arrive);
-}
-
-.story[data-started] .story__step:not([data-current]) {
-  opacity: 0.55;
+  transition: border-color 200ms var(--ease-standard);
 }
 
 .story__step[data-current] {
@@ -272,60 +347,117 @@
 .story__title {
   margin: 0;
   font-family: var(--font-editorial);
-  font-size: clamp(1.375rem, 1.2rem + 0.5vw, 1.625rem);
+  font-size: clamp(1.25rem, 1.1rem + 0.4vw, 1.5rem);
   font-weight: 400;
   line-height: 1.2;
-  color: var(--cx-text);
+  color: #cfc9c1;
+  transition: color 200ms var(--ease-standard);
+}
+
+.story__step[data-current] .story__title {
+  color: #fff;
 }
 
 .story__text {
   max-width: 60ch;
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   font-family: var(--font-sans);
   font-size: 1rem;
-  line-height: 1.65;
+  line-height: 1.6;
   color: var(--cx-text);
 }
 
-.story .cs__note {
-  margin-top: 8px;
+.story__points {
+  display: grid;
+  gap: 6px;
+  max-width: 58ch;
+  margin: 10px 0 0;
+  padding: 0 0 0 18px;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #d8d2ca;
 }
 
-/* Phones and narrow windows: the stage held under the header while the steps pass beneath it. */
+.story__points li::marker {
+  color: var(--cx-pink);
+}
+
+/* The next project under the stage, in the right column (wide screens), so no empty column is left beside the steps. */
+.cx-next--beside {
+  align-self: center;
+  max-width: none;
+  margin: 28px 0 0;
+  padding: 0;
+}
+
+@media (min-width: 900px) {
+  .cx:has(.story) .cx-next--after {
+    display: none;
+  }
+
+  .cx:has(.story) .cs {
+    padding-bottom: var(--cx-section);
+  }
+}
+
+/* Narrow windows: the introduction, then a compact stage held under the header, the steps below it. */
 @media (max-width: 899.98px) {
-  .story .cs__media {
+  .cs {
+    --stage-h: 30svh;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cs__intro,
+  .cs__body,
+  .cs__media {
+    grid-column: 1;
+  }
+
+  .cs__media {
+    grid-row: 2;
     position: sticky;
     top: var(--header-height);
     z-index: 2;
-    grid-column: 1 / -1;
-    margin-top: var(--cx-inner);
-    padding: 8px 0 12px;
-    background: #0a0a0c;
+    display: grid;
+    justify-items: center;
+    height: auto;
+    margin-top: 20px;
+    padding: 8px 0 10px;
+    background: #000;
   }
 
-  .story__stage {
-    width: min(100%, calc(40svh * var(--aspect, 1.6)));
-    margin-inline: auto;
+  /* Phones: the holder is not fixed; the stage (and any caption) sit in the held band as before. */
+  .story__hold {
+    display: contents;
   }
 
-  .story__phones {
-    width: min(100%, calc(40svh * 1.45));
+  .cs__body {
+    grid-row: 3;
+    margin-top: 20px;
   }
 
-  .story .cs__body {
-    margin-top: 16px;
+  .cx-next--beside {
+    display: none;
   }
 
-  .story__step {
-    min-height: 40svh;
+  /* The caption stays on phones (it says when a picture is illustrative or later than the project), in small type. */
+  .story__caption {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+
+  .story__steps {
+    gap: 28px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .story__layer,
-  .story__zoom,
   .story__phone,
-  .story__step {
+  .story__step,
+  .story__title {
     transition: none;
   }
 }
@@ -344,8 +476,8 @@
 
 .cx-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 24px;
+  flex-direction: column;
+  gap: 4px;
   margin: 24px 0 0;
   padding: 0;
   list-style: none;
@@ -472,13 +604,13 @@
 /* While a project opens (expandFrame), the hero's text waits for the image to land. */
 [data-hero-waiting] [data-hero-reveal] {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(8px);
 }
 
 [data-hero-reveal] {
   transition:
-    opacity 320ms var(--ease-arrive),
-    transform 320ms var(--ease-arrive);
+    opacity 220ms var(--ease-arrive),
+    transform 220ms var(--ease-arrive);
 }
 
 [data-hero-flying] [data-hero-media] {
@@ -495,9 +627,9 @@
 
 .cx-next {
   box-sizing: content-box;
-  max-width: var(--cx-max);
+  max-width: 1200px;
   margin: 0 auto;
-  padding: var(--cx-section) var(--cx-gutter);
+  padding: var(--cx-section) var(--story-gutter);
 }
 
 .cx-next__link {
@@ -520,8 +652,8 @@
   background: #0a0a0d;
 }
 
-/* Jumpstart's phones stand free here too, as on the homepage tile. */
-.cx-next__frame:has(> .plane__media[data-kind='screens']) {
+/* Free-standing tiles stand free here too, as on the homepage. */
+.cx-next__frame:has(> .plane__media[data-free]) {
   overflow: visible;
   border-color: transparent;
   background: none;
@@ -590,4 +722,12 @@
     transition: none;
   }
 
+}
+
+/* No single word alone on the last line of the introductions, steps and film texts. */
+.cx-lede,
+.story__text,
+.story__points li,
+.cw-text .cx-body {
+  text-wrap: pretty;
 }

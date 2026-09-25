@@ -3,7 +3,7 @@ import { EASE, gsap } from '../../lib/gsap'
 import { warmProject } from './projectTransition'
 
 /**
- * The project opening (brief v17, items 4 to 6): one continuous movement.
+ * The project opening (brief v17, shortened in brief v21): one continuous movement, about 300ms.
  *
  *   1. The clicked cover is frozen: that exact frame is cloned where it is
  *      (a playing video stops on its current frame). The caller fades the
@@ -22,11 +22,11 @@ import { warmProject } from './projectTransition'
  *      crossfade, after the landing.
  *
  * No titles ride on the frame, and there is no fade-to-black stage. A
- * picture made of several cutouts (Jumpstart's three phones, `data-kind`
- * "screens") travels without a ground or frame, the phones keeping their
- * arrangement as the box moves, and lands on the page's own three phones. If the
+ * free-standing picture (`data-free`: Jumpstart's three phones, the cutout
+ * compositions, the leasing conversation) travels without a ground or frame,
+ * its objects keeping their arrangement as the box moves. If the
  * destination has no hero image (or it cannot be found within 1.5s), the
- * frame fades out over the new page. Reduced motion: a plain navigation
+ * frame fades out over the new page (after at most 600ms). Reduced motion: a plain navigation
  * (the page's own short opacity reveal).
  */
 export function expandFrame({
@@ -52,6 +52,7 @@ export function expandFrame({
   overlay.className = 'frame-expand'
   overlay.setAttribute('aria-hidden', 'true')
   if (media.dataset.kind) overlay.dataset.kind = media.dataset.kind
+  if (media.dataset.free !== undefined) overlay.dataset.free = ''
   const clone = media.cloneNode(true) as HTMLElement
   clone.classList.add('frame-expand__media')
   const sourceVideo = media.querySelector('video')
@@ -69,44 +70,37 @@ export function expandFrame({
   const finish = () => {
     root.removeAttribute('data-hero-waiting')
     root.removeAttribute('data-hero-flying')
-    gsap.to(overlay, { opacity: 0, duration: 0.28, ease: EASE.arrive, onComplete: () => overlay.remove() })
+    gsap.to(overlay, { opacity: 0, duration: 0.18, ease: EASE.arrive, onComplete: () => overlay.remove() })
   }
 
-  // Let the captions fade (about 100ms), then change the page under the frame.
+  // Let the captions fade, then change the page under the picture at once.
   window.setTimeout(() => {
     root.setAttribute('data-hero-waiting', '')
     root.setAttribute('data-hero-flying', '')
+    // The router saves this page's scroll position for Back and starts the new page at its top (ScrollRestoration).
     navigate(path)
-    window.scrollTo(0, 0)
     const started = performance.now()
     const seek = () => {
       const dest = window.location.pathname === path ? document.querySelector<HTMLElement>('[data-hero-media]') : null
       const box = dest?.getBoundingClientRect()
       if (dest && box && box.width > 0) {
-        const to = getComputedStyle(dest).borderRadius
-        let revealed = false
+        // The destination's text arrives right away (a short fade), while the picture settles into place.
+        root.removeAttribute('data-hero-waiting')
         gsap.to(overlay, {
           left: box.left,
           top: box.top,
           width: box.width,
           height: box.height,
-          borderRadius: to,
-          duration: 0.5,
+          borderRadius: getComputedStyle(dest).borderRadius,
+          duration: 0.3,
           ease: EASE.move,
-          onUpdate() {
-            // The destination's text arrives once the image is mostly in position.
-            if (!revealed && this.progress() > 0.7) {
-              revealed = true
-              root.removeAttribute('data-hero-waiting')
-            }
-          },
           onComplete: finish,
         })
         return
       }
-      if (performance.now() - started > 1500) return finish()
+      if (performance.now() - started > 600) return finish()
       requestAnimationFrame(seek)
     }
-    requestAnimationFrame(() => requestAnimationFrame(seek))
-  }, 110)
+    requestAnimationFrame(seek)
+  }, 60)
 }

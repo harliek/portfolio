@@ -15,10 +15,10 @@ export default function MerchandisingPlatform() {
   return (
     <CasePage project={project} className="page-merchandising-platform">
       <CaseStory
+        project={project}
         title={C.title}
         meta={C.meta}
         lede={C.lede}
-        status={C.status}
         steps={C.decisions}
         stage={{
           kind: 'video',
@@ -30,7 +30,6 @@ export default function MerchandisingPlatform() {
           stills: C.stills,
           label: 'The Merchandising Platform prototype in use',
         }}
-        note={C.note}
       />
     </CasePage>
   )

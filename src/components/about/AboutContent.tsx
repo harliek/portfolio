@@ -1,158 +1,158 @@
 import '../../styles/pages/about.css'
-import { Link } from 'react-router-dom'
-import { accentVars } from '../../content/accents'
+import { useEffect, useState, type MouseEvent } from 'react'
 import { ABOUT } from '../../content/pages/about'
-import { projectById, projectPath } from '../../content/projects'
-import { prefetchRoute } from '../../routes'
 import { ResponsiveImage } from '../media/ResponsiveImage'
+import { StatefulIcons } from '../ui/Stateful'
 import { ArtPreview } from './ArtPreview'
 import { FeaturedFilm } from './FeaturedFilm'
 
-const prefetch = (path: string) => ({
-  onPointerEnter: () => prefetchRoute(path),
-  onFocus: () => prefetchRoute(path),
-})
+/** Each drawing in the Art card is about a third of the card's width at most (three side by side). */
+const ART_PIECE_SIZES = '(min-width: 1320px) 112px, (min-width: 900px) 8.5vw, (min-width: 560px) 14vw, 30vw'
 
-/** The portrait's rendered widths (about.css --portrait-w). */
-const PORTRAIT_SIZES = '(min-width: 960px) 360px, (min-width: 720px) 300px, 260px'
+/** The portrait's rendered width (about.css). */
+const PORTRAIT_SIZES = '(min-width: 720px) 340px, 80vw'
 
 /**
- * The /about page, reached from the carousel's About Me object and the
- * header's About link. One 40/60 grid on wide screens, stacked in reading
- * order on narrow ones:
+ * The /about page (brief v21), in the old creative portfolio's About format:
  *
- * 1. Opening (brief v17). The photograph of Harlie, static, on the left
- *    (about 40%), its top level with the pink serif greeting; on the right
- *    (about 60%) the greeting, the lead and its concrete follow-up, and
- *    three short paragraphs (what I build, how cognitive science informs
- *    it, the work I want next). The roles are listed once, under Experience.
- *    Phones: the greeting and lead, then the portrait, then the rest.
- * 2. Below a full-width divider, Education (about 40%: the school, degree,
- *    minor, certificate and dates, then Harlie's two written paragraphs)
- *    beside Experience (about 60%). Each role has one first-person contribution and, where there is
- *    one, a quiet text link to its case study.
- * 3. Creative work, below another divider, in the same 40/60 grid (the
- *    heading left, two equal cards right, brief v18). The same frame, badge
- *    and title: the Creative Portfolio (its Art tile; opens the
+ * 1. Opening. On the left a small "About" label with its rule, the name
+ *    "Harlie Katz", a short descriptor in the red accent, and three short
+ *    paragraphs; on the right the colour portrait (about 340px wide, 4:5).
+ *    Phones: the text, then the portrait.
+ * 2. Education, numbered as on the creative site: the school, degree, minor,
+ *    certificate and dates, then Harlie's two written paragraphs.
+ * 3. Creative work, compact: the Creative Portfolio (its Art tile; opens the
  *    original creative homepage at /creative/, a separate build, so a plain
- *    link) and An Artistic End (its authentic poster; plays the film, with
- *    the YouTube player requested only after that press).
- * Email and LinkedIn now live in the site's ending (Footer.tsx), right below.
+ *    link), An Artistic End (its authentic poster; plays the film, with the
+ *    YouTube player requested only after that press), and Art (one of
+ *    Harlie's charcoal portraits; opens the creative portfolio's Art page).
+ * Email, LinkedIn and the résumé live in the site's ending (Footer.tsx).
  *
  * The page is deliberately still: no pointer light and no parallax.
  */
 export function AboutContent() {
   const { education: edu } = ABOUT
+  // The creative links load a separate site: their red badge shows the loader until the page changes.
+  const [leaving, setLeaving] = useState<'portfolio' | 'art' | null>(null)
+  useEffect(() => {
+    // Back from the creative site restores this page from the cache: clear the loader.
+    const reset = () => setLeaving(null)
+    window.addEventListener('pageshow', reset)
+    return () => window.removeEventListener('pageshow', reset)
+  }, [])
+  const leave = (which: 'portfolio' | 'art') => (e: MouseEvent<HTMLAnchorElement>) => {
+    if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) setLeaving(which)
+  }
 
   return (
     <div className="about-content">
-      <div className="about-intro">
-        <div className="about-intro__head">
-          <h1 className="about-heading">{ABOUT.greeting}</h1>
-          <p className="about-intro__lead">
-            {ABOUT.lead} <span className="about-intro__detail">{ABOUT.leadDetail}</span>
-          </p>
-        </div>
-        <div className="about-intro__portrait about-photo">
-          <ResponsiveImage image="headshot" sizes={PORTRAIT_SIZES} alt={ABOUT.portraitLabel} priority />
-        </div>
-        <div className="about-intro__bio">
-          {ABOUT.bio.map((p) => (
-            <p key={p} className="about-intro__para">
-              {p}
-            </p>
-          ))}
-        </div>
-      </div>
-
-      <div className="about-rest" data-cover-reveal="">
-        <div className="about-record">
-          <section className="about-education" aria-labelledby="about-education-title">
-            <h2 id="about-education-title" className="about-subheading">
-              {ABOUT.educationTitle}
-            </h2>
-            <div className="about-school">
-              <p className="about-school__name">{edu.school}</p>
-              <ul className="about-school__credentials" role="list">
-                {edu.credentials.map((c) => (
-                  <li key={c}>{c}</li>
-                ))}
-                <li>
-                  {edu.certificate}
-                  <span className="visually-hidden">, </span>
-                  <span className="about-school__source">{edu.certificateSource}</span>
-                </li>
-              </ul>
-              <p className="about-school__dates tabular">
-                {edu.dates}
-                <span aria-hidden="true"> · </span>
-                <span className="visually-hidden">, </span>
-                {edu.pace}
-              </p>
-            </div>
-            <div className="about-school__text">
-              {edu.text.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
-            </div>
-          </section>
-
-          <section className="about-experience" aria-labelledby="about-experience-title">
-            <h2 id="about-experience-title" className="about-subheading">
-              {ABOUT.experienceTitle}
-            </h2>
-            <ol className="about-roles" role="list">
-              {ABOUT.experience.map((r) => {
-                const project = 'project' in r && r.project ? projectById(r.project) : null
-                const path = project ? projectPath(project) : null
-                return (
-                  <li key={r.org} className="about-role">
-                    <h3 className="about-role__org">{r.org}</h3>
-                    <p className="about-role__dates tabular">{r.dates}</p>
-                    <p className="about-role__title">{r.role}</p>
-                    <p className="about-role__text">{r.contribution}</p>
-                    {project && path && (
-                      <p className="about-role__more">
-                        <Link to={path} className="about-role__link" style={accentVars(project.accent)} {...prefetch(path)}>
-                          {ABOUT.caseLink(project.name)}
-                          <span className="about-role__arrow" aria-hidden="true">
-                            →
-                          </span>
-                        </Link>
-                      </p>
-                    )}
-                  </li>
-                )
-              })}
-            </ol>
-          </section>
-        </div>
-
-        <section className="about-creative" aria-labelledby="about-creative-title">
-          <h2 id="about-creative-title" className="about-subheading about-creative__title">
-            {ABOUT.creativeTitle}
-          </h2>
-          <div className="about-creative__grid">
-            <div className="about-work about-work--portfolio">
-              <div className="about-work__frame">
-                {/* A separate static build outside the router: a plain link and a full page load. */}
-                <a href={ABOUT.portfolio.href} className="about-work__hit" aria-label={`${ABOUT.portfolio.action}, ${ABOUT.portfolio.title}`}>
-                  <ArtPreview />
-                  <span className="about-work__badge" aria-hidden="true">
-                    {ABOUT.portfolio.action}
-                    <span className="about-work__arrow">↗</span>
-                  </span>
-                </a>
-              </div>
-              <div className="about-work__foot">
-                <h3 className="about-work__title">{ABOUT.portfolio.title}</h3>
-                <p className="about-work__line">{ABOUT.portfolio.line}</p>
-              </div>
-            </div>
-            <FeaturedFilm />
+      <section className="about-hero" aria-labelledby="about-title">
+        <div className="about-hero__text">
+          <p className="about-label">{ABOUT.label}</p>
+          <h1 id="about-title" className="about-name">
+            {ABOUT.name}
+          </h1>
+          <p className="about-descriptor">{ABOUT.descriptor}</p>
+          <div className="about-hero__copy">
+            {ABOUT.intro.map((p) => (
+              <p key={p}>{p}</p>
+            ))}
           </div>
-        </section>
-      </div>
+        </div>
+        <figure className="about-portrait">
+          <ResponsiveImage image="headshot" sizes={PORTRAIT_SIZES} alt={ABOUT.portraitLabel} priority />
+        </figure>
+      </section>
+
+      <section className="about-education" aria-labelledby="about-education-title">
+        <h2 id="about-education-title" className="about-section-label">
+          <span className="about-section-label__num" aria-hidden="true">
+            01
+          </span>
+          {ABOUT.educationTitle}
+        </h2>
+        <div className="about-education__grid">
+          <div className="about-school">
+            <p className="about-school__name">{edu.school}</p>
+            <ul className="about-school__credentials" role="list">
+              {edu.credentials.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+              <li>
+                {edu.certificate}
+                <span className="visually-hidden">, </span>
+                <span className="about-school__source">{edu.certificateSource}</span>
+              </li>
+            </ul>
+            <p className="about-school__dates tabular">
+              {edu.dates}
+            </p>
+          </div>
+          <div className="about-school__text">
+            {edu.text.map((p) => (
+              <p key={p}>{p}</p>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="about-creative" aria-labelledby="about-creative-title">
+        <h2 id="about-creative-title" className="about-section-label">
+          <span className="about-section-label__num" aria-hidden="true">
+            02
+          </span>
+          {ABOUT.creativeTitle}
+        </h2>
+        <div className="about-creative__grid">
+          <div className="about-work about-work--portfolio">
+            <div className="about-work__frame">
+              {/* A separate static build outside the router: a plain link and a full page load. */}
+              <a
+                href={ABOUT.portfolio.href}
+                className="about-work__hit"
+                aria-label={`${ABOUT.portfolio.action}, ${ABOUT.portfolio.title}`}
+                onClick={leave('portfolio')}
+              >
+                <ArtPreview />
+                <span className="about-work__badge stateful" aria-hidden="true" data-state={leaving === 'portfolio' ? 'loading' : 'idle'}>
+                  <StatefulIcons />
+                  {ABOUT.portfolio.action}
+                  <span className="about-work__arrow">↗</span>
+                </span>
+              </a>
+            </div>
+            <div className="about-work__foot">
+              <h3 className="about-work__title">{ABOUT.portfolio.title}</h3>
+              <p className="about-work__line">{ABOUT.portfolio.line}</p>
+            </div>
+          </div>
+          <FeaturedFilm />
+          <div className="about-work about-work--art">
+            <div className="about-work__frame">
+              {/* The creative portfolio's Charcoal Art page, a separate static build: a plain link and a full page load. */}
+              <a href={ABOUT.art.href} className="about-work__hit" aria-label={`${ABOUT.art.action}, ${ABOUT.art.title}`} onClick={leave('art')}>
+                {/* Three drawings, upright and small, side by side on the dark ground; the whole frame is the one link. */}
+                <span className="about-art-strip">
+                  {ABOUT.art.images.map((id) => (
+                    <span key={id} className="about-art-strip__piece">
+                      <ResponsiveImage image={id} sizes={ART_PIECE_SIZES} decorative fit="cover" className="about-art-strip__image" />
+                    </span>
+                  ))}
+                </span>
+                <span className="about-work__badge stateful" aria-hidden="true" data-state={leaving === 'art' ? 'loading' : 'idle'}>
+                  <StatefulIcons />
+                  {ABOUT.art.action}
+                  <span className="about-work__arrow">↗</span>
+                </span>
+              </a>
+            </div>
+            <div className="about-work__foot">
+              <h3 className="about-work__title">{ABOUT.art.title}</h3>
+              <p className="about-work__line">{ABOUT.art.line}</p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

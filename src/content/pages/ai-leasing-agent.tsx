@@ -1,8 +1,9 @@
 /**
- * AI Leasing Agent (brief v19): a compact page. The introduction and three
- * short passages (responsibilities, testing, rollout), with the illustrative
- * conversation (labelled as illustrative) fixed beside them, moving to the
- * part each passage is about.
+ * AI Leasing Agent (brief v19; copy from Harlie's editorial pass, v23): a
+ * compact page. The introduction and four short sections (inquiry scope,
+ * live property data, staff escalation, testing and deployment), with the
+ * illustrative conversation (captioned as illustrative) fixed beside them,
+ * moving to the part each section is about; one implementation note.
  *
  * Facts (unchanged from the verified copy): Leasing and Operations Associate,
  * Valiance Capital, Berkeley, October 2024 to June 2025; CRM and leasing
@@ -13,28 +14,36 @@
  */
 export const LEASING = {
   title: 'AI Leasing Agent',
-  meta: ['Leasing and Operations Associate', 'Valiance Capital, Berkeley', 'October 2024 to June 2025'],
+  /** The role, then the organisation and the years (years only, Harlie's request). */
+  meta: ['Leasing and Operations Associate', 'Valiance Capital, Berkeley 2024 to 2025'],
   lede: (
     <p>
-      Managing CRM and leasing operations for more than 1,000 tenants, I saw the team spend time on recurring questions alongside leads that needed personal
-      attention. I proposed an AI leasing agent, wrote its requirements and workflow documentation, and developed test cases for its rollout.
+      At Valiance Capital, I proposed an AI leasing assistant to address recurring inquiries within operations serving more than 1,000 tenants. I documented
+      requirements, defined inquiry workflows, and developed test cases for deployment.
     </p>
   ),
-  conversationLabel: 'Illustrative conversation, not a transcript.',
-  /** Where each passage sits in the illustration (source pixels): the Behind the scenes panel, the conversation, then all of it. */
-  regions: [{ x: 1160, y: 350, w: 500, h: 400 }, { x: 260, y: 215, w: 830, h: 620 }, null],
+  /**
+   * Where each group sits in the illustration (source pixels of valiance-messages): the renter's question and the
+   * assistant's first answer; the Live data required card; the Human approval card; then all of it.
+   */
+  regions: [{ x: 270, y: 215, w: 740, h: 330 }, { x: 1170, y: 365, w: 480, h: 225 }, { x: 1170, y: 590, w: 480, h: 155 }, null],
+  /** Harlie's editorial pass (v23): descriptive headings, one implementation note, one caption for the illustration. */
   sections: [
     {
-      title: 'Responsibilities',
-      text: 'I defined what the assistant could answer, when it had to check live property data through the API, and when a request needed a staff decision and should reach the leasing team.',
+      title: 'Inquiry scope',
+      text: 'I defined the recurring questions the assistant could handle and the inquiries that required direct support from the leasing team.',
     },
     {
-      title: 'Testing',
-      text: 'I tested it with questions about availability, pricing, tours, application status, and leasing policies. The production assistant ran on a third-party platform.',
+      title: 'Live property data',
+      text: 'I specified when responses required current pricing and availability from the property API.',
     },
     {
-      title: 'Rollout',
-      text: 'It was introduced in lower-risk scenarios, then expanded, and was adopted across 18 properties. It was designed to handle recurring inquiries so the leasing team could spend more time on leads.',
+      title: 'Staff escalation',
+      text: 'I documented which requests required staff review and how they should be transferred to the leasing team.',
+    },
+    {
+      title: 'Testing and deployment',
+      text: 'I tested responses covering availability, pricing, tours, application status, and leasing policies. The assistant was introduced in lower-risk scenarios before deployment expanded to 18 properties.',
     },
   ],
 }

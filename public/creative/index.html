@@ -12,5 +12,35 @@
     <!-- The way back to the professional portfolio, on every creative page (portfolio-navigation.css). A full page load: "/" is a separate build. -->
     <a class="professional-return" href="/"><span class="professional-return__arrow" aria-hidden="true">&larr;</span><span class="professional-return__text">Professional portfolio</span></a>
     <div id="root"></div>
+    <!--
+      HOME in this site's header goes to the professional portfolio's homepage (Harlie's request), with a full page load
+      ("/" is a separate build). The prebuilt app renders HOME as a link to /creative, so its href is rewritten to "/" and a
+      plain click is taken before the app's router sees it; modified clicks (new tab) follow the rewritten href.
+    -->
+    <script>
+      (function () {
+        var isHomeLink = function (a) {
+          return !!a && !a.classList.contains('professional-return') && !!a.closest('header, nav') && /^home$/i.test((a.textContent || '').trim())
+        }
+        var fix = function () {
+          document.querySelectorAll('a[href="/creative"], a[href="/creative/"]').forEach(function (a) {
+            if (isHomeLink(a)) a.setAttribute('href', '/')
+          })
+        }
+        document.addEventListener(
+          'click',
+          function (e) {
+            var a = e.target && e.target.closest ? e.target.closest('a') : null
+            if (!isHomeLink(a) || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+            e.preventDefault()
+            e.stopImmediatePropagation()
+            window.location.assign('/')
+          },
+          true
+        )
+        new MutationObserver(fix).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['href'] })
+        fix()
+      })()
+    </script>
   </body>
 </html>

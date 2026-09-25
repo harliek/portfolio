@@ -96,7 +96,7 @@ export const PROJECTS: Project[] = [
     order: 1,
     name: 'AI Leasing Agent',
     displayName: 'AI Leasing Agent',
-    displaySubtitle: 'Defined workflow and development requirements for an AI agent',
+    displaySubtitle: 'Requirements, workflow design, and testing for an AI leasing assistant',
     label: 'Workflow requirements and testing at Valiance Capital',
     category: 'Valiance Capital',
     summary: 'Workflow requirements and testing for a third-party leasing assistant adopted across 18 properties.',
@@ -114,7 +114,7 @@ export const PROJECTS: Project[] = [
     next: 'jumpstart-finance',
     seo: {
       title: 'AI Leasing Agent',
-      description: 'Requirements, workflow documentation, and testing for a third-party AI leasing assistant adopted across 18 Valiance Capital properties.',
+      description: 'Requirements, workflow design, and testing for an AI leasing assistant at Valiance Capital, deployed across 18 properties.',
     },
   },
   {
@@ -123,7 +123,7 @@ export const PROJECTS: Project[] = [
     order: 2,
     name: 'Jumpstart Finance',
     displayName: 'Jumpstart Finance',
-    displaySubtitle: 'CEO of gamified financial education platform concept and prototype',
+    displaySubtitle: 'Product development for a financial education app concept',
     label: 'Financial education startup developed during a student venture program',
     category: 'Student venture',
     summary: 'A financial education concept and mobile prototype developed at the European Innovation Academy in Porto.',
@@ -137,15 +137,15 @@ export const PROJECTS: Project[] = [
     cover: 'obj-jumpstart-finance',
     // The three original prototype screens beside the introduction.
     hero: [
-      { image: 'jf-screen-lessons', sizes: '(min-width: 1100px) 190px, 28vw' },
-      { image: 'jf-screen-progress', sizes: '(min-width: 1100px) 190px, 28vw' },
-      { image: 'jf-screen-community', sizes: '(min-width: 1100px) 190px, 28vw' },
+      { image: 'jf-screen-progress', sizes: '(min-width: 1100px) 190px, 26vw' },
+      { image: 'jf-screen-lessons', sizes: '(min-width: 1100px) 190px, 26vw' },
+      { image: 'jf-screen-community', sizes: '(min-width: 1100px) 190px, 26vw' },
     ],
     accent: 'jumpstart-finance',
     next: 'merchandising-platform',
     seo: {
       title: 'Jumpstart Finance',
-      description: 'A financial education startup concept and mobile prototype developed by a five-person team at the European Innovation Academy in 2024.',
+      description: 'Product development for a financial education app concept at the European Innovation Academy in Porto, 2024.',
     },
   },
   {
@@ -154,7 +154,7 @@ export const PROJECTS: Project[] = [
     order: 3,
     name: 'Merchandising Platform',
     displayName: 'Merchandising Platform',
-    displaySubtitle: 'Prototype: a centralized internal tool connecting product data, inventory, and workflows for merchandising team',
+    displaySubtitle: 'An independent prototype for product analysis and replenishment planning',
     label: 'Independent merchandising application prototype',
     category: 'Independent prototype',
     summary: 'An independent application prototype for reviewing product, pricing, inventory, and vendor information with synthetic data.',
@@ -172,7 +172,7 @@ export const PROJECTS: Project[] = [
     next: 'spreadsheet-agent',
     seo: {
       title: 'Merchandising Platform',
-      description: 'An independent merchandising prototype on synthetic data, where each reorder quantity shows its working before export.',
+      description: 'An independent prototype for product analysis and replenishment planning, using synthetic data.',
     },
   },
   {
@@ -181,17 +181,17 @@ export const PROJECTS: Project[] = [
     order: 4,
     name: 'Spreadsheet Agent',
     displayName: 'Spreadsheet Agent',
-    displaySubtitle: 'Built an agent that retrieves data and generates spreadsheets',
-    label: 'Spreadsheet interaction prototype with simulated AI responses',
+    displaySubtitle: 'A rules-based prototype for generating editable spreadsheets from written requests',
+    label: 'Rules-based spreadsheet prototype',
     category: 'Independent prototype',
-    summary: 'An independent prototype that takes a typed request to a reviewed plan and an editable sheet, with simulated AI responses.',
+    summary: 'A rules-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
     year: '2026',
     dateRange: '2026',
     role: 'Independent project',
     org: 'Independent',
     status: 'Independent prototype',
     description: 'A request, a reviewable plan, and an editable spreadsheet.',
-    meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Prototype with simulated AI responses' },
+    meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Rules-based prototype using synthetic data' },
     cover: 'obj-spreadsheet-agent',
     // The first step's screenshot (the request), the whole interface.
     hero: [{ image: 'sa-ui-request', sizes: '(min-width: 1408px) 620px, (min-width: 900px) 46vw, calc(100vw - 48px)' }],
@@ -199,7 +199,7 @@ export const PROJECTS: Project[] = [
     next: 'cafepress-uk',
     seo: {
       title: 'Spreadsheet Agent',
-      description: 'A spreadsheet agent prototype that shows a reviewable plan before building a sheet, with simulated AI responses.',
+      description: 'A rules-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
     },
   },
   {
@@ -208,7 +208,7 @@ export const PROJECTS: Project[] = [
     order: 5,
     name: 'CafePress UK',
     displayName: 'CafePress UK',
-    displaySubtitle: 'UK market research and storefront prototyping',
+    displaySubtitle: 'Market research, assortment planning, and early UK storefront prototyping',
     label: 'UK market research and storefront prototype',
     category: 'PlanetArt internship',
     summary: 'UK market research and a localized storefront prototype during a PlanetArt internship.',
@@ -226,7 +226,7 @@ export const PROJECTS: Project[] = [
     next: 'client-work',
     seo: {
       title: 'CafePress UK',
-      description: 'UK promotional products market research and a localized CafePress storefront prototype, developed during a PlanetArt internship.',
+      description: 'Market research, assortment planning, and early UK storefront prototyping during a PlanetArt internship.',
     },
   },
   {
@@ -235,7 +235,7 @@ export const PROJECTS: Project[] = [
     order: 6,
     name: 'Creative Production',
     displayName: 'Creative Production',
-    displaySubtitle: 'Creative strategy, production, and client support at Shift Content',
+    displaySubtitle: 'Client film production at Shift Content',
     label: 'Client film production at Shift Content',
     category: 'Shift Content internship',
     summary: 'Production support on client films and related agency work during an internship at Shift Content in London.',
@@ -253,7 +253,7 @@ export const PROJECTS: Project[] = [
     next: 'ai-leasing-agent',
     seo: {
       title: 'Creative Production',
-      description: 'Lighting, camera work, B-roll, and editing on three client films at Shift Content in London.',
+      description: 'Client film production at Shift Content in London.',
     },
   },
 ]

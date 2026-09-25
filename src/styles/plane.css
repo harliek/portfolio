@@ -53,13 +53,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5%;
+  gap: 4%;
 }
 
+/* Each phone at the same height, its own width from its proportions. */
 .plane__screen {
   display: block;
-  height: 88%;
-  aspect-ratio: 600 / 1210;
+  height: 84%;
 }
 
 .plane__screen:nth-child(2) {
@@ -68,10 +68,111 @@
 
 .plane__screen img {
   display: block;
-  width: 100%;
+  width: auto;
   height: 100%;
-  object-fit: contain;
   filter: drop-shadow(0 14px 18px rgb(0 0 0 / 0.45));
+}
+
+/*
+ * Cutouts: real interface elements, each its own transparent image placed
+ * in the 16:10 box (x, y and width in percent, field.ts), floating with a
+ * soft shadow; the page shows around and between them.
+ */
+.plane__cutouts {
+  position: absolute;
+  inset: 0;
+}
+
+.plane__cut {
+  position: absolute;
+  display: block;
+}
+
+.plane__cut img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 12px 20px rgb(0 0 0 / 0.5));
+}
+
+/*
+ * The leasing conversation as live message bubbles (after the REUI message
+ * pattern): the renter's turns on the left in light pink bubbles with initials,
+ * the assistant's on the right in light blue with its mark, the
+ * avatars at the foot of each turn. Sized to the tile (container units), so
+ * the words stay readable wherever the tile is shown.
+ */
+.plane__chat {
+  position: absolute;
+  inset: 0;
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2.4cqw;
+  padding: 0 4%;
+}
+
+.chat-msg {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.6cqw;
+  max-width: 84%;
+}
+
+.chat-msg[data-from='assistant'] {
+  flex-direction: row-reverse;
+  align-self: flex-end;
+}
+
+.chat-msg__avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 6.2cqw;
+  height: 6.2cqw;
+  border-radius: 50%;
+  background: #eeb3c8;
+  font-family: var(--font-sans);
+  font-size: 2.6cqw;
+  font-weight: 600;
+  line-height: 1;
+  color: #1c1a24;
+}
+
+.chat-msg[data-from='assistant'] .chat-msg__avatar {
+  background: #3d6fa8;
+  color: #eef5ff;
+}
+
+.chat-msg__avatar svg {
+  width: 56%;
+  height: 56%;
+}
+
+.chat-msg__bubble {
+  margin: 0;
+  padding: 1.5cqw 2.4cqw;
+  border-radius: 3cqw;
+  border-bottom-left-radius: 0.8cqw;
+  background: #f9dce6;
+  font-family: var(--font-sans);
+  font-size: clamp(9px, 2.5cqw, 15px);
+  line-height: 1.38;
+  color: #1c1a24;
+  box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.6);
+}
+
+.chat-msg[data-from='assistant'] .chat-msg__bubble {
+  border-bottom-left-radius: 3cqw;
+  border-bottom-right-radius: 0.8cqw;
+  background: #cfe3fb;
+  color: #0e1d30;
+}
+
+/* In the small next-project thumbnail the conversation keeps its proportions rather than a readable minimum. */
+.cx-next__frame .chat-msg__bubble {
+  font-size: 2.5cqw;
 }
 
 @media (prefers-reduced-motion: reduce) {

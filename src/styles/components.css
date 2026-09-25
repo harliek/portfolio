@@ -467,3 +467,75 @@ html.is-dialog-open {
   height: 100%;
   object-fit: contain;
 }
+
+
+/* ----------------------------------------------------------------------- */
+/* Stateful buttons (Stateful.tsx; after Aceternity's stateful button, red)  */
+/* ----------------------------------------------------------------------- */
+
+/*
+ * A red pill with white text and a red ring on hover and focus. When pressed,
+ * a spinning loader grows in before the label while the action runs, then a
+ * check replaces it for two seconds.
+ */
+.stateful {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    box-shadow 200ms var(--ease-standard),
+    background-color 200ms var(--ease-standard);
+}
+
+.stateful:hover,
+.stateful:focus-visible,
+:hover > .stateful,
+:focus-visible > .stateful {
+  box-shadow:
+    0 0 0 2px #0a0a0c,
+    0 0 0 4px var(--red);
+}
+
+.stateful__loader,
+.stateful__check {
+  flex: none;
+  width: 0;
+  margin-right: 0;
+  opacity: 0;
+  transform: scale(0);
+  transition:
+    width 200ms var(--ease-standard),
+    margin 200ms var(--ease-standard),
+    opacity 200ms var(--ease-standard),
+    transform 200ms var(--ease-standard);
+}
+
+.stateful[data-state='loading'] .stateful__loader,
+.stateful[data-state='done'] .stateful__check {
+  width: 20px;
+  margin-right: 8px;
+  opacity: 1;
+  transform: scale(1);
+}
+
+.stateful[data-state='loading'] .stateful__loader {
+  animation: stateful-spin 0.6s linear infinite;
+}
+
+@keyframes stateful-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stateful[data-state='loading'] .stateful__loader {
+    animation: none;
+  }
+}

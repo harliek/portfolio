@@ -43,8 +43,10 @@
  * carousel transition's landing slot), lit in the project's own accent, standing on the same floor as
  * the text: its base and its caption ("Concept cover", `coverLabel`, null to omit; styled like every
  * media label) end level with the lede's last line, and it fits the height of the text beside it
- * (`coverSize` scales it, default 1). Phones: one column, the smaller cover between the metadata and
- * the summary. CaseOpening is exported for layouts that share this opening (the Creative Production page).
+ * (`coverSize` scales it, default 1). Beside a short opening it keeps a floor of its balanced size
+ * (80% of COVER_HEIGHT from 960px): then its top is level with the title's and the extra height falls
+ * below the summary. Phones: one column, the smaller cover between the metadata and the summary.
+ * CaseOpening is exported for layouts that share this opening (the Creative Production page).
  *
  * Desktop (≥960px): a centred grid (the site's 1240px content width), 42% text / 6% gap / 52% media,
  * body 18 to 19px. The opening spans both columns (text left, cover right); below it the story and,
@@ -172,8 +174,8 @@ const STAGE_SIZES = '(min-width: 1368px) 645px, (min-width: 960px) 47vw, calc(10
 /**
  * The opening cover's greatest height (CSS px) per object, balanced by eye so a thin phone and a wide
  * laptop carry comparable weight. Independent of the homepage's object sizes. Beside the text it is
- * also fitted to the height of the title, metadata, summary and status line (case.css .cs-cover);
- * phones scale it down (--cover-hmax).
+ * also fitted to the height of the title, metadata, summary and status line, but never below a floor
+ * of this height (case.css .cs-cover, --cover-h); phones scale it down (--cover-hmax).
  */
 const COVER_HEIGHT: Record<ObjectKind, number> = {
   monitor: 232,
@@ -196,10 +198,15 @@ function CaseCover({ project, size = 1, label }: { project: Project; size?: numb
   if (!item) return null
   const image = getImage(item.image)
   const r = image.width / image.height
-  const width = COVER_HEIGHT[item.kind] * r * size
+  const height = COVER_HEIGHT[item.kind] * size
+  const width = height * r
   const scale = width / coverSlotWidth(item, 1)
   return (
-    <div className="cs-cover" data-kind={item.kind} style={{ '--cover-r': r, '--cover-max': `${Math.round(width)}px` } as CSSProperties}>
+    <div
+      className="cs-cover"
+      data-kind={item.kind}
+      style={{ '--cover-r': r, '--cover-max': `${Math.round(width)}px`, '--cover-h': `${Math.round(height)}px` } as CSSProperties}
+    >
       <CoverSlot id={project.accent} scale={scale} />
       {label && (
         <span className="cs-media-label cs-cover__label" data-cover-reveal="">

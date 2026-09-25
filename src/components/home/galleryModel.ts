@@ -14,13 +14,14 @@ import { getImage } from '../../content/media'
  * - scale: the slot's display area (1 selected, 0.8 beside it, 0.65 at the
  *   outer slots); each silhouette fits that area (contain) × its own factor;
  * - bottom edge: on one shallow symmetrical curve (the selected object
- *   lowest, the neighbours about 24px higher, the outer objects about 44px);
+ *   lowest, the neighbours about 24px higher, the outer objects about 44px,
+ *   as if standing further back on the room's floor);
  * - a gentle turn towards the centre, symmetrical on both sides;
  * - x: at each resting position (an integer `pos`) the neighbours stand a
  *   fixed silhouette gap from the selected object (more where two shown
  *   labels need the room), the outer ones beyond; in between, each object
  *   follows a smooth monotone curve through its own resting places;
- * - light and label size and opacity: knot tables over a.
+ * - light, floor reflection and label size and opacity: knot tables over a.
  *
  * Every measure is taken on the silhouette (GALLERY.opaque), so the thin
  * transparent margin of a PNG never changes a gap or a bottom edge: the
@@ -57,6 +58,13 @@ export interface SceneFrame {
   labelH?: number
   /** The controls beneath the carousel, with their gap above (px). */
   nav?: number
+  /**
+   * The height the stage and the controls may take in the first view: from
+   * the carousel's top (beneath the title) to the window's lower edge, less
+   * the section's bottom padding (px). Without it, the window below the
+   * header less GALLERY.stage.margin above and below.
+   */
+  avail?: number
 }
 
 export interface Scene {
@@ -106,9 +114,10 @@ export interface Placement {
   vis: number
   /** Opacity. */
   op: number
-  /** Light by slot (GALLERY.slot). */
+  /** Light by slot (GALLERY.slot) and the floor reflection's opacity (GALLERY.ground). */
   glow: number
   dim: number
+  reflect: number
   /** Label: scale, title and description opacity (before collision control), centre offset from x (px). */
   ls: number
   lt: number
@@ -118,7 +127,7 @@ export interface Placement {
   z: number
 }
 
-export const newPlacement = (): Placement => ({ d: 0, a: 0, s: 1, turn: 0, x: 0, base: 0, vis: 1, op: 1, glow: 0, dim: 0, ls: 1, lt: 1, lsub: 1, lc: 0, z: 100 })
+export const newPlacement = (): Placement => ({ d: 0, a: 0, s: 1, turn: 0, x: 0, base: 0, vis: 1, op: 1, glow: 0, dim: 0, reflect: 0, ls: 1, lt: 1, lsub: 1, lc: 0, z: 100 })
 
 const N = GALLERY_ITEMS.length
 /** Resting slots kept per position: −4 to 4. */
@@ -139,6 +148,17 @@ const OBJ = GALLERY_ITEMS.map((item) => {
 export function silhouetteOrigin(kind: ObjectKind) {
   const o = GALLERY.opaque[kind]
   return { x: o.x + o.w / 2, y: o.y + o.h }
+}
+
+/**
+ * Where an object's contact shadow lies in its image box (shares of the
+ * box): its centre and width, from GALLERY.ground.shadow (shares of the
+ * silhouette's width).
+ */
+export function groundShadow(kind: ObjectKind) {
+  const o = GALLERY.opaque[kind]
+  const g = GALLERY.ground.shadow[kind]
+  return { x: o.x + o.w * g.x, w: o.w * g.w }
 }
 
 /** The item selected at a fresh visit: Merchandising Platform (About Me on its left, CafePress UK Launch on its right). */
@@ -337,9 +357,10 @@ export function place(pos: number, scene: Scene, out: Placement[]) {
     o.op = o.vis
     o.glow = knot(slot.glow, o.a)
     o.dim = knot(slot.dim, o.a)
+    o.reflect = knot(GALLERY.ground.reflection.opacity, o.a)
     o.ls = labelScale(o.a)
-    // Tablets and phones: the selected object's caption only.
-    const side = p.sideLabels ? 1 : 1 - smoothstep(0.3, 0.7, o.a)
+    // Tablets and phones: the selected object's caption only, gone before the next one's appears (GALLERY.label.solo).
+    const side = p.sideLabels ? 1 : 1 - smoothstep(GALLERY.label.solo.fade[0], GALLERY.label.solo.fade[1], o.a)
     o.lt = knot(slot.title, o.a) * side
     o.lsub = subShown(o.a) * side
     o.lc = labelOffset(scene, i, o.s, o.turn)
@@ -369,9 +390,9 @@ const NAV_H = 44 + 14
  * fits the class's rule (desktop: the widest trio with its gaps and some
  * room at the edges; tablet and phone: the widest selected object within
  * `fit` of the width) and the height: the objects, labels and controls
- * stand within the window below the header, with GALLERY.stage.margin to
- * spare above and below (the carousel's section is scrolled into view below
- * the first view, brief v14).
+ * stand within the first view beneath the title (`frame.avail`, brief v15),
+ * so the objects stand on the room's floor with their captions and controls
+ * above the window's lower edge.
  */
 export function buildScene(W: number, H: number, frame: SceneFrame = {}): Scene {
   const cls = widthClass(W)
@@ -379,7 +400,8 @@ export function buildScene(W: number, H: number, frame: SceneFrame = {}): Scene 
   const header = frame.header ?? 61
   const labelH = frame.labelH ?? LABEL_H
   const nav = frame.nav ?? NAV_H
-  const { top, bottom, margin } = GALLERY.stage
+  const { bottom, margin } = GALLERY.stage
+  const top = GALLERY.stage.top[cls]
   const { hover } = GALLERY
   const lw = cls === 'phone' ? Math.min(GALLERY.label.width.phone, W - 2 * GALLERY.label.inset) : Math.min(GALLERY.label.width[cls], W - 2 * GALLERY.label.inset)
   const gap = clamp(p.gap.share * W, p.gap.min, p.gap.max)
@@ -406,7 +428,8 @@ export function buildScene(W: number, H: number, frame: SceneFrame = {}): Scene 
   sizeObjects(scene, p.area.w, p.area.h)
   const tallest = Math.max(...scene.sh)
   const fixed = top + bottom + GALLERY.label.gap + labelH + nav
-  const byHeight = (H - header - 2 * margin - fixed) / (tallest * hover.scale)
+  const avail = frame.avail ?? H - header - 2 * margin
+  const byHeight = (avail - fixed) / (tallest * hover.scale)
   let byWidth: number
   const edgeRoom = clamp(p.edgeRoom.at1280 + p.edgeRoom.perPx * (W - 1280), p.edgeRoom.min, p.edgeRoom.max)
   if (cls === 'desktop') byWidth = (W - 2 * gap - 2 * edgeRoom) / widestTrio(scene)

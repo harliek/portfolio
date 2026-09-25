@@ -5,7 +5,9 @@ import type { ObjectKind } from '../content/carousel'
  * geometry is in src/components/home/galleryModel.ts; the order, names and
  * subtitles are in src/content/carousel.ts). Plan v11, deliverables 4 to 10,
  * with plan v12, brief v13 (automatic rotation, the pause control, the
- * hover contour) and brief v14 (the carousel just below the first view).
+ * hover contour) and brief v15 (the objects stand on the room's floor in
+ * the first view, beneath the title, grounded by contact shadows and faint
+ * reflections; nothing floats).
  *
  * Model. The seven objects (About Me and the six projects) stand on one
  * shallow, symmetrical curve, each one an object-label group: its
@@ -61,6 +63,32 @@ export const GALLERY = {
   /** Where the label is centred, as a share of the silhouette's width (the mug's body, not its handle). */
   center: { headshot: 0.5, monitor: 0.5, mug: 0.42, laptop: 0.5, tablet: 0.5, camera: 0.5, phone: 0.5 } as Record<ObjectKind, number>,
 
+  /**
+   * Grounding on the room's glossy floor (home.css, brief v15). `shadow`:
+   * each object's soft contact shadow, centred at `x` and `w` wide as shares
+   * of its silhouette's width, around what actually meets the floor
+   * (measured on the lowest 4% of each PNG's opaque pixels): the monitor's
+   * stand, the mug's body without its handle, the camera's base, the full
+   * width of the laptop, tablet and phone, a narrower pool under the portrait's
+   * bust. The reflection (every object but the portrait, whose bust fades
+   * out before the floor): the PNG mirrored about its visual baseline at
+   * `reflection.opacity` by slot distance (a = 0, 1, 2), fading out over
+   * `reflection.depth` px (at u = 1) with a slight `blur` (px), like the
+   * floor's own soft reflections of the pillars.
+   */
+  ground: {
+    shadow: {
+      headshot: { x: 0.5, w: 0.7 },
+      monitor: { x: 0.5, w: 0.52 },
+      mug: { x: 0.37, w: 0.66 },
+      laptop: { x: 0.5, w: 0.98 },
+      tablet: { x: 0.5, w: 0.9 },
+      camera: { x: 0.56, w: 0.9 },
+      phone: { x: 0.5, w: 0.9 },
+    } as Record<ObjectKind, { x: number; w: number }>,
+    reflection: { opacity: [0.2, 0.15, 0.09], depth: 64, blur: 1.5 },
+  },
+
   /** Slot rules (knots at a = 0, 1, 2, 3), the same for every object. */
   slot: {
     /** Scale of the display area: selected 1, neighbours 0.8, outer objects 0.65. */
@@ -106,8 +134,9 @@ export const GALLERY = {
    *   and phones show the selected object's caption only; their neighbours
    *   are glimpses at the edges).
    * - `u`: the size factor's bounds; within them the objects, labels and
-   *   controls fit the window below the header (the carousel is scrolled
-   *   into view below the first view, brief v14).
+   *   controls fit the first view beneath the title (brief v15: the height
+   *   from the carousel's top to the window's lower edge). A window too
+   *   short for the smallest size scrolls a little further.
    */
   layout: {
     desktop: {
@@ -163,11 +192,33 @@ export const GALLERY = {
    * overlapping). A label reaching past the window's edge fades out before
    * it is cut (`visible`: the share of it inside), so a caption is either
    * whole or gone, also as the carousel turns.
+   *
+   * Tablets and phones show one caption, the selected object's (`solo`): it
+   * follows its object by `pull` of the object's offset from the centre (so
+   * the caption, nearly as wide as a phone, stays whole in the window while
+   * the carousel turns), and fades out between `fade` distances, before the
+   * next object's caption fades in (the two never show together).
    */
-  label: { gap: 20, width: { desktop: 440, tablet: 420, phone: 360 }, inset: 16, lines: 2, clear: 18, clearObject: 2, yieldPx: 10, visible: [0.975, 1] },
+  label: {
+    gap: 20,
+    width: { desktop: 440, tablet: 420, phone: 360 },
+    inset: 16,
+    lines: 2,
+    clear: 18,
+    clearObject: 2,
+    yieldPx: 10,
+    visible: [0.975, 1],
+    solo: { pull: 0.4, fade: [0.3, 0.48] },
+  },
 
-  /** The stage: room above the selected object (for its glow), below the labels, and around the whole carousel in its section (px). */
-  stage: { top: 30, bottom: 10, margin: 28 },
+  /**
+   * The stage: room above the tallest object (for its glow and the hover's
+   * growth) per width class, and below the labels (px). Phones keep less
+   * above (touch has no hover growth), so small phones keep the controls in
+   * the first view. `margin`: the room kept above and below the carousel
+   * when no first-view height is measured yet (px).
+   */
+  stage: { top: { desktop: 30, tablet: 30, phone: 18 }, bottom: 10, margin: 28 },
 
   /**
    * An arrow or keyboard step: `ms` for one object (a longer move adds
@@ -222,11 +273,10 @@ export const GALLERY = {
    *   pause begins it comes to a stop over this long (a short glide, never a
    *   jolt).
    * - `inView`: it runs only while at least this share of the stage is in
-   *   the window above its lowest `belowFold` share (where the first view
-   *   shows only the objects' tops, brief v14), so the carousel starts
-   *   turning once the visitor has scrolled to it, not while it peeks in.
+   *   the window (the carousel stands in the first view, brief v15; it
+   *   stops once the page is scrolled well past it).
    */
-  auto: { revolutionS: 45, startMs: 1600, afterInputMs: 3000, afterHoverMs: 1200, easeInMs: 1800, easeOutMs: 380, inView: 0.4, belowFold: 0.12 },
+  auto: { revolutionS: 45, startMs: 1600, afterInputMs: 3000, afterHoverMs: 1200, easeInMs: 1800, easeOutMs: 380, inView: 0.5 },
   /** Reduced motion: steps cross-fade (ms out, ms in); a horizontal trackpad gesture moves one step after this much scrolling (px), one per gesture (`gapMs`). */
   reduced: { outMs: 120, inMs: 240, wheelPx: 40, gapMs: 220 },
   /**

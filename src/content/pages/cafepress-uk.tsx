@@ -15,7 +15,9 @@ import type { CaseMedia, Rect, StorySection } from '../../components/case/CaseSc
  * UK”; the metadata repeats the cover's subtitle (UK market research and
  * storefront prototype) and the status line says it was a prototype for a
  * potential UK launch, so the page and the cover describe the same work and
- * nothing says a store launched. The cover's embedded “UK Launch” wording is in
+ * nothing says a store launched. The status line does not repeat
+ * “storefront” (the metadata and the summary above it already say storefront
+ * prototype). The cover's embedded “UK Launch” wording is in
  * docs/asset-checklist.md.
  *
  * Sources (PlanetArt/planetart presentation.pdf, titled “CafePress UK B2B
@@ -71,7 +73,7 @@ export const CAFEPRESS_UK = {
       operational readiness. Then I <strong>coded a localized storefront prototype</strong> from the findings.
     </p>
   ),
-  status: 'Storefront prototype for a potential UK launch',
+  status: 'Prototype for a potential UK launch',
   media: {
     kind: 'states',
     // The storefront and the header crops are 16:9; the products crop is a little wider and sits centred in the same frame.

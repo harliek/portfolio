@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom'
 import { fallbackSrc, getImage, getVideo, type ImageId, type VideoAsset, type VideoId } from '../../content/media'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { DemoControls } from './DemoControls'
-import { enterFullscreen, NATIVE_FULLSCREEN } from './fullscreen'
+import { enterFullscreen, NATIVE_FULLSCREEN, returnFocus } from './fullscreen'
 import { closeOnCancel, closeWithFade } from './dialogExit'
 import { ResponsiveImage } from './ResponsiveImage'
 import { drawUnderlay, onFramePresented, type Underlay } from './videoFrame'
@@ -259,8 +259,15 @@ export function DemoVideo({ video: id, full: fullId, label, map, poster, sizes, 
     else if (!reduced) tryPlay()
   }, [reduced, autoPause, tryPlay])
 
+  // The recording itself in full screen (touch Expand): leaving it returns focus to Expand when nothing holds it.
   useEffect(() => {
-    const onChange = () => setFullscreen(Boolean(videoRef.current) && document.fullscreenElement === videoRef.current)
+    const onChange = () => {
+      const own = Boolean(videoRef.current) && document.fullscreenElement === videoRef.current
+      setFullscreen((was) => {
+        if (was && !own) requestAnimationFrame(() => returnFocus(expandRef.current))
+        return own
+      })
+    }
     document.addEventListener('fullscreenchange', onChange)
     return () => document.removeEventListener('fullscreenchange', onChange)
   }, [])
@@ -635,7 +642,7 @@ function VideoDialog({ asset, posterSrc, label, start, onClose }: VideoDialogPro
             )}
           </p>
           <div className="image-dialog__controls">
-            <button ref={closeRef} type="button" className="button button--small" onClick={() => closeWithFade(dialogRef.current)}>
+            <button ref={closeRef} type="button" className="button button--secondary button--small" onClick={() => closeWithFade(dialogRef.current)}>
               <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
                 <path d="m3.5 3.5 9 9m0-9-9 9" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               </svg>

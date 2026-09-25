@@ -198,7 +198,7 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
                 <button type="button" className="button button--secondary button--small" onClick={() => setDetail((d) => !d)}>
                   {detail ? 'Fit to screen' : 'Actual size'}
                 </button>
-                <button ref={closeRef} type="button" className="button button--small" onClick={close}>
+                <button ref={closeRef} type="button" className="button button--secondary button--small" onClick={close}>
                   <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
                     <path d="m3.5 3.5 9 9m0-9-9 9" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                   </svg>

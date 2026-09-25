@@ -1,35 +1,34 @@
 /**
  * The persistent background set (StageBackground, mounted once in PageShell):
- * the film on the homepage, a quiet near-black ground on every other page
- * (case studies, About, the not-found page; no architectural video, walls,
- * floor or reflection line). CSS-side values (the film's overlay, the
- * ground's faint tone) live in src/styles/stage.css.
+ * the room (a dark architectural corridor, brief v15) on the homepage, a
+ * quiet near-black ground on every other page (case studies, About, the
+ * not-found page; no video, walls, floor or reflection line). CSS-side
+ * values (the room's shade, the ground's faint tone) live in
+ * src/styles/stage.css; the media in STAGE_MEDIA.room (src/content/media.ts).
  */
 export const STAGE = {
   background: {
-    /** Choose the smaller film file below this width (one file per device, chosen once). */
-    mobileBelow: 600,
-    /** The film fades in over its poster once frames are actually playing (ms). */
+    /** Portrait windows narrower than this take the room's portrait crop (the full frame otherwise). */
+    portraitBelow: 600,
+    /** The room fades in over its poster once frames are actually playing (ms; the same picture, so it cannot be seen). */
     fadeInMs: 800,
     /**
-     * The page's visible images load before the film is requested, so on a
-     * slow connection the content (not the decorative film) gets the
-     * bandwidth first; the film starts after at most this long regardless (ms).
+     * The page's visible images load before the room is requested, so on a
+     * slow connection the content (not the decorative video) gets the
+     * bandwidth first; the video starts after at most this long regardless (ms).
      */
     contentFirstMaxMs: 4000,
   },
-  film: {
+  room: {
     /**
-     * Arriving on the homepage, the film fades in over the near-black ground
-     * over this long (ms); leaving it, the film fades out quicker
-     * (`fadeOutMs`), so the next page's content is not seen over the film for
+     * Arriving on the homepage, the room fades in over the near-black ground
+     * over this long (ms); leaving it, the room fades out quicker
+     * (`fadeOutMs`), so the next page's content is not seen over the room for
      * long. While a project opens from the carousel, at the transition's
      * quicker pace (stage.css `data-hurry`).
      */
     fadeMs: 550,
     fadeOutMs: 260,
-    /** The film's veil darkens slightly as the page scrolls this share of the window height (the projects entering). */
-    enterShare: 0.85,
   },
 } as const
 

@@ -1,20 +1,21 @@
 /*
  * The settings behind every professional page: the persistent background
- * set (StageBackground, mounted once so the film never restarts), a
+ * set (StageBackground, mounted once so the room's video never restarts), a
  * route-transition helper, and the pointer trail canvas.
  *
  * Two layers of the set:
  * - the ground (`.stage-bg` itself): a quiet near-black behind every page.
- *   Case studies, About and the not-found page show only this (plan v12
- *   item 10): no architectural walls, reflective floor or reflection line,
- *   and no architectural video. A faint cool lift at the top and a soft
- *   darkening towards the edges keep it from reading as a dead flat black;
- *   nothing in it has an edge or a line, so text reads over it anywhere;
- * - the film (`.stage-film`, the homepage): the original film of Harlie's
- *   first portfolio homepage behind the opening and the projects, with a
- *   restrained overlay (below). It lies over the ground and cross-fades with
- *   it when the route changes: one layer fading over a steady one, so there
- *   is never a black flash or a double exposure of two pictures.
+ *   Case studies, About and the not-found page show only this: no
+ *   architectural walls, reflective floor or reflection line, and no video.
+ *   A faint cool lift at the top and a soft darkening towards the edges keep
+ *   it from reading as a dead flat black; nothing in it has an edge or a
+ *   line, so text reads over it anywhere;
+ * - the room (`.stage-scene`, the homepage, brief v15): a dark architectural
+ *   corridor behind the title and the project objects, which stand on its
+ *   floor, with a restrained shade (below). It lies over the ground and
+ *   cross-fades with it when the route changes: one layer fading over a
+ *   steady one, so there is never a black flash or a double exposure of two
+ *   pictures.
  */
 
 /* ----------------------------------------------------------------------- */
@@ -35,126 +36,107 @@
 
 /*
  * A project is opening from the carousel (StageBackground data-hurry): the
- * destination's ground replaces the film quickly, so the new page's text
- * never appears over the film.
+ * destination's ground replaces the room quickly, so the new page's text
+ * never appears over the room.
  */
-.stage-bg[data-hurry] .stage-film {
+.stage-bg[data-hurry] .stage-scene {
   transition-duration: 200ms;
 }
 
 /* ----------------------------------------------------------------------- */
-/* The film (homepage)                                                      */
+/* The room (homepage)                                                      */
 /* ----------------------------------------------------------------------- */
 
 /*
  * Over the ground, shown on the homepage only (`data-shown`), cross-fading
- * with it on a route change (--film-fade; quicker with data-hurry). Its
- * own dark base, so an unloaded poster reads as the film's darkness.
- * Object-fit cover with the original framing (centred, never stretched);
- * narrow portrait windows crop a little right of centre, where the subject
- * stands and lies.
+ * with it on a route change (--scene-fade; quicker with data-hurry). Its
+ * own dark base, so an unloaded poster reads as the room's darkness.
+ * Object-fit cover about the centre, so the corridor's vanishing point
+ * stays at the middle of the window and its floor fills the lower third,
+ * at every size (portrait phones have their own centred crop of the same
+ * frames, StageBackground).
  */
-.stage-film {
-  --film-enter: 0;
-  --film-x: 50%;
+.stage-scene {
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: #030305;
+  background: #030306;
   opacity: 0;
-  transition: opacity var(--film-fade, 700ms) var(--ease-standard);
+  transition: opacity var(--scene-fade, 700ms) var(--ease-standard);
 }
 
-.stage-film[data-shown] {
+.stage-scene[data-shown] {
   opacity: 1;
 }
 
-/* Leaving the homepage: out quicker than in, so the next page is not seen over the film for long. */
-.stage-film:not([data-shown]) {
-  transition-duration: var(--film-fade-out, 260ms);
+/* Leaving the homepage: out quicker than in, so the next page is not seen over the room for long. */
+.stage-scene:not([data-shown]) {
+  transition-duration: var(--scene-fade-out, 260ms);
 }
 
-@media (max-aspect-ratio: 4 / 5) {
-  .stage-film {
-    --film-x: 54%;
-  }
-}
-
-.stage-film__poster,
-.stage-film__poster img,
-.stage-film__video {
+.stage-scene__poster,
+.stage-scene__poster img,
+.stage-scene__video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   max-width: none;
   object-fit: cover;
-  object-position: var(--film-x) 50%;
+  object-position: 50% 50%;
 }
 
-.stage-film__video {
+.stage-scene__video {
   opacity: 0;
   transition: opacity var(--bg-video-fade, var(--dur-4)) var(--ease-standard);
 }
 
-.stage-film__video[data-playing] {
+.stage-scene__video[data-playing] {
   opacity: 1;
 }
 
 /*
- * Readability, restrained (the footage stays clearly visible): a shade
- * under the header; a soft gradient, darker on the left, behind the
- * introduction (::before); and the original's light veil (::after). As the
- * projects enter (--film-enter, 0 to 1 over about one window of scroll,
- * StageBackground) the veil deepens slightly and the left side evens out,
- * so the carousel stands on an even ground. Never a solid black section.
+ * The room's shade, restrained (its own indigo, violet, teal and the small
+ * red uplights stay as they are; nothing is added): a shade under the
+ * header; a soft darkening at the far left and right, where the nearest
+ * pillars and their red uplights would pull the eye from the objects; and a
+ * low shade along the bottom edge, under the carousel's controls. The
+ * title and the captions carry their own local shades (home.css). Never a
+ * solid band.
  */
-.stage-film__shade,
-.stage-film__shade::before,
-.stage-film__shade::after {
+.stage-scene__shade,
+.stage-scene__shade::before,
+.stage-scene__shade::after {
   position: absolute;
   inset: 0;
 }
 
-.stage-film__shade {
-  background: linear-gradient(to bottom in oklch, rgb(2 2 5 / 0.46), rgb(2 2 5 / 0.14) 11%, rgb(2 2 5 / 0) 22%);
+.stage-scene__shade {
+  background: linear-gradient(to bottom in oklch, rgb(2 2 5 / 0.5), rgb(2 2 5 / 0.14) 12%, rgb(2 2 5 / 0) 24%);
 }
 
-.stage-film__shade::before {
+.stage-scene__shade::before {
   content: '';
   background: linear-gradient(
     to right in oklch,
-    rgb(2 2 5 / 0.6),
-    rgb(2 2 5 / 0.4) 22%,
-    rgb(2 2 5 / 0.14) 42%,
-    rgb(2 2 5 / 0) 60%
+    rgb(2 2 5 / 0.42),
+    rgb(2 2 5 / 0.12) 16%,
+    rgb(2 2 5 / 0) 30%,
+    rgb(2 2 5 / 0) 70%,
+    rgb(2 2 5 / 0.12) 84%,
+    rgb(2 2 5 / 0.42)
   );
-  opacity: calc(1 - 0.6 * var(--film-enter));
 }
 
-.stage-film__shade::after {
+.stage-scene__shade::after {
   content: '';
-  background: rgb(2 2 5);
-  opacity: calc(0.1 + 0.22 * var(--film-enter));
+  background: linear-gradient(to top in oklch, rgb(2 2 5 / 0.46), rgb(2 2 5 / 0.12) 12%, rgb(2 2 5 / 0) 24%);
 }
 
-/*
- * Portrait phones and tablets: the introduction spans most of the width and
- * the subject crosses behind it, so its shade is a soft band across the
- * middle of the window, where the introduction stands (it lightens as the
- * projects enter, like the left-hand shade).
- */
-@media (max-width: 999.98px) and (orientation: portrait) {
-  .stage-film__shade::before {
-    background: linear-gradient(
-      to bottom in oklch,
-      rgb(2 2 5 / 0.3),
-      rgb(2 2 5 / 0.5) 28%,
-      rgb(2 2 5 / 0.62) 42%,
-      rgb(2 2 5 / 0.58) 60%,
-      rgb(2 2 5 / 0.22) 78%,
-      rgb(2 2 5 / 0.06)
-    );
+/* Phones: the window shows only the corridor's middle, so the side shade would darken the objects' own ground. */
+@media (max-width: 599.98px) {
+  .stage-scene__shade::before {
+    opacity: 0.5;
   }
 }
 

@@ -23,13 +23,17 @@ interface GalleryObjectProps {
 
 /**
  * One PNG object of the homepage carousel, all transparent (no card, frame
- * or backing), standing over the film. No floor: no reflection, no floor
- * light, no contact shadow. In layers:
+ * or backing), standing on the room's floor (brief v15). In layers:
  *
  * - `lift`: the hover and focus wrapper (+6% about the silhouette's bottom
  *   centre, its visual baseline, so the bottom edge stays where it is; not
- *   with reduced motion) holding the art:
- *   - the PNG itself (first, so the route transition finds it); on hover
+ *   with reduced motion) holding:
+ *   - `ground`: what grounds it on the glossy floor (home.css), beneath the
+ *     art: a soft contact shadow under its base, and a faint reflection of
+ *     the PNG mirrored about its visual baseline, fading out within a
+ *     short distance (none for the portrait, whose bust fades out before
+ *     the floor);
+ *   - `art`, the PNG itself (first image, so the route transition finds it); on hover
  *     and focus it takes a thin red contour (home.css: zero-blur
  *     drop-shadows on its own alpha, about 1px, no glow or spread);
  *   - `glow`: the same image beneath it with an alpha-aware rim and halo
@@ -97,6 +101,14 @@ export function GalleryObject({ item, index, sizes, priority, objectRef, onReady
   return (
     <span ref={objectRef} className="gobj__object">
       <span className="gobj__lift">
+        <span className="gobj__ground" aria-hidden="true">
+          <span className="gobj__shadow" />
+          {item.kind !== 'headshot' && (
+            <span className="gobj__reflection">
+              <ResponsiveImage image={item.image} sizes={sizes} decorative fit="contain" priority={false} loading="eager" />
+            </span>
+          )}
+        </span>
         <span ref={artRef} className="gobj__art" data-cover-source={item.id}>
           <ResponsiveImage image={item.image} sizes={sizes} decorative fit="contain" priority={priority} loading="eager" />
           <span className="gobj__glow" aria-hidden="true">

@@ -2,8 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProp
 import type { ClientFilm } from '../../../content/pages/client-work'
 import { fallbackSrc, getImage, getVideo, type VideoAsset } from '../../../content/media'
 import { useReducedMotion } from '../../../hooks/useReducedMotion'
-import { ExpandIcon } from '../../media/ExpandIcon'
-import { enterFullscreen, NATIVE_FULLSCREEN } from '../../media/fullscreen'
+import { DemoControls } from '../../media/DemoControls'
+import { enterFullscreen, NATIVE_FULLSCREEN, returnFocus } from '../../media/fullscreen'
 import { ResponsiveImage } from '../../media/ResponsiveImage'
 import { spokenDuration } from '../../media/duration'
 import { onFramePresented } from '../../media/videoFrame'
@@ -12,22 +12,30 @@ import { FilmDialog, type FilmState } from './FilmDialog'
 /*
  * FilmPlayer: one Creative Production film in its own section (brief-v8
  * section 13), at the film's own proportions, in the case studies' player
- * frame (case.css .cs-player): the film, then the player's own bar below it
- * (Watch with sound while it previews, and Expand). No caption.
+ * frame (case.css .cs-player): the film, its picture clean (brief-v15: no
+ * timer or native timeline over it), then the compact bar below it that the
+ * product recordings use (DemoControls). No caption.
  *
  * Modes (the page, FilmScroll, coordinates the three players):
  * - Poster: never played. The poster with one obvious Watch film button (a
- *   direct gesture, so it plays from the start with sound).
+ *   direct gesture, so it plays from the start with sound), in the quiet
+ *   secondary style of the recordings' Play demo, so no solid red sits on the
+ *   film. The bar holds Play (the same action) and Expand.
  * - Preview: while `preview` is true (this film is the one most in view,
  *   nothing plays with sound, no reduced motion, the visitor has not paused a
- *   preview) it plays muted and looping with native controls; when `preview`
- *   turns false it pauses where it is. Watch with sound (in the bar) starts it
- *   properly from the beginning.
- * - Opened: the visitor pressed Watch film or Watch with sound, unmuted,
- *   played, scrubbed, went full screen or expanded it. It is theirs: it no
+ *   preview) it plays muted and looping; when `preview` turns false it pauses
+ *   where it is. The bar holds Pause (a visitor's pause stops the previews on
+ *   the page), Watch with sound (starts it properly from the beginning) and
+ *   Expand; Play on a paused preview makes it the visitor's, still muted.
+ * - Opened: the visitor pressed Watch film or Watch with sound, played,
+ *   unmuted, sought, went full screen or expanded it. It is theirs: it no
  *   longer loops, nothing restarts or switches it, and its position is kept.
- *   Like every film here it pauses once it is completely out of view (and
- *   stays paused there; nothing plays sound because of scrolling).
+ *   The bar is complete: play or pause, the seek slider, sound, Expand. Like
+ *   every film here it pauses once it is completely out of view (and stays
+ *   paused there; nothing plays sound because of scrolling).
+ * A click on the picture is a pointer shortcut for the bar's first control.
+ * When Watch film or Watch with sound leaves the page (the film starts), focus
+ * moves to the bar's Pause button.
  * The page is told when the film plays with sound (`onSound`), so no preview
  * starts beside it, and when the visitor pauses a preview (`onPreviewPause`),
  * which stops the previews on the page. One film with sound at a time is the
@@ -97,18 +105,19 @@ export function FilmPlayer({ film, preview, opened, onOpen, onSound, onPreviewPa
   const frameRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const expandRef = useRef<HTMLButtonElement>(null)
+  const playRef = useRef<HTMLButtonElement>(null)
   // The frame's width, estimated from the layout (beside the text: the 52% media column, at most 645px).
   const [src] = useState(() => pickVariant(asset, layout === 'sticky' ? Math.min(645, window.innerWidth * 0.5) : window.innerWidth).src)
   /** The poster file the picture loaded (undefined until then; '' if it failed). */
   const [posterSrc, setPosterSrc] = useState<string>()
   const posterReady = posterSrc !== undefined
   const [playing, setPlaying] = useState(false)
-  /** It has played at least once (its paused frame now stands for it, with native controls). */
+  /** It has played at least once (its paused frame now stands for it, in place of the poster and Watch film). */
   const [started, setStarted] = useState(false)
   /** The recording has put a frame on screen (it is shown from then on, over the poster). */
   const [hasFrame, setHasFrame] = useState(false)
   const [expanded, setExpanded] = useState<FilmState | null>(null)
-  /** This film itself is in full screen (touch Expand): its native full screen button returns, so it can be left. */
+  /** This film itself is in full screen (touch Expand): the browser's own controls are there only then, so it can be left. */
   const [fullscreen, setFullscreen] = useState(false)
   /** Imperative state read by media event handlers (never rendered). */
   const ctl = useRef({ autoStart: false, selfPause: false, selfMute: false, selfSeek: false, expanded: false, blocked: false, opened, preview, reduced, posterReady })
@@ -218,11 +227,14 @@ export function FilmPlayer({ film, preview, opened, onOpen, onSound, onPreviewPa
     return onFramePresented(v, () => setHasFrame(true))
   }, [])
 
-  // Full screen (touch Expand, or a double click on the film) counts as opening the film.
+  // Full screen (touch Expand) counts as opening the film. Leaving it returns focus to Expand when nothing holds it.
   useEffect(() => {
     const onChange = () => {
       const own = Boolean(videoRef.current) && document.fullscreenElement === videoRef.current
-      setFullscreen(own)
+      setFullscreen((was) => {
+        if (was && !own) requestAnimationFrame(() => returnFocus(expandRef.current))
+        return own
+      })
       if (own) open()
     }
     document.addEventListener('fullscreenchange', onChange)
@@ -241,7 +253,8 @@ export function FilmPlayer({ film, preview, opened, onOpen, onSound, onPreviewPa
     const c = ctl.current
     setPlaying(true)
     setStarted(true)
-    // Started from the native controls or the keyboard (not by the preview): the visitor opened the film.
+    // Started by the visitor (the bar, a click on the picture, or the browser's controls in full screen), not by the
+    // preview: the visitor opened the film.
     if (!c.autoStart) open()
     report()
   }
@@ -278,7 +291,10 @@ export function FilmPlayer({ film, preview, opened, onOpen, onSound, onPreviewPa
     if (v && !c.opened && !(v.loop && v.currentTime < 0.3)) open()
   }
 
-  /** Watch film / Watch with sound: from the start, with sound (a direct gesture). */
+  /**
+   * Watch film / Watch with sound: from the start, with sound (a direct gesture). The button that was pressed leaves
+   * as the film starts, so focus moves to the bar's Pause button.
+   */
   const watch = () => {
     const v = videoRef.current
     const c = ctl.current
@@ -291,7 +307,7 @@ export function FilmPlayer({ film, preview, opened, onOpen, onSound, onPreviewPa
     if (v.muted) c.selfMute = true
     v.muted = false
     v.play().then(
-      () => v.focus({ preventScroll: true }),
+      () => playRef.current?.focus({ preventScroll: true }),
       () => {},
     )
   }
@@ -350,6 +366,18 @@ export function FilmPlayer({ film, preview, opened, onOpen, onSound, onPreviewPa
   const ratio = asset.width / asset.height
   const mode = opened ? 'opened' : playing ? 'preview' : started ? 'paused' : 'poster'
 
+  /**
+   * The bar's play or pause control (and a click on the picture). Poster: Watch film. A preview: its pause is the
+   * visitor's (onPause stops the previews), and play resumes it as the visitor's own (onPlay opens it).
+   */
+  const togglePlay = () => {
+    const v = videoRef.current
+    if (!v) return
+    if (posterMode) watch()
+    else if (v.paused || v.ended) v.play().catch(() => {})
+    else v.pause()
+  }
+
   return (
     <figure className="fp" data-mode={mode} data-layout={layout} style={{ '--film-r': ratio } as CSSProperties}>
       <div className="cs-player fp-player">
@@ -365,8 +393,9 @@ export function FilmPlayer({ film, preview, opened, onOpen, onSound, onPreviewPa
             width={asset.width}
             height={asset.height}
             playsInline
-            controls={!posterMode || fullscreen}
-            // One enlarge control per player: Expand in the bar; the native full screen button returns only in full screen.
+            // Nothing over the picture (the bar below is the player's); the browser's own controls appear only while
+            // this film is in full screen (touch Expand), so it can be left there.
+            controls={fullscreen}
             controlsList={fullscreen ? undefined : 'nofullscreen'}
             preload={opened || started || (preview && posterReady && !reduced) ? 'auto' : 'none'}
             aria-label={`${film.name} film`}
@@ -374,10 +403,11 @@ export function FilmPlayer({ film, preview, opened, onOpen, onSound, onPreviewPa
             onPause={onPause}
             onVolumeChange={onVolumeChange}
             onSeeking={onSeeking}
+            onClick={fullscreen ? undefined : togglePlay}
           />
           {posterMode && (
             <span className="fp-center">
-              <button type="button" className="button fp-watch" onClick={watch}>
+              <button type="button" className="button button--secondary fp-watch" onClick={watch}>
                 <PlayIcon />
                 Watch film
                 <span className="visually-hidden">
@@ -387,21 +417,32 @@ export function FilmPlayer({ film, preview, opened, onOpen, onSound, onPreviewPa
             </span>
           )}
         </div>
-        {/* The player's own bar, below the film inside its frame: Watch with sound while it previews, then Expand. */}
-        <div className="cs-player__bar fp-bar">
-          {showSound ? (
+        {/*
+          The compact bar below the film inside its frame (DemoControls, as the product recordings): Play and Expand on
+          the poster; Pause, Watch with sound and Expand while it previews; the complete bar once it is the visitor's.
+        */}
+        <DemoControls
+          videoRef={videoRef}
+          title={`${film.name} film`}
+          noun="film"
+          duration={asset.duration}
+          hasAudio={asset.hasAudio}
+          seekable={opened}
+          sound={opened}
+          onTogglePlay={togglePlay}
+          playRef={playRef}
+          onExpand={openExpanded}
+          expandLabel={`Expand film, ${film.name}`}
+          expandRef={expandRef}
+        >
+          {showSound && (
             <button type="button" className="fp-sound" onClick={watch}>
               <SoundIcon />
               Watch with sound
               <span className="visually-hidden">, {film.name}, from the start</span>
             </button>
-          ) : (
-            <span />
           )}
-          <button ref={expandRef} type="button" className="cs-expand cs-player__expand fp-expand" aria-label={`Expand film, ${film.name}`} onClick={openExpanded}>
-            <ExpandIcon />
-          </button>
-        </div>
+        </DemoControls>
       </div>
       {expanded && <FilmDialog asset={asset} title={film.name} posterSrc={fallbackSrc(posterAsset, 1600)} start={expanded} onClose={closeExpanded} />}
     </figure>

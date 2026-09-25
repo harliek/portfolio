@@ -31,6 +31,8 @@ export type Provenance =
   | 'presentation-mockup'
   /** Supplied illustrative cover artwork for a project tile (not evidence). */
   | 'cover-artwork'
+  /** A supplied decorative environment behind a page (no project content, never captioned). */
+  | 'decorative-background'
 
 /** Visible caption label per provenance class (null = no label). */
 export const PROVENANCE_LABEL: Record<Provenance, string | null> = {
@@ -46,6 +48,7 @@ export const PROVENANCE_LABEL: Record<Provenance, string | null> = {
   'art-directed-prop': 'Art-directed prop (AI-generated)',
   'presentation-mockup': 'Presentation mockup',
   'cover-artwork': 'Illustrative cover artwork',
+  'decorative-background': null,
 }
 
 export interface ImageAsset {
@@ -227,7 +230,26 @@ export const IMAGES = {
     id: 'film-bg-poster', file: 'film-bg-poster', width: 1920, height: 1080, widths: [960, 1280, 1920], fallback: 'jpg',
     alt: '',
     provenance: 'personal-work', synthetic: false,
-    source: 'old portfolio/_superseded/dist-old/home-bg.mp4 (frame at 12.5s)', role: 'Homepage film background poster (reduced motion, loading)',
+    source: 'old portfolio/_superseded/dist-old/home-bg.mp4 (frame at 12.5s)', role: 'Former homepage film background poster (not shown since brief v15)',
+  }),
+  /*
+   * The homepage room (scripts/prepare-media.mjs, task `room`): the first
+   * frame of the seam-free loop, painted before the video plays and the
+   * only picture with reduced motion. The portrait crop serves portrait
+   * phones (the same pixels their cover crop shows).
+   */
+  'room-poster': img({
+    id: 'room-poster', file: 'room-poster', width: 1280, height: 720, widths: [640, 960, 1280], fallback: 'jpg',
+    alt: '',
+    provenance: 'decorative-background', synthetic: false,
+    source: 'Background video.m4v (frame 0)', role: 'Homepage room background poster (reduced motion, loading)',
+  }),
+  'room-poster-portrait': img({
+    id: 'room-poster-portrait', file: 'room-poster-portrait', width: 480, height: 720, widths: [480], fallback: 'jpg',
+    alt: '',
+    provenance: 'decorative-background', synthetic: false,
+    source: 'Background video.m4v (frame 0)', role: 'Homepage room background poster on portrait phones',
+    crop: 'Centred 480×720 crop (x 400 to 880 of 1280×720), around the vanishing point',
   }),
   'tile-about': img({
     id: 'tile-about', file: 'tile-about', width: 566, height: 755, widths: [320, 480, 566], fallback: 'jpg',
@@ -1013,10 +1035,25 @@ export const STAGE_MEDIA = {
     source: 'inspiration/working-model-assets/background video.mp4 (1112×834, 24fps, 6.08s; audio removed)',
   },
   /**
+   * The homepage's environment (brief v15): a dark architectural corridor
+   * with a central vanishing point, glossy floor reflections and violet,
+   * teal and small red uplights. The supplied file is a dolly in and back
+   * that stops short (a plain loop snaps); the derivatives replay its
+   * forward move out and back on one smooth path, at rest at the loop point,
+   * so the loop has no visible seam (scripts/prepare-media.mjs, task `room`).
+   * 12s per loop, 24fps, muted H.264. `portrait`: a centred crop for portrait
+   * phones (StageBackground picks one file per device, once).
+   */
+  room: {
+    desktop: { src: '/media/video/room-1280.mp4', width: 1280, height: 720, poster: 'room-poster' as const, bytes: 2_341_969 },
+    portrait: { src: '/media/video/room-portrait-480.mp4', width: 480, height: 720, poster: 'room-poster-portrait' as const, bytes: 782_609 },
+    source: 'Background video.m4v (1280×720, 24fps, 7.29s, 175 frames; the H.264 stream, frames 0 to 93)',
+  },
+  /**
    * The original film background of Harlie's first portfolio homepage
-   * (a woman in a black leather corset and red gloves, lit in red and blue),
-   * restored for the professional homepage. Same footage, colours and
-   * framing; audio removed; 30fps H.264.
+   * (a woman in a black leather corset and red gloves, lit in red and blue).
+   * Shown behind the homepage until brief v15 replaced it with the room;
+   * no longer requested by any page. Audio removed; 30fps H.264.
    */
   film: {
     desktop: { src: '/media/video/film-bg-1920.mp4', width: 1920, height: 1080, poster: 'film-bg-poster' as const, bytes: 2_503_862 },

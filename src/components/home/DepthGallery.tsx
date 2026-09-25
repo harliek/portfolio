@@ -15,6 +15,7 @@ import {
   place,
   restSpacing,
   silhouette,
+  groundShadow,
   silhouetteOrigin,
   smoothstep,
   type Box,
@@ -79,6 +80,12 @@ function rimRgb(id: AccentId) {
  */
 const positionText = (i: number) => `Project ${i + 1} of ${N}`
 
+/** The floor reflection's depth and softness at u = 1 (home.css scales both by --u). */
+const groundStyle = {
+  '--reflect-depth': `${GALLERY.ground.reflection.depth}px`,
+  '--reflect-blur': `${GALLERY.ground.reflection.blur}px`,
+} as CSSProperties
+
 /** The images' `sizes`: each object's largest rendered width at this window size (selected and hovered). */
 function sizesFor(scene: Scene) {
   return Array.from(scene.bw, (w) => `${Math.ceil(w * GALLERY.hover.scale)}px`)
@@ -114,6 +121,7 @@ interface Parts {
   sub: HTMLElement | null
   glow: HTMLElement | null
   dim: HTMLElement | null
+  reflect: HTMLElement | null
 }
 
 /** The carousel's scene for the current window (before the labels are measured). */
@@ -123,7 +131,7 @@ function initialScene() {
 
 /**
  * The homepage project carousel: About Me and the six projects on one
- * shallow, symmetrical curve over the film, each one an object-label group
+ * shallow, symmetrical curve on the room's floor, each one an object-label group
  * (its transparent PNG with its title and description beneath it, in the
  * same moving unit). Every property of an object (its place, scale, bottom
  * edge, turn, light, label size and opacity, stacking order) comes from its
@@ -131,27 +139,26 @@ function initialScene() {
  * largest, slightly lower and fully lit, and the others step back
  * symmetrically.
  *
- * It sits in the page's normal flow just below the first view (brief v14):
- * at the top of the page only the tops of the nearest objects show at the
- * window's lower edge (the section is drawn up so the highest of them stands
- * on the introduction's lower edge, `pull`), and scrolled to the end of the
- * page the objects, labels and controls stand in the window below the header
- * (sized to fit it; galleryModel.ts). The page scrolls normally, and
- * vertical wheel, trackpad and touch gestures always scroll the page.
+ * It stands in the first view beneath the title (brief v15): the section
+ * fills the window from the title to the lower edge, and the objects are
+ * sized so that they, their labels and the controls fit it
+ * (galleryModel.ts), standing on the room's floor with a contact shadow and
+ * a faint reflection each (GalleryObject). They never float. The page
+ * scrolls normally, and vertical wheel, trackpad and touch gestures always
+ * scroll the page.
  *
  * Automatic rotation (GALLERY.auto): the carousel turns slowly and steadily
- * on its own (one revolution in about 45s; objects also float gently, CSS).
+ * on its own (one revolution in about 45s, a continuous glide with no stops,
+ * so it never reads as a timer).
  * It glides to a stop while the pointer is over the objects, while keyboard
  * focus is in the carousel (not on the pause control itself), while a drag,
  * swipe, trackpad gesture, arrow or key step or a press is under way, while
  * a project opens, while the pause control is set, and while the carousel
- * is mostly out of view (the first view's peek does not count) or the tab is
- * hidden. It eases back in from where it
+ * is mostly out of view or the tab is hidden. It eases back in from where it
  * stands, about 3s after manual input or 1.2s after the pointer or focus
  * leaves, once nothing holds it. The pause control (between the arrows)
  * shows and announces its state; pausing brings the carousel to rest on the
- * nearest object and stops the floating too. Reduced motion: it never moves
- * on its own, and nothing floats.
+ * nearest object. Reduced motion: it never moves on its own.
  *
  * Moving it by hand:
  * - the previous and next arrows (and the arrow keys on an object or an
@@ -185,7 +192,7 @@ export function DepthGallery() {
   const navigationType = useNavigationType()
   const { key: locationKey } = useLocation()
   const reduced = useReducedMotion()
-  /** The pause control's state (automatic rotation and floating stopped by the visitor), kept for the visit. */
+  /** The pause control's state (automatic rotation stopped by the visitor), kept for the visit. */
   const [paused, setPaused] = useState(recallPaused)
   const pausedRef = useRef(paused)
   const rootRef = useRef<HTMLElement>(null)
@@ -243,6 +250,7 @@ export function DepthGallery() {
       sub: labels[i].querySelector<HTMLElement>('.gobj__sub'),
       glow: objects[i].querySelector<HTMLElement>('.gobj__glow'),
       dim: objects[i].querySelector<HTMLElement>('.gobj__dim'),
+      reflect: objects[i].querySelector<HTMLElement>('.gobj__reflection'),
     }))
 
     // ------------------------------------------------------------------
@@ -292,36 +300,28 @@ export function DepthGallery() {
       return reserve
     }
 
-    const frameOf = (): SceneFrame => {
+    /**
+     * What the scene is fitted to. The first view (brief v15): the title
+     * above, then the carousel's section down to the window's lower edge;
+     * the stage and the controls take the height from the section's top
+     * (in the page, so a scrolled page measures the same) to that edge, less
+     * the section's bottom padding (home.css), so the objects stand on the
+     * room's floor with their captions and controls in view.
+     */
+    const frameOf = (H: number): SceneFrame => {
       const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) || undefined
       const nav = navRef.current
       const navH = nav ? nav.offsetHeight + (parseFloat(getComputedStyle(nav).marginTop) || 0) : undefined
-      return { header, nav: navH }
-    }
-
-    /**
-     * The first view (brief v14): only the tops of the nearest objects show at
-     * the window's lower edge. The section is drawn up (home.css
-     * --gallery-pull) by its room above the stage and the stage's room above
-     * the highest object shown at the resting position, so that object's top
-     * stands on the introduction's lower edge, --home-peek above the window's.
-     */
-    const rest = Array.from({ length: N }, newPlacement)
-    const pull = () => {
-      place(Math.round(pos), scene, rest)
-      let top = Infinity
-      rest.forEach((p, i) => {
-        const s = silhouette(scene, i, p)
-        if (p.op > 0.5 && s.r > 0 && s.l < scene.W) top = Math.min(top, s.t)
-      })
-      return stage.offsetTop + (Number.isFinite(top) ? top : 0)
+      const top = root.getBoundingClientRect().top + window.scrollY
+      const avail = H - top - (parseFloat(getComputedStyle(root).paddingBottom) || 0)
+      return { header, nav: navH, avail }
     }
 
     const measure = () => {
       const W = stage.clientWidth
       // The layout viewport's height (the small viewport on phones: steady while their toolbars slide).
       const H = document.documentElement.clientHeight || window.innerHeight
-      const base = frameOf()
+      const base = frameOf(H)
       // Label widths depend on the window: a first scene, then the labels at that width, then the scene that fits them.
       scene = buildScene(W, H, base)
       root.style.setProperty('--lw', `${scene.lw.toFixed(1)}px`)
@@ -339,7 +339,6 @@ export function DepthGallery() {
         items[i].style.setProperty('--w', `${scene.bw[i].toFixed(2)}px`)
         items[i].style.setProperty('--h', `${scene.bh[i].toFixed(2)}px`)
       }
-      root.style.setProperty('--gallery-pull', `${pull().toFixed(1)}px`)
       w.reset()
     }
 
@@ -374,14 +373,16 @@ export function DepthGallery() {
         appeared[i] = x * (2 - x)
       }
       const persp = scene.persp.toFixed(0)
-      const { gap, visible, yieldPx } = GALLERY.label
+      const { gap, visible, yieldPx, solo } = GALLERY.label
+      // Tablets and phones (one caption): it follows its object part of the way, so it stays whole in the window.
+      const pull = scene.p.sideLabels ? 1 : solo.pull
 
       // Labels first: each line's box, then collision control (the farther label yields).
       for (let i = 0; i < N; i++) {
         const p = P[i]
         const h = hov[i]
         const L = lab[i]
-        const lx = p.x + p.lc
+        const lx = scene.x0 + (p.x + p.lc - scene.x0) * pull
         const ly = p.base + gap
         const { title, sub } = boxes[i]
         title.l = lx - (L.tw * p.ls) / 2
@@ -459,6 +460,8 @@ export function DepthGallery() {
         // Light by slot; hover and keyboard focus raise it a little.
         if (pt.glow) w.set(pt.glow.style, 'opacity', f3(p.glow + (1 - p.glow) * h * 0.4))
         if (pt.dim) w.set(pt.dim.style, 'opacity', f3(p.dim * (1 - 0.7 * h)))
+        // The floor reflection: clearest under the selected object, fainter further back.
+        if (pt.reflect) w.set(pt.reflect.style, 'opacity', f3(p.reflect))
         // The label: flat, upright and sharp (a 2D scale only), centred beneath the object.
         const { title, sub } = boxes[i]
         const dx = (title.l + title.r) / 2 - p.x
@@ -1140,7 +1143,7 @@ export function DepthGallery() {
       } else scheduleAuto()
     }
     document.addEventListener('visibilitychange', onVisibility)
-    // The frame loop runs only while the stage is on screen (its peek included).
+    // The frame loop runs only while the stage is on screen.
     const onScreen = new IntersectionObserver(
       ([entry]) => {
         st.onScreen = entry.isIntersecting
@@ -1149,15 +1152,15 @@ export function DepthGallery() {
       { threshold: 0 },
     )
     onScreen.observe(stage)
-    // Automatic rotation only while enough of the stage is in view above the window's lowest band (where the
-    // first view shows only the objects' tops), so the carousel turns once the visitor has scrolled to it.
+    // Automatic rotation only while enough of the stage is in view (it stands in the first view; scrolled well
+    // past it, it stops).
     const inView = new IntersectionObserver(
       ([entry]) => {
         hold.away = entry.intersectionRatio < AUTO.inView - 0.001
         if (hold.away) autoK = 0
         else scheduleAuto()
       },
-      { threshold: [0, AUTO.inView], rootMargin: `0px 0px ${-AUTO.belowFold * 100}% 0px` },
+      { threshold: [0, AUTO.inView] },
     )
     inView.observe(stage)
     const onPageHide = () => save()
@@ -1302,7 +1305,7 @@ export function DepthGallery() {
     // A new history entry for / (the home link on the homepage) starts over with the opening.
   }, [locationKey, navigationType, reduced, navigate])
 
-  /** The pause control: stops or restarts automatic rotation (and the floating), shows its state and announces it. */
+  /** The pause control: stops or restarts automatic rotation, shows its state and announces it. */
   const togglePaused = () => {
     const next = !pausedRef.current
     pausedRef.current = next
@@ -1325,11 +1328,19 @@ export function DepthGallery() {
   }
 
   return (
-    <section ref={rootRef} className="gallery" aria-label="Projects" data-reduced={reduced || undefined} data-paused={paused || undefined}>
+    <section
+      ref={rootRef}
+      className="gallery"
+      aria-label="Projects"
+      data-reduced={reduced || undefined}
+      data-paused={paused || undefined}
+      style={groundStyle}
+    >
       <div ref={stageRef} className="gallery__stage" style={initialStyle}>
         <ul className="gallery__list" role="list">
           {GALLERY_ITEMS.map((item, i) => {
             const origin = silhouetteOrigin(item.kind)
+            const shadow = groundShadow(item.kind)
             return (
               <li
                 key={item.id}
@@ -1339,7 +1350,16 @@ export function DepthGallery() {
                 className="gobj"
                 data-index={i}
                 data-kind={item.kind}
-                style={{ ...accentVars(item.id), '--rim-rgb': rimRgb(item.id), '--float-phase': i * 0.83, '--ox': origin.x.toFixed(4), '--oy': origin.y.toFixed(4) } as CSSProperties}
+                style={
+                  {
+                    ...accentVars(item.id),
+                    '--rim-rgb': rimRgb(item.id),
+                    '--ox': origin.x.toFixed(4),
+                    '--oy': origin.y.toFixed(4),
+                    '--gx': shadow.x.toFixed(4),
+                    '--gw': shadow.w.toFixed(4),
+                  } as CSSProperties
+                }
               >
                 <a
                   ref={(el) => {

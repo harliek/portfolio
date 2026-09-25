@@ -25,3 +25,12 @@ export function enterFullscreen(v: HTMLVideoElement & { webkitEnterFullscreen?: 
   }
   return false
 }
+
+/**
+ * After a player's own full screen ends: focus goes back to its Expand control
+ * when nothing else holds it (leaving full screen can drop focus to the page),
+ * without scrolling.
+ */
+export function returnFocus(control: HTMLElement | null) {
+  if (control && (!document.activeElement || document.activeElement === document.body)) control.focus({ preventScroll: true })
+}

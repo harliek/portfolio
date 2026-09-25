@@ -1,24 +1,20 @@
-/* Homepage: editorial introduction and the project carousel over the original film. */
+/* Homepage: the title and the project carousel in one first view, over the room. */
 
 /*
- * The first view (brief v14, after Harlie's original homepage): the film and
- * the title, nothing else, but for the tops of the nearest project objects
- * at the window's lower edge (--home-peek), which invite a scroll. The
- * carousel's section stands just below: DepthGallery pulls it up
- * (--gallery-pull) so the highest of those objects stands on the
- * introduction's lower edge, and scrolled to the end of the page the
- * carousel fills the window below the header.
+ * The first view (brief v15): the room (StageBackground) behind the title
+ * and the carousel, whose objects stand on the room's floor with their
+ * captions and controls above the window's lower edge. The homepage is one
+ * column the height of the window below the header: the title at its top,
+ * the carousel's section filling the rest, its contents at the bottom
+ * (DepthGallery sizes the objects to fit that height).
  */
 .home {
   /* The title group's left edge: 8% of the width, as in the original (the gutter at least). */
   --home-left: max(var(--gutter), 8vw);
-  /*
-   * The peek: the original's hero was 84% of the window below its 61px
-   * header, then 16px to the tiles (67px of a 900px window, 96px of 1080px,
-   * 58px of 844px); never under 44px, never over 12% of the window.
-   */
-  --home-peek: clamp(44px, 16svh - var(--header-height) - 16px, 12svh);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - var(--header-height));
 }
 
 /* ======================================================================= */
@@ -26,26 +22,44 @@
 /* ======================================================================= */
 
 /*
- * One group on one left edge, measured on the original: the name (a short
- * rule, then small letter-spaced capitals), PORTFOLIO large in the editorial
- * serif 24px below it, the pair centred 33.6% of the window below the header
- * (40% down the original's 84% hero); Harlie's two roles hang beneath,
- * smaller and quieter, so PORTFOLIO dominates. The introduction fills the
- * first view down to the peek (it grows on a window too short for it).
+ * One group on one left edge, set like the Creative Art page's title (and
+ * the original homepage's): the name as small letter-spaced capitals after
+ * a short rule, PORTFOLIO large in the editorial serif, then Harlie's two
+ * roles, smaller and quieter, in the sans. Clear, even steps between the
+ * three (20px, then 14px; less on short windows), PORTFOLIO dominant.
  *
- * --word-size: the original's clamp(64px, 8.8vw, 126px), and never wider than
- * the window (PORTFOLIO is about 5.6em wide), so the narrowest phones keep it
- * on one line with a margin.
+ * --word-size: 96px at desktop widths, 68px at 768px, 48px on phones; never
+ * wider than the window less the left edge twice (PORTFOLIO is about 5.62em
+ * wide), so it never clips.
  */
 .home-intro {
-  --word-size: min(clamp(4rem, 8.8vw, 7.875rem), calc((100vw - var(--home-left) - 16px) / 5.62));
+  --word-size: min(clamp(3rem, 1.75rem + 5.2vw, 6rem), calc((100vw - 2 * var(--home-left)) / 5.62));
   position: relative;
-  min-height: calc(100svh - var(--header-height) - var(--home-peek));
-  padding: max(24px, calc(33.6svh - (42px + 1.2 * var(--word-size)) / 2)) var(--home-left) 32px;
+  flex: none;
+  padding: clamp(24px, 6.5svh, 72px) var(--home-left) 0;
+  /* The title's soft shade (below) reaches past the window's edges on narrow phones: cut there, never a sideways scroll. */
+  overflow-x: clip;
 }
 
+/*
+ * Readability over every frame of the room: a soft, local shade behind the
+ * group (an ellipse that fades to nothing well outside the text; never a
+ * box), which quiets the pillars' lit edges behind the letters.
+ */
 .home-intro__block {
+  position: relative;
+  isolation: isolate;
+  width: max-content;
   max-width: 100%;
+}
+
+.home-intro__block::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -34% -26% -40% -22%;
+  background: radial-gradient(closest-side in oklch, rgb(3 3 8 / 0.66), rgb(3 3 8 / 0.42) 52%, rgb(3 3 8 / 0.14) 78%, rgb(3 3 8 / 0));
+  pointer-events: none;
 }
 
 .home-intro__title {
@@ -61,7 +75,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  margin: 0 0 24px;
+  margin: 0 0 20px;
   font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 400;
@@ -82,9 +96,10 @@
 
 /*
  * PORTFOLIO: the original's Playfair Display in white capitals, tracked
- * -0.02em on a 1.2 line. The original set it in the Medium weight; the site
- * hosts the Regular only, so a hairline stroke of the letters' own colour
- * brings the stems to the Medium's weight (measured on both).
+ * -0.02em. The original set it in the Medium weight; the site hosts the
+ * Regular only, so a hairline stroke of the letters' own colour brings the
+ * stems to the Medium's weight (measured on both). A soft shadow keeps its
+ * edges clean over the room's lit pillars.
  */
 .home-intro__word {
   display: block;
@@ -92,29 +107,62 @@
   font-size: var(--word-size);
   font-weight: 400;
   font-optical-sizing: auto;
-  line-height: 1.2;
+  line-height: 1.08;
   letter-spacing: -0.02em;
   text-transform: uppercase;
   white-space: nowrap;
   color: #fff;
   -webkit-text-stroke: 0.012em currentColor;
+  text-shadow: 0 2px 18px rgb(0 0 0 / 0.45);
 }
 
-/* The two roles: a clean sans, smaller and quieter than the title, lightly tracked, close beneath it. */
+/* The two roles: a clean sans, smaller and quieter than the title, lightly tracked, a clear step beneath it. */
 .home-intro__roles {
   display: grid;
   justify-items: start;
-  gap: 1px;
-  margin: 4px 0 0;
+  gap: 2px;
+  margin: 14px 0 0;
   font-size: clamp(0.8125rem, 0.78rem + 0.12vw, 0.9375rem);
   font-weight: 400;
-  line-height: 1.55;
+  line-height: 1.5;
   letter-spacing: 0.04em;
-  color: rgb(255 255 255 / 0.7);
+  color: rgb(255 255 255 / 0.74);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
 }
 
 .home-intro__roles > span {
   display: block;
+}
+
+/* Short windows (a laptop with its toolbars, a small phone): tighter steps and a smaller title, so the objects keep their size. */
+@media (max-height: 760px) {
+  .home-intro {
+    --word-size: min(clamp(2.75rem, 1.5rem + 4.4vw, 5rem), calc((100vw - 2 * var(--home-left)) / 5.62));
+    padding-top: clamp(18px, 4svh, 40px);
+  }
+
+  .home-intro__name {
+    margin-bottom: 14px;
+  }
+
+  .home-intro__roles {
+    margin-top: 10px;
+  }
+}
+
+/* Small phones (320 × 640 and the like): tighter still, so the objects, their caption and the controls stay in the first view. */
+@media (max-height: 700px) and (max-width: 599.98px) {
+  .home-intro {
+    padding-top: clamp(12px, 2.5svh, 20px);
+  }
+
+  .home-intro__name {
+    margin-bottom: 12px;
+  }
+
+  .home-intro__roles {
+    margin-top: 8px;
+  }
 }
 
 /* ======================================================================= */
@@ -122,31 +170,21 @@
 /* ======================================================================= */
 
 /*
- * The section is a window tall below the header, the carousel and its
- * controls centred in it, so scrolled to the end of the page they stand in
- * the middle of the window with the film around them. DepthGallery sets
- * --gallery-pull (the section's room above the stage plus the room in the
- * stage above the highest object in front), which draws the section up over
- * the introduction's lower edge: at the top of the page only those objects'
- * tops show. The section itself takes no pointer (it lies over the
- * introduction); its stage and controls do.
+ * The rest of the first view below the title, its stage and controls at
+ * the bottom: the objects stand on the room's floor, and their captions,
+ * the controls and the position line keep clear of the window's lower edge
+ * (and a phone's home indicator). DepthGallery sizes the stage to this
+ * height (the section's top to the window's edge, less the bottom padding).
  */
 .gallery {
   /* Hover and keyboard focus: +6% about the visual baseline (GALLERY.hover.scale). */
   --hover-scale: 1.06;
   position: relative;
   display: flex;
+  flex: 1 0 auto;
   flex-direction: column;
-  justify-content: center;
-  min-height: calc(100svh - var(--header-height));
-  margin-top: calc(var(--gallery-pull, 0px) * -1);
-  padding-bottom: clamp(14px, 2.6svh, 28px);
-  pointer-events: none;
-}
-
-.gallery__stage,
-.gallery__nav {
-  pointer-events: auto;
+  justify-content: flex-end;
+  padding-bottom: max(clamp(10px, 2.2svh, 24px), env(safe-area-inset-bottom));
 }
 
 /*
@@ -170,9 +208,9 @@
 }
 
 /*
- * Readability of the captions over the moving film: a broad, feathered
+ * Readability of the captions over the moving room: a broad, feathered
  * shade across the caption row, the controls and the position line beneath
- * them (no box; the film stays visible through it, and it fades out at both
+ * them (no box; the room stays visible through it, and it fades out at both
  * ends, so it never shows as a line). DepthGallery sets where it starts
  * (--caption-top, just above the selected object's bottom edge) and how tall
  * it is (--caption-h: to a little below the position line).
@@ -286,6 +324,84 @@
 
 .gallery:not([data-reduced]) .gobj:is([data-active], [data-pressed]) .gobj__lift {
   transform: scale(var(--hover-scale));
+}
+
+/*
+ * Grounding (brief v15): what sets each object on the room's glossy floor,
+ * beneath its artwork and inside the lift (so a hovered object's shadow and
+ * reflection grow with it, about the same baseline):
+ * - the contact shadow: a soft dark pool centred on the object's visual
+ *   baseline under what meets the floor (--gx, --gw: its centre and width
+ *   as shares of the box, GALLERY.ground.shadow), about a tenth as deep as
+ *   it is wide; the object covers its upper half, so it reads as the
+ *   object's weight on the floor, never as a halo;
+ * - the reflection: the PNG mirrored about that baseline, faint (its
+ *   opacity by slot, written per frame by DepthGallery), a little soft, and
+ *   fading out within --reflect-depth, like the floor's own reflections of
+ *   the pillars. None for the portrait (its bust fades out above the floor).
+ * Hidden while the object travels into its page (data-selected: its artwork
+ * is hidden then too), so nothing is left behind on the floor.
+ */
+.gobj__ground {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.gobj[data-selected] .gobj__ground {
+  visibility: hidden;
+}
+
+.gobj__shadow {
+  position: absolute;
+  left: calc(var(--gx) * 100%);
+  top: calc(var(--oy) * 100%);
+  width: calc(var(--gw) * 100%);
+  height: calc(var(--w) * var(--gw) * 0.1 + 6px);
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side in oklch,
+    rgb(0 0 3 / 0.8),
+    rgb(0 0 3 / 0.52) 42%,
+    rgb(0 0 3 / 0.16) 74%,
+    rgb(0 0 3 / 0)
+  );
+}
+
+.gobj__reflection {
+  --depth: calc(var(--reflect-depth, 64px) * var(--u, 1));
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scaleY(-1);
+  transform-origin: 50% calc(var(--oy) * 100%);
+  /* In the unflipped image: clear at the baseline, gone --depth above it (so, flipped, gone --depth below). */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent calc(var(--oy) * 100% - var(--depth)),
+    rgb(0 0 0 / 0.3) calc(var(--oy) * 100% - var(--depth) * 0.5),
+    #000 calc(var(--oy) * 100%)
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent calc(var(--oy) * 100% - var(--depth)),
+    rgb(0 0 0 / 0.3) calc(var(--oy) * 100% - var(--depth) * 0.5),
+    #000 calc(var(--oy) * 100%)
+  );
+  filter: blur(calc(var(--reflect-blur, 1.5px) * var(--u, 1)));
+  will-change: opacity;
+}
+
+.gobj__reflection .picture,
+.gobj__reflection img {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
 }
 
 .gobj__art {
@@ -420,36 +536,6 @@
 .gallery__stage[data-dragging] .gobj__hit,
 .gallery__stage[data-dragging] .gobj__caption {
   cursor: grabbing;
-}
-
-/*
- * Floating (brief v13: only when motion is allowed): each object drifts
- * 6px up and down on a slow cycle, out of step with its neighbours. The
- * individual `translate` leaves the carousel's per-frame transform intact.
- * It holds still on the object under the pointer or keyboard focus, on a
- * press, while a project opens, during a drag, and whenever the pause
- * control is set; reduced motion has none.
- */
-@keyframes object-float {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-
-  50% {
-    translate: 0 -6px;
-  }
-}
-
-.gallery:not([data-reduced]) .gobj__object {
-  animation: object-float 7s ease-in-out infinite;
-  animation-delay: calc(var(--float-phase) * -1s);
-}
-
-.gallery[data-paused] .gobj__object,
-.gobj:is([data-active], [data-pressed], [data-selected]) .gobj__object,
-.gallery__stage[data-dragging] .gobj__object {
-  animation-play-state: paused;
 }
 
 /*

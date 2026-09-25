@@ -21,6 +21,7 @@
  *   node scripts/prepare-media.mjs crops [page]  # focused evidence crops from scripts/crops/<page>.json
  *   node scripts/prepare-media.mjs tiles      # carousel tile artwork (final tiles/, 3:4 focal-point crops)
  *   node scripts/prepare-media.mjs objects    # carousel PNG objects (final png tiles/, trimmed, alpha kept)
+ *   node scripts/prepare-media.mjs room       # homepage room background: seam-free loop, portrait crop, posters
  *
  * Requires: ffmpeg/ffprobe, poppler (pdftoppm, pdfimages), sharp, and
  * Playwright's Chromium (for the typographic cover and social image).
@@ -957,6 +958,137 @@ async function objects() {
   }
   writeFileSync(join(CACHE, 'objects.json'), JSON.stringify(dims, null, 2))
 }
+
+/* ------------------------------------------------------------------ */
+/* The room: the homepage's background loop (brief v15)                 */
+/* ------------------------------------------------------------------ */
+
+const ROOM_SRC = 'Background video.m4v'
+
+/**
+ * The supplied room video (1280×720, 24fps, 175 frames, H.264 plus an
+ * embedded MJPEG cover image, which is ignored) is a dark architectural
+ * corridor with a slow dolly towards its central vanishing point. Frame by
+ * frame (brief v15 verification notes): frames 0 to 93 are the camera's one
+ * forward move (about a 10% push in; 93 is the nearest point); frames 94 to
+ * 174 replay 92 down to 12 in reverse (frame j matches frame 186 − j within
+ * compression noise). So the file is a ping-pong that stops short: played
+ * as a plain loop it jumps from frame 12's position back to frame 0's (a
+ * camera snap of about 6px at the frame edges) and reverses its direction
+ * there, and its turnaround at frame 93 is a hard bounce (the edges move
+ * about 0.9px per frame in, then 0.9px per frame out).
+ *
+ * The derivative plays the forward move out and back on one smooth cosine
+ * path: output frame k shows source position
+ *   s(k) = first + (last − first) · (1 − cos(2πk / period)) / 2,
+ * so the camera slows to rest at both ends of its move and turns round
+ * without a bounce (speed and acceleration continuous everywhere), never
+ * faster than the original (at most 1.01× in mid move), and the file ends
+ * where it begins: the loop point is the far turnaround, where the camera
+ * is at rest (frames k and period − k are identical), so the loop has no
+ * cut, snap, fade or brightness change, and a frame the browser holds at
+ * the loop point cannot be seen. A fractional position blends the two
+ * source frames either side of it (in the decoded 4:2:0 planes, no colour
+ * conversion); consecutive source frames differ by under 1px of camera
+ * travel, so a blend never ghosts. Nothing is added or recoloured.
+ *
+ * The encode keeps the loop point clean too. The master's last and first
+ * frames are identical, but a plain encode is not: frame 0 is a fresh
+ * keyframe and the last frame the end of a long chain of predicted frames,
+ * so the fine texture of the pillars and floor changed at the loop point (a
+ * faint shimmer where the picture is otherwise still). One keyframe per
+ * loop, keyframes and predicted frames at the same quality, and `zones`:
+ * the still frames either side of the loop point are encoded almost
+ * losslessly (quantiser 8), stepping gently back to the normal quality
+ * (12, then 15) over the frames where the camera starts to move, so both
+ * sides of the loop point match the master and no step in quality shows.
+ * Verified on the decoded files (brief v15 notes): the loop point's
+ * difference is 0.055 of 255 on average, as small as any step between two
+ * still frames, where a plain encode gave 0.63.
+ *
+ * Outputs (muted, H.264, faststart; never upscaled): room-1280.mp4 (the
+ * full frame) and room-portrait-480.mp4 (a centred 480×720 crop for
+ * portrait phones: the same pixels a phone's cover crop shows, at a third
+ * of the data), their posters (the loop's first frame, the reduced-motion
+ * still), and a lossless master in .media-cache/room/.
+ */
+const ROOM = {
+  width: 1280, height: 720, fps: 24, first: 0, last: 93, period: 288, portraitWidth: 480, crf: 21,
+  /** [first frame, last frame, quantiser]: near lossless at the loop point, graded back to the base quality. */
+  zones: [[0, 5, 8], [6, 11, 12], [12, 17, 15], [252, 257, 15], [258, 263, 12], [264, 287, 8]],
+}
+
+/** The source frame position shown at output frame k (see above). */
+const roomPosition = (k) => ROOM.first + ((ROOM.last - ROOM.first) * (1 - Math.cos((2 * Math.PI * k) / ROOM.period))) / 2
+
+async function roomLoop() {
+  const { spawn } = await import('node:child_process')
+  const { once } = await import('node:events')
+  const dir = join(CACHE, 'room')
+  ensure(VID); ensure(IMG); ensure(dir)
+  const { width: W, height: H, fps, first, last, period, portraitWidth: PW } = ROOM
+  const size = (W * H * 3) / 2
+  const count = last - first + 1
+  const color = ['-color_range', 'tv', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709']
+
+  // The forward move, decoded once as raw 4:2:0 planes (the H.264 stream only).
+  const raw = execFileSync('ffmpeg', ['-v', 'error', '-i', src(ROOM_SRC), '-map', '0:v:0', '-frames:v', String(last + 1),
+    '-f', 'rawvideo', '-pix_fmt', 'yuv420p', 'pipe:1'], { maxBuffer: size * (last + 2) })
+  if (raw.length !== size * (last + 1)) throw new Error(`room: expected ${last + 1} frames, decoded ${raw.length / size}`)
+  const frame = (i) => raw.subarray((first + i) * size, (first + i + 1) * size)
+
+  // The master: one output frame per step of the cosine path, blended between neighbours; lossless.
+  const master = join(dir, 'room-master.mkv')
+  const enc = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'yuv420p', '-s', `${W}x${H}`, '-r', String(fps), ...color,
+    '-i', 'pipe:0', '-c:v', 'libx264', '-qp', '0', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', ...color, master], { stdio: ['pipe', 'ignore', 'inherit'] })
+  const done = new Promise((resolve, reject) => {
+    enc.on('error', reject)
+    enc.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`room master: ffmpeg exited ${code}`))))
+  })
+  const map = []
+  for (let k = 0; k < period; k++) {
+    const s = roomPosition(k) - first
+    const i0 = Math.min(Math.floor(s + 1e-9), count - 1)
+    const i1 = Math.min(i0 + 1, count - 1)
+    const f = Math.max(0, s - i0)
+    const a = frame(i0)
+    const b = frame(i1)
+    // A new buffer per frame: the pipe may still hold the previous one.
+    const out = Buffer.allocUnsafe(size)
+    if (f < 1e-6 || i0 === i1) a.copy(out)
+    else for (let p = 0; p < size; p++) out[p] = Math.round(a[p] + (b[p] - a[p]) * f)
+    map.push([k, +(first + s).toFixed(4)])
+    if (!enc.stdin.write(out)) await once(enc.stdin, 'drain')
+  }
+  enc.stdin.end()
+  await done
+  writeFileSync(join(dir, 'room-timemap.json'), JSON.stringify(map))
+
+  // The derivatives: one keyframe per loop, keyframes at the predicted frames' quality, the loop point near lossless.
+  const x264 = [
+    'aq-mode=3', 'ipratio=1.0', 'pbratio=1.0', `keyint=${period + 12}`, `min-keyint=${period + 12}`, 'scenecut=0',
+    `zones=${ROOM.zones.map(([a, b, q]) => `${a},${b},q=${q}`).join('/')}`,
+  ].join(':')
+  const encode = (out, vf) => {
+    run('ffmpeg', ['-y', '-v', 'error', '-i', master, '-map', '0:v:0', '-an', ...(vf ? ['-vf', vf] : []),
+      '-c:v', 'libx264', '-preset', 'veryslow', '-crf', String(ROOM.crf), '-profile:v', 'high', '-pix_fmt', 'yuv420p',
+      '-x264-params', x264, ...color, '-movflags', '+faststart', join(VID, out)])
+    report.push(`${out} ${(statSync(join(VID, out)).size / 1e6).toFixed(2)}MB`)
+  }
+  const crop = `crop=${PW}:${H}:${(W - PW) / 2}:0`
+  encode('room-1280.mp4', null)
+  encode('room-portrait-480.mp4', crop)
+
+  // Posters: the loop's first frame (full frame and the portrait crop).
+  const still = (name, vf) => {
+    const out = join(dir, `${name}.png`)
+    run('ffmpeg', ['-y', '-v', 'error', '-i', master, '-frames:v', '1', ...(vf ? ['-vf', vf] : []), out])
+    return out
+  }
+  await variants('room-poster', still('room-poster'), [640, 960, 1280], { quality: 'photo' })
+  await variants('room-poster-portrait', still('room-poster-portrait', crop), [480], { quality: 'photo' })
+  report.push(`room: source frames ${first}–${last}, ${period} frames (${(period / fps).toFixed(2)}s) per loop`)
+}
 /* ------------------------------------------------------------------ */
 
 const task = process.argv[2] ?? 'all'
@@ -976,5 +1108,6 @@ if (task === 'phones' || task === 'all') await phones()
 if (task === 'crops' || task === 'all') await crops()
 if (task === 'tiles' || task === 'all') await tiles()
 if (task === 'objects' || task === 'all') await objects()
+if (task === 'room' || task === 'all') await roomLoop()
 console.log(report.join('\n'))
 if (existsSync(join(CACHE, 'dimensions.json'))) console.log('dimensions → .media-cache/dimensions.json')

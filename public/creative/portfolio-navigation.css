@@ -2,7 +2,8 @@
  * The way back to the professional portfolio (index.html's .professional-return),
  * persistent on every view of the restored creative build: /creative/,
  * /creative/art, /creative/films and /creative/about. The build itself (its
- * bundle, pages and assets) is untouched; this sheet only places the link.
+ * bundle, pages and assets) is untouched; this sheet places the link and fits
+ * the homepage's PORTFOLIO heading to phones (below).
  *
  * It lives in the creative header's band (the sticky bar with Home, Film, Art
  * and About Me, 61px tall), so it never sits over the pages' content:
@@ -19,7 +20,7 @@
   --return-red: var(--accent-red, #d32f2f);
   position: fixed;
   z-index: 20;
-  top: 14px;
+  top: calc(14px + env(safe-area-inset-top, 0px));
   left: 50%;
   display: inline-flex;
   align-items: center;
@@ -86,7 +87,7 @@
   }
 
   .professional-return {
-    top: 54px;
+    top: calc(54px + env(safe-area-inset-top, 0px));
     left: max(32px, env(safe-area-inset-left, 0px));
     height: 34px;
     transform: none;
@@ -103,6 +104,17 @@
     gap: 7px;
     padding: 0 12px 0 10px;
     letter-spacing: 0.06em;
+  }
+}
+
+/*
+ * The creative homepage's PORTFOLIO (its hero heading, 64px at the smallest in the build) needs about 354px: below
+ * 420px it broke inside the word ("PORTFOL / IO") or touched the right edge. There it scales with the window instead,
+ * one line with the same margin on both sides; wider windows keep the build's own size.
+ */
+@media (max-width: 419.98px) {
+  h1.editorial-heading.text-\[clamp\(64px\,8\.8vw\,126px\)\] {
+    font-size: min(15.5vw, 64px);
   }
 }
 

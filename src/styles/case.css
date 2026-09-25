@@ -12,10 +12,11 @@
  * outcome; it is released with the outcome's end, before the next-project
  * link. Below 960px: stacked in reading order, no sticky.
  *
- * The opening (brief-v13): title, metadata, summary and status on the left,
- * the concept cover beside them on the right, standing on the same floor as
- * the text, with its caption under it; the first media section starts below
- * the cover, level with the first section heading.
+ * The opening (brief-v13 and v15): title, metadata, summary and status on the
+ * left, the concept cover beside them on the right with its caption under it,
+ * standing on the same floor as the text (or, beside a short opening, level
+ * with the title at a floor of its balanced size); the first media section
+ * starts below the cover, level with the first section heading.
  *
  * No captions under media (section 8) beyond one discreet media label each,
  * in one style (.cs-media-label): under an image beside its expand glyph,
@@ -51,6 +52,17 @@
   --case-next-gap: 64px;
   /* The cover's floor light may reach into the gutter; never past the viewport (clip, unlike hidden, keeps sticky media working). */
   overflow-x: clip;
+}
+
+/*
+ * The site's buttons on a case page (Play demo, Watch film, the Close of a recording's or film's larger view): hover and
+ * focus take the project's accent instead of the homepage red, with a 1px edge in place of the shared glow, so no
+ * control lights up beside the media. (components.css defines the buttons; this only resolves their accent here.)
+ */
+.case .button {
+  --_acc: var(--case-accent);
+  --_acc-rgb: var(--case-accent-rgb);
+  --btn-glow: 0 0 0 1px rgb(var(--_acc-rgb) / 0.55);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -140,9 +152,6 @@
    * below the navigation at the page end (a tall phone never slides under the header).
    */
   --cs-cap: max(300px, calc(100svh - var(--cs-top) - var(--cs-after)));
-  /* The Creative Production page (FilmScroll, client-work.css) still sizes its player from a caption row. */
-  --cs-caption: 54px;
-  --cs-stage-max: max(240px, calc(100svh - var(--cs-top) - var(--cs-after) - var(--cs-caption)));
   width: 100%;
   max-width: calc(var(--case-max) + 2 * var(--gutter));
   margin-inline: auto;
@@ -154,7 +163,6 @@
   .cs {
     --cs-bar: 52px;
     --cs-pbar: 48px;
-    --cs-caption: 56px;
   }
 }
 
@@ -170,7 +178,12 @@
    * the cover, the media column. (The Creative Production page places its own pieces, client-work.css.)
    */
   .cs[data-stage][data-layout='sticky'] {
-    grid-template-rows: auto 1fr;
+    /*
+     * The opening's row is at least tall enough that the first section starts below the activation line (40% of the
+     * viewport) on arrival. The row, not the opening, carries that minimum: the opening keeps its own height (start
+     * aligned), so its cover is never stretched away from the title on a tall window.
+     */
+    grid-template-rows: minmax(calc(40vh - var(--header-height) - var(--space-5) - clamp(44px, 6.5svh, 72px)), auto) 1fr;
     grid-template-areas:
       'opening opening'
       'body media';
@@ -179,8 +192,7 @@
 
   .cs[data-layout='sticky'] > .cs-opening {
     grid-area: opening;
-    /* The first section always starts below the activation line (40% of the viewport) on arrival. */
-    min-height: calc(40vh - var(--header-height) - var(--space-5) - clamp(44px, 6.5svh, 72px));
+    align-self: start;
   }
 
   .cs[data-layout='sticky'] > .cs-media {
@@ -203,12 +215,14 @@
 /* ----------------------------------------------------------------------- */
 
 /*
- * brief-v13: the concept artwork stands beside the introduction, as on the Creative Production page, on the same
- * floor as the text. Its base and its caption end level with the lede's last line (the status line where there is
- * one), so the two small annotations, the status on the left and "Concept cover" on the right, read as a pair. Its
+ * brief-v13 and v15: the concept artwork stands beside the introduction, as on the Creative Production page, on the
+ * same floor as the text. Its base and its caption end level with the lede's last line (the status line where there
+ * is one), so the two small annotations, the status on the left and "Concept cover" on the right, read as a pair. Its
  * box takes no height of its own (size containment): the text decides the opening's height and the artwork fits the
  * space beside it (at most its COVER_HEIGHT, CaseScroll.tsx), so neither the text nor the artwork is left in an
- * unexplained empty space. Centred in the media column, it shares its axis with the media below.
+ * unexplained empty space. A short opening (no status line) keeps the artwork at a floor of its balanced size
+ * instead (below): then the artwork's top is level with the title's and the extra height falls below the summary,
+ * before the story. Centred in the media column, it shares its axis with the media below.
  *
  * From 700px: two columns (60/40 on tablets; the page's 42/52 grid from 960px). Phones: one column, title and
  * metadata, a smaller cover with its caption (in view on arrival, so the route transition's object lands there),
@@ -228,7 +242,8 @@
   .cs-opening {
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    grid-template-rows: auto auto;
+    /* The last row is flexible: a cover taller than the text (its floor, below) adds its extra height there. */
+    grid-template-rows: auto minmax(0, 1fr);
     grid-template-areas:
       'intro cover'
       'lede cover';
@@ -359,13 +374,33 @@
   margin-top: var(--space-6);
 }
 
-/* Beside the text: the height of the title, metadata, summary and status decides the space (size containment). */
+/*
+ * Beside the text: the height of the title, metadata, summary and status decides the space (size containment), with
+ * a floor. A short opening (two or three lines of summary and no status line) would otherwise shrink a narrow object
+ * such as the phone or the tablet to about two thirds of its balanced size (COVER_HEIGHT, --cover-h), so the cover
+ * keeps at least --cover-floor-k of it: 74% on tablets, 80% from 960px (never wider than its column, --cover-col,
+ * the opening grid's cover column estimated from the viewport). When the floor is taller than the text, the text keeps
+ * its own spacing, level with the cover's top, and the extra height falls below the lede (the opening's last row is
+ * the flexible one), before the story.
+ */
 @media (min-width: 700px) {
   .cs-opening > .cs-cover {
+    /* The opening grid's cover column: 2 of 5 fractions after the 32px gap. */
+    --cover-col: calc((min(100vw - 2 * var(--gutter), var(--case-max)) - var(--space-6)) * 0.4);
+    --cover-floor-k: 0.74;
     --slot-w: min(var(--cover-max, 260px), 100cqw, calc((100cqh - var(--cover-cap)) * var(--cover-r, 10)));
     container-type: size;
-    min-height: 180px;
+    min-height: max(180px, calc(min(var(--cover-h, 200px) * var(--cover-floor-k), var(--cover-col) / var(--cover-r, 1)) + var(--cover-cap)));
     margin-top: 0;
+  }
+
+}
+
+@media (min-width: 960px) {
+  .cs-opening > .cs-cover {
+    /* The page grid's media column: 52% of the content width (the 6% gap is taken from the same width). */
+    --cover-col: calc(min(100vw - 2 * var(--gutter), var(--case-max)) * 0.52);
+    --cover-floor-k: 0.8;
   }
 }
 
@@ -836,11 +871,10 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
 }
 
 /*
- * The expand control, at the right end of the media bar (images) or of a film's bar (the Creative Production
- * films), never on the artwork, always visible (R4-01). With a mouse it is a quiet glyph (a 40px pointer target), in
- * the accent while the media is hovered or focused; on touch it is an outlined 44px button. For images the picture
- * itself is the enlargement control, so this one is a pointer and touch shortcut. (A product recording's Expand is
- * the last control in its bar, .cs-ctl below.)
+ * The expand control at the right end of an image's media bar, never on the artwork, always visible (R4-01). With a
+ * mouse it is a quiet glyph (a 40px pointer target), in the accent while the media is hovered or focused; on touch it
+ * is an outlined 44px button. The picture itself is the enlargement control, so this one is a pointer and touch
+ * shortcut. (A recording's or a film's Expand is the last control in its bar, .cs-ctl below.)
  */
 .cs-expand {
   position: relative;
@@ -869,8 +903,7 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
 }
 
 .cs-expand:is(:hover, :focus-visible),
-.cs-figure:has(.cs-zoom:is(:hover, :focus-visible)) .cs-expand,
-.cs-figure:has(.cs-stage[data-kind='video']:is(:hover, :focus-within)) .cs-expand {
+.cs-figure:has(.cs-zoom:is(:hover, :focus-visible)) .cs-expand {
   color: color-mix(in oklch, var(--case-accent) 80%, var(--case-ink));
 }
 
@@ -890,21 +923,7 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
   }
 }
 
-/* The earlier caption row (the Creative Production page's players still use it). */
-.cs-caption {
-  max-width: 64ch;
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  line-height: 1.5;
-  text-wrap: balance;
-}
-
-.cs-label {
-  color: var(--color-text);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
+/* The separator between a larger view's title and its media label (DemoVideo). */
 .cs-label__sep {
   color: var(--color-subtle);
 }
@@ -914,8 +933,8 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
 /* ----------------------------------------------------------------------- */
 
 /*
- * The player: one rounded frame holding the recording and, below it, its bar (DemoVideo: the compact controls;
- * FilmPlayer on the Creative Production page: its own bar). Hover brightens the frame's hairline a little (no
+ * The player: one rounded frame holding the recording and, below it, its compact controls (DemoControls, for the
+ * product recordings and the Creative Production films alike). Hover brightens the frame's hairline a little (no
  * scale, no glow); the accent belongs to the focused or pressed control inside it.
  */
 .cs-player {
@@ -941,23 +960,12 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
   background: var(--color-surface);
 }
 
-/* The Creative Production films' bar (FilmPlayer): Watch with sound, then Expand. */
-.cs-player__bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  height: var(--cs-pbar);
-  padding: 0 var(--space-2) 0 var(--space-4);
-  border-top: 1px solid rgb(255 255 255 / 0.07);
-  background: rgb(255 255 255 / 0.025);
-}
-
 /*
- * The compact controls below a recording (DemoControls): play or pause, the seek slider, sound, expand, in one row
- * inside the frame. Quiet at rest (muted glyphs, a thin pale track); a control takes the project's accent only when
- * it is focused from the keyboard or pressed, and the slider while it is dragged. Buttons are 32px with a 40px
- * target (40px and 48px on touch screens).
+ * The compact controls below a recording or a film (DemoControls): play or pause, the seek slider, sound, expand, in
+ * one row inside the frame (a film's preview: play or pause, Watch with sound, expand). Quiet at rest (muted glyphs, a
+ * thin pale track); a control takes the project's accent only when it is focused from the keyboard or pressed, and
+ * the slider while it is dragged. Buttons are 32px with a 40px target; on touch screens every control, the slider
+ * included, is 44px tall in the 48px bar.
  */
 .cs-controls {
   --ctl: 32px;
@@ -974,7 +982,9 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
 
 @media (hover: none) {
   .cs-controls {
-    --ctl: 40px;
+    --ctl: 44px;
+    gap: 0;
+    padding-inline: 2px;
   }
 }
 
@@ -994,6 +1004,12 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
   transition:
     color var(--dur-1) var(--ease-standard),
     background-color var(--dur-1) var(--ease-standard);
+}
+
+/* A bar without the seek slider: the space that keeps expand at the right end. */
+.cs-controls__gap {
+  flex: 1;
+  min-width: 0;
 }
 
 /* The pointer target around the glyph. */

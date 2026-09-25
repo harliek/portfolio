@@ -11,8 +11,10 @@
  * floor as the status line, its caption level with it), the anchor links
  * below the text, then each section with its heading level with the top of
  * its film. Every film keeps its own proportions (the Aristocracy film is 4:3)
- * in the case studies' player frame (case.css .cs-player), with the player's
- * own bar below it. Below 960px: heading, film, description.
+ * in the case studies' player frame (case.css .cs-player), with the compact
+ * bar below it that the product recordings use (DemoControls, case.css
+ * .cs-controls): nothing over the picture. Below 960px: heading, film,
+ * description.
  */
 
 .page-client-work {
@@ -30,7 +32,8 @@
    */
   .page-client-work .cs.fs[data-layout='sticky'] {
     grid-template-columns: minmax(0, 42fr) minmax(0, 52fr);
-    grid-template-rows: auto auto auto auto;
+    /* The lede's row is flexible, as in every case opening (case.css): a cover taller than the text adds its extra height below the lede. */
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
     grid-template-areas:
       'intro cover'
       'lede cover'
@@ -168,18 +171,10 @@
 /* ----------------------------------------------------------------------- */
 
 .page-client-work .fp {
-  /* The expand control (case.css .cs-expand): a quiet 24px glyph with a 40px pointer target, a 44px button on touch. */
-  --cs-expand: 24px;
   position: relative;
   isolation: isolate;
   min-width: 0;
   margin: 0;
-}
-
-@media (hover: none) {
-  .page-client-work .fp {
-    --cs-expand: 44px;
-  }
 }
 
 /*
@@ -245,14 +240,9 @@
   opacity: 1;
 }
 
-.page-client-work .fp-video:focus-visible {
-  outline: 2px solid var(--case-accent);
-  outline-offset: -2px;
-}
-
-/* One enlarge control per player (as case.css .cs-demo__video): no greyed full screen button in Chromium. */
-.page-client-work .fp-video:not(:fullscreen)::-webkit-media-controls-fullscreen-button {
-  display: none;
+/* A click on the picture plays or pauses it (a pointer shortcut for the bar's first control). */
+.page-client-work .fp-video:not([controls]) {
+  cursor: pointer;
 }
 
 /* Poster: one obvious Watch film action. */
@@ -270,17 +260,15 @@
   pointer-events: auto;
 }
 
-/* The player's own bar (case.css .cs-player__bar): Watch with sound while the film previews, then Expand. */
-.page-client-work .fp-bar {
-  padding-left: var(--space-2);
-}
-
+/* A preview's Watch with sound, in the compact bar after Pause: a small outlined pill (the bar's one labelled control). */
 .page-client-work .fp-sound {
   position: relative;
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 30px;
+  margin-left: var(--space-1);
   padding: 0 12px 0 10px;
   border: 0;
   border-radius: 999px;
@@ -305,11 +293,10 @@
   inset: -7px -2px;
 }
 
+/* Hover and focus: the accent's edge and a faint tint, no glow (the precise edge the other player controls use). */
 .page-client-work .fp-sound:is(:hover, :focus-visible) {
   background: rgb(var(--case-accent-rgb) / 0.14);
-  box-shadow:
-    inset 0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.85),
-    0 0 14px rgb(var(--case-accent-rgb) / 0.3);
+  box-shadow: inset 0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.85);
   color: color-mix(in oklch, var(--case-accent) 55%, var(--stage-ivory));
 }
 
@@ -324,11 +311,6 @@
   }
 }
 
-/* Expand takes the accent while the film is hovered or focused (as case.css does for the other players). */
-.page-client-work .fp-player:is(:hover, :focus-within) .fp-expand {
-  color: color-mix(in oklch, var(--case-accent) 80%, var(--stage-ivory));
-}
-
 /* ----------------------------------------------------------------------- */
 /* Transcript                                                               */
 /* ----------------------------------------------------------------------- */
@@ -339,7 +321,8 @@
 
 /*
  * The transcript disclosure: quiet text (a chevron and an underlined 15px/500 label, no box), with a 44px target
- * (the negative margins keep it from adding space). On hover and focus it takes the page accent.
+ * (the negative margins keep it from adding space). On hover and focus it takes the page accent (a colour change, no
+ * glow).
  */
 .page-client-work .fs-transcript__summary {
   display: flex;
@@ -354,9 +337,7 @@
   line-height: 1.5;
   list-style: none;
   cursor: pointer;
-  transition:
-    color var(--dur-feedback) var(--ease-out),
-    text-shadow var(--dur-feedback) var(--ease-out);
+  transition: color var(--dur-feedback) var(--ease-out);
 }
 
 .page-client-work .fs-transcript__summary::-webkit-details-marker {
@@ -373,7 +354,6 @@
 
 .page-client-work .fs-transcript__summary:is(:hover, :focus-visible) {
   color: var(--case-accent);
-  text-shadow: 0 0 14px rgb(var(--case-accent-rgb) / 0.35);
 }
 
 .page-client-work .fs-transcript__summary:is(:hover, :focus-visible) :is(.fs-transcript__show, .fs-transcript__hide) {
@@ -423,7 +403,7 @@
   text-transform: uppercase;
 }
 
-html[data-motion='reduce'] .page-client-work :is(.fp-video, .fp-sound, .fp-expand, .fs-transcript__summary, .fs-transcript__chevron) {
+html[data-motion='reduce'] .page-client-work :is(.fp-video, .fp-sound, .fs-transcript__summary, .fs-transcript__chevron) {
   animation: none !important;
   transition: none !important;
 }

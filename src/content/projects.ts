@@ -45,9 +45,9 @@ export interface Project {
   /** Case study name (the case H1 and document title; accurate project naming). */
   name: string
   /**
-   * Display title matching the embedded title of the project's cover PNG
-   * (Harlie's label table, brief v8 section 4): the homepage's foremost
-   * label, the Work shelf, the mobile menu and next-project links.
+   * The project's name in the Work shelf and the mobile menu: the same
+   * identity the homepage field uses (brief v16: Jumpstart Finance, never
+   * the role; CafePress UK; Creative Production).
    */
   displayName: string
   /** Display subtitle matching the cover PNG's embedded subtitle (homepage foremost label only). */
@@ -121,7 +121,7 @@ export const PROJECTS: Project[] = [
     slug: 'cafepress-uk',
     order: 2,
     name: 'CafePress UK',
-    displayName: 'CafePress UK Launch',
+    displayName: 'CafePress UK',
     displaySubtitle: 'UK market research and storefront prototyping',
     label: 'UK market research and storefront prototype',
     category: 'PlanetArt internship',
@@ -202,7 +202,7 @@ export const PROJECTS: Project[] = [
     slug: 'creative-production',
     order: 5,
     name: 'Creative Production',
-    displayName: 'Film and Campaign Work',
+    displayName: 'Creative Production',
     displaySubtitle: 'Creative strategy, production, and client support at Shift Content',
     label: 'Client film production at Shift Content',
     category: 'Shift Content internship',
@@ -229,7 +229,7 @@ export const PROJECTS: Project[] = [
     slug: 'jumpstart',
     order: 6,
     name: 'Jumpstart Finance',
-    displayName: 'Student Founder of Fintech Venture',
+    displayName: 'Jumpstart Finance',
     displaySubtitle: 'CEO of gamified financial education platform concept and prototype',
     label: 'Financial education startup developed during a student venture program',
     category: 'Student venture',

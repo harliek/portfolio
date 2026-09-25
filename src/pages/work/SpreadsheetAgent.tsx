@@ -1,84 +1,140 @@
 import '../../styles/pages/spreadsheet-agent.css'
 import { CasePage, CaseTitle } from '../../components/case/CasePage'
-import { ScrollScrubVideo } from '../../components/case/ScrollScrubVideo'
+import { ChapterDemo, type Chapter } from '../../components/case/ChapterDemo'
 import { ResponsiveImage } from '../../components/media/ResponsiveImage'
 import { SHEET as C } from '../../content/pages/spreadsheet-agent'
 import { projectById } from '../../content/projects'
 
 const project = projectById('spreadsheet-agent')
 
+const STAGE_SIZES = '(min-width: 1408px) 1280px, calc(100vw - 48px)'
+
+/** Stage 4: the selected cell on the left, its source detail enlarged on the right, a thin connector between. */
+function Trace() {
+  return (
+    <div className="sa-trace">
+      <figure className="sa-trace__cell cx-frame">
+        <ResponsiveImage image="sa-trace-cell" sizes="(min-width: 1100px) 460px, 40vw" />
+      </figure>
+      <span className="sa-trace__link" aria-hidden="true" />
+      <figure className="sa-trace__detail cx-frame">
+        <ResponsiveImage image="sa-trace-detail" sizes="(min-width: 1100px) 680px, 56vw" />
+      </figure>
+    </div>
+  )
+}
+
+const chapters: Chapter[] = C.demo.stages.map((s) => ({
+  label: s.label,
+  caption: s.caption,
+  visual:
+    'image' in s && s.image ? (
+      <div className="cx-frame">
+        <ResponsiveImage image={s.image} sizes={STAGE_SIZES} />
+      </div>
+    ) : (
+      <Trace />
+    ),
+}))
+
 /**
- * Spreadsheet Agent (brief v16): the application is the opening visual. A
- * short title band, then one pinned passage the visitor plays with the
- * scroll, from a blank sheet through the request, its interpretation, the
- * plan to review, the rows, the traced source and the finished sheet, with
- * the seven steps as a quiet rail beneath the picture. Then the problem as
- * a statement, the review plan large with the decision beside it, and the
- * outcome as a figure.
+ * Spreadsheet Agent (brief v17): built around review and traceability. The
+ * hero with its scope; the problem in two compact columns; the four-stage
+ * demonstration (the persistent request, the scope line and its one
+ * sentence, four tabs, one picture, one stable caption, Play walkthrough),
+ * where every stage answers the same verified request; the design decisions
+ * with their tradeoff; and what the prototype demonstrates beside its
+ * limitations, with the dataset size as supporting metadata only.
  */
 export default function SpreadsheetAgent() {
   return (
     <CasePage project={project} className="page-spreadsheet-agent">
-      <header className="sa-hero">
-        <div className="sa-hero__title">
+      <header className="sa-hero cx-wrap">
+        <div data-hero-reveal>
           <CaseTitle title={C.title} meta={C.meta} />
         </div>
-        <div className="sa-hero__text">
+        <div className="sa-hero__lede" data-hero-reveal>
           <div className="cx-lede">{C.summary}</div>
-          <p className="cx-status">{C.status}</p>
         </div>
+        <figure className="sa-hero__media cx-frame" data-hero-media>
+          <ResponsiveImage image={C.hero} sizes={STAGE_SIZES} priority />
+        </figure>
       </header>
 
-      <ScrollScrubVideo
-        className="sa-demo"
-        layout="rail"
-        src="/media/video/spreadsheet-agent-scrub-1280.mp4"
-        poster="/media/img/spreadsheet-agent-scrub-poster.jpg"
-        width={1280}
-        height={646}
-        duration={25.4}
-        length={380}
-        timeMap={C.timeMap}
-        moments={C.moments}
-        label="The Spreadsheet Agent prototype, played by scrolling: a written request becomes a reviewed plan and a finished sheet"
-      />
-
-      <section className="sa-problem" aria-labelledby="sa-problem-title">
-        <p className="cx-kicker" id="sa-problem-title">
-          The problem
-        </p>
-        <p className="sa-problem__lead" data-reveal>
-          {C.problem.lead}
-        </p>
-        <p className="cx-statement sa-problem__statement" data-reveal>
-          {C.problem.statement}
-        </p>
-      </section>
-
-      <section className="sa-approach" aria-labelledby="sa-approach-title">
-        <figure className="sa-approach__media cx-frame" data-reveal>
-          <ResponsiveImage image="sheet-plan" sizes="(min-width: 1100px) 70vw, 100vw" />
-        </figure>
-        <div className="sa-approach__text" data-reveal>
-          <p className="cx-kicker">My approach</p>
-          <h2 className="sa-approach__title" id="sa-approach-title">
-            {C.approach.title}
+      <section className="sa-problem cx-wrap cx-section" aria-labelledby="sa-problem-title">
+        <div className="cx-grid">
+          <h2 className="cx-h2 sa-problem__heading" id="sa-problem-title">
+            {C.problem.heading}
           </h2>
-          <p className="cx-body">{C.approach.body}</p>
+          <p className="cx-body sa-problem__body">{C.problem.body}</p>
         </div>
       </section>
 
-      <section className="sa-outcome" aria-labelledby="sa-outcome-title">
-        <p className="cx-kicker" id="sa-outcome-title">
-          Prototype outcome
-        </p>
-        <p className="sa-outcome__figure" data-reveal aria-hidden="true">
-          {C.outcome.figure}
-          <span>{C.outcome.unit}</span>
-        </p>
-        <p className="cx-body sa-outcome__text" data-reveal>
-          {C.outcome.text}
-        </p>
+      <section className="sa-demo cx-wrap cx-section" aria-labelledby="sa-demo-title">
+        <h2 className="visually-hidden" id="sa-demo-title">
+          The prototype, in four stages
+        </h2>
+        <ChapterDemo
+          label="The Spreadsheet Agent prototype in four stages"
+          chapters={chapters}
+          hold={4}
+          head={
+            <div className="sa-demo__head">
+              <blockquote className="sa-request">
+                <p>“{C.demo.request}”</p>
+              </blockquote>
+              <div className="chapters__scope">
+                <p className="sa-scope">{C.demo.scope}</p>
+                <p className="sa-scope__note">{C.demo.scopeNote}</p>
+              </div>
+            </div>
+          }
+        />
+      </section>
+
+      <section className="sa-decisions cx-wrap cx-section" aria-labelledby="sa-decisions-title">
+        <h2 className="cx-h2" id="sa-decisions-title">
+          {C.decisions.heading}
+        </h2>
+        <div className="cx-grid sa-decisions__grid">
+          {C.decisions.items.map((d) => (
+            <div key={d.title} className="sa-decision">
+              <h3 className="cx-h3">{d.title}</h3>
+              <p className="cx-body">{d.body}</p>
+            </div>
+          ))}
+          <div className="sa-decision sa-decision--tradeoff">
+            <h3 className="cx-h3">{C.decisions.tradeoff.title}</h3>
+            <p className="cx-body">{C.decisions.tradeoff.body}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="sa-closing cx-wrap cx-section" aria-labelledby="sa-closing-title">
+        <h2 className="cx-h2" id="sa-closing-title">
+          {C.closing.lead}
+        </h2>
+        <p className="sa-closing__meta">{C.closing.meta}</p>
+        <div className="cx-grid sa-closing__cols">
+          <div>
+            <p className="cx-kicker">Demonstrated</p>
+            <ul className="cx-list">
+              {C.closing.demonstrated.map((d) => (
+                <li key={d.title}>
+                  <strong>{d.title}.</strong> {d.text}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="cx-kicker">Limitations</p>
+            <ul className="cx-list">
+              {C.closing.limitations.map((d) => (
+                <li key={d}>{d}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </section>
     </CasePage>
   )

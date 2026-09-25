@@ -1,69 +1,90 @@
-import type { ScrubMoment, ScrubTimeMap } from '../../components/case/ScrollScrubVideo'
+import type { ImageId } from '../media'
 
 /**
- * Spreadsheet Agent (brief v16): one choreographed, scroll-played passage
- * from a blank sheet to a finished one, the recording itself as the story.
+ * Spreadsheet Agent (brief v17): the page is built around review and
+ * traceability. Hero and scope, the problem, a four-stage demonstration,
+ * two design decisions with their tradeoff, and what the prototype
+ * demonstrates beside its limitations.
  *
- * Checked against the recording (Spreadsheet Agent/Spreadsheet Video.mov,
- * 37.8s; the scrub encode starts at its 2.0s, so times below are the
- * recording's minus 2.0):
- *  1 blank sheet 2.07 ("Untitled sheet · Not saved", "Select a cell to trace
- *    where its value came from.");
- *  2 request typed 4.5 to 17.2 ("Compare vendor prices across B2B
- *    products"), sent 18.1;
- *  3 "Interpreting request" 18.1 to 19.1;
- *  4 "Review before building · Build plan" 19.2 to 22.6: source "Northwind
- *    product catalog · 1,200 synthetic records · approved for this
- *    workspace", columns, sort, and "Not used: compare, across";
- *  5 rows arrive 23.75 to 24.75 (1,200);
- *  6 the selected cell's "Source data · northwind.catalog.products[].sku"
- *    bar, shown with the rows (selected automatically, never clicked);
- *  7 "Vendor Pricing and Margin is ready: 1,200 rows and 6 columns" 25.0.
- * Steps 4 to 7 pass within six seconds, so the time map gives each a
- * similar share of the scroll.
+ * The demonstration was captured on 2026-09-25 from the live prototype
+ * (spreadsheetagent.netlify.app, the build in the September recording) with
+ * a request its plan answers exactly: “Create a sheet of B2B products with
+ * vendor, cost, retail price, and margin.” The plan lists the Northwind
+ * product catalog (1,200 synthetic records), no filters, the columns SKU,
+ * Product Name, Vendor, Cost, Retail Price and Margin Percent, sorted by
+ * product name; the built sheet has 1,200 rows and six columns; selecting
+ * Atlas Goods (C3) and opening Detail shows the field
+ * northwind.catalog.products[].vendor.name, the dataset Northwind Goods
+ * product catalog v1.0.0, record B2B-1595, its definition and why the
+ * column was chosen. The earlier recording's request (“Compare vendor
+ * prices…”) is no longer shown: its plan performed no comparison.
  *
- * Qualified once, beside the title: synthetic data, AI responses simulated
- * by rules, not a live model. Not claimed: a model, live data, edits typed
- * into cells (the recording shows the editing controls, not an edit).
+ * Scope, stated once beside the demonstration: working prototype, synthetic
+ * catalog, rule-based responses (a deterministic rule engine, no model).
  */
 export const SHEET = {
   title: 'Spreadsheet Agent',
   meta: ['Independent project', 'Product design and build', '2026'],
-  status: 'Working prototype with synthetic data. The AI responses are simulated by rules, not a live model.',
   summary: (
     <p>
-      I built a prototype spreadsheet agent that turns a written request into a structured, editable sheet. It adds matching rows from a product
-      catalog and shows a plan to review before it builds anything.
+      I built a prototype spreadsheet agent that turns a written request into a structured, editable sheet. It adds matching rows from a product catalog and
+      shows a plan to review before it builds anything.
     </p>
   ),
-  moments: [
-    { start: 0, end: 2.5, label: 'A blank sheet' },
-    { start: 2.5, end: 16.1, label: 'A written request', note: '“Compare vendor prices across B2B products.”', still: 'sheet-request' },
-    { start: 16.1, end: 17.2, label: 'The agent interprets it', still: 'sheet-interpreting' },
-    { start: 17.2, end: 21.75, label: 'A plan to review first', note: 'Source, filters, columns, and sort, with unmatched words listed as unused.', still: 'sheet-plan' },
-    { start: 21.75, end: 22.5, label: 'Matching rows arrive', note: '1,200 rows from the approved catalog.', still: 'sheet-returned' },
-    { start: 22.5, end: 23.2, label: 'Each value traces to its source', note: 'The selected cell shows the catalog field it came from.' },
-    { start: 23.2, end: 25.5, label: 'The sheet is ready', note: 'Saved with 1,200 rows and six columns.', still: 'sheet-list' },
-  ] satisfies ScrubMoment[],
-  timeMap: [
-    [0, 0],
-    [0.08, 2.5],
-    [0.28, 15.6],
-    [0.36, 16.6],
-    [0.4, 17.2],
-    [0.54, 21.2],
-    [0.64, 22.1],
-    [0.76, 22.9],
-    [0.88, 23.6],
-    [1, 25.4],
-  ] satisfies ScrubTimeMap,
+  hero: 'sa-cover' as ImageId,
+
   problem: {
-    lead: 'In leasing and merchandising, I worked with large amounts of property and product data.',
-    statement: 'Preparing a new spreadsheet meant gathering data, cleaning it, and repeating the work for each requested view.',
+    heading: 'Review the plan before the sheet is built.',
+    body: 'A written request can be read more than one way. The same words might point to a different source, other columns, or another order, and a sheet built on the wrong reading looks just as finished as a right one. So the agent first shows its plan, naming the source, columns, filters, and sort, and lists any words it could not use.',
   },
-  approach: {
-    title: 'Review the plan before creating the sheet.',
-    body: 'Users can check the source, filters, columns, and sort order before building. Words the agent could not map to a field or filter are listed as unused rather than silently dropped.',
+
+  demo: {
+    scope: 'Working prototype · Synthetic catalog · Rule-based responses',
+    scopeNote: 'The agent’s responses come from a set of rules written for this prototype; they are simulated, not generated by a live model.',
+    request: 'Create a sheet of B2B products with vendor, cost, retail price, and margin.',
+    stages: [
+      { label: 'Request', image: 'sa-stage-request' as ImageId, caption: 'An empty sheet and the request, written in plain language in the assistant panel.' },
+      {
+        label: 'Review plan',
+        image: 'sa-stage-plan' as ImageId,
+        caption: 'The plan names the source, filters, the six columns, the sort, and the row limit, and waits for review.',
+      },
+      { label: 'Build sheet', image: 'sa-stage-sheet' as ImageId, caption: 'Building fills 1,200 rows and six columns, and the reply confirms what was built.' },
+      { label: 'Trace a value', caption: 'Inspect the catalog field behind a selected value.' },
+    ],
   },
-  outcome: { figure: '1,200', unit: 'rows', text: 'In the prototype, one written request becomes a saved sheet of 1,200 rows and six columns after a single review step.' },
+
+  decisions: {
+    heading: 'Design decisions',
+    items: [
+      {
+        title: 'Show the plan instead of a spinner',
+        body: 'The interpreter is a set of rules, not a model, so rather than hide it, the prototype shows exactly what it will build and waits for a decision.',
+      },
+      {
+        title: 'Keep every value traceable',
+        body: 'Any cell can be selected to see the dataset, record, and field behind it, with the reason its column was included.',
+      },
+    ],
+    tradeoff: {
+      title: 'The tradeoff',
+      body: 'Rules are predictable and easy to inspect, but narrow. A request outside their vocabulary is met with unused words listed in the plan, not a guess.',
+    },
+  },
+
+  closing: {
+    lead: 'A reviewable plan becomes an editable sheet.',
+    meta: '1,200 synthetic rows · 6 columns · 1 review step',
+    demonstrated: [
+      { title: 'Plan review', text: 'Source, columns, filters, and sort are shown and confirmed before building.' },
+      { title: 'Sheet creation', text: 'One confirmed plan becomes a saved, titled sheet.' },
+      { title: 'Source inspection', text: 'A selected value opens the catalog field and record behind it.' },
+    ],
+    limitations: [
+      'The responses are rule-based; no language model is involved.',
+      'The catalog is synthetic, so real data quality and scale are untested.',
+      'The walkthrough does not show an edit to the finished sheet.',
+      'How well the review step works for the people who build these sheets remains to be validated.',
+    ],
+  },
 }

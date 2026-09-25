@@ -368,13 +368,12 @@
   position: relative;
 }
 
-.chapters__stage .cx-frame {
+.chapters__stage > .cx-frame {
   aspect-ratio: var(--chapters-aspect, 16 / 10);
 }
 
-.chapters__stage .cx-frame > img,
-.chapters__stage .cx-frame > picture img,
-.chapters__stage .cx-frame > video {
+.chapters__stage > .cx-frame img,
+.chapters__stage > .cx-frame video {
   width: 100%;
   height: 100%;
   object-fit: cover;

@@ -1,12 +1,14 @@
 import '../../styles/pages/about.css'
+import { useLayoutEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { accentVars } from '../../content/accents'
 import { ABOUT } from '../../content/pages/about'
 import { projectById, projectPath } from '../../content/projects'
 import { SITE } from '../../content/site'
 import { prefetchRoute } from '../../routes'
-import { CoverSlot } from '../transition/CoverSlot'
-import { AboutLight } from './AboutLight'
+import { useReducedMotion } from '../../hooks/useReducedMotion'
+import { gsap } from '../../lib/gsap'
+import { ResponsiveImage } from '../media/ResponsiveImage'
 import { ArtPreview } from './ArtPreview'
 import { FeaturedFilm } from './FeaturedFilm'
 
@@ -15,26 +17,17 @@ const prefetch = (path: string) => ({
   onFocus: () => prefetchRoute(path),
 })
 
-/**
- * Scale of the About object's carousel size (OBJECT_SIZE.headshot) for the
- * portrait's slot: an upper bound (about 350px); the portrait's frame sets
- * the rendered width (about.css --portrait-w: up to 300px from 960px, up to
- * 260px from 720px, up to 240px below), keeping the artwork's proportions.
- * Keep PORTRAIT_SIZES in step with those widths and with
- * TRANSITION.slotSizes['/about'] (the file the transition warms).
- */
-const PORTRAIT_SCALE = 1.45
-const PORTRAIT_SIZES = '(min-width: 960px) 300px, (min-width: 720px) 260px, 240px'
+/** The portrait's rendered widths (about.css --portrait-w). */
+const PORTRAIT_SIZES = '(min-width: 960px) 360px, (min-width: 720px) 300px, 260px'
 
 /**
  * The /about page, reached from the carousel's About Me object and the
  * header's About link. One 40/60 grid on wide screens, stacked in reading
  * order on narrow ones:
  *
- * 1. Opening. The same headshot PNG as the carousel object, in its
- *    CoverSlot (the route transition moves the carousel image into it),
- *    cropped by a quiet frame that lines up with the greeting (the page
- *    H1), a lead paragraph and a second one.
+ * 1. Opening. The photograph of Harlie in a quiet rectangular frame (brief
+ *    v16: no cutout), drifting a few pixels against the scroll, beside the
+ *    greeting (the page H1), a lead paragraph and two more.
  * 2. Below a full-width divider, Education (about 40%) beside Experience
  *    (about 60%). Education keeps the verified degree, minor, certificate,
  *    school and dates and two short paragraphs (no separate coursework
@@ -47,22 +40,33 @@ const PORTRAIT_SIZES = '(min-width: 960px) 300px, (min-width: 720px) 260px, 240p
  *    the YouTube player requested only after that press).
  * 4. Email and LinkedIn as quiet links, with no heading.
  *
- * Behind it all, AboutLight: a slow, soft pool of lavender light that
- * follows the mouse (off for reduced motion and touch).
- *
- * When the page opens from the carousel, the portrait travels into its slot
- * while the page arrives around it (projectTransition.ts). The
- * `data-cover-reveal` markers are not styled today; they mark the text that
- * arrives after the portrait. Direct loads show everything at once.
+ * The page is deliberately still (brief v16): no pointer light, only the
+ * portrait's slight parallax, none under reduced motion.
  */
 export function AboutContent() {
   const { education: edu } = ABOUT
+  const reduced = useReducedMotion()
+  const portraitRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const frame = portraitRef.current
+    if (!frame || reduced) return
+    const tween = gsap.fromTo(
+      frame.querySelector('img'),
+      { yPercent: -3 },
+      { yPercent: 3, ease: 'none', scrollTrigger: { trigger: frame, start: 'top bottom', end: 'bottom top', scrub: true } },
+    )
+    return () => {
+      tween.scrollTrigger?.kill()
+      tween.kill()
+    }
+  }, [reduced])
+
   return (
     <div className="about-content">
-      <AboutLight />
       <div className="about-intro">
-        <div className="about-intro__portrait" role="img" aria-label={ABOUT.portraitLabel}>
-          <CoverSlot id="about" scale={PORTRAIT_SCALE} sizes={PORTRAIT_SIZES} className="about-portrait" />
+        <div ref={portraitRef} className="about-intro__portrait about-photo">
+          <ResponsiveImage image="headshot" sizes={PORTRAIT_SIZES} alt={ABOUT.portraitLabel} priority />
         </div>
         <div className="about-intro__text" data-cover-reveal="">
           <h1 className="about-heading">{ABOUT.greeting}</h1>

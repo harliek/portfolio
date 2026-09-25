@@ -67,7 +67,8 @@ export const ABOUT = {
   greeting: 'Hi, I’m Harlie.',
   /** The first paragraph is set as the lead. */
   bio: [
-    'I’m deeply invested in the future of applied AI and in building products that make it useful in everyday work. My background in cognitive science and data science shapes how I understand people, evaluate technology, and develop ideas.',
+    'I build around messy work. My projects usually begin with a fragmented process, an overloaded spreadsheet, or a system people have learned to work around.',
+    'I studied cognitive science at Berkeley, with a minor in data science, and it shapes how I build: I look at how people interpret, trust, and use technical systems, then design tools that show their reasoning and leave the decision with the person using them.',
     'I want to work where research becomes a product decision, a working prototype, or a better way to operate. My experience spans product operations, enterprise AI research, leasing, and creative production.',
   ],
   portraitLabel: 'Portrait of Harlie Katz',

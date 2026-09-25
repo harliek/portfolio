@@ -80,10 +80,11 @@
  */
 .about-content .about-heading {
   color: var(--about-ink-strong);
-  font-size: var(--about-title);
-  font-weight: var(--weight-heading);
+  font-family: var(--font-editorial);
+  font-size: calc(var(--about-title) * 1.12);
+  font-weight: 400;
   line-height: 1.04;
-  letter-spacing: -0.034em;
+  letter-spacing: -0.01em;
   text-wrap: balance;
 }
 
@@ -100,10 +101,11 @@
 /* Section titles (Education, Experience, Creative work), each opening its block below a divider. */
 .about-content .about-subheading {
   color: var(--about-ink-strong);
-  font-size: clamp(1.5rem, 1.36rem + 0.55vw, 1.875rem);
-  font-weight: var(--weight-heading);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.625rem, 1.4rem + 0.8vw, 2.25rem);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0;
 }
 
 /* ------------------------------------------------------------------ */
@@ -112,7 +114,7 @@
 
 .about-content .about-intro {
   /* The portrait's width; its frame is at least 1.29 times as tall (the cut-out plus a little headroom). */
-  --portrait-w: min(240px, 62vw);
+  --portrait-w: min(260px, 68vw);
   display: grid;
   gap: var(--space-6);
   align-items: start;
@@ -120,7 +122,7 @@
 
 @media (min-width: 720px) {
   .about-content .about-intro {
-    --portrait-w: clamp(220px, 27vw, 260px);
+    --portrait-w: clamp(240px, 30vw, 300px);
     grid-template-columns: auto minmax(0, 1fr);
     column-gap: clamp(32px, 5vw, 56px);
   }
@@ -128,63 +130,41 @@
 
 @media (min-width: 960px) {
   .about-content .about-intro {
-    --portrait-w: clamp(270px, 19.5vw, 300px);
+    --portrait-w: clamp(300px, 24vw, 360px);
     grid-template-columns: var(--about-cols);
     column-gap: var(--about-gap);
   }
 }
 
 /*
- * The headshot cut-out (the carousel's About object) in its CoverSlot,
- * cropped cleanly by a quiet frame: a dark lavender-grey ground, a 1px
- * hairline and rounded corners, the cut-out standing on the frame's lower
- * edge (its flat base is the crop) with a little headroom above. No glow,
- * halo or fade.
- *
- * Aligned with the introduction: from 720px the frame's top meets the cap
- * height of the greeting (Inter's capitals start 0.156em below a 1.04 line
- * box) and it stretches with the text column, so its lower edge meets the
- * end of the second paragraph (never shorter than the cut-out plus
- * headroom, never so tall that the ground reads as an empty panel). On
- * narrow screens it sits above the greeting, on the text's left edge.
- *
- * The route transition moves the carousel's PNG into the slot itself
- * (projectTransition.ts); the frame arrives with the rest of the page.
+ * The photograph of Harlie (brief v16: a real rectangular photo, never a
+ * cut-out) in a quiet frame: a hairline and square-ish corners. The image is
+ * a little taller than its frame so its slight scroll parallax (AboutContent)
+ * never shows an edge.
  */
 .about-content .about-intro__portrait {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
   justify-self: start;
   width: var(--portrait-w);
-  min-height: calc(var(--portrait-w) * 1.29);
-  overflow: clip;
-  border-radius: 16px;
-  background: linear-gradient(to bottom in oklch, rgb(42 40 56), rgb(18 18 26) 88%);
+  aspect-ratio: 644 / 755;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #121216;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.1),
+    0 60px 120px -60px rgb(0 0 0 / 0.9);
 }
 
-/* The hairline, drawn over the cut-out so it stays whole where the shoulders meet the lower corners. */
-.about-content .about-intro__portrait::after {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px rgb(236 232 250 / 0.09);
-  content: '';
-  pointer-events: none;
-}
-
-.about-content .about-portrait {
-  flex: none;
+.about-content .about-intro__portrait img {
+  display: block;
   width: 100%;
-  /* The PNG keeps 16px of transparent margin below the flat base (1.44% of its width): the frame's edge is the crop. */
-  margin-bottom: -1.444%;
+  height: 108%;
+  margin-top: -4%;
+  object-fit: cover;
 }
 
 @media (min-width: 720px) {
   .about-content .about-intro__portrait {
-    align-self: stretch;
-    max-height: calc(var(--portrait-w) * 1.5);
     margin-top: calc(var(--about-title) * 0.156);
   }
 }

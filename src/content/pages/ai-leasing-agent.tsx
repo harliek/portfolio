@@ -18,26 +18,26 @@ export const LEASING = {
   meta: ['Leasing and Operations Associate', 'Valiance Capital – 2024 to 2025'],
   lede: (
     <p>
-      At Valiance Capital, I proposed an AI leasing assistant to address recurring inquiries within operations serving more than 1,000 tenants.
+      At Valiance Capital, I proposed an AI assistant to handle recurring leasing questions for a portfolio serving more than 1,000 tenants.
     </p>
   ),
   /** Harlie's editorial pass (v23): descriptive headings, one implementation note, one caption for the illustration. */
   sections: [
     {
-      title: 'Inquiry scope',
-      text: 'I defined the recurring questions the assistant could handle and the inquiries that required direct support from the leasing team.',
+      title: 'Defining the assistant’s scope',
+      text: 'I defined which questions the assistant could answer.',
     },
     {
-      title: 'Live property data',
-      text: 'I specified when responses required current pricing and availability from the property API.',
+      title: 'Using current property data',
+      text: 'I specified when answers needed live pricing and availability from the property API.',
     },
     {
-      title: 'Staff escalation',
-      text: 'I documented which requests required staff review and how they should be transferred to the leasing team.',
+      title: 'Handing requests to staff',
+      text: 'I documented which requests needed staff review and how to transfer them to the leasing team.',
     },
     {
-      title: 'Testing and deployment',
-      text: 'I tested responses covering availability, pricing, tours, application status, and leasing policies. The assistant was introduced in lower-risk scenarios before deployment expanded to 18 properties.',
+      title: 'Testing and rollout',
+      text: 'I tested answers about availability, pricing, tours, application status, and leasing policies. Rollout began with lower-risk inquiries and expanded to 18 properties.',
     },
   ],
 }

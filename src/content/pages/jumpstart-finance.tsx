@@ -19,8 +19,7 @@ export const JUMPSTART = {
   meta: ['Founder and Product Lead', 'Student venture, Portugal – 2024'],
   lede: (
     <p>
-      I led a five&#8209;person team at the European Innovation Academy in Porto to develop a financial education app concept. My responsibilities included
-      product direction, positioning, prototyping, and business&#8209;model development.
+      At the European Innovation Academy in Porto, I led a five&#8209;person team developing a financial education app concept. My work covered product direction, positioning, prototyping, and business&#8209;model development.
     </p>
   ),
   /** Harlie's three phones, left to right as on the homepage tile (Profile, Home, Community); `step` is the section each one illustrates. */
@@ -32,16 +31,16 @@ export const JUMPSTART = {
   /** Harlie's editorial pass (v23): the product decisions only (no competitor claims, no pitch narration). */
   features: [
     {
-      title: 'Financial education',
-      text: 'The concept organized financial education around users’ experience and goals, with topics including budgeting, banking, investing, and taxes.',
+      title: 'Organizing the learning content',
+      text: 'We organized topics such as budgeting, banking, investing, and taxes around users’ experience and goals.',
     },
     {
-      title: 'Learning progression',
-      text: 'The prototype used numbered levels and a learning path to structure progression through the material. Gamification was intended to support engagement.',
+      title: 'Building a learning path',
+      text: 'The prototype used a learning path with numbered levels to encourage continued learning.',
     },
     {
-      title: 'Community discussion',
-      text: 'The proposed community forum allowed users to ask questions and exchange perspectives alongside the learning content.',
+      title: 'Making room for discussion',
+      text: 'The proposed forum would let users ask questions and discuss what they were learning.',
     },
   ],
   /** Under the three sections (Harlie's request). The sign-ups are the pitch deck's (p. 10); the investor presentation is Harlie's own statement (not shown in the project files). */

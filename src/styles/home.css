@@ -122,7 +122,8 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  margin: 0 0 24px;
+  /* Close above PORTFOLIO (Harlie's request): about half the old gap, scaled with PORTFOLIO's size. */
+  margin: 0 0 calc(24px - var(--word-size) * 0.25);
   font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 400;
@@ -142,10 +143,14 @@
 }
 
 /* PORTFOLIO: the old portfolio's Playfair Display in white capitals. */
+.hero__title {
+  --word-size: clamp(64px, 8.8vw, 126px);
+}
+
 .hero__word {
   display: block;
   font-family: var(--font-editorial);
-  font-size: clamp(64px, 8.8vw, 126px);
+  font-size: var(--word-size);
   font-weight: 400;
   /* The old portfolio's medium weight (Playfair Display 500): the self-hosted regular face, thickened by a fine outline. */
   line-height: 1.2;
@@ -551,8 +556,8 @@
     display: none;
   }
 
-  .hero__word {
-    font-size: 15vw;
+  .hero__title {
+    --word-size: 15vw;
   }
 
   .hero__line {

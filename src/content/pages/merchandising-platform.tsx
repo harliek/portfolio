@@ -20,8 +20,7 @@ export const MERCH = {
   meta: ['Product design and build', 'Independent project – 2026'],
   lede: (
     <p>
-      During my PlanetArt internship, I designed and built an independent merchandising prototype that consolidates catalog, inventory, sales, and vendor
-      data to support replenishment decisions.
+      During my PlanetArt internship, I designed and built an independent prototype to help merchandisers decide what to reorder and how much.
     </p>
   ),
   /** The recording's segment for each decision (seconds), and one still per step for reduced motion. */
@@ -34,16 +33,16 @@ export const MERCH = {
   /** Harlie's editorial pass (v23): descriptive headings and one scope note. */
   decisions: [
     {
-      title: 'Unified product data',
-      text: 'Each product record combines pricing, margin, inventory, vendor information, and sales. The overview prioritizes pending decisions by severity and financial exposure.',
+      title: 'Bringing product data together',
+      text: 'I brought pricing, margin, inventory, vendor information, and sales into one product record. The overview prioritizes decisions by urgency and financial exposure.',
     },
     {
-      title: 'Replenishment calculations',
-      text: 'Suggested order quantities include the underlying sales velocity, demand variability, supplier lead time, safety stock, and reorder point. Supplier minimums are included in the calculation.',
+      title: 'Explaining order quantities',
+      text: 'Each suggested order quantity shows the calculation behind it, including sales patterns, supplier lead times, safety stock, and minimum order quantities.',
     },
     {
-      title: 'Review and order preparation',
-      text: 'Products at or below their reorder point are ranked by margin at risk. Merchandisers can export an order sheet for review; the prototype does not place orders.',
+      title: 'Preparing orders for review',
+      text: 'Products due for replenishment are ranked by margin at risk. Merchandisers can export an order sheet for review; the prototype does not place orders.',
     },
   ],
 }

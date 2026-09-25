@@ -91,7 +91,7 @@ export function Home() {
               </span>
             </h1>
             <p className="hero__line">
-              <TypeLine text="AI implementation, product strategy, and software development" delay={1.0} duration={0.85} />
+              <TypeLine text="AI product management, strategy, and implementation" delay={1.0} duration={0.8} />
             </p>
           </div>
         </div>

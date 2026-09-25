@@ -21,7 +21,7 @@ export const SHEET = {
   meta: ['Product design and build', 'Independent project – 2026'],
   lede: (
     <p>
-      I designed and built a spreadsheet prototype that converts written requests into reviewable plans and editable sheets using a synthetic product catalog.
+      I designed and built a prototype for creating spreadsheets from written requests, using a synthetic product catalog.
     </p>
   ),
   /**
@@ -40,21 +40,21 @@ export const SHEET = {
   /** Harlie's editorial pass (v23): the workflow's distinctions, the demonstrated request quoted on its own, one scope note. */
   steps: [
     {
-      title: 'Request interpretation',
-      text: 'The prototype interprets a written request to identify the requested product fields.',
+      title: 'Defining the request',
+      text: 'A written request specifies which product fields to include.',
       quote: '“Create a sheet of B2B products with vendor, cost, retail price, and margin.”',
     },
     {
-      title: 'Plan review',
-      text: 'Before generating a sheet, the prototype displays the data source, filters, columns, sorting, and row limit. Unsupported terms are identified for review.',
+      title: 'Reviewing the plan',
+      text: 'Before building the sheet, users can review the data source, columns, filters, and sorting. The plan flags terms it cannot interpret.',
     },
     {
-      title: 'Sheet generation',
-      text: 'The demonstrated request generates an editable sheet containing 1,200 product records and six columns.',
+      title: 'Building the sheet',
+      text: 'The approved plan becomes an editable sheet.',
     },
     {
-      title: 'Data provenance',
-      text: 'Cell details identify the source dataset, version, record, and field definition, along with the reason the column was included.',
+      title: 'Tracing the data',
+      text: 'Cell details show where the data came from, what the field means, and why it was included.',
     },
   ],
 }

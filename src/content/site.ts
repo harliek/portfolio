@@ -2,7 +2,7 @@
 export const SITE = {
   name: 'Harlie Katz',
   titleSuffix: 'Harlie Katz',
-  description: 'Harlie Katz, AI implementation, product strategy, and software development. Case studies and creative work.',
+  description: 'Harlie Katz, AI product management, strategy, and implementation. Case studies and creative work.',
   email: 'harliekatz@berkeley.edu',
   emailHref: 'mailto:harliekatz@berkeley.edu',
   linkedin: 'https://www.linkedin.com/in/harliekatz/',

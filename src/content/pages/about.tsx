@@ -40,10 +40,10 @@ export const ABOUT = {
   descriptor: 'AI implementation · Product strategy and operations',
   /** Harlie's editorial pass (v23): the name heading introduces Harlie, and the education detail is not repeated from Education. */
   intro: [
-    // Harlie's words (v26), each on its own line.
-    'I am incredibly invested in the future of AI implementation.',
-    'Across my experience, I have consistently moved beyond my defined role to identify operational friction, uncover opportunities, and develop solutions.',
-    'I am pursuing early-career roles in AI product management, strategy, and implementation. I hope to join a company I’m excited to grow with and contribute to from day one.',
+    // Harlie’s introduction, tightened in the September 25 copy review.
+    'I am invested in the future of AI implementation.',
+    'I look beyond my defined role to identify operational problems and develop solutions.',
+    'I am pursuing early-career roles in AI product management, strategy, and implementation.',
   ],
   portraitLabel: 'Portrait of Harlie Katz',
 
@@ -55,9 +55,9 @@ export const ABOUT = {
     lines: ['B.A. in Cognitive Science – Data Science minor', 'Certificate in Entrepreneurship and Technology – Sutardja Center'],
     /** Under the three lines, Harlie's wording (v26). */
     coursework: 'Coursework: machine learning, data science, user experience, computer science, psychology, human cognition',
-    /** Harlie's paragraph, word for word (v26). */
+    /** Harlie’s education paragraph, tightened in the September 25 copy review. */
     text: [
-      'Studied intelligence across cognitive and computational systems, developing an interdisciplinary foundation for understanding how people think, how intelligent systems are built, and how technology can be designed around human behavior.',
+      'I studied how people think, how intelligent systems are built, and how technology can be designed around human behavior.',
     ],
   },
 

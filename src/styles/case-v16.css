@@ -21,7 +21,6 @@
   --cx-hair: rgb(255 255 255 / 0.12);
 
   position: relative;
-  padding-bottom: var(--cx-s5);
   color: var(--cx-text);
 }
 

@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { accentVars } from '../../content/accents'
 import { ABOUT } from '../../content/pages/about'
 import { projectById, projectPath } from '../../content/projects'
-import { SITE } from '../../content/site'
 import { prefetchRoute } from '../../routes'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { gsap } from '../../lib/gsap'
@@ -38,7 +37,7 @@ const PORTRAIT_SIZES = '(min-width: 960px) 360px, (min-width: 720px) 300px, 260p
  *    original creative homepage at /creative/, a separate build, so a plain
  *    link) and An Artistic End (its authentic poster; plays the film, with
  *    the YouTube player requested only after that press).
- * 4. Email and LinkedIn as quiet links, with no heading.
+ * Email and LinkedIn now live in the site's ending (Footer.tsx), right below.
  *
  * The page is deliberately still (brief v16): no pointer light, only the
  * portrait's slight parallax, none under reduced motion.
@@ -165,22 +164,6 @@ export function AboutContent() {
           </div>
         </section>
 
-        <ul className="about-links" role="list" aria-label={ABOUT.links.label}>
-          <li>
-            <a href={SITE.emailHref} className="about-links__link">
-              {SITE.email}
-            </a>
-          </li>
-          <li>
-            <a href={SITE.linkedin} className="about-links__link" target="_blank" rel="noopener noreferrer">
-              {ABOUT.links.linkedin}
-              <span className="about-links__arrow" aria-hidden="true">
-                ↗
-              </span>
-              <span className="visually-hidden"> (opens in a new tab)</span>
-            </a>
-          </li>
-        </ul>
       </div>
     </div>
   )

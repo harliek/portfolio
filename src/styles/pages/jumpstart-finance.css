@@ -1,353 +1,247 @@
 /*
- * Jumpstart Finance page (src/pages/work/JumpstartFinance.tsx, PhoneGroup.tsx).
- * Every selector is scoped under .page-jumpstart-finance; green is the page
- * accent (--case-accent from CaseLayout).
- *
- * The stage is a group of three original prototype phones on one floor
- * (motion-plan P4, the emphasis stack). PhoneGroup sets each phone's pose from
- * one depth value (--x in phone widths from the stage centre, --rise as a share
- * of the phone height, --s, --ry, the stacking order and data-level): the phone
- * of the section being read stands in front, larger, lower and frontal; the
- * others step back, higher, smaller and turned a little towards it, and stay
- * whole behind it. Position, scale, turn, stacking and light change together in
- * one transition over --dur-3 on the arrive curve (no overshoot), so a change of
- * section is one smooth move, retargeted (never queued) when the visitor
- * scrolls fast or backward. The stacking is interpolated on the same curve, so
- * the incoming phone passes in front when the two are the same size.
- *
- * Light (motion-plan P2, at case-page strength): no box and no blur. Each phone
- * keeps its transparent silhouette with an alpha-aware rim and halo in the
- * accent, a pool of the accent on the floor beneath it and a soft contact
- * shadow at its base (both inside the phone's own transform, so they narrow
- * with its scale and turn). The lead gets the featured light, its neighbour
- * about 40% of it, the far phone a trace; brightness never drops below 0.94, so
- * every screen stays readable. Hover and keyboard focus give a phone the active
- * light only (its place follows the story, not the pointer).
+ * Jumpstart Finance (brief v16): one pinned composition. The text column
+ * holds the title, then each story step in turn (they share one place and
+ * crossfade); the trio of original prototype screens stands beside it and
+ * the timeline in JumpstartFinance.tsx moves each phone forward in turn.
  */
 
-.page-jumpstart-finance {
-  /* The shared motion system (tokens.css), with its values as fallbacks. */
-  --jf-move: var(--dur-3, 420ms);
-  --jf-ease: var(--ease-arrive, cubic-bezier(0.215, 0.61, 0.355, 1));
-  --jf-respond: var(--dur-2, 240ms);
-  --jf-respond-ease: var(--ease-respond, cubic-bezier(0.2, 0.7, 0.2, 1));
-  --jf-standard: var(--ease-standard, cubic-bezier(0.25, 0.46, 0.45, 0.94));
-  /* The rim: the accent mixed towards white (the shared light model's --light-rim-mix). */
-  --jf-rim: color-mix(in oklch, var(--case-accent) var(--light-rim-mix, 55%), white);
+.jf-story {
+  position: relative;
+  height: calc(100svh - var(--header-height) + 520svh);
 }
 
-.page-jumpstart-finance .jf-group {
+.jf-stage {
+  position: sticky;
+  top: var(--header-height);
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  width: 100%;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(24px, 4vw, 72px);
+  align-items: center;
+  height: calc(100svh - var(--header-height));
+  padding: 0 var(--cx-edge);
+  overflow: hidden;
+}
+
+/* The panels share one place and crossfade. */
+.jf-text {
+  display: grid;
+  align-items: center;
+}
+
+.jf-panel {
+  grid-area: 1 / 1;
+  display: grid;
+  gap: var(--cx-s2);
+  align-content: center;
+}
+
+.jf-panel--intro .cx-lede {
+  margin-top: var(--cx-s1);
+}
+
+.jf-panel__index {
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.jf-panel__index span {
+  color: var(--cx-dim);
+}
+
+.jf-panel__title {
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(2rem, 3.8vw, 4rem);
+  font-weight: 400;
+  line-height: 1.02;
+  color: #fff;
+}
+
+.jf-panel .cx-body {
+  max-width: 44ch;
+}
+
+.jf-result__figure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.1em 0.24em;
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(4.5rem, 11vw, 10rem);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.jf-result__figure span {
+  font-family: var(--font-sans);
+  font-size: clamp(0.75rem, 0.95vw, 0.875rem);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cx-dim);
+}
+
+/* The trio: phones stand at the stage's centre; poses come from the timeline. */
+.jf-trio {
+  position: relative;
+  display: grid;
   height: 100%;
   margin: 0;
 }
 
-/*
- * The phones' floor: a size container (the phone width and the poses are in its units). The phone width is the
- * largest that lets the group's widest state (--jf-span phone widths, from PhoneGroup) fill 96% of the stage's
- * width while the lead fits its height; the depth is a perspective proportional to that width, so the group
- * looks the same at every size.
- */
-.page-jumpstart-finance .jf-floor {
-  /* The front floor line, above the floor's bottom edge: room for the lead's contact shadow and floor light. */
-  --jf-base: 3cqh;
-  --jf-pw: min(calc(96cqw / var(--jf-span, 2.55)), calc((96cqh - var(--jf-base)) * 600 / 1210));
-  --jf-ph: calc(var(--jf-pw) * 1210 / 600);
-  position: relative;
-  container-type: size;
-  perspective: calc(var(--jf-pw) * 6);
-  perspective-origin: 50% 40%;
-}
-
-/* A faint, broad pool of the accent on the shared floor under the group (never behind a screen). */
-.page-jumpstart-finance .jf-floor::before {
-  content: '';
+.jf-trio__stage {
   position: absolute;
-  left: 8%;
-  right: 8%;
-  bottom: 0;
-  height: calc(var(--jf-base) + 0.1 * var(--jf-ph));
-  background: radial-gradient(closest-side in oklch, color-mix(in oklch, var(--case-accent) 12%, transparent), transparent);
-  pointer-events: none;
+  inset: 0;
+  perspective: 1400px;
+  --jf-phone-h: min(70svh, 640px);
 }
 
-/*
- * Light by level: the shared light model (tokens.css --light-*), at case-page strength (--light-case restrains
- * the halo and the floor light). The lead takes the featured row, its neighbour the near row (about 40% of it),
- * the far phone the far row; the balanced group at the outcome sits halfway between featured and near. The
- * screens are the evidence, so brightness never goes below 0.94 (motion-plan P4), even for the far phone.
- */
-.page-jumpstart-finance .jf-phone {
-  --edge-a: var(--light-near-edge-a);
-  --edge-r: var(--light-near-edge-r);
-  --halo-a: calc(var(--light-near-halo-a) * var(--light-case));
-  --halo-r: var(--light-near-halo-r);
-  --bright: max(0.94, var(--light-near-bright));
-  --spill-o: calc(var(--light-near-spill) * var(--light-case));
-  --shadow-o: var(--light-near-shadow);
-}
-
-.page-jumpstart-finance .jf-phone[data-level='lead'] {
-  --edge-a: var(--light-feat-edge-a);
-  --edge-r: var(--light-feat-edge-r);
-  --halo-a: calc(var(--light-feat-halo-a) * var(--light-case));
-  --halo-r: var(--light-feat-halo-r);
-  --bright: var(--light-feat-bright);
-  --spill-o: calc(var(--light-feat-spill) * var(--light-case));
-  --shadow-o: var(--light-feat-shadow);
-}
-
-.page-jumpstart-finance .jf-phone[data-level='far'] {
-  --edge-a: var(--light-far-edge-a);
-  --edge-r: var(--light-far-edge-r);
-  --halo-a: calc(var(--light-far-halo-a) * var(--light-case));
-  --halo-r: var(--light-far-halo-r);
-  --bright: max(0.94, var(--light-far-bright));
-  --spill-o: calc(var(--light-far-spill) * var(--light-case));
-  --shadow-o: var(--light-far-shadow);
-}
-
-.page-jumpstart-finance .jf-phone[data-level='even'] {
-  --edge-a: calc((var(--light-feat-edge-a) + var(--light-near-edge-a)) / 2);
-  --edge-r: var(--light-near-edge-r);
-  --halo-a: calc((var(--light-feat-halo-a) + var(--light-near-halo-a)) / 2 * var(--light-case));
-  --halo-r: calc((var(--light-feat-halo-r) + var(--light-near-halo-r)) / 2);
-  --bright: calc((var(--light-feat-bright) + var(--light-near-bright)) / 2);
-  --spill-o: calc((var(--light-feat-spill) + var(--light-near-spill)) / 2 * var(--light-case));
-  --shadow-o: calc((var(--light-feat-shadow) + var(--light-near-shadow)) / 2);
-}
-
-/*
- * A phone stands on the front floor line at the stage centre; its pose moves it along the floor (--x phone
- * widths), back and up (--rise of its height), turns it and scales it about its base.
- */
-.page-jumpstart-finance .jf-phone {
+.jf-phone {
   position: absolute;
   left: 50%;
-  bottom: var(--jf-base);
-  width: var(--jf-pw);
-  aspect-ratio: 600 / 1210;
-  transform: translate(calc(var(--x) * var(--jf-pw) - 50%), calc(var(--rise) * var(--jf-ph) * -1)) rotateY(var(--ry)) scale(var(--s));
-  transform-origin: 50% 100%;
-  transition:
-    transform var(--jf-move) var(--jf-ease),
-    z-index var(--jf-move) var(--jf-ease);
+  top: 50%;
+  width: calc(var(--jf-phone-h) * 600 / 1210);
+  /* The timeline owns the transform (centring included); reduced motion sets its own below. */
+  will-change: transform, filter;
 }
 
-/* The accent light on the floor beneath the phone, rising with its level. */
-.page-jumpstart-finance .jf-phone__spill {
-  position: absolute;
-  z-index: -1;
-  left: 50%;
-  top: 99%;
-  width: 116%;
-  height: 12%;
-  translate: -50% -50%;
-  background: radial-gradient(
-    closest-side,
-    rgb(var(--case-accent-rgb) / 0.3),
-    rgb(var(--case-accent-rgb) / 0.1) 48%,
-    rgb(var(--case-accent-rgb) / 0)
-  );
-  opacity: var(--spill-o);
-  pointer-events: none;
-  transition: opacity var(--jf-move) var(--jf-ease);
-}
-
-/* The soft contact shadow where the phone meets the floor. */
-.page-jumpstart-finance .jf-phone__shadow {
-  position: absolute;
-  z-index: -1;
-  left: 50%;
-  top: 99.2%;
-  width: 90%;
-  height: 4.2%;
-  translate: -50% -50%;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(1 1 5 / 0.92), rgb(1 1 5 / 0.55) 45%, rgb(1 1 5 / 0));
-  opacity: var(--shadow-o);
-  pointer-events: none;
-  transition: opacity var(--jf-move) var(--jf-ease);
-}
-
-/*
- * The phone itself: brightness and the two-layer, alpha-aware light (a narrow rim following the silhouette and
- * a wider halo). One list of filter functions in every state, so it interpolates with the move.
- */
-.page-jumpstart-finance .jf-phone__body {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  filter: brightness(var(--bright)) drop-shadow(0 0 var(--edge-r) color-mix(in oklch, var(--jf-rim) calc(var(--edge-a) * 100%), transparent))
-    drop-shadow(0 0 var(--halo-r) rgb(var(--case-accent-rgb) / var(--halo-a)));
-  transition: filter var(--jf-move) var(--jf-ease);
-}
-
-.page-jumpstart-finance .jf-phone__body .picture,
-.page-jumpstart-finance .jf-phone__body img {
+.jf-phone img {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
+  filter: drop-shadow(0 36px 40px rgb(0 0 0 / 0.55));
 }
 
-/* The phone is its own enlarge control: a button over its silhouette (the phone's corner radius). */
-.page-jumpstart-finance .jf-phone__zoom {
+/* A soft contact shadow grounds the group (no glow). */
+.jf-trio__stage::after {
+  content: '';
   position: absolute;
-  inset: 1.3% 1.3%;
-  padding: 0;
-  border: 0;
-  border-radius: 12% / 6%;
-  background: none;
-  cursor: zoom-in;
-}
-
-.page-jumpstart-finance .jf-phone__zoom:focus-visible {
-  outline: 2px solid var(--case-accent);
-  outline-offset: 5px;
-}
-
-/* Hover and keyboard focus: the active light (the model's active row) over --dur-2; the phone keeps its place and size. */
-.page-jumpstart-finance .jf-phone:has(.jf-phone__zoom:focus-visible) {
-  --edge-a: var(--light-active-edge-a);
-  --edge-r: var(--light-active-edge-r);
-  --halo-a: calc(var(--light-active-halo-a) * var(--light-case));
-  --halo-r: var(--light-active-halo-r);
-  --bright: var(--light-active-bright);
-  --spill-o: calc(var(--light-active-spill) * var(--light-case));
-}
-
-@media (hover: hover) {
-  .page-jumpstart-finance .jf-phone:has(.jf-phone__zoom:hover) {
-    --edge-a: var(--light-active-edge-a);
-    --edge-r: var(--light-active-edge-r);
-    --halo-a: calc(var(--light-active-halo-a) * var(--light-case));
-    --halo-r: var(--light-active-halo-r);
-    --bright: var(--light-active-bright);
-    --spill-o: calc(var(--light-active-spill) * var(--light-case));
-  }
-
-  .page-jumpstart-finance .jf-phone:has(.jf-phone__zoom:hover) :is(.jf-phone__body, .jf-phone__spill) {
-    transition-duration: var(--jf-respond);
-    transition-timing-function: var(--jf-respond-ease);
-  }
-}
-
-.page-jumpstart-finance .jf-phone:has(.jf-phone__zoom:focus-visible) :is(.jf-phone__body, .jf-phone__spill) {
-  transition-duration: var(--jf-respond);
-  transition-timing-function: var(--jf-respond-ease);
-}
-
-/* Keyboard focus brings a phone in front at once, so its focus ring is never hidden behind a neighbour. */
-.page-jumpstart-finance .jf-phone:has(.jf-phone__zoom:focus-visible) {
-  z-index: 4 !important;
-  transition-property: transform;
-}
-
-/* The group's one media label (Original 2024 prototype), centred under the floor. */
-.page-jumpstart-finance .jf-group__label {
-  justify-self: center;
-  margin-top: var(--space-2);
-  text-align: center;
-}
-
-/*
- * Beside the story: the stage takes the media column's whole width (its height is the page's 8 / 7 box, capped
- * so the figure still fits beside the outcome at the page end). On a short window the group is as tall as that
- * cap allows and stays centred.
- */
-@media (min-width: 960px) {
-  .page-jumpstart-finance .cs-custom[data-variant='sticky'][data-ratio] {
-    width: 100%;
-    height: var(--cs-mh);
-    aspect-ratio: auto;
-  }
-}
-
-/* ----------------------------------------------------------------------- */
-/* Stacked (below 960px)                                                    */
-/* ----------------------------------------------------------------------- */
-
-/* The group after the opening, as wide as the column but never taller than most of the screen. */
-.page-jumpstart-finance .cs-custom[data-variant='stacked'] {
-  width: min(100%, calc(min(68svh, 600px) * var(--stage-r)));
-  margin-inline: auto;
-}
-
-/* Room under the phones for the index of screen names. */
-.page-jumpstart-finance .jf-group[data-layout='stacked'] .jf-floor {
-  --jf-base: calc(var(--jf-index-h) + 2cqh);
-  --jf-index-h: 26px;
-}
-
-/*
- * The index: each screen's name under its phone, following it along the floor; the phone of the section being
- * read is marked in the accent with a small light (adapted from Beirne Relay's step row on phones).
- */
-.page-jumpstart-finance .jf-index {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--jf-index-h);
+  left: 50%;
+  top: calc(50% + var(--jf-phone-h) * 0.52);
+  width: min(90%, calc(var(--jf-phone-h) * 1.5));
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.6), rgb(0 0 0 / 0));
+  transform: translateX(-50%);
   pointer-events: none;
 }
 
-.page-jumpstart-finance .jf-index__name {
+.jf-trio__label {
   position: absolute;
-  left: 50%;
-  bottom: 0;
-  display: inline-flex;
-  align-items: center;
-  translate: calc(var(--x) * var(--jf-pw) - 50%) 0;
-  color: var(--color-subtle);
-  font-size: 0.75rem;
-  font-weight: var(--weight-label, 500);
-  line-height: 1.3;
-  letter-spacing: 0.08em;
+  right: 0;
+  bottom: clamp(16px, 3svh, 32px);
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  white-space: nowrap;
-  transition:
-    translate var(--jf-move) var(--jf-ease),
-    color var(--jf-respond) var(--jf-standard);
+  color: var(--cx-dim);
 }
 
-/* The marker sits outside the name (the name itself stays centred under its phone). */
-.page-jumpstart-finance .jf-index__name::before {
-  content: '';
-  position: absolute;
-  right: calc(100% + 6px);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--case-accent);
-  box-shadow: 0 0 8px rgb(var(--case-accent-rgb) / 0.6);
-  opacity: 0;
-  transition: opacity var(--jf-respond) var(--jf-standard);
+/* Reduced motion: the composition stands still; the story reads in order beside it. */
+.jf-story[data-reduced] {
+  height: auto;
 }
 
-.page-jumpstart-finance .jf-index__name[data-lead] {
-  color: color-mix(in oklch, var(--case-accent) 72%, var(--stage-ivory));
+.jf-story[data-reduced] .jf-stage {
+  position: static;
+  height: auto;
+  min-height: calc(100svh - var(--header-height));
+  padding-block: var(--cx-s4);
+  align-items: start;
 }
 
-.page-jumpstart-finance .jf-index__name[data-lead]::before {
-  opacity: 1;
+.jf-story[data-reduced] .jf-text {
+  gap: var(--cx-s4);
 }
 
-/* Phones: a squarer box, so the three phones stay a readable size in the narrow column. */
-@media (max-width: 599.98px) {
-  .page-jumpstart-finance .cs-custom[data-variant='stacked'][data-ratio] {
-    width: 100%;
-    aspect-ratio: 1;
+.jf-story[data-reduced] .jf-panel {
+  grid-area: auto;
+}
+
+.jf-story[data-reduced] .jf-trio {
+  position: sticky;
+  top: calc(var(--header-height) + 24px);
+  height: calc(100svh - var(--header-height) - 48px);
+}
+
+.jf-story[data-reduced] .jf-phone:nth-child(1) {
+  transform: translate(-124%, -50%) rotateY(-14deg) scale(0.82);
+  filter: brightness(0.6);
+}
+
+.jf-story[data-reduced] .jf-phone:nth-child(2) {
+  z-index: 2;
+  transform: translate(-50%, -50%);
+}
+
+.jf-story[data-reduced] .jf-phone:nth-child(3) {
+  transform: translate(24%, -50%) rotateY(14deg) scale(0.82);
+  filter: brightness(0.6);
+}
+
+/* Phones and narrow tablets: the trio above, the text beneath, both inside the pin. */
+@media (max-width: 899.98px) {
+  .jf-story {
+    height: calc(100svh - var(--header-height) + 420svh);
   }
-}
 
-/* ----------------------------------------------------------------------- */
-/* Reduced motion: the same emphasis, applied at once                       */
-/* ----------------------------------------------------------------------- */
+  .jf-stage {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-content: start;
+    align-items: start;
+    gap: 8px;
+    padding-top: 12px;
+  }
 
-html[data-motion='reduce'] .page-jumpstart-finance :is(.jf-phone, .jf-phone__body, .jf-phone__spill, .jf-phone__shadow, .jf-index__name),
-html[data-motion='reduce'] .page-jumpstart-finance .jf-index__name::before {
-  transition: none !important;
+  .jf-trio {
+    grid-row: 1;
+    height: 44svh;
+  }
+
+  .jf-text {
+    grid-row: 2;
+    align-items: start;
+  }
+
+  .jf-trio__stage {
+    --jf-phone-h: min(38svh, 400px);
+  }
+
+  .jf-trio__label {
+    display: none;
+  }
+
+  .jf-panel .cx-body {
+    font-size: 0.9375rem;
+  }
+
+  .jf-panel__title {
+    font-size: clamp(1.625rem, 7vw, 2.25rem);
+  }
+
+  .jf-result__figure {
+    font-size: clamp(3.5rem, 18vw, 5rem);
+  }
+
+  .jf-story[data-reduced] .jf-stage {
+    grid-template-rows: auto auto;
+  }
+
+  .jf-story[data-reduced] .jf-trio {
+    position: relative;
+    top: 0;
+    height: 52svh;
+  }
 }

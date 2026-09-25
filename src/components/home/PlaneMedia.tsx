@@ -54,12 +54,16 @@ export function PlaneMedia({ item, videoRef }: { item: FieldProject; videoRef: (
   }
   return (
     <div className="plane__screens">
-      {media.screens.map((s, k) => (
-        <picture key={s} className="plane__screen" style={{ '--k': k } as CSSProperties}>
-          <source type="image/webp" srcSet={`${s}-360.webp 360w, ${s}-540.webp 540w`} sizes="(min-width: 1100px) 10vw, 24vw" />
-          <img src={`${s}-360.png`} alt="" width={360} height={771} loading="lazy" decoding="async" draggable={false} />
-        </picture>
-      ))}
+      {media.screens.map((id, k) => {
+        const asset = getImage(id)
+        return (
+          <picture key={id} className="plane__screen" style={{ '--k': k } as CSSProperties}>
+            <source type="image/avif" srcSet={srcSet(asset, 'avif')} sizes="(min-width: 1100px) 10vw, 24vw" />
+            <source type="image/webp" srcSet={srcSet(asset, 'webp')} sizes="(min-width: 1100px) 10vw, 24vw" />
+            <img src={fallbackSrc(asset, 320)} alt="" width={asset.width} height={asset.height} loading="lazy" decoding="async" draggable={false} />
+          </picture>
+        )
+      })}
     </div>
   )
 }

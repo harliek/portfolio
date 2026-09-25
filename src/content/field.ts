@@ -14,7 +14,7 @@ import type { ProjectId } from './projects'
 export type PlaneMedia =
   | { kind: 'video'; src: string; poster: string; position?: string }
   | { kind: 'image'; image: ImageId; position?: string; pan?: 'left' | 'right' }
-  | { kind: 'screens'; screens: readonly string[] }
+  | { kind: 'screens'; screens: readonly ImageId[] }
 
 export interface FieldProject {
   id: ProjectId
@@ -69,8 +69,8 @@ export const FIELD: readonly FieldProject[] = [
     line: 'A gamified financial learning app, taken from concept to prototype and pitch.',
     media: {
       kind: 'screens',
-      screens: ['/media/img/jumpstart-screen-lessons', '/media/img/jumpstart-screen-home', '/media/img/jumpstart-screen-community'],
+      screens: ['jf-screen-lessons', 'jf-screen-progress', 'jf-screen-community'],
     },
-    alt: 'Three screens of the Jumpstart app prototype: lessons, home and community',
+    alt: 'Three screens of the original 2024 Jumpstart prototype: lessons, progress and community',
   },
 ]

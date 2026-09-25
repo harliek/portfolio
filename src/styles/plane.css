@@ -43,7 +43,7 @@
   }
 }
 
-/* Jumpstart: the app's own screens (no device frames), each taking focus in turn. */
+/* Jumpstart: the original 2024 prototype screens, each taking focus in turn (no glow). */
 .plane__screens {
   position: absolute;
   inset: 0;
@@ -56,8 +56,8 @@
 
 .plane__screen {
   display: block;
-  height: 82%;
-  aspect-ratio: 360 / 771;
+  height: 84%;
+  aspect-ratio: 600 / 1210;
 }
 
 .plane__screen img {

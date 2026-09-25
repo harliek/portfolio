@@ -20,8 +20,7 @@ export default function JumpstartFinance() {
         meta={C.meta}
         lede={C.lede}
         steps={C.features}
-        stage={{ kind: 'phones', phones: C.phones }}
-        result={C.result}
+        stage={{ kind: 'phones', phones: C.phones, all: 'jf-phones-all' }}
       />
     </CasePage>
   )

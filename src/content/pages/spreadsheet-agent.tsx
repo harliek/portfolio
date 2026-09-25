@@ -18,10 +18,10 @@
  */
 export const SHEET = {
   title: 'Spreadsheet Agent',
-  meta: ['Product design and build', 'Independent project – 2026'],
+  meta: ['Product design and build', 'Independent project · 2026'],
   lede: (
     <p>
-      I designed and built a prototype for creating spreadsheets from written requests, using a synthetic product catalog.
+      I designed and built a prototype that turns written requests into editable spreadsheets using a synthetic product catalog.
     </p>
   ),
   /**
@@ -31,30 +31,24 @@ export const SHEET = {
    * earlier recordings (request "Compare vendor prices across B2B products") are not used.
    */
   segments: [
-    [0, 8.97],
-    [8.97, 13.2],
+    [0, 13.2],
     [13.2, 18.83],
     [18.83, 24.73],
   ] as const,
-  stills: [8.6, 11.5, 17.2, 23.5],
+  stills: [11.5, 17.2, 23.5],
   /** Harlie's editorial pass (v23): the workflow's distinctions, the demonstrated request quoted on its own, one scope note. */
   steps: [
     {
-      title: 'Defining the request',
-      text: 'A written request specifies which product fields to include.',
-      quote: '“Create a sheet of B2B products with vendor, cost, retail price, and margin.”',
-    },
-    {
       title: 'Reviewing the plan',
-      text: 'Before building the sheet, users can review the data source, columns, filters, and sorting. The plan flags terms it cannot interpret.',
+      text: 'Before generating a sheet, users can review the proposed data source, columns, filters, and sorting. The plan flags unsupported terms.',
     },
     {
       title: 'Building the sheet',
-      text: 'The approved plan becomes an editable sheet.',
+      text: 'Users approve the plan to generate a sheet they can edit.',
     },
     {
       title: 'Tracing the data',
-      text: 'Cell details show where the data came from, what the field means, and why it was included.',
+      text: 'Cell details show the source record, field definition, and why the column was included.',
     },
   ],
 }

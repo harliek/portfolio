@@ -53,7 +53,7 @@ export type Stage =
     }
   | { kind: 'layers'; aspect: number; layers: readonly StageLayer[]; show: readonly number[]; /** The laptop screen's colour around the pictures. */ screen?: string }
   | { kind: 'crops'; image: ImageId; regions: readonly (Region | null)[] }
-  | { kind: 'phones'; phones: readonly { image: ImageId; name: string; step: number | readonly number[] }[] }
+  | { kind: 'phones'; phones: readonly { image: ImageId; name: string; step: number | readonly number[] }[]; /** One picture of all the phones, opened larger on a click. */ all?: ImageId }
 
 /** The reading line (a share of the window's height from the top): a step becomes current when its top reaches it. */
 const line = () => (window.matchMedia('(max-width: 899.98px)').matches ? 0.66 : 0.5)
@@ -384,6 +384,10 @@ function StageView({ stage, active, bind }: { stage: Stage; active: number; bind
         <ZoomButton
           label="View the screens larger"
           onZoom={(trigger) => {
+            if (stage.all) {
+              dialog.open(stage.all, trigger, { gallery: [stage.all] })
+              return
+            }
             const ids = stage.phones.map((p) => p.image)
             const lit = stage.phones.find((p) => (typeof p.step === 'number' ? p.step === active : p.step.includes(active)))
             dialog.open(lit?.image ?? ids[0], trigger, { gallery: ids })

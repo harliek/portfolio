@@ -17,7 +17,7 @@
  */
 export const MERCH = {
   title: 'Merchandising Platform',
-  meta: ['Product design and build', 'Independent project – 2026'],
+  meta: ['Product design and build', 'Independent project · 2026'],
   lede: (
     <p>
       During my PlanetArt internship, I designed and built an independent prototype to help merchandisers decide what to reorder and how much.
@@ -33,12 +33,12 @@ export const MERCH = {
   /** Harlie's editorial pass (v23): descriptive headings and one scope note. */
   decisions: [
     {
-      title: 'Bringing product data together',
-      text: 'I brought pricing, margin, inventory, vendor information, and sales into one product record. The overview prioritizes decisions by urgency and financial exposure.',
+      title: 'Consolidating product data',
+      text: 'I combined pricing, margin, inventory, sales, and vendor information in one product record. The overview prioritizes decisions by urgency and financial exposure.',
     },
     {
-      title: 'Explaining order quantities',
-      text: 'Each suggested order quantity shows the calculation behind it, including sales patterns, supplier lead times, safety stock, and minimum order quantities.',
+      title: 'Explaining recommendations',
+      text: 'Suggested order quantities show their underlying calculations, including sales patterns, supplier lead times, safety stock, and minimum order quantities.',
     },
     {
       title: 'Preparing orders for review',

@@ -40,9 +40,8 @@ export const ABOUT = {
   descriptor: 'AI implementation · Product strategy and operations',
   /** Harlie's editorial pass (v23): the name heading introduces Harlie, and the education detail is not repeated from Education. */
   intro: [
-    // Harlie’s introduction, tightened in the September 25 copy review.
-    'I am invested in the future of AI implementation.',
-    'I look beyond my defined role to identify operational problems and develop solutions.',
+    // Harlie's copy (September 25), word for word.
+    'I am invested in the future of AI implementation. Across my experience, I have looked beyond my defined role to identify operational problems and develop solutions.',
     'I am pursuing early-career roles in AI product management, strategy, and implementation.',
   ],
   portraitLabel: 'Portrait of Harlie Katz',
@@ -51,10 +50,8 @@ export const ABOUT = {
   education: {
     /** Harlie's wording (v26): three lines, the school with its years, then the degree and the certificate. */
     school: 'University of California, Berkeley',
-    dates: '2023 to 2026',
-    lines: ['B.A. in Cognitive Science – Data Science minor', 'Certificate in Entrepreneurship and Technology – Sutardja Center'],
-    /** Under the three lines, Harlie's wording (v26). */
-    coursework: 'Coursework: machine learning, data science, user experience, computer science, psychology, human cognition',
+    dates: '2023–2026',
+    lines: ['B.A. in Cognitive Science · Data Science minor', 'Certificate in Entrepreneurship and Technology · Sutardja Center'],
     /** Harlie’s education paragraph, tightened in the September 25 copy review. */
     text: [
       'I studied how people think, how intelligent systems are built, and how technology can be designed around human behavior.',
@@ -82,7 +79,7 @@ export const ABOUT = {
   film: {
     title: 'An Artistic End',
     /** Medium and contribution (Harlie's editorial pass, v23); the runtime (4:54 on YouTube) shows separately, on the play badge. */
-    line: 'Short film · Writing, direction, cinematography, and editing',
+    line: 'Writing, direction, cinematography, and editing',
     runtime: '4:54',
     runtimeLabel: '4 minutes 54 seconds',
     youtubeId: 'a2Vm1LFB_68',

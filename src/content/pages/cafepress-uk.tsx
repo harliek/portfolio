@@ -20,10 +20,10 @@
  */
 export const CAFEPRESS = {
   title: 'CafePress UK',
-  meta: ['Product Operations and Merchandising Intern', 'PlanetArt – 2026'],
+  meta: ['Product Operations and Merchandising Intern', 'PlanetArt · 2026'],
   lede: (
     <p>
-      At PlanetArt, I assessed whether CafePress’s US B2B model could be adapted for the UK. My work combined market research, operational review, and early storefront prototyping.
+      At PlanetArt, I assessed whether CafePress’s US B2B model could be adapted for the UK through market research, operational review, and early storefront prototyping.
     </p>
   ),
   /** Harlie's editorial pass (v23): descriptive headings, a short supporting list, one scope note. */
@@ -34,11 +34,11 @@ export const CAFEPRESS = {
     },
     {
       title: 'Evaluating suppliers and products',
-      text: 'I evaluated UK suppliers and selected potential launch products based on competitor ranges, recognizable brands, and eco-friendly options.',
+      text: 'I evaluated UK suppliers and identified potential launch products based on competitor ranges, recognizable brands, and eco-friendly options.',
     },
     {
-      title: 'Launch recommendations',
-      text: 'My recommendations covered localized product data, vendor coordination, and the merchandising workflows needed to adapt the US B2B model.',
+      title: 'Defining launch requirements',
+      text: 'My recommendations covered the product data, vendor coordination, and merchandising workflows needed to support a UK storefront.',
     },
   ],
 }

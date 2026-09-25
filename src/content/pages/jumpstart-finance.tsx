@@ -16,33 +16,36 @@ import type { ImageId } from '../media'
  */
 export const JUMPSTART = {
   title: 'Jumpstart Finance',
-  meta: ['Founder and Product Lead', 'Student venture, Portugal – 2024'],
+  meta: ['Founder and Product Lead', 'Student venture, Portugal · 2024'],
   lede: (
     <p>
-      At the European Innovation Academy in Porto, I led a five&#8209;person team developing a financial education app concept. My work covered product direction, positioning, prototyping, and business&#8209;model development.
+      At the European Innovation Academy in Porto, I led a five&#8209;person team developing a financial education app concept. My work covered product direction, positioning, prototyping, and the business model.
     </p>
   ),
-  /** Harlie's three phones, left to right as on the homepage tile (Profile, Home, Community); `step` is the section each one illustrates. */
+  /**
+   * Harlie's three phones, left to right as on the homepage tile (Profile, Home, Community); `step` is the section (or
+   * sections) each one lights: the learning experience lights the learning path and the topics, the discussion lights
+   * the community, and the pitch lights the whole app.
+   */
   phones: [
-    { image: 'jf-tile-profile' as ImageId, name: 'Profile', step: 1 },
-    { image: 'jf-tile-home' as ImageId, name: 'Home', step: 0 },
-    { image: 'jf-tile-third' as ImageId, name: 'Community', step: 2 },
+    { image: 'jf-tile-profile' as ImageId, name: 'Profile', step: [0, 2] },
+    { image: 'jf-tile-home' as ImageId, name: 'Home', step: [0, 2] },
+    { image: 'jf-tile-third' as ImageId, name: 'Community', step: [1, 2] },
   ],
   /** Harlie's editorial pass (v23): the product decisions only (no competitor claims, no pitch narration). */
   features: [
     {
-      title: 'Organizing the learning content',
-      text: 'We organized topics such as budgeting, banking, investing, and taxes around users’ experience and goals.',
+      title: 'Designing the learning experience',
+      text: 'We organized budgeting, banking, investing, and tax topics around users’ experience and goals. The prototype used a learning path with numbered levels to encourage continued learning.',
     },
     {
-      title: 'Building a learning path',
-      text: 'The prototype used a learning path with numbered levels to encourage continued learning.',
+      title: 'Supporting discussion',
+      text: 'The proposed forum would let users ask questions and exchange perspectives alongside the lessons.',
     },
     {
-      title: 'Making room for discussion',
-      text: 'The proposed forum would let users ask questions and discuss what they were learning.',
+      // The sign-ups are the pitch deck's (p. 10); the investor presentation is Harlie's own statement.
+      title: 'Pitch and response',
+      text: 'I presented the concept to a board of investors. The pitch generated 150 sign‑ups within 24 hours.',
     },
   ],
-  /** Under the three sections (Harlie's request). The sign-ups are the pitch deck's (p. 10); the investor presentation is Harlie's own statement (not shown in the project files). */
-  result: { title: 'Result', text: '150 sign‑ups within 24 hours of the pitch. I presented the concept to a board of investors.' },
 }

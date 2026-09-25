@@ -530,6 +530,13 @@ export const IMAGES = {
     source: 'PNG Tiles/jumpstart tile 3.png (supplied by Harlie, already transparent)', role: 'Jumpstart homepage tile, phone 3',
     crop: 'Trimmed to its content.',
   }),
+  // The three phones together (Profile, Home, Community), for the larger view on the case page (Harlie's request).
+  'jf-phones-all': img({
+    id: 'jf-phones-all', file: 'jf-phones-all', width: 2684, height: 1730, widths: [900, 1400, 2684], fallback: 'png', transparent: true,
+    alt: 'Three Jumpstart Finance phone screens side by side: the learning path on the profile, the home screen with topics, and the community forum.',
+    provenance: 'original-artifact', synthetic: false,
+    source: 'Composed from PNG Tiles/jumpstart tile 1 to 3 (supplied by Harlie)', role: 'Jumpstart case page: the phones, larger',
+  }),
   'merch-object': img({
     id: 'merch-object', file: 'merch-object', width: 1671, height: 828, widths: [836, 1671], fallback: 'png', transparent: true,
     alt: 'An illustrative merchandising dashboard with sample product, vendor, inventory and promotion counts, a 30-day sales chart and revenue by category.',

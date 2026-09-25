@@ -26,8 +26,8 @@ export default function AILeasingAgent() {
           aspect: 971 / 578,
           screen: '#f5f7fa',
           layers: [{ image: 'valiance-listing' }, { image: 'valiance-dashboard' }, { image: 'valiance-inbox' }],
-          // Inquiry scope and live data: the listing's assistant; staff escalation: the inbox; testing and deployment: the dashboard.
-          show: [0, 0, 2, 1],
+          // Scope and handoffs: the listing's assistant; data requirements: the inbox; testing and rollout: the dashboard.
+          show: [0, 2, 1],
         }}
       />
     </CasePage>

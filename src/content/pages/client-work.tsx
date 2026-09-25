@@ -65,9 +65,9 @@ export interface ClientFilm {
 
 export const CLIENT_WORK = {
   title: 'Creative Production',
-  meta: ['Creative Strategy and Client Solutions Intern', 'Shift Content – 2026'],
+  meta: ['Creative Strategy and Client Solutions Intern', 'Shift Content · 2026'],
   summary: (
-    <p>At Shift Content, I supported client shoots and edited footage.</p>
+    <p>At Shift Content, I supported client film production and editing.</p>
   ),
   films: [
     {
@@ -77,19 +77,19 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/nickleby-loop-trim-1138.mp4', poster: '/media/img/nickleby-loop-poster.jpg', width: 1138, height: 640 },
       work: (
         <p>
-          I helped set up lighting and equipment and filmed B&#8209;roll for an interview shoot. Senior team members drew question cards and answered without a script to create testimonials and FAQ content.
+          I helped set up lighting and equipment and filmed B&#8209;roll for an interview shoot. Team members answered question cards without a script, creating testimonials and FAQ content.
         </p>
       ),
     },
     {
       id: 'aristocracy',
-      name: 'Aristocracy',
+      name: 'Aristocracy London',
       video: 'aristocracy',
       // Cropped to fill the 16:9 frame (Harlie's request: no black borders).
       clip: { src: '/media/video/aristocracy-loop-854.mp4', poster: '/media/img/aristocracy-loop-poster.jpg', width: 854, height: 640, fill: true },
       work: (
         <p>
-          I helped with lighting and on-set coordination for Aristocracy London’s spring/summer campaign, and filmed behind&#8209;the&#8209;scenes content for the agency’s marketing.
+          I supported lighting and on&#8209;set coordination for the spring/summer campaign and filmed behind&#8209;the&#8209;scenes content for the agency’s marketing.
         </p>
       ),
     },

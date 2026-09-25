@@ -12,8 +12,21 @@ export interface ScrubMoment {
   label: string
   /** At most one short sentence. */
   note?: string
-  /** A still of this moment for phones and reduced motion. */
-  still: ImageId
+  /** A still of this moment for phones and reduced motion (a moment without one reads as text). */
+  still?: ImageId
+}
+
+/** Scroll progress (0 to 1) against video seconds, ascending; lets fast passages of a recording take more scroll. */
+export type ScrubTimeMap = readonly (readonly [number, number])[]
+
+const timeAt = (map: ScrubTimeMap, p: number) => {
+  if (p <= map[0][0]) return map[0][1]
+  for (let k = 1; k < map.length; k++) {
+    const [p1, t1] = map[k]
+    const [p0, t0] = map[k - 1]
+    if (p <= p1) return t0 + ((t1 - t0) * (p - p0)) / (p1 - p0 || 1)
+  }
+  return map[map.length - 1][1]
 }
 
 interface ScrollScrubVideoProps {
@@ -27,8 +40,14 @@ interface ScrollScrubVideoProps {
   moments: readonly ScrubMoment[]
   /** Accessible description of the recording. */
   label: string
-  /** Scroll distance per second of video (svh); the pinned section is duration × this. */
+  /** Scroll distance per second of video (svh); the pinned section is duration × this (or `length`). */
   svhPerSecond?: number
+  /** The pinned section's scroll length (svh), overriding svhPerSecond. */
+  length?: number
+  /** Uneven pacing: scroll progress against video seconds (default: linear over the duration). */
+  timeMap?: ScrubTimeMap
+  /** The annotations as an index beside the picture, or as a rail of steps beneath it. */
+  layout?: 'index' | 'rail'
   className?: string
 }
 
@@ -61,7 +80,20 @@ interface ScrollScrubVideoProps {
  * Phones and reduced motion get the same moments as a quiet sequence of
  * stills with their annotations (no pinning, no scrubbing).
  */
-export function ScrollScrubVideo({ src, poster, width, height, duration, moments, label, svhPerSecond = 7, className }: ScrollScrubVideoProps) {
+export function ScrollScrubVideo({
+  src,
+  poster,
+  width,
+  height,
+  duration,
+  moments,
+  label,
+  svhPerSecond = 7,
+  length,
+  timeMap,
+  layout = 'index',
+  className,
+}: ScrollScrubVideoProps) {
   const reduced = useReducedMotion()
   const phone = useMediaQuery('(max-width: 699.98px)')
   const sectionRef = useRef<HTMLElement>(null)
@@ -83,6 +115,10 @@ export function ScrollScrubVideo({ src, poster, width, height, duration, moments
     const section = sectionRef.current
     const video = videoRef.current
     if (!section || !video || !scrub) return
+    const map: ScrubTimeMap = timeMap ?? [
+      [0, 0],
+      [1, duration],
+    ]
     let target = 0
     let running = false
     let frame = 0
@@ -92,14 +128,14 @@ export function ScrollScrubVideo({ src, poster, width, height, duration, moments
       start: 'top top+=61',
       end: 'bottom bottom',
       onUpdate: (self) => {
-        target = self.progress * duration
+        target = timeAt(map, self.progress)
       },
       onToggle: (self) => {
         running = self.isActive
         if (running) loop()
       },
       onRefresh: (self) => {
-        target = self.progress * duration
+        target = timeAt(map, self.progress)
       },
     })
     const loop = () => {
@@ -127,19 +163,35 @@ export function ScrollScrubVideo({ src, poster, width, height, duration, moments
       trigger.kill()
       video.removeEventListener('loadedmetadata', onLoaded)
     }
-  }, [scrub, duration, moments])
+  }, [scrub, duration, moments, timeMap])
 
   if (!scrub) {
     return (
       <section className={['scrub scrub--stills', className].filter(Boolean).join(' ')} aria-label={label}>
         {moments.map((m) => {
+          if (!m.still)
+            return (
+              <p key={m.label} className="scrub__still scrub__still--text">
+                <span className="scrub__label">{m.label}</span>
+                {m.note && <span className="scrub__note">{m.note}</span>}
+              </p>
+            )
           const img = getImage(m.still)
           return (
             <figure key={m.label} className="scrub__still">
               <picture>
                 <source type="image/avif" srcSet={srcSet(img, 'avif')} sizes="(min-width: 700px) 80vw, 100vw" />
                 <source type="image/webp" srcSet={srcSet(img, 'webp')} sizes="(min-width: 700px) 80vw, 100vw" />
-                <img src={fallbackSrc(img, 1200)} srcSet={srcSet(img, 'jpg')} sizes="(min-width: 700px) 80vw, 100vw" alt={img.alt} width={img.width} height={img.height} loading="lazy" decoding="async" />
+                <img
+                  src={fallbackSrc(img, 1200)}
+                  srcSet={srcSet(img, 'jpg')}
+                  sizes="(min-width: 700px) 80vw, 100vw"
+                  alt={img.alt}
+                  width={img.width}
+                  height={img.height}
+                  loading="lazy"
+                  decoding="async"
+                />
               </picture>
               <figcaption>
                 <span className="scrub__label">{m.label}</span>
@@ -156,8 +208,14 @@ export function ScrollScrubVideo({ src, poster, width, height, duration, moments
     <section
       ref={sectionRef}
       className={['scrub', className].filter(Boolean).join(' ')}
+      data-layout={layout}
       aria-label={label}
-      style={{ '--scrub-length': `${Math.round(duration * svhPerSecond)}svh`, '--scrub-aspect': `${width} / ${height}` } as CSSProperties}
+      style={
+        {
+          '--scrub-length': `${length ?? Math.round(duration * svhPerSecond)}svh`,
+          '--scrub-aspect': `${width} / ${height}`,
+        } as CSSProperties
+      }
     >
       <div className="scrub__pin">
         <div className="scrub__frame">

@@ -1,58 +1,34 @@
-import type { StorySection } from '../../components/case/CaseScroll'
-import type { TimeMap } from '../../components/media/DemoVideo'
+import type { ScrubMoment, ScrubTimeMap } from '../../components/case/ScrollScrubVideo'
 
 /**
- * Spreadsheet Agent (CaseScroll `video` media with an edited preview; brief-v8 section 10).
+ * Spreadsheet Agent (brief v16): one choreographed, scroll-played passage
+ * from a blank sheet to a finished one, the recording itself as the story.
  *
- * Inline, an edited preview at 1.5× plays (VIDEOS `spreadsheet-agent-preview`, labelled "Edited preview · 1.5×
- * speed"): the request, the reviewable build plan at 1.8s, then the sheet created and filled from 5.8s (the sheet
- * list and most of the typing are left out, so the preview no longer dwells on an empty sheet). Expanding plays the
- * complete recording (`spreadsheet-agent`) at original speed, from the matching moment (PREVIEW_MAP). Its poster is
- * the build plan, for reduced motion and a refused autoplay.
+ * Checked against the recording (Spreadsheet Agent/Spreadsheet Video.mov,
+ * 37.8s; the scrub encode starts at its 2.0s, so times below are the
+ * recording's minus 2.0):
+ *  1 blank sheet 2.07 ("Untitled sheet · Not saved", "Select a cell to trace
+ *    where its value came from.");
+ *  2 request typed 4.5 to 17.2 ("Compare vendor prices across B2B
+ *    products"), sent 18.1;
+ *  3 "Interpreting request" 18.1 to 19.1;
+ *  4 "Review before building · Build plan" 19.2 to 22.6: source "Northwind
+ *    product catalog · 1,200 synthetic records · approved for this
+ *    workspace", columns, sort, and "Not used: compare, across";
+ *  5 rows arrive 23.75 to 24.75 (1,200);
+ *  6 the selected cell's "Source data · northwind.catalog.products[].sku"
+ *    bar, shown with the rows (selected automatically, never clicked);
+ *  7 "Vendor Pricing and Margin is ready: 1,200 rows and 6 columns" 25.0.
+ * Steps 4 to 7 pass within six seconds, so the time map gives each a
+ * similar share of the scroll.
  *
- * Copy: The problem's second sentence and My approach are brief-v8 section 10 verbatim ("Preparing a new spreadsheet ...",
- * "Review the plan before creating the sheet. Users can check ..."). The status line states once that the AI responses
- * are simulated (no live model), so the page never describes a production agent; the opening says "prototype". The
- * homepage's display subtitle ("Built an agent that retrieves data ...") is a label; the page says what the recording
- * shows (matching rows added from a product catalog). Word counts: opening 32, The problem 30, My approach 36,
- * Prototype outcome 21.
- *
- * Checked against the recording (Spreadsheet Agent/Spreadsheet Video.mov, 37.8s, read frame by frame):
- *   4 to 18.4s  the request "Compare vendor prices across B2B products" typed into the assistant panel ("Describe the
- *               result you need. Review the data source and logic before anything is added to your sheet.")
- *   18.5 to 19s "Interpreting request"
- *   19.25 to 22s "Review before building · Build plan": Source (Northwind product catalog, "1,200 synthetic records
- *               approved for this workspace"), Filters, Columns, Sort, Row limit, Edit plan, Discard, Build sheet, and
- *               "Not used: compare, across. These words did not map to a field or filter, so they had no effect on
- *               the plan."
- *   22 to 25.25s Build sheet: "Checking approved sources", "No filters to apply", "Creating 6 columns", "Adding 1,200
- *               matching products" (200 to 1,200 rows), "Sheet ready"
- *   25.25s      "Vendor Pricing and Margin is ready: 1,200 rows and 6 columns from the Northwind catalog."; the sheet
- *               "Saved · 1,200 rows · 6 columns" with an editing toolbar, a formula bar, Download CSV and "Ask for a
- *               change to this sheet"
- * "Editable" rests on those controls (no cell edit is typed on screen); Download CSV is visible but not used. The
- * leasing and merchandising data work is on the résumé (Valiance Capital, a 1,000+ tenant portfolio; PlanetArt,
- * product, vendor and inventory data). "Simulated by rules, not a live model": Harlie's statement (earlier briefs),
- * the plan's "Not used" words (a field mapping, not a model), and the project's own README
- * (~/Downloads/spreadsheet-agent: "a deterministic rule engine, not a language model"; "no database, no API, no
- * authentication and no model behind it"). That local copy is a related version, not the exact recorded build (its
- * catalog is "Northwind Goods" and it lacks the recording's "Review before building" wording).
+ * Qualified once, beside the title: synthetic data, AI responses simulated
+ * by rules, not a live model. Not claimed: a model, live data, edits typed
+ * into cells (the recording shows the editing controls, not an edit).
  */
-
-/** [previewSeconds, completeSeconds], printed by `node scripts/prepare-media.mjs previews`. */
-export const PREVIEW_MAP: TimeMap = [
-  [0, 17],
-  [0.9, 18.35],
-  [1.2, 18.35],
-  [3.567, 21.9],
-  [4.367, 21.9],
-  [7.433, 26.5],
-  [8.633, 26.5],
-  [10.133, 28.75],
-]
-
-export const SPREADSHEET_AGENT = {
-  meta: ['Product design and build · Independent project', '2026 · Spreadsheets from written requests'],
+export const SHEET = {
+  title: 'Spreadsheet Agent',
+  meta: ['Independent project', 'Product design and build', '2026'],
   status: 'Working prototype with synthetic data. The AI responses are simulated by rules, not a live model.',
   summary: (
     <p>
@@ -60,31 +36,34 @@ export const SPREADSHEET_AGENT = {
       catalog and shows a plan to review before it builds anything.
     </p>
   ),
-  sections: [
-    {
-      id: 'problem',
-      title: 'The problem',
-      body: (
-        <p>
-          In leasing and merchandising, I worked with large amounts of property and product data. Preparing a new spreadsheet meant gathering data,
-          cleaning it, and repeating the work for each requested view.
-        </p>
-      ),
-    },
-    {
-      id: 'approach',
-      title: 'My approach',
-      body: (
-        <p>
-          <strong>Review the plan before creating the sheet.</strong> Users can check the source, filters, columns, and sort order before building.
-          Words the agent could not map to a field or filter are listed as unused rather than silently dropped.
-        </p>
-      ),
-    },
-  ] satisfies StorySection[],
-  outcome: {
-    id: 'outcome',
-    title: 'Prototype outcome',
-    body: <p>In the prototype, one written request becomes a saved sheet of 1,200 rows and six columns after a single review step.</p>,
-  } satisfies StorySection,
+  moments: [
+    { start: 0, end: 2.5, label: 'A blank sheet' },
+    { start: 2.5, end: 16.1, label: 'A written request', note: '“Compare vendor prices across B2B products.”', still: 'sheet-request' },
+    { start: 16.1, end: 17.2, label: 'The agent interprets it', still: 'sheet-interpreting' },
+    { start: 17.2, end: 21.75, label: 'A plan to review first', note: 'Source, filters, columns, and sort, with unmatched words listed as unused.', still: 'sheet-plan' },
+    { start: 21.75, end: 22.5, label: 'Matching rows arrive', note: '1,200 rows from the approved catalog.', still: 'sheet-returned' },
+    { start: 22.5, end: 23.2, label: 'Each value traces to its source', note: 'The selected cell shows the catalog field it came from.' },
+    { start: 23.2, end: 25.5, label: 'The sheet is ready', note: 'Saved with 1,200 rows and six columns.', still: 'sheet-list' },
+  ] satisfies ScrubMoment[],
+  timeMap: [
+    [0, 0],
+    [0.08, 2.5],
+    [0.28, 15.6],
+    [0.36, 16.6],
+    [0.4, 17.2],
+    [0.54, 21.2],
+    [0.64, 22.1],
+    [0.76, 22.9],
+    [0.88, 23.6],
+    [1, 25.4],
+  ] satisfies ScrubTimeMap,
+  problem: {
+    lead: 'In leasing and merchandising, I worked with large amounts of property and product data.',
+    statement: 'Preparing a new spreadsheet meant gathering data, cleaning it, and repeating the work for each requested view.',
+  },
+  approach: {
+    title: 'Review the plan before creating the sheet.',
+    body: 'Users can check the source, filters, columns, and sort order before building. Words the agent could not map to a field or filter are listed as unused rather than silently dropped.',
+  },
+  outcome: { figure: '1,200', unit: 'rows', text: 'In the prototype, one written request becomes a saved sheet of 1,200 rows and six columns after a single review step.' },
 }

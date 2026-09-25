@@ -184,7 +184,7 @@ export const PROJECTS: Project[] = [
     meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Prototype with simulated AI responses' },
     cover: 'obj-spreadsheet-agent',
     // The edited preview's poster (the build plan under review), until the preview plays over it.
-    hero: [{ image: 'spreadsheet-agent-poster', sizes: STAGE_SIZES }],
+    hero: [],
     accent: 'spreadsheet-agent',
     next: 'ai-leasing-agent',
     seo: {

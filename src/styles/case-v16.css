@@ -296,6 +296,66 @@
   opacity: 1;
 }
 
+/* Rail: the steps in a row beneath the picture; the active step's note on one line below. */
+.scrub[data-layout='rail'] .scrub__pin {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  gap: clamp(18px, 2.6svh, 30px);
+}
+
+.scrub[data-layout='rail'] .scrub__frame,
+.scrub[data-layout='rail'] .scrub__moments {
+  grid-column: 1;
+  justify-self: center;
+  width: min(100%, calc((100svh - var(--header-height) - 230px) * 1.98));
+  max-width: none;
+}
+
+.scrub[data-layout='rail'] .scrub__frame {
+  grid-row: 1;
+}
+
+.scrub[data-layout='rail'] .scrub__moments {
+  position: relative;
+  grid-row: 2;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  grid-auto-flow: column;
+  gap: 14px;
+  padding-bottom: 2.2em;
+}
+
+.scrub[data-layout='rail'] .scrub__moment {
+  padding-top: 10px;
+  border-top: 1px solid rgb(255 255 255 / 0.18);
+  transition:
+    opacity 480ms var(--ease-arrive),
+    border-color 480ms var(--ease-arrive);
+}
+
+.scrub[data-layout='rail'] .scrub__moment[data-active] {
+  border-top-color: var(--accent);
+}
+
+.scrub[data-layout='rail'] .scrub__label {
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+}
+
+.scrub[data-layout='rail'] .scrub__note {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.scrub[data-layout='rail'] .scrub__moment[data-active] .scrub__note {
+  margin: 0;
+}
+
 /* Phones and reduced motion: the same moments as stills. */
 .scrub--stills {
   display: grid;
@@ -324,6 +384,12 @@
   max-height: none;
   margin-top: 6px;
   opacity: 1;
+}
+
+.scrub__still--text {
+  margin: 0;
+  padding-top: var(--cx-s1);
+  border-top: 1px solid var(--cx-hair);
 }
 
 /* The next project ------------------------------------------------------------------ */

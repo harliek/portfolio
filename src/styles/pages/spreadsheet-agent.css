@@ -1,6 +1,141 @@
 /*
- * Spreadsheet Agent page (src/pages/work/SpreadsheetAgent.tsx). Scope every
- * selector under .page-spreadsheet-agent. The layout, the recording's player
- * and the ending come from the shared case styles (case.css); nothing
- * page-specific is needed.
+ * Spreadsheet Agent (brief v16): a short title band so the application is
+ * the opening visual, the pinned request-to-sheet passage with its steps as
+ * a rail, the problem as a statement, the review plan large, and the outcome
+ * as a figure.
  */
+
+.sa-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: var(--cx-s3) clamp(28px, 4vw, 72px);
+  align-items: end;
+  padding: clamp(36px, 6svh, 80px) var(--cx-edge) var(--cx-s3);
+}
+
+/* The title shares its band with the summary, so it is set a step smaller than on other pages. */
+@media (min-width: 700px) {
+  .sa-hero .cx-title {
+    font-size: clamp(2.75rem, 5.8vw, 6.75rem);
+  }
+}
+
+.sa-hero__text {
+  display: grid;
+  justify-items: start;
+  padding-bottom: 4px;
+}
+
+.sa-hero__text .cx-lede {
+  max-width: 40ch;
+}
+
+.sa-hero__text .cx-status {
+  max-width: 46ch;
+}
+
+/* The problem: a small lead-in, then the one sentence that matters, set large. */
+.sa-problem {
+  display: grid;
+  gap: var(--cx-s2);
+  padding: var(--cx-s5) var(--cx-edge) 0;
+}
+
+.sa-problem__lead {
+  max-width: 48ch;
+  margin: var(--cx-s1) 0 0;
+  font-family: var(--font-sans);
+  font-size: clamp(1.0625rem, 1.2vw, 1.25rem);
+  line-height: 1.55;
+  color: var(--cx-dim);
+}
+
+.sa-problem__statement {
+  max-width: 24ch;
+}
+
+/* The approach: the plan large and offset to the right; the decision set against its lower left. */
+.sa-approach {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr);
+  gap: var(--cx-s3) clamp(28px, 4vw, 72px);
+  align-items: end;
+  padding: var(--cx-s5) 0 0 var(--cx-edge);
+}
+
+.sa-approach__media {
+  grid-column: 2;
+  grid-row: 1;
+  border-radius: 3px 0 0 3px;
+}
+
+.sa-approach__text {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  gap: var(--cx-s2);
+  padding-bottom: var(--cx-s2);
+}
+
+.sa-approach__title {
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.625rem, 2.4vw, 2.5rem);
+  font-weight: 400;
+  line-height: 1.12;
+  color: #fff;
+}
+
+/* The outcome: the figure in the editorial serif, the sentence beneath. */
+.sa-outcome {
+  display: grid;
+  gap: var(--cx-s2);
+  padding: var(--cx-s6) var(--cx-edge) 0;
+}
+
+.sa-outcome__figure {
+  display: flex;
+  align-items: baseline;
+  gap: 0.18em;
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(5rem, 16vw, 15rem);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.sa-outcome__figure span {
+  font-family: var(--font-sans);
+  font-size: clamp(0.75rem, 1vw, 0.9375rem);
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--cx-dim);
+}
+
+.sa-outcome__text {
+  max-width: 44ch;
+}
+
+@media (max-width: 899.98px) {
+  .sa-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sa-approach {
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: 0;
+  }
+
+  .sa-approach__media,
+  .sa-approach__text {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .sa-approach__text {
+    padding-right: var(--cx-edge);
+  }
+}

@@ -1,14 +1,14 @@
-import "../../styles/pages/merchandising-platform.css";
-import { useLayoutEffect, useRef, type CSSProperties } from "react";
-import { CasePage, CaseTitle } from "../../components/case/CasePage";
-import { ScrollScrubVideo } from "../../components/case/ScrollScrubVideo";
-import { ResponsiveImage } from "../../components/media/ResponsiveImage";
-import { MERCH as C } from "../../content/pages/merchandising-platform";
-import { projectById } from "../../content/projects";
-import { useReducedMotion } from "../../hooks/useReducedMotion";
-import { gsap, ScrollTrigger } from "../../lib/gsap";
+import '../../styles/pages/merchandising-platform.css'
+import { useLayoutEffect, useRef, type CSSProperties } from 'react'
+import { CasePage, CaseTitle } from '../../components/case/CasePage'
+import { ScrollScrubVideo } from '../../components/case/ScrollScrubVideo'
+import { ResponsiveImage } from '../../components/media/ResponsiveImage'
+import { MERCH as C } from '../../content/pages/merchandising-platform'
+import { projectById } from '../../content/projects'
+import { useReducedMotion } from '../../hooks/useReducedMotion'
+import { gsap, ScrollTrigger } from '../../lib/gsap'
 
-const project = projectById("merchandising-platform");
+const project = projectById('merchandising-platform')
 
 /** Where each fragment waits before it converges (percent of the stage, rotation in degrees, scale); clear of the statement on the left. */
 const SCATTER: readonly [number, number, number, number][] = [
@@ -22,7 +22,7 @@ const SCATTER: readonly [number, number, number, number][] = [
   [88, 70, -2, 0.8],
   [76, 56, 3, 0.8],
   [46, 90, -3, 0.75],
-];
+]
 
 /**
  * The problem, set as type, with the scattered sources converging: small
@@ -33,28 +33,28 @@ const SCATTER: readonly [number, number, number, number][] = [
  * reduced motion shows the statement and the catalog without movement.
  */
 function Converge() {
-  const reduced = useReducedMotion();
-  const rootRef = useRef<HTMLElement>(null);
+  const reduced = useReducedMotion()
+  const rootRef = useRef<HTMLElement>(null)
 
   useLayoutEffect(() => {
-    const root = rootRef.current;
-    if (!root || reduced) return;
+    const root = rootRef.current
+    if (!root || reduced) return
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
-        defaults: { ease: "none" },
+        defaults: { ease: 'none' },
         scrollTrigger: {
           trigger: root,
-          start: "top top+=61",
-          end: "bottom bottom",
+          start: 'top top+=61',
+          end: 'bottom bottom',
           scrub: 0.6,
         },
-      });
+      })
       tl.fromTo(
-        ".mp-fragment",
+        '.mp-fragment',
         { xPercent: 0, yPercent: 0 },
         {
-          left: "50%",
-          top: "50%",
+          left: '50%',
+          top: '50%',
           xPercent: -50,
           yPercent: -50,
           rotate: 0,
@@ -65,31 +65,18 @@ function Converge() {
         },
         0.12,
       )
-        .to(".mp-problem__text", { opacity: 0, y: -32, duration: 0.16 }, 0.36)
-        .fromTo(
-          ".mp-converge__frame",
-          { opacity: 0, scale: 0.86 },
-          { opacity: 1, scale: 1, duration: 0.3 },
-          0.54,
-        );
-    }, root);
-    return () => ctx.revert();
-  }, [reduced]);
+        .to('.mp-problem__text', { opacity: 0, y: -32, duration: 0.16 }, 0.36)
+        .fromTo('.mp-converge__frame', { opacity: 0, scale: 0.86 }, { opacity: 1, scale: 1, duration: 0.3 }, 0.54)
+    }, root)
+    return () => ctx.revert()
+  }, [reduced])
 
   return (
-    <section
-      ref={rootRef}
-      className="mp-problem"
-      data-reduced={reduced || undefined}
-      aria-labelledby="mp-problem-title"
-    >
+    <section ref={rootRef} className="mp-problem" data-reduced={reduced || undefined} aria-labelledby="mp-problem-title">
       <div className="mp-problem__pin">
         <div className="mp-problem__text">
           <p className="cx-kicker">The problem</p>
-          <h2
-            className="cx-statement mp-problem__statement"
-            id="mp-problem-title"
-          >
+          <h2 className="cx-statement mp-problem__statement" id="mp-problem-title">
             {C.problem.statement.map((line) => (
               <span key={line}>{line}</span>
             ))}
@@ -98,18 +85,18 @@ function Converge() {
         </div>
         <div className="mp-fragments" aria-hidden="true">
           {C.problem.fragments.map((f, i) => {
-            const [x, y, r, s] = SCATTER[i % SCATTER.length];
+            const [x, y, r, s] = SCATTER[i % SCATTER.length]
             return (
               <span
                 key={f}
                 className="mp-fragment"
-                data-mid={y > 22 && y < 78 ? "" : undefined}
+                data-mid={y > 22 && y < 78 ? '' : undefined}
                 style={
                   {
                     left: `${x}%`,
                     top: `${y}%`,
-                    "--r": `${r}deg`,
-                    "--s": s,
+                    '--r': `${r}deg`,
+                    '--s': s,
                   } as CSSProperties
                 }
               >
@@ -117,20 +104,17 @@ function Converge() {
                 <span className="mp-fragment__field">{f}</span>
                 <span className="mp-fragment__rows" />
               </span>
-            );
+            )
           })}
         </div>
         <figure className="mp-converge">
           <div className="mp-converge__frame cx-frame">
-            <ResponsiveImage
-              image="merch-catalog"
-              sizes="(min-width: 1100px) 62vw, 92vw"
-            />
+            <ResponsiveImage image="merch-catalog" sizes="(min-width: 1100px) 62vw, 92vw" />
           </div>
         </figure>
       </div>
     </section>
-  );
+  )
 }
 
 /**
@@ -143,9 +127,9 @@ function Converge() {
 export default function MerchandisingPlatform() {
   useLayoutEffect(() => {
     // Images above change heights once decoded; keep pinned sections measured.
-    const t = window.setTimeout(() => ScrollTrigger.refresh(), 600);
-    return () => window.clearTimeout(t);
-  }, []);
+    const t = window.setTimeout(() => ScrollTrigger.refresh(), 600)
+    return () => window.clearTimeout(t)
+  }, [])
 
   return (
     <CasePage project={project} className="page-merchandising-platform">
@@ -158,11 +142,7 @@ export default function MerchandisingPlatform() {
           <p className="cx-status">{C.status}</p>
         </div>
         <figure className="mp-hero__media cx-frame">
-          <ResponsiveImage
-            image="merch-overview"
-            sizes="(min-width: 1100px) 66vw, 100vw"
-            priority
-          />
+          <ResponsiveImage image="merch-overview" sizes="(min-width: 1100px) 66vw, 100vw" priority />
         </figure>
       </header>
 
@@ -184,20 +164,13 @@ export default function MerchandisingPlatform() {
           What I built
         </h2>
         <figure className="mp-built__media cx-frame" data-reveal>
-          <ResponsiveImage
-            image="merch-replenish"
-            sizes="(min-width: 1100px) 88vw, 100vw"
-          />
+          <ResponsiveImage image="merch-replenish" sizes="(min-width: 1100px) 88vw, 100vw" />
         </figure>
         <ol className="mp-built__decisions">
           {C.built.map((d, i) => (
-            <li
-              key={d.title}
-              data-reveal
-              style={{ transitionDelay: `${i * 90}ms` }}
-            >
+            <li key={d.title} data-reveal style={{ transitionDelay: `${i * 90}ms` }}>
               <span className="mp-built__index" aria-hidden="true">
-                {String(i + 1).padStart(2, "0")}
+                {String(i + 1).padStart(2, '0')}
               </span>
               <h3 className="mp-built__title">{d.title}</h3>
               <p className="mp-built__body">{d.body}</p>
@@ -215,5 +188,5 @@ export default function MerchandisingPlatform() {
         </p>
       </section>
     </CasePage>
-  );
+  )
 }

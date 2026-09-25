@@ -51,6 +51,14 @@ export const FIELD_YEARS = '2024–2026'
 
 export const FIELD: readonly FieldProject[] = [
   {
+    id: 'spreadsheet-agent',
+    title: 'Spreadsheet Agent',
+    line: 'A rules-based prototype for generating editable spreadsheets from written requests.',
+    // Harlie's tile (PNG Tiles/spreadsheet tile.png, transparent), contained in the box at the shared scale.
+    media: { kind: 'cutouts', pieces: [{ image: 'sa-object', x: 3, y: 8.8, w: 94 }] },
+    alt: 'Spreadsheet Agent with a generated B2B apparel assortment beside the assistant panel and its request',
+  },
+  {
     id: 'ai-leasing-agent',
     title: 'AI Leasing Agent',
     line: 'Requirements, workflow design, and testing for an AI leasing assistant.',
@@ -69,6 +77,14 @@ export const FIELD: readonly FieldProject[] = [
     alt: 'An illustrative leasing conversation: a renter asks about a two-bedroom, a fee waiver and a unit hold, and the assistant answers the general questions and passes the requests to the leasing staff',
   },
   {
+    id: 'merchandising-platform',
+    title: 'Merchandising Platform',
+    line: 'An independent prototype for product analysis and replenishment planning.',
+    // Harlie's tile (PNG Tiles/Merchandising Tile.png), contained in the box at the shared scale.
+    media: { kind: 'cutouts', pieces: [{ image: 'merch-object', x: 3, y: 12.7, w: 94 }] },
+    alt: 'An illustrative merchandising dashboard with sample product, vendor, inventory and promotion counts, a sales chart and revenue by category',
+  },
+  {
     id: 'jumpstart-finance',
     title: 'Jumpstart Finance',
     line: 'Product development for a financial education app concept.',
@@ -78,22 +94,6 @@ export const FIELD: readonly FieldProject[] = [
       screens: ['jf-tile-profile', 'jf-tile-home', 'jf-tile-third'],
     },
     alt: 'Three Jumpstart Finance phone screens: home, the learning journey, and the community',
-  },
-  {
-    id: 'merchandising-platform',
-    title: 'Merchandising Platform',
-    line: 'An independent prototype for product analysis and replenishment planning.',
-    // Harlie's tile (PNG Tiles/Merchandising Tile.png), contained in the box at the shared scale.
-    media: { kind: 'cutouts', pieces: [{ image: 'merch-object', x: 3, y: 12.7, w: 94 }] },
-    alt: 'An illustrative merchandising dashboard with sample product, vendor, inventory and promotion counts, a sales chart and revenue by category',
-  },
-  {
-    id: 'spreadsheet-agent',
-    title: 'Spreadsheet Agent',
-    line: 'A rules-based prototype for generating editable spreadsheets from written requests.',
-    // Harlie's tile (PNG Tiles/spreadsheet tile.png, transparent), contained in the box at the shared scale.
-    media: { kind: 'cutouts', pieces: [{ image: 'sa-object', x: 3, y: 8.8, w: 94 }] },
-    alt: 'Spreadsheet Agent with a generated B2B apparel assortment beside the assistant panel and its request',
   },
   {
     id: 'cafepress-uk',

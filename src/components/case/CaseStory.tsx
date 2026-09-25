@@ -168,7 +168,12 @@ export function CaseStory({
       // footer follows close under both; on phones (the picture is not held beside the words) a short gap.
       const stage = list.closest('.cs')?.querySelector<HTMLElement>('.story__hold > .story__stage')
       const wide = !window.matchMedia('(max-width: 899.98px)').matches
-      const want = wide && stage ? Math.max(24, vh - footerH - stage.getBoundingClientRect().bottom) : 56
+      // The picture's visible bottom: its lowest image (the laptop, or the largest phone), never below the stage's own
+      // box (a cropped picture inside the laptop's screen can reach past it), and not the phones' padded box.
+      const box = stage?.getBoundingClientRect().bottom ?? 0
+      const shown = stage ? [...stage.querySelectorAll('img')].map((el) => el.getBoundingClientRect().bottom).filter((b) => b > 0) : []
+      const stageBottom = shown.length ? Math.min(box, Math.max(...shown)) : box
+      const want = wide && stage ? Math.max(24, vh - footerH - stageBottom) : 56
       const pad = Math.max(0, Math.round(m.pad + want - (footerTop - lastBottom)))
       if (pad !== m.pad) {
         m.pad = pad
@@ -295,10 +300,18 @@ export function CaseStory({
 function StageView({ stage, active, bind }: { stage: Stage; active: number; bind: (fn: ((k: number, local: number) => void) | null) => void }) {
   if (stage.kind === 'video') return <VideoStage stage={stage} bind={bind} />
   if (stage.kind === 'phones') {
+    // Each phone's width follows its own proportions, so phones of different shapes stand at the same height.
+    const aspects = stage.phones.map((p) => getImage(p.image).width / getImage(p.image).height)
+    const widest = Math.max(...aspects)
     return (
       <div className="story__stage story__phones" data-hero-media="" data-focus={active >= 0 || undefined}>
-        {stage.phones.map((p) => (
-          <div key={p.image} className="story__phone" data-on={p.step === active || undefined}>
+        {stage.phones.map((p, k) => (
+          <div
+            key={p.image}
+            className="story__phone"
+            data-on={p.step === active || undefined}
+            style={{ width: `${((aspects[k] / widest) * 100).toFixed(2)}%` }}
+          >
             <ResponsiveImage image={p.image} sizes="(min-width: 1100px) 190px, 26vw" alt={`${p.name} screen`} priority />
           </div>
         ))}

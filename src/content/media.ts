@@ -553,7 +553,7 @@ export const IMAGES = {
   }),
   'cp-drinkware': img({
     id: 'cp-drinkware', file: 'cp-drinkware', width: 1672, height: 941, widths: [640, 960, 1280, 1672], fallback: 'jpg',
-    alt: 'A later image of a CafePress Business UK drinkware page, not part of the original project, with a free UK delivery offer over £100, price and colour filters, and three drinkware products priced in pounds.',
+    alt: 'A CafePress Business UK drinkware page with a free UK delivery offer over £100, price and colour filters, and three drinkware products priced in pounds.',
     provenance: 'synthetic-example', synthetic: true,
     source: 'PlanetArt/cafepress uk/drinkware web.png (added by Harlie, 2026-09-25)', role: 'CafePress UK stage (a later image, captioned as not part of the original project)',
   }),
@@ -584,7 +584,7 @@ export const IMAGES = {
   }),
   'cp-assistant': img({
     id: 'cp-assistant', file: 'cp-assistant', width: 1672, height: 941, widths: [640, 960, 1280, 1672], fallback: 'jpg',
-    alt: 'A later image of the CafePress Business UK storefront with an AI assistant panel open, not part of the original project, beside drinkware products priced in pounds.',
+    alt: 'The CafePress Business UK storefront with an AI assistant panel open beside drinkware products priced in pounds.',
     provenance: 'synthetic-example', synthetic: true,
     source: 'PlanetArt/cafepress uk/cafepress uk ai agent.png (added by Harlie, 2026-09-25)', role: 'CafePress UK stage (a later image, captioned as not part of the original project)',
   }),

@@ -271,6 +271,8 @@
 }
 
 .story__phone {
+  /* Its width is set from its proportions (CaseStory), so it is centred in its column. */
+  justify-self: center;
   transition:
     transform 320ms var(--ease-arrive),
     opacity 320ms var(--ease-arrive);

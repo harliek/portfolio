@@ -768,6 +768,25 @@ export const IMAGES = {
     source: 'Valiance Capital/messages.png', role: 'Requirements chapter supporting image',
     notes: 'The image itself carries a small “Reconstruction · Invented data” footer; the property name and people are invented.',
   }),
+  // Harlie's three AI Leasing images (Valiance Capital/, 2026-09-25, v29): illustrative mockups with invented people and figures.
+  'valiance-listing': img({
+    id: 'valiance-listing', file: 'valiance-listing', width: 1448, height: 1086, widths: [800, 1200, 1448], fallback: 'jpg',
+    alt: 'A rental listing for a two-bedroom at 2425 Durant Ave, Berkeley, with the AI leasing assistant, powered by Valiance Capital and The Berkeley Group, answering questions about availability, pricing and pets.',
+    provenance: 'synthetic-example', synthetic: true,
+    source: 'Valiance Capital/ai leasing 1.png (supplied by Harlie)', role: 'AI Leasing stage: inquiry scope and live property data',
+  }),
+  'valiance-dashboard': img({
+    id: 'valiance-dashboard', file: 'valiance-dashboard', width: 1448, height: 1086, widths: [800, 1200, 1448], fallback: 'jpg',
+    alt: 'A Valiance Capital and The Berkeley Group leasing dashboard across all 18 properties, with flagged conversations, recent messages, upcoming tours and message topics such as availability, pricing and tours.',
+    provenance: 'synthetic-example', synthetic: true,
+    source: 'Valiance Capital/leasing dashboard 2.png (supplied by Harlie)', role: 'AI Leasing stage: testing and deployment',
+  }),
+  'valiance-inbox': img({
+    id: 'valiance-inbox', file: 'valiance-inbox', width: 1536, height: 1024, widths: [800, 1200, 1536], fallback: 'jpg',
+    alt: 'A leasing inbox with conversations flagged as needing a person, a renter conversation that confirms availability and books a tour, and the assistant’s notes.',
+    provenance: 'synthetic-example', synthetic: true,
+    source: 'Valiance Capital/leasing messages 3.png (supplied by Harlie)', role: 'AI Leasing stage: staff escalation',
+  }),
 
   /* Jumpstart */
   'jumpstart-proto-1': img({

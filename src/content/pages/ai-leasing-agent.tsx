@@ -21,11 +21,6 @@ export const LEASING = {
       At Valiance Capital, I proposed an AI leasing assistant to address recurring inquiries within operations serving more than 1,000 tenants.
     </p>
   ),
-  /**
-   * Where each group sits in the illustration (source pixels of valiance-messages): the renter's question and the
-   * assistant's first answer; the Live data required card; the Human approval card; then all of it.
-   */
-  regions: [{ x: 270, y: 215, w: 740, h: 330 }, { x: 1170, y: 365, w: 480, h: 225 }, { x: 1170, y: 590, w: 480, h: 155 }, null],
   /** Harlie's editorial pass (v23): descriptive headings, one implementation note, one caption for the illustration. */
   sections: [
     {

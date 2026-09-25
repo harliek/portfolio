@@ -49,7 +49,7 @@ export type Stage =
       /** Plays on its own (looping) while on screen, and faster while the page scrolls, instead of following the scroll. */
       play?: boolean
     }
-  | { kind: 'layers'; aspect: number; layers: readonly StageLayer[]; show: readonly number[] }
+  | { kind: 'layers'; aspect: number; layers: readonly StageLayer[]; show: readonly number[]; /** The laptop screen's colour around the pictures. */ screen?: string }
   | { kind: 'crops'; image: ImageId; regions: readonly (Region | null)[] }
   | { kind: 'phones'; phones: readonly { image: ImageId; name: string; step: number }[] }
 
@@ -69,14 +69,14 @@ const STAGE_SIZES = '(min-width: 1296px) 560px, (min-width: 900px) 44vw, 72vw'
 const LAPTOP = { w: 1313, h: 734, x: 171.5, y: 70.5, sw: 971, sh: 578 }
 
 /** A recording or screenshot sitting in the laptop's screen, behind the laptop picture. */
-function Laptop({ aspect, children }: { aspect: number; children: ReactNode }) {
+function Laptop({ aspect, screen, children }: { aspect: number; screen?: string; children: ReactNode }) {
   const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(4)}%`
   return (
     <div className="story__stage story__laptop" style={{ '--aspect': LAPTOP.w / LAPTOP.h } as CSSProperties}>
       <div
         className="story__screen"
         data-hero-media=""
-        style={{ left: pct(LAPTOP.x, LAPTOP.w), top: pct(LAPTOP.y, LAPTOP.h), width: pct(LAPTOP.sw, LAPTOP.w), height: pct(LAPTOP.sh, LAPTOP.h) }}
+        style={{ left: pct(LAPTOP.x, LAPTOP.w), top: pct(LAPTOP.y, LAPTOP.h), width: pct(LAPTOP.sw, LAPTOP.w), height: pct(LAPTOP.sh, LAPTOP.h), background: screen }}
       >
         <div className="story__fit" style={{ '--media-aspect': aspect } as CSSProperties}>
           {children}
@@ -330,7 +330,7 @@ function StageView({ stage, active, bind }: { stage: Stage; active: number; bind
   if (stage.kind === 'crops') return <CropStage stage={stage} active={active} />
   const shown = stage.show[Math.max(0, active)] ?? 0
   return (
-    <Laptop aspect={stage.aspect}>
+    <Laptop aspect={stage.aspect} screen={stage.screen}>
       {stage.layers.map((layer, k) => (
         <div key={k} className="story__layer" data-on={k === shown || undefined} aria-hidden={k === shown ? undefined : true}>
           {'image' in layer ? <ResponsiveImage image={layer.image} sizes={STAGE_SIZES} priority={k === 0} alt={layer.alt} /> : layer.node}

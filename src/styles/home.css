@@ -255,92 +255,12 @@
   outline-offset: 6px;
 }
 
-.plane__media,
 .plane__veil {
   position: absolute;
   inset: 0;
   display: block;
-}
-
-.plane__veil {
   background: #050507;
   pointer-events: none;
-}
-
-.plane__video,
-.plane__picture,
-.plane__picture img {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Still images move very slowly inside their frame (a moving crop, not a zoom). */
-.plane__picture[data-pan] img {
-  animation: plane-pan 30s ease-in-out infinite alternate;
-  transform-origin: 50% 40%;
-}
-
-.plane__picture[data-pan='right'] img {
-  animation-direction: alternate-reverse;
-}
-
-@keyframes plane-pan {
-  from {
-    transform: scale(1.1) translateX(2.4%);
-  }
-
-  to {
-    transform: scale(1.1) translateX(-2.4%);
-  }
-}
-
-/* Jumpstart: the app's own screens (no device frames), each taking focus in turn. */
-.plane__screens {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5%;
-  background: radial-gradient(90% 100% at 50% 70%, #18211c, #08090a 72%);
-}
-
-.plane__screen {
-  display: block;
-  height: 82%;
-  aspect-ratio: 360 / 771;
-}
-
-.plane__screen img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  animation: screen-focus 12s var(--ease-exchange) infinite;
-  animation-delay: calc(var(--k) * -8s);
-}
-
-@keyframes screen-focus {
-  0%,
-  27% {
-    opacity: 1;
-    transform: translateY(-2%) scale(1.06);
-  }
-
-  36%,
-  91% {
-    opacity: 0.5;
-    transform: none;
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(-2%) scale(1.06);
-  }
 }
 
 /* The centred project's title and line, attached to its frame's lower left. */
@@ -440,44 +360,6 @@
 .home[data-leaving] .field__label {
   opacity: 0;
   transition: opacity 500ms var(--ease-arrive);
-}
-
-/* The chosen frame expanding to the window edges (appended to <body>). */
-.plane-expand {
-  position: fixed;
-  z-index: 1000;
-  overflow: hidden;
-  background: #050507;
-  pointer-events: none;
-}
-
-.plane-expand .plane__media {
-  position: absolute;
-  inset: 0;
-}
-
-.plane-expand::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0) 40%);
-}
-
-.plane-expand__title {
-  position: absolute;
-  left: clamp(20px, 6.2vw, 120px);
-  bottom: clamp(18px, 9svh, 96px);
-  z-index: 1;
-  margin: 0;
-  font-family: var(--font-editorial);
-  font-size: clamp(2rem, 5vw, 5rem);
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: #fff;
-  opacity: 0;
 }
 
 /* Tablets: simpler depth, a slightly shorter hold. */

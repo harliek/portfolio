@@ -1,0 +1,96 @@
+/*
+ * A project's picture inside its frame (PlaneMedia, brief v16): the homepage
+ * field and each case study's next-project link. Footage and stills fill the
+ * frame; stills drift very slowly (a moving crop); Jumpstart shows the app's
+ * own screens taking focus in turn.
+ */
+
+.plane__media {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+}
+
+.plane__video,
+.plane__picture,
+.plane__picture img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Still images move very slowly inside their frame (a moving crop, not a zoom). */
+.plane__picture[data-pan] img {
+  animation: plane-pan 30s ease-in-out infinite alternate;
+  transform-origin: 50% 40%;
+}
+
+.plane__picture[data-pan='right'] img {
+  animation-direction: alternate-reverse;
+}
+
+@keyframes plane-pan {
+  from {
+    transform: scale(1.1) translateX(2.4%);
+  }
+
+  to {
+    transform: scale(1.1) translateX(-2.4%);
+  }
+}
+
+/* Jumpstart: the app's own screens (no device frames), each taking focus in turn. */
+.plane__screens {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5%;
+  background: radial-gradient(90% 100% at 50% 70%, #18211c, #08090a 72%);
+}
+
+.plane__screen {
+  display: block;
+  height: 82%;
+  aspect-ratio: 360 / 771;
+}
+
+.plane__screen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: screen-focus 12s var(--ease-exchange) infinite;
+  animation-delay: calc(var(--k) * -8s);
+}
+
+@keyframes screen-focus {
+  0%,
+  27% {
+    opacity: 1;
+    transform: translateY(-2%) scale(1.06);
+  }
+
+  36%,
+  91% {
+    opacity: 0.5;
+    transform: none;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(-2%) scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plane__picture[data-pan] img,
+  .plane__screen img {
+    animation: none;
+  }
+}

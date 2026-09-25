@@ -375,3 +375,54 @@ html[data-page-transition] .route-reveal {
     opacity: 1;
   }
 }
+
+/* ----------------------------------------------------------------------- */
+/* The frame expanding into a project (expandFrame.ts, brief v16)            */
+/* ----------------------------------------------------------------------- */
+
+.frame-expand {
+  position: fixed;
+  z-index: 1000;
+  overflow: hidden;
+  background: #050507;
+  pointer-events: none;
+}
+
+.frame-expand__media {
+  position: absolute !important;
+  inset: 0;
+  display: block;
+}
+
+.frame-expand__media video,
+.frame-expand__media picture,
+.frame-expand__media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.frame-expand::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0) 40%);
+}
+
+.frame-expand__title {
+  position: absolute;
+  left: clamp(20px, 6.2vw, 120px);
+  bottom: clamp(18px, 9svh, 96px);
+  z-index: 1;
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #fff;
+  opacity: 0;
+}

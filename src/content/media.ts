@@ -479,6 +479,13 @@ export const IMAGES = {
     provenance: 'independent-prototype', synthetic: true,
     source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising Platform approach (product detail)', timestamp: 12.0,
   }),
+  'merch-inventory': img({
+    id: 'merch-inventory', file: 'merch-inventory', width: 2940, height: 1486, widths: [800, 1200, 1600], fallback: 'jpg',
+    alt: 'Merch Console Inventory screen in the synthetic demo, ranking products that need replenishment by margin at risk, with an Export order sheet button.',
+    caption: 'Inventory ranks what needs replenishment and exports an order sheet for review.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising Platform scrub still (inventory)', timestamp: 21.6,
+  }),
   'merch-ask': img({
     id: 'merch-ask', file: 'merch-ask', width: 2940, height: 1486, widths: [800, 1200, 1600], fallback: 'jpg',
     alt: 'Merch Console Ask screen in the synthetic demo, matching the question What is out of stock against fixed query shapes and listing products at risk of stocking out.',

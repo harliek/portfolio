@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FIELD, FIELD_YEARS, type FieldProject } from '../../content/field'
-import { fallbackSrc, getImage, srcSet } from '../../content/media'
+import { FIELD, FIELD_YEARS } from '../../content/field'
 import { projectById, projectPath } from '../../content/projects'
 import { prefersReducedMotion, useReducedMotion } from '../../hooks/useReducedMotion'
-import { EASE, gsap } from '../../lib/gsap'
+import { expandFrame } from '../transition/expandFrame'
+import { PlaneMedia } from './PlaneMedia'
 import { isPlainClick, warmProject } from '../transition/projectTransition'
 
 const N = FIELD.length
@@ -85,60 +85,6 @@ const lerpSteps = (steps: number[], a: number) => {
   if (a >= steps.length - 1) return steps[steps.length - 1]
   const k = Math.floor(a)
   return steps[k] + (steps[k + 1] - steps[k]) * (a - k)
-}
-
-function PlaneMedia({ item, videoRef }: { item: FieldProject; videoRef: (el: HTMLVideoElement | null) => void }) {
-  const { media } = item
-  if (media.kind === 'video') {
-    return (
-      <video
-        ref={videoRef}
-        className="plane__video"
-        data-src={media.src}
-        poster={media.poster}
-        style={{ objectPosition: media.position }}
-        muted
-        loop
-        playsInline
-        preload="none"
-        disablePictureInPicture
-        disableRemotePlayback
-        tabIndex={-1}
-        aria-hidden="true"
-      />
-    )
-  }
-  if (media.kind === 'image') {
-    const asset = getImage(media.image)
-    return (
-      <picture className="plane__picture" data-pan={media.pan}>
-        <source type="image/avif" srcSet={srcSet(asset, 'avif')} sizes="(min-width: 1100px) 36vw, 80vw" />
-        <source type="image/webp" srcSet={srcSet(asset, 'webp')} sizes="(min-width: 1100px) 36vw, 80vw" />
-        <img
-          src={fallbackSrc(asset, 1200)}
-          srcSet={srcSet(asset, 'jpg')}
-          sizes="(min-width: 1100px) 36vw, 80vw"
-          alt=""
-          width={asset.width}
-          height={asset.height}
-          style={{ objectPosition: media.position }}
-          loading="lazy"
-          decoding="async"
-          draggable={false}
-        />
-      </picture>
-    )
-  }
-  return (
-    <div className="plane__screens">
-      {media.screens.map((s, k) => (
-        <picture key={s} className="plane__screen" style={{ '--k': k } as CSSProperties}>
-          <source type="image/webp" srcSet={`${s}-360.webp 360w, ${s}-540.webp 540w`} sizes="(min-width: 1100px) 10vw, 24vw" />
-          <img src={`${s}-360.png`} alt="" width={360} height={771} loading="lazy" decoding="async" draggable={false} />
-        </picture>
-      ))}
-    </div>
-  )
 }
 
 function readStored() {
@@ -360,56 +306,19 @@ export function ProjectField() {
   /** Expands the centred plane to the window, lets the rest recede, then opens the case study. */
   const open = (i: number) => {
     const item = FIELD[i]
-    const path = projectPath(projectById(item.id))
-    const plane = planeRefs.current[i]
-    const media = plane?.querySelector<HTMLElement>('.plane__media')
-    if (prefersReducedMotion() || !media) {
-      navigate(path)
-      return
-    }
-    warmProject(path)
-    const m = motion.current
-    m.frozen = true
-    const rect = media.getBoundingClientRect()
-    const overlay = document.createElement('div')
-    overlay.className = 'plane-expand'
-    overlay.setAttribute('aria-hidden', 'true')
-    const clone = media.cloneNode(true) as HTMLElement
-    const sourceVideo = media.querySelector('video')
-    const cloneVideo = clone.querySelector('video')
-    if (sourceVideo && cloneVideo) {
-      cloneVideo.muted = true
-      cloneVideo.currentTime = sourceVideo.currentTime
-      void cloneVideo.play().catch(() => {})
-    }
-    const title = document.createElement('p')
-    title.className = 'plane-expand__title'
-    title.textContent = item.title
-    overlay.append(clone, title)
-    Object.assign(overlay.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` })
-    document.body.append(overlay)
-    sectionRef.current?.closest('.home')?.setAttribute('data-leaving', '')
-    document.querySelector('.home-film')?.setAttribute('data-leaving', '')
-    // Expand, dip the frame to black while the route changes, then fade the new page in (never two pictures blended).
-    const media2 = overlay.querySelector<HTMLElement>('.plane__media')
-    const done = () => {
-      gsap.to([media2, title], {
-        opacity: 0,
-        duration: 0.26,
-        ease: EASE.arrive,
-        onComplete: () => {
-          navigate(path)
-          requestAnimationFrame(() =>
-            requestAnimationFrame(() => gsap.to(overlay, { opacity: 0, duration: 0.5, ease: EASE.arrive, onComplete: () => overlay.remove() })),
-          )
-        },
-      })
-    }
     const captionTitle = sectionRef.current?.querySelector<HTMLElement>('.field__caption-item[data-state="in"] .field__title')
-    const startSize = captionTitle ? parseFloat(getComputedStyle(captionTitle).fontSize) : 24
-    gsap.set(title, { fontSize: startSize })
-    gsap.to(overlay, { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight, duration: 0.85, ease: EASE.move, onComplete: done })
-    gsap.to(title, { opacity: 1, fontSize: Math.min(80, Math.max(32, window.innerWidth * 0.05)), duration: 0.85, ease: EASE.move })
+    expandFrame({
+      media: planeRefs.current[i]?.querySelector<HTMLElement>('.plane__media') ?? null,
+      title: item.title,
+      titleSize: captionTitle ? parseFloat(getComputedStyle(captionTitle).fontSize) : undefined,
+      path: projectPath(projectById(item.id)),
+      navigate,
+      onStart: () => {
+        motion.current.frozen = true
+        sectionRef.current?.closest('.home')?.setAttribute('data-leaving', '')
+        document.querySelector('.home-film')?.setAttribute('data-leaving', '')
+      },
+    })
   }
 
   const onPlaneClick = (e: MouseEvent<HTMLAnchorElement>, i: number) => {

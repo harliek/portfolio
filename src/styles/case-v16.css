@@ -1,0 +1,431 @@
+/*
+ * Case studies (brief v16). One system, many compositions: what repeats is
+ * the margin, the spacing scale, the type and the motion, never a layout.
+ *
+ * Spacing: related things sit close (s1 to s3); sections breathe (s4 to s6).
+ * Type: the editorial serif for titles and statements; the sans for reading
+ * (17 to 19px, a measure of about 60 characters, high contrast) and for
+ * small uppercase labels (metadata, kickers, annotations).
+ */
+
+.cx {
+  --cx-edge: clamp(20px, 6.2vw, 120px);
+  --cx-s1: clamp(10px, 0.9vw, 14px);
+  --cx-s2: clamp(18px, 1.8vw, 26px);
+  --cx-s3: clamp(28px, 3vw, 44px);
+  --cx-s4: clamp(56px, 6vw, 96px);
+  --cx-s5: clamp(88px, 10vw, 168px);
+  --cx-s6: clamp(120px, 15vw, 240px);
+  --cx-text: rgb(255 255 255 / 0.86);
+  --cx-dim: rgb(255 255 255 / 0.64);
+  --cx-hair: rgb(255 255 255 / 0.12);
+
+  position: relative;
+  padding-bottom: var(--cx-s5);
+  color: var(--cx-text);
+}
+
+/* Labels: metadata, kickers, annotations ------------------------------------ */
+
+.cx-kicker {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cx-dim);
+}
+
+.cx-kicker::before {
+  content: '';
+  flex: none;
+  width: 32px;
+  height: 1px;
+  background: currentColor;
+}
+
+.cx-title {
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(2.75rem, 7.2vw, 8.25rem);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #fff;
+  text-wrap: balance;
+}
+
+.cx-title:focus {
+  outline: none;
+}
+
+.cx-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: var(--cx-s2) 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cx-dim);
+}
+
+/* Reading ------------------------------------------------------------------------ */
+
+.cx-lede {
+  max-width: 34ch;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: clamp(1.125rem, 1.35vw, 1.3125rem);
+  line-height: 1.55;
+  color: var(--cx-text);
+}
+
+.cx-lede p {
+  margin: 0;
+}
+
+.cx-body {
+  max-width: 58ch;
+  font-family: var(--font-sans);
+  font-size: clamp(1.0625rem, 1.15vw, 1.1875rem);
+  line-height: 1.62;
+  color: var(--cx-text);
+}
+
+.cx-body p {
+  margin: 0;
+}
+
+.cx-body p + p {
+  margin-top: 1em;
+}
+
+.cx strong {
+  font-weight: 600;
+  color: #fff;
+}
+
+.cx-status {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: var(--cx-s2) 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--cx-dim);
+}
+
+.cx-status::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* A statement: one idea set large, with room around it. */
+.cx-statement {
+  max-width: 20ch;
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(2rem, 4.4vw, 4.5rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.005em;
+  color: #fff;
+  text-wrap: balance;
+}
+
+/* Media: framed with a hairline, never a device. */
+.cx-frame {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #0b0b0e;
+  box-shadow:
+    0 0 0 1px var(--cx-hair),
+    0 60px 120px -60px rgb(0 0 0 / 0.9);
+}
+
+.cx-frame img,
+.cx-frame video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.cx-caption {
+  max-width: 44ch;
+  margin: var(--cx-s1) 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--cx-dim);
+}
+
+/* Reveal on scroll (motion.ts adds data-in); reduced motion shows everything at once. */
+.cx [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition:
+    opacity 900ms var(--ease-arrive),
+    transform 900ms var(--ease-arrive);
+}
+
+.cx [data-reveal][data-in] {
+  opacity: 1;
+  transform: none;
+}
+
+/* The scroll-scrubbed demo (ScrollScrubVideo) ------------------------------------ */
+
+.scrub {
+  position: relative;
+  height: calc(100svh - var(--header-height) + var(--scrub-length, 300svh));
+}
+
+.scrub__pin {
+  position: sticky;
+  top: var(--header-height);
+  display: grid;
+  grid-template-columns: minmax(200px, 19vw) minmax(0, 1fr);
+  gap: clamp(28px, 3.4vw, 64px);
+  align-items: center;
+  height: calc(100svh - var(--header-height));
+  padding: 0 var(--cx-edge);
+}
+
+.scrub__frame {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  width: 100%;
+  max-width: calc((100svh - var(--header-height) - 120px) * 1.98);
+  aspect-ratio: var(--scrub-aspect);
+  overflow: hidden;
+  border-radius: 3px;
+  background: #0b0b0e;
+  box-shadow:
+    0 0 0 1px var(--cx-hair),
+    0 60px 120px -60px rgb(0 0 0 / 0.9);
+}
+
+.scrub__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scrub__moments {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  gap: clamp(22px, 3svh, 34px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scrub__moment {
+  opacity: 0.34;
+  transition: opacity 480ms var(--ease-arrive);
+}
+
+.scrub__moment[data-active] {
+  opacity: 1;
+}
+
+.scrub__index {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+
+.scrub__label {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.scrub__note {
+  display: block;
+  max-width: 30ch;
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: rgb(255 255 255 / 0.72);
+  opacity: 0;
+  transition:
+    max-height 480ms var(--ease-arrive),
+    margin-top 480ms var(--ease-arrive),
+    opacity 480ms var(--ease-arrive);
+}
+
+.scrub__moment[data-active] .scrub__note {
+  max-height: 7em;
+  margin-top: 8px;
+  opacity: 1;
+}
+
+/* Phones and reduced motion: the same moments as stills. */
+.scrub--stills {
+  display: grid;
+  gap: var(--cx-s4);
+  height: auto;
+  padding: 0 var(--cx-edge);
+}
+
+.scrub__still {
+  margin: 0;
+}
+
+.scrub__still img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px var(--cx-hair);
+}
+
+.scrub__still figcaption {
+  margin-top: var(--cx-s1);
+}
+
+.scrub__still .scrub__note {
+  max-height: none;
+  margin-top: 6px;
+  opacity: 1;
+}
+
+/* The next project ------------------------------------------------------------------ */
+
+.cx-next {
+  margin-top: var(--cx-s6);
+  padding: 0 var(--cx-edge);
+}
+
+.cx-next__link {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-areas:
+    'kicker kicker'
+    'frame text';
+  gap: var(--cx-s2) clamp(28px, 4vw, 72px);
+  align-items: end;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cx-next__kicker {
+  grid-area: kicker;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cx-dim);
+}
+
+.cx-next__frame {
+  grid-area: frame;
+  position: relative;
+  display: block;
+  aspect-ratio: 1.55;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #0a0a0d;
+  box-shadow:
+    0 0 0 1px var(--cx-hair),
+    0 60px 120px -60px rgb(0 0 0 / 0.9);
+  transition: transform 800ms var(--ease-arrive);
+}
+
+.cx-next__text {
+  grid-area: text;
+  display: grid;
+  gap: var(--cx-s1);
+  padding-bottom: 4px;
+}
+
+.cx-next__title {
+  font-family: var(--font-editorial);
+  font-size: clamp(1.75rem, 3.2vw, 3.25rem);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.cx-next__line {
+  max-width: 36ch;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--cx-dim);
+}
+
+.cx-next__link:hover .cx-next__frame,
+.cx-next__link:focus-visible .cx-next__frame {
+  transform: scale(1.015);
+}
+
+.cx-next__link:focus-visible {
+  outline: 1px solid var(--color-focus);
+  outline-offset: 8px;
+}
+
+@media (max-width: 699.98px) {
+  /* Long single words (MERCHANDISING) must fit a 320px screen. */
+  .cx-title {
+    font-size: clamp(1.75rem, 9vw, 2.75rem);
+  }
+
+  .cx-next__link {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'kicker'
+      'frame'
+      'text';
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cx [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .cx-next__frame {
+    transition: none;
+  }
+}

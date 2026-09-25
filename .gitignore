@@ -34,3 +34,6 @@ blob-report/
 /cover selections/
 /final png tiles/
 /Background video.m4v
+
+# Netlify CLI local build cache
+.netlify

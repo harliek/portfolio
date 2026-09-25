@@ -135,7 +135,7 @@ export const PROJECTS: Project[] = [
     meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
     cover: 'obj-cafepress-uk',
     // The opening composition's storefront (brief v16).
-    hero: [{ image: 'cp-storefront', sizes: '(min-width: 1100px) 56vw, 100vw' }],
+    hero: [{ image: 'cp-cover', sizes: '(min-width: 1408px) 1280px, calc(100vw - 48px)' }],
     accent: 'cafepress-uk',
     next: 'spreadsheet-agent',
     seo: {

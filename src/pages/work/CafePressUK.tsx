@@ -1,147 +1,183 @@
 import '../../styles/pages/cafepress-uk.css'
-import { useLayoutEffect, useRef } from 'react'
 import { CasePage, CaseTitle } from '../../components/case/CasePage'
 import { ResponsiveImage } from '../../components/media/ResponsiveImage'
 import { CAFEPRESS as C } from '../../content/pages/cafepress-uk'
 import { projectById } from '../../content/projects'
-import { useReducedMotion } from '../../hooks/useReducedMotion'
-import { gsap } from '../../lib/gsap'
 
 const project = projectById('cafepress-uk')
 
 /**
- * CafePress UK (brief v16): localization and merchandising, told with the
- * storefront itself. The opening is a composed view of the prototype, the
- * whole page with a magnified UK detail laid over it, the layers drifting
- * at different depths as the page scrolls; then the category navigation as
- * type with the storefront's own category row beneath it; the US to UK
- * wording from the research shifting word by word with the scroll; the
- * assortment large; and the three recommendations. Reduced motion: every
- * layer and word at rest (UK terms shown).
+ * CafePress UK (brief v17): research turned into visible choices. The hero
+ * (the same storefront crop as the homepage cover); the launch question
+ * with the four areas assessed; the storefront with three numbered
+ * markers beside what was retained, what changed and why (one viewport,
+ * not pinned); the localization table, complete from the start, a quiet
+ * pink highlight passing across its rows; the assortment considered as a
+ * readable comparison; and three recommendation rows (Retain, Localize,
+ * Prepare) with their evidence and implication, ending on the status.
  */
 export default function CafePressUK() {
-  const reduced = useReducedMotion()
-  const rootRef = useRef<HTMLDivElement>(null)
-
-  useLayoutEffect(() => {
-    const root = rootRef.current
-    if (!root || reduced) return
-    const ctx = gsap.context(() => {
-      // Depth in the opening: the magnified detail travels faster than the page behind it.
-      gsap.to('.cp-collage__page', { yPercent: -4, ease: 'none', scrollTrigger: { trigger: '.cp-hero', start: 'top top', end: 'bottom top', scrub: true } })
-      gsap.fromTo(
-        '.cp-collage__detail',
-        { yPercent: 6 },
-        { yPercent: -14, ease: 'none', scrollTrigger: { trigger: '.cp-hero', start: 'top top', end: 'bottom top', scrub: true } },
-      )
-      // The words shift from US to UK one after another as the list crosses the view.
-      const rows = gsap.utils.toArray<HTMLElement>('.cp-pair')
-      const tl = gsap.timeline({ scrollTrigger: { trigger: '.cp-pairs', start: 'top 75%', end: 'bottom 45%', scrub: 0.4 } })
-      rows.forEach((row, i) => {
-        tl.to(row.querySelector('.cp-pair__us'), { opacity: 0.28, duration: 0.5 }, i * 0.35)
-        tl.fromTo(row.querySelector('.cp-pair__uk'), { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.5 }, i * 0.35 + 0.15)
-      })
-    }, root)
-    return () => ctx.revert()
-  }, [reduced])
-
+  const D = C.decisions
+  const L = C.localization
+  const A = C.assortment
+  const R = C.recommendations
   return (
     <CasePage project={project} className="page-cafepress-uk">
-      <div ref={rootRef} data-reduced={reduced || undefined}>
-        <header className="cp-hero">
-          <div className="cp-hero__title">
-            <CaseTitle title={C.title} meta={C.meta} />
-          </div>
-          <div className="cp-hero__text">
-            <div className="cx-lede">{C.summary}</div>
-            <p className="cx-status">{C.status}</p>
-          </div>
-          <figure className="cp-collage" aria-label="The CafePress Business UK storefront prototype, with its UK contact details magnified">
-            <div className="cp-collage__page cx-frame">
-              <ResponsiveImage image="cp-storefront" sizes="(min-width: 1100px) 56vw, 100vw" priority />
-            </div>
-            <div className="cp-collage__detail cx-frame">
-              <ResponsiveImage image="cp-header-nav" sizes="(min-width: 1100px) 24vw, 50vw" />
-            </div>
-          </figure>
-        </header>
+      <header className="cp-hero cx-wrap">
+        <div data-hero-reveal>
+          <CaseTitle title={C.title} meta={C.meta} />
+        </div>
+        <div className="cp-hero__lede" data-hero-reveal>
+          <div className="cx-lede">{C.summary}</div>
+        </div>
+        <figure className="cp-hero__media cx-frame" data-hero-media>
+          <ResponsiveImage image={C.hero} sizes="(min-width: 1408px) 1280px, calc(100vw - 48px)" priority />
+        </figure>
+      </header>
 
-        <section className="cp-categories" aria-labelledby="cp-categories-title">
-          <p className="cx-kicker" id="cp-categories-title">
-            {C.categories.title}
-          </p>
-          <ul className="cp-categories__list" data-reveal>
-            {C.categories.items.map((c) => (
-              <li key={c}>{c}</li>
-            ))}
-          </ul>
-          <div className="cp-strip cx-frame" data-reveal aria-hidden="true">
-            <ResponsiveImage image="cp-storefront" sizes="(min-width: 1100px) 88vw, 100vw" decorative />
+      <section className="cp-question cx-wrap cx-section" aria-labelledby="cp-question-title">
+        <div className="cx-grid">
+          <div className="cp-question__head">
+            <p className="cx-kicker">The launch question</p>
+            <h2 className="cx-h2" id="cp-question-title">
+              {C.question.heading}
+            </h2>
           </div>
-          <p className="cx-body cp-categories__body" data-reveal>
-            {C.categories.body}
-          </p>
-        </section>
-
-        <section className="cp-local" aria-labelledby="cp-local-title">
-          <div className="cp-local__text">
-            <p className="cx-kicker" id="cp-local-title">
-              {C.localization.title}
-            </p>
-            <p className="cx-body">{C.localization.body}</p>
-            <figure className="cp-local__detail cx-frame" data-reveal>
-              <ResponsiveImage image="cp-header-nav" sizes="(min-width: 1100px) 30vw, 100vw" />
-            </figure>
-          </div>
-          <div className="cp-pairs">
-            <p className="cp-pairs__label">{C.localization.label}</p>
-            <ul className="cp-pairs__list">
-              {C.localization.pairs.map(([us, uk]) => (
-                <li key={us} className="cp-pair">
-                  <span className="cp-pair__us" lang="en-US">
-                    {us}
-                  </span>
-                  <span className="cp-pair__arrow" aria-hidden="true">
-                    →
-                  </span>
-                  <span className="cp-pair__uk" lang="en-GB">
-                    {uk}
-                  </span>
+          <div className="cp-question__areas">
+            <p className="cx-body">{C.question.lead}</p>
+            <ol className="cp-areas">
+              {C.question.areas.map((a) => (
+                <li key={a.title}>
+                  <strong>{a.title}</strong>
+                  <span>{a.text}</span>
                 </li>
               ))}
-            </ul>
+            </ol>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="cp-assortment" aria-labelledby="cp-assortment-title">
-          <figure className="cp-assortment__media cx-frame" data-reveal>
-            <ResponsiveImage image="cp-products" sizes="(min-width: 1100px) 76vw, 100vw" />
+      <section className="cp-decisions cx-wrap cx-section" aria-labelledby="cp-decisions-title">
+        <h2 className="cx-h2" id="cp-decisions-title">
+          {D.heading}
+        </h2>
+        <div className="cx-grid cp-decisions__grid">
+          <figure className="cp-annotated" data-reveal>
+            <div className="cx-frame">
+              <ResponsiveImage image={D.image} sizes="(min-width: 1100px) 830px, calc(100vw - 48px)" />
+            </div>
+            {D.markers.map((m) => (
+              <span key={m.n} className="cp-marker" style={{ left: `${m.x}%`, top: `${m.y}%` }} aria-hidden="true">
+                {m.n}
+              </span>
+            ))}
+            <figcaption className="visually-hidden">Markers: {D.markers.map((m) => `${m.n}, ${m.label}`).join('; ')}.</figcaption>
           </figure>
-          <div className="cp-assortment__text" data-reveal>
-            <p className="cx-kicker" id="cp-assortment-title">
-              {C.assortment.title}
-            </p>
-            <div className="cx-body">{C.assortment.body}</div>
-          </div>
-        </section>
-
-        <section className="cp-result" aria-labelledby="cp-result-title">
-          <p className="cx-kicker" id="cp-result-title">
-            The result
-          </p>
-          <p className="cx-statement cp-result__lead" data-reveal>
-            {C.result.lead}
-          </p>
-          <ol className="cp-result__list">
-            {C.result.items.map((item, i) => (
-              <li key={item} data-reveal style={{ transitionDelay: `${i * 90}ms` }}>
-                <span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-                {item}
+          <ol className="cp-choices">
+            {D.items.map((d) => (
+              <li key={d.n}>
+                <span className="cp-choices__num" aria-hidden="true">
+                  {d.n}
+                </span>
+                <div>
+                  <p className="cx-kicker">{d.kind}</p>
+                  <h3 className="cp-choices__title">{d.title}</h3>
+                  <p className="cp-choices__text">{d.text}</p>
+                </div>
               </li>
             ))}
           </ol>
-        </section>
-      </div>
+        </div>
+      </section>
+
+      <section className="cp-local cx-wrap cx-section" aria-labelledby="cp-local-title">
+        <div className="cx-grid">
+          <div className="cp-local__head">
+            <h2 className="cx-h2" id="cp-local-title">
+              {L.heading}
+            </h2>
+            <p className="cx-body">{L.lead}</p>
+            <figure className="cp-local__detail cx-frame" data-reveal>
+              <ResponsiveImage image={L.detail} sizes="(min-width: 1100px) 400px, calc(100vw - 48px)" />
+            </figure>
+          </div>
+          <div className="cp-local__table">
+            <table className="cp-terms">
+              <thead>
+                <tr>
+                  <th scope="col">US</th>
+                  <th scope="col">UK</th>
+                </tr>
+              </thead>
+              <tbody>
+                {L.pairs.map(([us, uk], i) => (
+                  <tr key={us} style={{ animationDelay: `${i * 2.5}s` }}>
+                    <td lang="en-US">{us}</td>
+                    <td lang="en-GB">{uk}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="cx-caption">{L.note}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="cp-assortment cx-wrap cx-section" aria-labelledby="cp-assortment-title">
+        <h2 className="cx-h2" id="cp-assortment-title">
+          {A.heading}
+        </h2>
+        <p className="cx-body cp-assortment__lead">{A.lead}</p>
+        <div className="cp-table-wrap">
+          <table className="cp-assort">
+            <thead>
+              <tr>
+                {A.columns.map((c) => (
+                  <th key={c} scope="col">
+                    {c}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {A.rows.map((r) => (
+                <tr key={r.product}>
+                  <th scope="row">{r.product}</th>
+                  <td>{r.supplier}</td>
+                  <td>{r.reason}</td>
+                  <td className="cp-assort__muted">{r.constraint}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="cx-caption">{A.note}</p>
+      </section>
+
+      <section className="cp-recs cx-wrap cx-section" aria-labelledby="cp-recs-title">
+        <h2 className="cx-h2" id="cp-recs-title">
+          {R.heading}
+        </h2>
+        <ol className="cp-recs__rows">
+          {R.rows.map((r) => (
+            <li key={r.kind} className="cp-rec">
+              <p className="cp-rec__kind">{r.kind}</p>
+              <div className="cp-rec__main">
+                <h3 className="cx-h3">{r.title}</h3>
+              </div>
+              <div className="cp-rec__col">
+                <p className="cx-kicker">Evidence</p>
+                <p className="cp-rec__text">{r.evidence}</p>
+              </div>
+              <div className="cp-rec__col">
+                <p className="cx-kicker">For the launch</p>
+                <p className="cp-rec__text">{r.implication}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p className="cx-status cp-recs__status">{R.status}</p>
+      </section>
     </CasePage>
   )
 }

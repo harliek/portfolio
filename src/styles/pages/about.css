@@ -229,6 +229,15 @@
   color: var(--about-ink-muted);
 }
 
+/* The coursework line wraps within the column the three lines set (it never widens it). */
+.about-content .about-school__coursework {
+  width: 0;
+  min-width: 100%;
+  margin-top: 10px;
+  color: var(--about-ink-muted);
+  text-wrap: pretty;
+}
+
 /* Three lines on wide windows: no line wraps. */
 @media (min-width: 820px) {
   .about-content .about-school__name,
@@ -367,34 +376,23 @@
 }
 
 /*
- * The Art card: three upright drawings, small and side by side on the dark
- * ground, a little above the middle so the badge keeps its corner. Hover or
- * focus on the one link lifts them slightly, as the other cards' pictures do.
+ * The Art card: the three drawings fill the whole card side by side (Harlie's
+ * request), each a third of it, cropped to fit, with a hairline of the dark
+ * ground between them. Hover or focus on the one link enlarges them a touch,
+ * as the other cards' pictures do.
  */
 .about-content .about-art-strip {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  /* Room at the bottom for the badge, so it never covers a drawing. */
-  padding: 0 6% max(7%, 40px);
-  container-type: size;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
 }
 
 .about-content .about-art-strip__piece {
   position: relative;
-  flex: none;
-  /* A third of the row (less the two gaps), and never taller than about 70% of the card. */
-  width: min(calc((100cqw - 20px) / 3), 72cqh * 0.8);
-  aspect-ratio: 4 / 5;
+  min-width: 0;
   overflow: hidden;
-  border-radius: 4px;
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.08),
-    0 14px 28px -10px rgb(0 0 0 / 0.85);
-  transition: transform 260ms var(--ease-out);
 }
 
 .about-content .about-art-strip__image,
@@ -405,16 +403,25 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 50% 32%;
 }
 
-.about-content .about-work__hit:hover .about-art-strip__piece,
-.about-content .about-work__hit:focus-visible .about-art-strip__piece {
-  transform: translateY(-3px);
+.about-content .about-art-strip__image img {
+  transition: transform 260ms var(--ease-out);
+}
+
+.about-content .about-work__hit:hover .about-art-strip__image img,
+.about-content .about-work__hit:focus-visible .about-art-strip__image img {
+  transform: scale(1.03);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .about-content .about-art-strip__piece {
+  .about-content .about-art-strip__image img {
     transition: none;
+  }
+
+  .about-content .about-work__hit:hover .about-art-strip__image img {
+    transform: none;
   }
 }
 

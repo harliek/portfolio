@@ -52,7 +52,8 @@
   overflow: hidden;
   aspect-ratio: 16 / 9;
   border: 1px solid var(--cx-hair);
-  border-radius: var(--cx-radius);
+  /* The same rounded corners as the homepage's film tile, where the Nickleby film opens from. */
+  border-radius: 16px;
   background: #000;
 }
 

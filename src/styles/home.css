@@ -369,14 +369,15 @@
   transition: opacity 400ms var(--ease-arrive);
 }
 
-/* The 16:10 cover: one hairline, 6px corners (the case studies' screenshot treatment). */
+/* The 16:10 cover: one hairline, 16px corners. */
 .plane__frame {
   position: relative;
   display: block;
   height: var(--plane-h, 35vw);
   overflow: hidden;
   border: 1px solid rgb(243 238 231 / 0.14);
-  border-radius: 6px;
+  /* Rounded corners (Harlie's request, the Nickleby film tile). */
+  border-radius: 16px;
   background: #0a0a0d;
   box-shadow: 0 40px 80px -40px rgb(0 0 0 / 0.9);
 }

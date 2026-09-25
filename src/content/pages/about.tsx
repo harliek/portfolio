@@ -40,10 +40,10 @@ export const ABOUT = {
   descriptor: 'AI implementation · Product strategy and operations',
   /** Harlie's editorial pass (v23): the name heading introduces Harlie, and the education detail is not repeated from Education. */
   intro: [
-    'My experience spans AI implementation, product strategy, and software development, including leasing operations, merchandising research, and independent software prototypes.',
-    'I graduated from UC Berkeley in three years with a B.A. in Cognitive Science and a minor in Data Science.',
-    // Harlie's paragraph (v26), word for word apart from one typo ("invest" to "invested").
-    'I am incredibly invested in the future of AI implementation. Across my experience, I have consistently moved beyond my defined role to identify operational friction, uncover opportunities, and develop solutions. I am pursuing early-career roles in AI product management, strategy, and implementation.',
+    // Harlie's words (v26), each on its own line.
+    'I am incredibly invested in the future of AI implementation.',
+    'Across my experience, I have consistently moved beyond my defined role to identify operational friction, uncover opportunities, and develop solutions.',
+    'I am pursuing early-career roles in AI product management, strategy, and implementation. I hope to join a company I’m excited to grow with and contribute to from day one.',
   ],
   portraitLabel: 'Portrait of Harlie Katz',
 
@@ -53,9 +53,11 @@ export const ABOUT = {
     school: 'University of California, Berkeley',
     dates: '2023 to 2026',
     lines: ['B.A. in Cognitive Science – Data Science minor', 'Certificate in Entrepreneurship and Technology – Sutardja Center'],
+    /** Under the three lines, Harlie's wording (v26). */
+    coursework: 'Coursework: machine learning, data science, user experience, computer science, psychology, human cognition',
     /** Harlie's paragraph, word for word (v26). */
     text: [
-      'Studied intelligence across cognitive and computational systems, with coursework spanning machine learning, data science, user experience, computer science, psychology, and human cognition. Developed an interdisciplinary foundation for understanding how people think, how intelligent systems are built, and how technology can be designed around human behavior.',
+      'Studied intelligence across cognitive and computational systems, developing an interdisciplinary foundation for understanding how people think, how intelligent systems are built, and how technology can be designed around human behavior.',
     ],
   },
 

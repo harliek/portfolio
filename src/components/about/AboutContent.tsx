@@ -6,8 +6,8 @@ import { StatefulIcons } from '../ui/Stateful'
 import { ArtPreview } from './ArtPreview'
 import { FeaturedFilm } from './FeaturedFilm'
 
-/** Each drawing in the Art card is about a third of the card's width at most (three side by side). */
-const ART_PIECE_SIZES = '(min-width: 1320px) 112px, (min-width: 900px) 8.5vw, (min-width: 560px) 14vw, 30vw'
+/** Each drawing in the Art card is a third of the card's width (three side by side, filling it). */
+const ART_PIECE_SIZES = '(min-width: 1320px) 120px, (min-width: 900px) 10vw, (min-width: 560px) 16vw, 33vw'
 
 /** The portrait's rendered width (about.css). */
 const PORTRAIT_SIZES = '(min-width: 720px) 340px, 80vw'
@@ -81,6 +81,7 @@ export function AboutContent() {
                 <li key={l}>{l}</li>
               ))}
             </ul>
+            <p className="about-school__coursework">{edu.coursework}</p>
           </div>
           <div className="about-school__text">
             {edu.text.map((p) => (
@@ -125,7 +126,7 @@ export function AboutContent() {
             <div className="about-work__frame">
               {/* The creative portfolio's Charcoal Art page, a separate static build: a plain link and a full page load. */}
               <a href={ABOUT.art.href} className="about-work__hit" aria-label={`${ABOUT.art.action}, ${ABOUT.art.title}`} onClick={leave('art')}>
-                {/* Three drawings, upright and small, side by side on the dark ground; the whole frame is the one link. */}
+                {/* Three drawings filling the card side by side; the whole frame is the one link. */}
                 <span className="about-art-strip">
                   {ABOUT.art.images.map((id) => (
                     <span key={id} className="about-art-strip__piece">

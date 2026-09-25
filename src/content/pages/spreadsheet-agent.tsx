@@ -18,7 +18,7 @@
  */
 export const SHEET = {
   title: 'Spreadsheet Agent',
-  meta: ['Product design and build', 'Independent project 2026'],
+  meta: ['Product design and build', 'Independent project – 2026'],
   lede: (
     <p>
       I designed and built a spreadsheet prototype that converts written requests into reviewable plans and editable sheets using a synthetic product catalog.

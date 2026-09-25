@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 
 /**
  * The light around the cursor (Harlie's request, after the Orb shader's
- * spotlight): a soft blue violet circle, 0.34 of the window's shorter side, that
+ * spotlight): a soft blue violet circle, 0.24 of the window's shorter side, that
  * follows a mouse or trackpad and fades in with movement and out when the
  * pointer leaves the window. It lies over the homepage film and over the
  * black ground of the case studies (styles in stage.css, .cursor-light);

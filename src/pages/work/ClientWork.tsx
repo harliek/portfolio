@@ -91,11 +91,10 @@ function Film({ film, index }: { film: ClientFilm; index: number }) {
   const id = `cw-${film.id}`
   return (
     <section className="cw-film" id={film.id} aria-labelledby={id} data-side={index % 2 ? 'right' : 'left'}>
-      <figure className="cw-frame" {...(index === 0 ? { 'data-hero-media': '' } : { 'data-reveal': '' })}>
+      <figure className="cw-frame" data-fill={film.clip.fill || undefined} {...(index === 0 ? { 'data-hero-media': '' } : { 'data-reveal': '' })}>
         <Loop clip={film.clip} />
       </figure>
       <div className="cw-text">
-        <p className="cx-kicker">{film.kind}</p>
         <h2 className="cw-name" id={id}>
           {film.name}
         </h2>

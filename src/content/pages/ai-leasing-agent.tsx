@@ -14,8 +14,8 @@
  */
 export const LEASING = {
   title: 'AI Leasing Agent',
-  /** The role, then the organisation and the years (years only, Harlie's request). */
-  meta: ['Leasing and Operations Associate', 'Valiance Capital, Berkeley 2024 to 2025'],
+  /** The role, then the company and the years ("company – year", years only; Harlie's requests). */
+  meta: ['Leasing and Operations Associate', 'Valiance Capital – 2024 to 2025'],
   lede: (
     <p>
       At Valiance Capital, I proposed an AI leasing assistant to address recurring inquiries within operations serving more than 1,000 tenants. I documented

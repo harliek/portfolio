@@ -123,8 +123,8 @@
   left: var(--hold-left, 50%);
   z-index: 1;
   display: grid;
-  /* The stage alone sits on the middle line; a caption, if any, hangs below it. */
-  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  /* The stage sits a little above the middle (Harlie's request); a caption, if any, hangs below it. */
+  grid-template-rows: minmax(0, 0.76fr) auto minmax(0, 1.24fr);
   justify-items: center;
   width: var(--hold-width, 50%);
   height: calc(100svh - var(--header-height));
@@ -265,9 +265,9 @@
   --aspect: 1.36;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(14px, 1.8vw, 26px);
+  gap: clamp(12px, 1.4vw, 20px);
   align-items: center;
-  padding: 5% 4.5%;
+  padding: 4% 2%;
 }
 
 .story__phone {
@@ -287,20 +287,23 @@
   filter: drop-shadow(0 18px 22px rgb(0 0 0 / 0.5));
 }
 
-/* Before the first step: the homepage tile's arrangement, the middle phone a step forward. */
-.story__phones:not([data-focus]) .story__phone:nth-child(2) {
-  transform: scale(1.05);
+/*
+ * The homepage tile's arrangement throughout (Harlie's request): the outer two
+ * phones the same size, the middle one larger. The current section's phone
+ * is shown at full brightness and the others slightly dimmed (no change of size).
+ */
+.story__phone:nth-child(2) {
+  position: relative;
+  z-index: 1;
+  transform: scale(1.14);
 }
 
 .story__phones[data-focus] .story__phone {
-  opacity: 0.78;
-  transform: scale(0.95);
+  opacity: 0.62;
 }
 
 .story__phones[data-focus] .story__phone[data-on] {
-  z-index: 1;
   opacity: 1;
-  transform: scale(1.08);
 }
 
 .story__caption {
@@ -396,8 +399,9 @@
     display: none;
   }
 
+  /* No fixed space under a told story: CaseStory sizes it so the words end level with the held picture. */
   .cx:has(.story) .cs {
-    padding-bottom: var(--cx-section);
+    padding-bottom: 0;
   }
 }
 
@@ -730,4 +734,14 @@
 .story__points li,
 .cw-text .cx-body {
   text-wrap: pretty;
+}
+
+/* A result after the steps (Jumpstart): set like a step, and not part of the scroll story. */
+.story__result {
+  padding: 2px 0 2px 18px;
+  border-left: 2px solid var(--cx-hair);
+}
+
+.story__result .story__title {
+  color: var(--cx-text);
 }

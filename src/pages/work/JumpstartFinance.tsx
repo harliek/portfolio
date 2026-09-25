@@ -21,6 +21,7 @@ export default function JumpstartFinance() {
         lede={C.lede}
         steps={C.features}
         stage={{ kind: 'phones', phones: C.phones }}
+        result={C.result}
       />
     </CasePage>
   )

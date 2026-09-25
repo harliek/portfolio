@@ -53,17 +53,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4%;
+  gap: 3.2%;
 }
 
-/* Each phone at the same height, its own width from its proportions. */
+/* The outer two phones at the same height (their own widths from their proportions); the middle one larger (Harlie's request). */
 .plane__screen {
   display: block;
-  height: 84%;
+  height: 90%;
 }
 
 .plane__screen:nth-child(2) {
-  transform: scale(1.06);
+  position: relative;
+  z-index: 1;
+  transform: scale(1.14);
 }
 
 .plane__screen img {

@@ -9,23 +9,24 @@ import type { ImageId } from '../media'
  * Facts: student venture at the European Innovation Academy, Porto, June to
  * July 2024; Harlie was Founder and Product Lead of a five-person team
  * (résumé). The pitch deck (p. 10) reports "150 sign-ups in 24 hours" at the
- * academy pitch; it is stated as early interest in the concept, not
- * adoption. Not claimed: an investor pitch, a launched app, what people
+ * academy pitch; it is stated as sign-ups, not adoption. Harlie adds that
+ * the concept was presented to a board of investors (Harlie's statement;
+ * the project files do not show it). Not claimed: a launched app, what people
  * signed up for.
  */
 export const JUMPSTART = {
   title: 'Jumpstart Finance',
-  meta: ['Founder and Product Lead', 'Student venture, Portugal 2024'],
+  meta: ['Founder and Product Lead', 'Student venture, Portugal – 2024'],
   lede: (
     <p>
-      I led a five&#8209;person team at the European Innovation Academy in Porto to develop a financial education app concept, which drew 150 sign&#8209;ups
-      within 24 hours of its pitch. My responsibilities included product direction, positioning, prototyping, and business&#8209;model development.
+      I led a five&#8209;person team at the European Innovation Academy in Porto to develop a financial education app concept. My responsibilities included
+      product direction, positioning, prototyping, and business&#8209;model development.
     </p>
   ),
-  /** Harlie's three phones (the homepage tile's, left to right); `step` is the group each one illustrates. */
+  /** Harlie's three phones, left to right as on the homepage tile (Profile, Home, Community); `step` is the section each one illustrates. */
   phones: [
-    { image: 'jf-tile-home' as ImageId, name: 'Home', step: 0 },
     { image: 'jf-tile-profile' as ImageId, name: 'Profile', step: 1 },
+    { image: 'jf-tile-home' as ImageId, name: 'Home', step: 0 },
     { image: 'jf-tile-third' as ImageId, name: 'Community', step: 2 },
   ],
   /** Harlie's editorial pass (v23): the product decisions only (no competitor claims, no pitch narration). */
@@ -43,4 +44,6 @@ export const JUMPSTART = {
       text: 'The proposed community forum allowed users to ask questions and exchange perspectives alongside the learning content.',
     },
   ],
+  /** Under the three sections (Harlie's request). The sign-ups are the pitch deck's (p. 10); the investor presentation is Harlie's own statement (not shown in the project files). */
+  result: { title: 'Result', text: '150 sign‑ups within 24 hours of the pitch. I presented the concept to a board of investors.' },
 }

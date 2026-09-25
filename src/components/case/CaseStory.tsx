@@ -121,6 +121,7 @@ export function CaseStory({
   caption,
   captions,
   note,
+  result,
 }: {
   title: string
   meta: readonly string[]
@@ -134,6 +135,8 @@ export function CaseStory({
   captions?: readonly ReactNode[]
   /** A scope line after the steps. */
   note?: ReactNode
+  /** A result after the steps (a heading and one or two sentences), shown like a step but not part of the scroll story. */
+  result?: { title: string; text: ReactNode }
   /** The case study's project (the footer carries Previous and Next project). */
   project?: Project
 }) {
@@ -146,35 +149,58 @@ export function CaseStory({
     const list = listRef.current
     if (!list) return
     const n = steps.length
-    const m = { tops: [0], last: 1, line: 0, pad: 0 }
+    /** Scroll positions where each step becomes current, the page's last scroll position, and the space added under the steps. */
+    const m = { t: [0], end: 1, pad: 0 }
     const measure = () => {
       const y = window.scrollY
+      const vh = window.innerHeight
       const items = [...list.children] as HTMLElement[]
-      m.tops = items.map((el) => el.getBoundingClientRect().top + y)
-      const lastBox = items[n - 1].getBoundingClientRect()
-      m.last = lastBox.height || 1
-      m.line = line() * window.innerHeight
-      // The last step must be able to reach the line: add only the missing space under the steps.
-      const below = document.documentElement.scrollHeight - (lastBox.top + y) - m.pad
-      const need = Math.max(0, Math.ceil(window.innerHeight - m.line - below + 8))
-      if (need !== m.pad) {
-        m.pad = need
-        list.style.paddingBottom = need ? `${need}px` : ''
+      const tops = items.map((el) => el.getBoundingClientRect().top + y)
+      // The words end with the last step, or with a result after the steps.
+      const body = list.parentElement ?? list
+      const tail = (body.lastElementChild as HTMLElement | null) ?? items[n - 1]
+      const lastBottom = tail.getBoundingClientRect().bottom + y
+      const footer = document.querySelector<HTMLElement>('.site-end')
+      const footerBox = footer?.getBoundingClientRect()
+      const footerTop = footerBox ? footerBox.top + y : document.documentElement.scrollHeight
+      const footerH = footerBox?.height ?? 0
+      // At the end of the page the words end level with the bottom of the held picture (Harlie's request), so the
+      // footer follows close under both; on phones (the picture is not held beside the words) a short gap.
+      const stage = list.closest('.cs')?.querySelector<HTMLElement>('.story__hold > .story__stage')
+      const wide = !window.matchMedia('(max-width: 899.98px)').matches
+      const want = wide && stage ? Math.max(24, vh - footerH - stage.getBoundingClientRect().bottom) : 56
+      const pad = Math.max(0, Math.round(m.pad + want - (footerTop - lastBottom)))
+      if (pad !== m.pad) {
+        m.pad = pad
+        body.style.paddingBottom = pad ? `${pad}px` : ''
         requestAnimationFrame(() => ScrollTrigger.refresh())
       }
+      // Each step becomes current when its top reaches the reading line; if the page ends before the last one can,
+      // the changes are spaced evenly over the scroll that is left, keeping room for the last step's own movement.
+      const end = Math.max(1, document.documentElement.scrollHeight - vh)
+      const raw = tops.map((top) => top - line() * vh)
+      const lim = end - Math.min(0.35 * vh, 260)
+      if (raw[n - 1] > lim) {
+        // A short page: start earlier if need be, and finish the changes with room left for the last step.
+        const start = Math.min(raw[0], Math.max(-vh, lim - (n - 1) * 80))
+        const stop = Math.max(start + (n - 1) * 20, Math.min(lim, end - 1))
+        const span = raw[n - 1] - raw[0] || 1
+        m.t = raw.map((r) => start + ((r - raw[0]) * (stop - start)) / span)
+      } else m.t = raw
+      m.end = end
     }
     const update = () => {
-      const at = window.scrollY + m.line
-      if (at < m.tops[0]) {
+      const y = window.scrollY
+      if (y < m.t[0]) {
         setActive(-1)
         follow.current?.(-1, 0)
         return
       }
       let k = 0
-      while (k < n - 1 && at >= m.tops[k + 1]) k++
-      const span = k < n - 1 ? m.tops[k + 1] - m.tops[k] : m.last
+      while (k < n - 1 && y >= m.t[k + 1]) k++
+      const span = k < n - 1 ? m.t[k + 1] - m.t[k] : Math.max(1, m.end - m.t[k])
       setActive(k)
-      follow.current?.(k, Math.min(1, Math.max(0, (at - m.tops[k]) / (span || 1))))
+      follow.current?.(k, Math.min(1, Math.max(0, (y - m.t[k]) / span)))
     }
     const trigger = ScrollTrigger.create({
       start: 0,
@@ -187,7 +213,7 @@ export function CaseStory({
     })
     return () => {
       trigger.kill()
-      list.style.paddingBottom = ''
+      ;(list.parentElement ?? list).style.paddingBottom = ''
     }
   }, [steps.length])
 
@@ -254,6 +280,12 @@ export function CaseStory({
             </li>
           ))}
         </ol>
+        {result && (
+          <section className="story__result" aria-label={result.title}>
+            <h2 className="story__title">{result.title}</h2>
+            <p className="story__text">{result.text}</p>
+          </section>
+        )}
         {note && <p className="cs__note">{note}</p>}
       </div>
     </div>

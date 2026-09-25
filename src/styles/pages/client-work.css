@@ -65,6 +65,20 @@
   object-fit: contain;
 }
 
+/*
+ * A clip that is not 16:9 (Aristocracy, 4:3) fills the frame instead, cropped,
+ * and a little enlarged so the dark bands at the footage's own side edges
+ * (about 30 of its 854px each side) fall outside: no black borders.
+ */
+.cw-frame[data-fill] {
+  overflow: hidden;
+}
+
+.cw-frame[data-fill] .cw-frame__video {
+  object-fit: cover;
+  transform: scale(1.12);
+}
+
 .cw-text {
   display: grid;
   gap: var(--cx-s2);

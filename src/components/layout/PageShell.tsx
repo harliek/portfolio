@@ -35,10 +35,10 @@ export function PageShell() {
           Skip to content
         </a>
         <StageBackground route={route} />
-        {/* Harlie's Orb shader behind About and the other pages; idle on the homepage (the film covers it) and on the case studies. */}
-        <OrbBackground active={route !== 'home' && route !== 'case'} />
-        {/* The case studies: pitch black, with the cursor's blue light. */}
-        {route === 'case' && (
+        {/* Harlie's Orb shader behind the remaining pages (not found); idle on the homepage (the film covers it), the case studies and About. */}
+        <OrbBackground active={route === 'other'} />
+        {/* The case studies and About: pitch black, with the cursor's blue violet light. */}
+        {(route === 'case' || route === 'about') && (
           <div className="case-ground" aria-hidden="true">
             <CursorLight />
           </div>

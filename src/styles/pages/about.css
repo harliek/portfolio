@@ -49,9 +49,11 @@
 }
 
 @media (min-width: 820px) {
+  /* The words' column is as wide as they are, and the portrait follows close beside them (Harlie's request). */
   .about-content .about-hero {
-    grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 344px);
-    column-gap: clamp(40px, 6vw, 96px);
+    grid-template-columns: minmax(0, max-content) clamp(300px, 26vw, 344px);
+    column-gap: clamp(32px, 4vw, 56px);
+    justify-content: start;
   }
 }
 
@@ -169,9 +171,10 @@
 }
 
 @media (min-width: 820px) {
+  /* The school's details take their own width and the paragraphs follow close beside them (Harlie's request). */
   .about-content .about-education__grid {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-    column-gap: clamp(40px, 6vw, 96px);
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+    column-gap: clamp(32px, 4vw, 56px);
     align-items: start;
   }
 }
@@ -323,7 +326,7 @@
     opacity 400ms var(--ease-out);
 }
 
-/* The creative portfolio's silent loop fades in over its poster while the link is hovered or focused (ArtPreview.tsx). */
+/* The creative portfolio's silent loop fades in over its poster once it plays (always, while on screen; ArtPreview.tsx). */
 .about-content .about-work__video {
   opacity: 0;
 }
@@ -398,16 +401,20 @@
   align-items: center;
   min-height: 44px;
   padding: 0 17px 0 15px;
+  border: 1px solid rgb(255 255 255 / 0.34);
   border-radius: 999px;
-  /* The red stateful pill (components.css .stateful). */
-  background: var(--red);
+  /* The transparent stateful pill (components.css .stateful): a faint blurred glass that turns translucent red on hover. */
+  background: rgb(8 8 10 / 0.22);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   color: #fff;
   font-size: 0.9375rem;
   font-weight: var(--control-weight);
   line-height: 1;
   white-space: nowrap;
   transition:
-    box-shadow 200ms var(--ease-standard),
+    border-color 200ms var(--ease-standard),
+    background-color 200ms var(--ease-standard),
     opacity 120ms var(--ease-out);
 }
 
@@ -424,9 +431,9 @@
 
 .about-content .about-work__hit:hover .about-work__badge,
 .about-content .about-work__hit:focus-visible .about-work__badge {
-  box-shadow:
-    0 0 0 2px #0a0a0c,
-    0 0 0 4px var(--red);
+  border-color: rgb(var(--red-rgb) / 0.75);
+  background: rgb(var(--red-rgb) / 0.3);
+  box-shadow: none;
 }
 
 .about-content .about-work__hit:hover .about-work__arrow,

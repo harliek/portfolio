@@ -75,7 +75,7 @@ export const FIELD: readonly FieldProject[] = [
     media: {
       kind: 'screens',
       // Harlie's three phones (PNG Tiles/jumpstart tile 1 to 3), made free-standing.
-      screens: ['jf-tile-home', 'jf-tile-profile', 'jf-tile-third'],
+      screens: ['jf-tile-profile', 'jf-tile-home', 'jf-tile-third'],
     },
     alt: 'Three Jumpstart Finance phone screens: home, the learning journey, and the community',
   },
@@ -84,7 +84,7 @@ export const FIELD: readonly FieldProject[] = [
     title: 'Merchandising Platform',
     line: 'An independent prototype for product analysis and replenishment planning.',
     // Harlie's tile (PNG Tiles/Merchandising Tile.png), contained in the box at the shared scale.
-    media: { kind: 'cutouts', pieces: [{ image: 'merch-object', x: 3, y: 5.2, w: 94 }] },
+    media: { kind: 'cutouts', pieces: [{ image: 'merch-object', x: 3, y: 12.7, w: 94 }] },
     alt: 'An illustrative merchandising dashboard with sample product, vendor, inventory and promotion counts, a sales chart and revenue by category',
   },
   {
@@ -92,7 +92,7 @@ export const FIELD: readonly FieldProject[] = [
     title: 'Spreadsheet Agent',
     line: 'A rules-based prototype for generating editable spreadsheets from written requests.',
     // Harlie's tile (PNG Tiles/spreadsheet tile.png, transparent), contained in the box at the shared scale.
-    media: { kind: 'cutouts', pieces: [{ image: 'sa-object', x: 3, y: 15.8, w: 94 }] },
+    media: { kind: 'cutouts', pieces: [{ image: 'sa-object', x: 3, y: 18.7, w: 94 }] },
     alt: 'Spreadsheet Agent with a generated B2B apparel assortment beside the assistant panel and its request',
   },
   {
@@ -100,7 +100,7 @@ export const FIELD: readonly FieldProject[] = [
     title: 'CafePress UK',
     line: 'Market research, assortment planning, and early UK storefront prototyping.',
     // An illustrative mockup Harlie made for the tile (PNG Tiles/cafepress uk tile.png).
-    media: { kind: 'cutouts', pieces: [{ image: 'cp-object', x: 3, y: 7.5, w: 94 }] },
+    media: { kind: 'cutouts', pieces: [{ image: 'cp-object', x: 5.9, y: 3, w: 88.1 }] },
     alt: 'An illustrative CafePress Business UK storefront mockup with a T-shirt, tote bag and mug priced in pounds',
   },
   {

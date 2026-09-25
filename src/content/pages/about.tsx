@@ -75,8 +75,8 @@ export const ABOUT = {
     title: 'Art',
     line: 'Charcoal drawings',
     action: 'View art',
-    /** Three portrait drawings from the Charcoal Art page, side by side in the one link (Harlie's request, v23). */
-    images: ['about-art', 'about-art-deluge', 'about-art-soaked'] as ImageId[],
+    /** Harlie's three portrait drawings (A Life, Beautifully Worn; Time Unspoken; Written by Time), side by side in the one link. */
+    images: ['about-art', 'about-art-time-unspoken', 'about-art-written-by-time'] as ImageId[],
   },
   film: {
     title: 'An Artistic End',

@@ -531,24 +531,24 @@ export const IMAGES = {
     crop: 'Trimmed to its content.',
   }),
   'merch-object': img({
-    id: 'merch-object', file: 'merch-object', width: 1457, height: 868, widths: [729, 1457], fallback: 'png', transparent: true,
+    id: 'merch-object', file: 'merch-object', width: 1671, height: 828, widths: [836, 1671], fallback: 'png', transparent: true,
     alt: 'An illustrative merchandising dashboard with sample product, vendor, inventory and promotion counts, a 30-day sales chart and revenue by category.',
     provenance: 'independent-prototype', synthetic: true,
-    source: 'PNG Tiles/merch png.png (supplied by Harlie, transparent; replaced 2026-09-25 13:58)', role: 'Merchandising homepage tile',
+    source: 'PNG Tiles/merch png.png (supplied by Harlie, transparent; replaced 2026-09-25 14:30)', role: 'Merchandising homepage tile',
     crop: 'Trimmed to its content.',
   }),
   'cp-object': img({
-    id: 'cp-object', file: 'cp-object', width: 1601, height: 904, widths: [801, 1601], fallback: 'png', transparent: true,
-    alt: 'An illustrative CafePress Business UK storefront mockup with a free UK delivery offer and a T-shirt, tote bag and mug priced in pounds.',
+    id: 'cp-object', file: 'cp-object', width: 1536, height: 1024, widths: [768, 1536], fallback: 'png', transparent: true,
+    alt: 'An illustrative CafePress Business UK storefront mockup with a T-shirt, tote bag and mug priced in pounds.',
     provenance: 'synthetic-example', synthetic: true,
-    source: 'PNG Tiles/cafepress uk.png (a mockup made for the tile by Harlie, transparent; replaced 2026-09-25 13:30)', role: 'CafePress UK homepage tile (illustrative)',
+    source: 'PNG Tiles/cafepress uk.png (a mockup made for the tile by Harlie, transparent; replaced 2026-09-25 14:24)', role: 'CafePress UK homepage tile (illustrative)',
     crop: 'Trimmed to its content.',
   }),
   'sa-object': img({
-    id: 'sa-object', file: 'sa-object', width: 1595, height: 726, widths: [798, 1595], fallback: 'png', transparent: true,
-    alt: 'Spreadsheet Agent with a five-row B2B apparel assortment of products, vendors and categories beside the assistant panel holding the request that built it.',
+    id: 'sa-object', file: 'sa-object', width: 1599, height: 666, widths: [800, 1599], fallback: 'png', transparent: true,
+    alt: 'Spreadsheet Agent with a six-row B2B apparel assortment of products, vendors and categories beside the assistant panel holding the request that built it.',
     provenance: 'independent-prototype', synthetic: true,
-    source: 'PNG Tiles/spreadsheet tile 2.png (supplied by Harlie, transparent; replaced 2026-09-25 13:16)', role: 'Spreadsheet Agent homepage tile',
+    source: 'PNG Tiles/spreadsheet tile 2.png (supplied by Harlie, transparent; replaced 2026-09-25 14:25)', role: 'Spreadsheet Agent homepage tile',
     crop: 'Trimmed to its content.',
   }),
   'cp-drinkware': img({
@@ -563,17 +563,17 @@ export const IMAGES = {
     provenance: 'original-artifact', synthetic: false,
     source: 'public/creative/art/oldwoman.JPG (the creative portfolio’s Charcoal Art page)', role: 'About, Creative work: the Art card',
   }),
-  'about-art-deluge': img({
-    id: 'about-art-deluge', file: 'about-art-deluge', width: 480, height: 600, widths: [240, 480], fallback: 'jpg',
-    alt: 'Deluge, a charcoal drawing by Harlie of a face with eyes closed, framed by long falling strokes, on light paper.',
+  'about-art-time-unspoken': img({
+    id: 'about-art-time-unspoken', file: 'about-art-time-unspoken', width: 480, height: 600, widths: [240, 480], fallback: 'jpg',
+    alt: 'Time Unspoken, a charcoal portrait by Harlie of an elderly bearded man in a dark hood, one hand over his mouth.',
     provenance: 'personal-work', synthetic: false,
-    source: 'public/creative/art/tree.jpg (Deluge, the creative portfolio’s Charcoal Art page), cropped to 4:5', role: 'About, Creative work: the Art card',
+    source: 'public/creative/art/oldman.jpg (Time Unspoken, the creative portfolio’s Charcoal Art page), cropped to 4:5', role: 'About, Creative work: the Art card',
   }),
-  'about-art-soaked': img({
-    id: 'about-art-soaked', file: 'about-art-soaked', width: 480, height: 600, widths: [240, 480], fallback: 'jpg',
-    alt: 'Soaked in Silence, a charcoal drawing by Harlie of a close-up face with wet strands of hair across it.',
+  'about-art-written-by-time': img({
+    id: 'about-art-written-by-time', file: 'about-art-written-by-time', width: 480, height: 600, widths: [240, 480], fallback: 'jpg',
+    alt: 'Written by Time, a charcoal portrait by Harlie of an old man with wild white hair and a full beard, staring straight out.',
     provenance: 'personal-work', synthetic: false,
-    source: 'public/creative/art/close.jpg (Soaked in Silence, the creative portfolio’s Charcoal Art page)', role: 'About, Creative work: the Art card',
+    source: 'public/creative/art/oldman2.JPG (Written by Time, the creative portfolio’s Charcoal Art page), cropped to 4:5', role: 'About, Creative work: the Art card',
   }),
   // The laptop the case studies' recordings and screenshots sit in (PNG Tiles/computer png.png, supplied by Harlie; replaced 13:36,
   // trimmed to x 68 to 1380, y 179 to 912 of the 1448x1086 file). Its screen is transparent: x 172 to 1141, y 71 to 647 of the trimmed image.

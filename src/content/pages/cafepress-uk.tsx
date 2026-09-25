@@ -20,7 +20,7 @@
  */
 export const CAFEPRESS = {
   title: 'CafePress UK',
-  meta: ['Product Operations and Merchandising Intern', 'PlanetArt 2026'],
+  meta: ['Product Operations and Merchandising Intern', 'PlanetArt – 2026'],
   lede: (
     <p>
       At PlanetArt, I assessed the feasibility of a UK B2B storefront through competitor research, vendor evaluation, assortment planning, and operational

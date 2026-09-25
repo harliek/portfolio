@@ -17,7 +17,7 @@
  */
 export const MERCH = {
   title: 'Merchandising Platform',
-  meta: ['Product design and build', 'Independent project 2026'],
+  meta: ['Product design and build', 'Independent project – 2026'],
   lede: (
     <p>
       Following my PlanetArt internship, I designed and built an independent merchandising prototype that consolidates catalog, inventory, sales, and vendor

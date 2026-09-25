@@ -56,18 +56,16 @@ export interface ClientFilm {
   id: 'nickleby' | 'aristocracy' | 'night-club'
   /** Section heading and anchor link label. */
   name: string
-  /** Short kind of film, shown with its duration under the heading. */
-  kind: string
   video: VideoId
   /** Harlie's part, first person. */
   work: ReactNode
-  /** The moving frame on the page (a short muted excerpt, its whole frame; the full film opens with sound on request). */
-  clip: { src: string; poster: string; width: number; height: number }
+  /** The moving frame on the page (a short muted excerpt; the full film opens with sound on request). `fill` crops it to fill the 16:9 frame. */
+  clip: { src: string; poster: string; width: number; height: number; fill?: boolean }
 }
 
 export const CLIENT_WORK = {
   title: 'Creative Production',
-  meta: ['Creative Strategy and Client Solutions Intern', 'Shift Content, London 2026'],
+  meta: ['Creative Strategy and Client Solutions Intern', 'Shift Content – 2026'],
   summary: (
     <p>At Shift Content, I supported client film production through lighting, camera setup, on&#8209;set coordination, B&#8209;roll capture, and editing.</p>
   ),
@@ -75,22 +73,22 @@ export const CLIENT_WORK = {
     {
       id: 'nickleby',
       name: 'Nickleby Capital',
-      kind: 'Interview film',
       video: 'nickleby',
       clip: { src: '/media/video/nickleby-loop-trim-1138.mp4', poster: '/media/img/nickleby-loop-poster.jpg', width: 1138, height: 640 },
       work: (
         <p>
-          I supported lighting and equipment setup and <strong>filmed B&#8209;roll</strong> during a one&#8209;day interview shoot.
+          I supported lighting and equipment setup and <strong>filmed B&#8209;roll</strong> during a one&#8209;day interview shoot for Nickleby Capital. Five senior
+          team members drew question cards and answered on camera without a script, a game&#8209;show format that kept the testimonials and FAQ answers
+          spontaneous.
         </p>
       ),
     },
     {
       id: 'aristocracy',
       name: 'Aristocracy',
-      kind: 'Campaign film',
       video: 'aristocracy',
-      // The whole 4:3 frame (27.0s to 34.4s of the film), shown inside the same 16:9 frame as the others.
-      clip: { src: '/media/video/aristocracy-loop-854.mp4', poster: '/media/img/aristocracy-loop-poster.jpg', width: 854, height: 640 },
+      // Cropped to fill the 16:9 frame (Harlie's request: no black borders).
+      clip: { src: '/media/video/aristocracy-loop-854.mp4', poster: '/media/img/aristocracy-loop-poster.jpg', width: 854, height: 640, fill: true },
       work: (
         <p>
           I supported <strong>lighting, setup, and on-set coordination</strong> for Aristocracy London’s two&#8209;day spring/summer campaign shoot. I also filmed
@@ -101,7 +99,6 @@ export const CLIENT_WORK = {
     {
       id: 'night-club',
       name: 'The Night Club Global Tour',
-      kind: 'Event film',
       video: 'heck',
       // The whole 16:9 frame (14.6s to 21.5s of the film).
       clip: { src: '/media/video/heck-loop-1138.mp4', poster: '/media/img/heck-loop-poster.jpg', width: 1138, height: 640 },

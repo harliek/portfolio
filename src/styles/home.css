@@ -14,11 +14,8 @@
 .home {
   --enter: 0;
   --settle: 0;
-  --hero-hold: 55svh;
-  --field-hold: 110svh;
-  --field-overlap: 38svh;
-  --edge: clamp(20px, 6.2vw, 120px);
-  --horizon: 42%;
+  --edge: clamp(24px, 4.45vw, 64px);
+  --horizon: 44%;
 
   position: relative;
   isolation: isolate;
@@ -61,14 +58,13 @@
   }
 }
 
-/* Darkness: a left fade behind the title, a vignette, top and bottom falloff; then the scroll-driven dim. */
+/* Only enough local contrast for the title (a soft left fade, a little at the top), then a light scroll-driven dim behind the work. */
 .home-film__shade {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgb(0 0 0 / 0.78) 0%, rgb(0 0 0 / 0.52) 30%, rgb(0 0 0 / 0.12) 52%, rgb(0 0 0 / 0) 64%),
-    radial-gradient(125% 95% at 62% 50%, rgb(0 0 0 / 0) 48%, rgb(0 0 0 / 0.62) 100%),
-    linear-gradient(to bottom, rgb(0 0 0 / 0.4), rgb(0 0 0 / 0) 18%, rgb(0 0 0 / 0) 72%, rgb(0 0 0 / 0.55));
+    linear-gradient(90deg, rgb(0 0 0 / 0.55) 0%, rgb(0 0 0 / 0.3) 26%, rgb(0 0 0 / 0) 46%),
+    linear-gradient(to bottom, rgb(0 0 0 / 0.25), rgb(0 0 0 / 0) 16%);
 }
 
 .home-film__shade::after {
@@ -76,7 +72,7 @@
   position: absolute;
   inset: 0;
   background: #030305;
-  opacity: min(0.86, calc(var(--enter) * 0.48 + var(--settle) * 0.38));
+  opacity: min(0.38, calc(var(--enter) * 0.2 + var(--settle) * 0.18));
   transition: opacity 700ms var(--ease-arrive);
 }
 
@@ -88,24 +84,24 @@
 
 .hero {
   position: relative;
-  height: calc(100svh - var(--header-height) + var(--hero-hold));
+  /* A little shorter than the window, so the selected work already shows at the bottom edge. */
+  height: calc(100svh - var(--header-height) - 12svh);
+  min-height: 420px;
 }
 
-/* One block, about 64px from the left and slightly below the vertical centre; the right of the film stays open. */
+/* The identity group sits about 38 to 40% down the opening, about 64px from the left. */
 .hero__stage {
-  position: sticky;
-  top: var(--header-height);
-  height: calc(100svh - var(--header-height));
-  display: flex;
-  align-items: center;
-  padding: 10svh 0 0 clamp(24px, 4.45vw, 64px);
-  overflow: hidden;
+  position: relative;
+  height: 100%;
 }
 
 .hero__group {
-  transform: translate3d(0, calc(var(--enter) * -9svh), 0) scale(calc(1 - var(--enter) * 0.14));
-  transform-origin: 0 50%;
-  opacity: calc(1 - var(--enter) * 0.45);
+  position: absolute;
+  top: calc((100svh - var(--header-height)) * 0.39);
+  left: var(--edge);
+  right: var(--edge);
+  transform: translate3d(0, calc(-50% - var(--enter) * 6svh), 0);
+  opacity: calc(1 - var(--enter) * 0.6);
   will-change: transform;
 }
 
@@ -116,13 +112,13 @@
 
 .hero__name {
   display: block;
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   font-family: var(--font-sans);
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 0.9375rem;
+  font-weight: 400;
   line-height: 1.4;
   letter-spacing: 0.02em;
-  color: #f3eee7;
+  color: rgb(243 238 231 / 0.82);
 }
 
 /* PORTFOLIO: the original homepage's Playfair Display in white capitals. */
@@ -130,7 +126,7 @@
   display: block;
   margin-left: -0.045em;
   font-family: var(--font-editorial);
-  font-size: clamp(88px, 12vw, 180px);
+  font-size: clamp(64px, 8.8vw, 126px);
   font-weight: 400;
   line-height: 0.9;
   letter-spacing: -0.012em;
@@ -141,11 +137,11 @@
 }
 
 .hero__line {
-  max-width: 34ch;
-  margin: 20px 0 0;
+  max-width: 62ch;
+  margin: 16px 0 0;
   font-family: var(--font-sans);
-  font-size: 1.375rem;
-  line-height: 1.4;
+  font-size: 1.0625rem;
+  line-height: 1.45;
   color: rgb(243 238 231 / 0.9);
   opacity: calc(1 - var(--enter) * 1.6);
 }
@@ -155,9 +151,9 @@
   align-items: center;
   gap: 10px;
   min-height: 44px;
-  margin-top: 20px;
+  margin-top: 12px;
   font-family: var(--font-sans);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   color: #f3eee7;
   text-decoration: none;
   border-bottom: 1px solid rgb(243 238 231 / 0.35);
@@ -179,8 +175,8 @@
 .field {
   position: relative;
   z-index: 1;
-  height: calc(100svh - var(--header-height) + var(--field-hold));
-  margin-top: calc(-1 * var(--field-overlap));
+  /* The pin plus the scroll that moves through the projects (ProjectField --field-steps). */
+  height: calc(100svh - var(--header-height) + var(--field-steps, 200svh));
 }
 
 .field__pin {
@@ -192,7 +188,7 @@
 
 .field__label {
   position: absolute;
-  top: clamp(18px, 4.6svh, 46px);
+  top: clamp(16px, 3.4svh, 32px);
   left: var(--edge);
   z-index: 300;
   display: flex;
@@ -286,7 +282,7 @@
 /* Each card's own caption: the title 20px below the cover, the line 8px below it, the same height for every card. */
 .plane__caption {
   display: block;
-  padding-top: 20px;
+  padding-top: 16px;
   opacity: calc(1 - var(--depth, 0) * 0.3);
   transition: opacity 100ms linear;
 }
@@ -294,7 +290,7 @@
 .plane__title {
   display: block;
   font-family: var(--font-editorial);
-  font-size: clamp(1.375rem, 1rem + 0.8vw, 1.75rem);
+  font-size: clamp(1.375rem, 1.1rem + 0.45vw, 1.625rem);
   font-weight: 400;
   line-height: 1.15;
   color: #f3eee7;
@@ -306,7 +302,7 @@
   max-width: 56ch;
   margin-top: 8px;
   font-family: var(--font-sans);
-  font-size: clamp(0.9375rem, 0.85rem + 0.2vw, 1.0625rem);
+  font-size: clamp(0.875rem, 0.82rem + 0.15vw, 0.9375rem);
   line-height: 1.5;
   color: #b4aea6;
 }
@@ -402,32 +398,24 @@
   opacity: 0;
 }
 
-/* Tablets: simpler depth, a slightly shorter hold. */
-@media (max-width: 1099.98px) {
-  .home {
-    --field-hold: 90svh;
-  }
+/* A step is unavailable at either end of the collection. */
+.field__step:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
-/* Phones: one card and glimpses of its neighbours, captions directly beneath. */
+/* Phones: one tile and glimpses of its neighbours, captions directly beneath. */
 @media (max-width: 699.98px) {
   .home {
-    --hero-hold: 40svh;
-    --field-hold: 70svh;
-    --field-overlap: 26svh;
-    --horizon: 36%;
-  }
-
-  .hero__stage {
-    padding-top: 6svh;
+    --horizon: 38%;
   }
 
   .hero__word {
-    font-size: 14vw;
+    font-size: 15vw;
   }
 
   .hero__line {
-    font-size: 1.1875rem;
+    font-size: 1rem;
   }
 
   .field__label {
@@ -440,18 +428,10 @@
   }
 }
 
-/* Reduced motion: no hold, no drift (ProjectField), the still poster (HomeFilm). */
+/* Reduced motion: the title stays put; tiles move without easing (ProjectField); the still poster (HomeFilm). */
 @media (prefers-reduced-motion: reduce) {
-  .home {
-    --hero-hold: 0px;
-    --field-hold: 0px;
-    --field-overlap: 0px;
-  }
-
-  .hero__group,
-  .hero__line,
-  .hero__explore {
-    transform: none;
+  .hero__group {
+    transform: translate3d(0, -50%, 0);
     opacity: 1;
   }
 

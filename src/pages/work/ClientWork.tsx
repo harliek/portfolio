@@ -53,7 +53,7 @@ function Loop({ clip, className }: { clip: ClientFilm['clip'] | typeof C.hero; c
 /**
  * A film scrubbed gently by the scroll: its time follows the frame's passage
  * through the window (no pinning), eased toward the target and never queuing
- * seeks. The excerpt is keyframe-dense (see ScrollScrubVideo's note).
+ * seeks. The excerpt is encoded keyframe-dense so seeks land quickly.
  */
 function Strip({ clip }: { clip: ClientFilm['clip'] }) {
   const ref = useRef<HTMLVideoElement>(null)

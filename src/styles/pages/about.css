@@ -10,11 +10,11 @@
  * so About starts and ends on the same edges as the header, the footer and
  * the case studies.
  *   Opening      portrait (40%)            greeting, lead and paragraph (60%)
- *   ─────────    a full-width hairline, with generous space on both sides
+ *   ─────────    a full-width hairline
  *   Record       Education (40%)           Experience (60%)
  *   ─────────
- *   Creative     two equal cards (50% / 50%), from 720px
- *   Links        email and LinkedIn
+ *   Creative     the heading (40%)         two equal cards (60%)
+ * Email and LinkedIn are in the site's compact ending (Footer.tsx).
  * Narrow screens stack each block in reading order.
  *
  * The page accent (About's lavender, set on .page-about by About.tsx) marks
@@ -32,9 +32,9 @@
   --about-accent-rgb: var(--accent-rgb, 201 184 255);
   --about-cols: minmax(0, 2fr) minmax(0, 3fr);
   --about-gap: clamp(40px, 6.5vw, 88px);
-  --about-block-gap: clamp(72px, 8vw, 112px);
+  --about-block-gap: clamp(48px, 4.4vw, 64px);
   /* Space between a divider and the section titles below it. */
-  --about-after-rule: clamp(40px, 4.5vw, 56px);
+  --about-after-rule: clamp(32px, 3vw, 40px);
   --about-rule: rgb(236 232 250 / 0.12);
   /*
    * The homepage's pale lavender-white type: headings and names brightest,
@@ -175,9 +175,9 @@
   max-width: 34em;
   margin: 0;
   color: #f3eee7;
-  font-size: clamp(1.25rem, 1.05rem + 0.5vw, 1.5rem);
-  line-height: 1.45;
-  letter-spacing: -0.006em;
+  font-size: clamp(1.125rem, 1.02rem + 0.3vw, 1.25rem);
+  line-height: 1.5;
+  letter-spacing: -0.004em;
   text-wrap: pretty;
 }
 
@@ -196,42 +196,9 @@
   max-width: 60ch;
   margin: 0;
   color: var(--about-ink);
-  font-size: 1.125rem;
-  line-height: 1.5556;
+  font-size: 1rem;
+  line-height: 1.65;
   text-wrap: pretty;
-}
-
-/* Selected experience: three factual sentences, close to the introduction. */
-.about-content .about-selected {
-  margin-top: 16px;
-}
-
-.about-content .about-selected__title {
-  margin: 0 0 8px;
-  color: var(--about-ink-muted);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-
-.about-content .about-selected__list {
-  display: grid;
-  max-width: 60ch;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.about-content .about-selected__list li {
-  padding: 12px 0;
-  border-top: 1px solid rgb(243 238 231 / 0.12);
-  color: var(--about-ink-strong);
-  font-size: 1.0625rem;
-  line-height: 1.5;
-}
-
-.about-content .about-selected__list li:last-child {
-  border-bottom: 1px solid rgb(243 238 231 / 0.12);
 }
 
 /* ------------------------------------------------------------------ */
@@ -328,22 +295,6 @@
 .about-content .about-school__dates {
   margin-top: var(--space-2);
   color: var(--about-ink-muted);
-}
-
-.about-content .about-school__text {
-  display: grid;
-  gap: var(--space-4);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--about-rule);
-  color: var(--about-ink);
-  font-size: var(--about-primary);
-  line-height: var(--about-primary-leading);
-  text-wrap: pretty;
-}
-
-/* The measure is on the paragraphs, so the rule above them spans the column like the others. */
-.about-content .about-school__text p {
-  max-width: var(--about-measure);
 }
 
 .about-content .about-roles {
@@ -485,9 +436,18 @@
   gap: var(--space-6);
 }
 
+/* Wide screens: the heading in the 40% column, the two cards in the 60% column (the record's grid). */
+@media (min-width: 960px) {
+  .about-content .about-creative {
+    grid-template-columns: var(--about-cols);
+    column-gap: var(--about-gap);
+    align-items: start;
+  }
+}
+
 .about-content .about-creative__grid {
   display: grid;
-  gap: var(--space-7);
+  gap: var(--space-6);
   align-items: start;
 }
 
@@ -495,7 +455,7 @@
 @media (min-width: 720px) {
   .about-content .about-creative__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: clamp(24px, 4vw, 56px);
+    column-gap: clamp(20px, 2.4vw, 32px);
   }
 }
 
@@ -723,58 +683,6 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Email and LinkedIn: quiet links at the end, no heading               */
-/* ------------------------------------------------------------------ */
-
-.about-content .about-links {
-  margin-top: calc(var(--space-7) - var(--about-block-gap));
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0 var(--space-6);
-  list-style: none;
-}
-
-.about-content .about-links__link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--about-ink-muted);
-  font-size: var(--about-secondary);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-decoration-color: rgb(182 177 198 / 0.35);
-  text-underline-offset: 4px;
-  transition:
-    color var(--dur-feedback) var(--ease-out),
-    text-decoration-color var(--dur-feedback) var(--ease-out);
-}
-
-.about-content .about-links__arrow {
-  display: inline-block;
-  margin-left: 5px;
-  text-decoration: none;
-  transition: transform var(--dur-feedback) var(--ease-out);
-}
-
-.about-content .about-links__link:hover .about-links__arrow,
-.about-content .about-links__link:focus-visible .about-links__arrow {
-  transform: translate(1px, -1px);
-}
-
-.about-content .about-links__link:hover,
-.about-content .about-links__link:focus-visible {
-  color: var(--about-accent);
-  text-decoration-color: currentColor;
-}
-
-.about-content .about-links__link:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* ------------------------------------------------------------------ */
 /* The pointer's light pool (AboutLight.tsx, appended to <body>)        */
 /* ------------------------------------------------------------------ */
 
@@ -836,9 +744,7 @@ html[data-motion='reduce'] .about-light {
   .about-content .about-work__hit:hover .about-work__arrow,
   .about-content .about-work__hit:focus-visible .about-work__arrow,
   .about-content .about-role__link:hover .about-role__arrow,
-  .about-content .about-role__link:focus-visible .about-role__arrow,
-  .about-content .about-links__link:hover .about-links__arrow,
-  .about-content .about-links__link:focus-visible .about-links__arrow {
+  .about-content .about-role__link:focus-visible .about-role__arrow {
     transform: none;
   }
 }
@@ -848,8 +754,6 @@ html[data-motion='reduce'] .about-content .about-work__hit:focus-visible :is(.ab
 html[data-motion='reduce'] .about-content .about-work__hit:hover .about-work__arrow,
 html[data-motion='reduce'] .about-content .about-work__hit:focus-visible .about-work__arrow,
 html[data-motion='reduce'] .about-content .about-role__link:hover .about-role__arrow,
-html[data-motion='reduce'] .about-content .about-role__link:focus-visible .about-role__arrow,
-html[data-motion='reduce'] .about-content .about-links__link:hover .about-links__arrow,
-html[data-motion='reduce'] .about-content .about-links__link:focus-visible .about-links__arrow {
+html[data-motion='reduce'] .about-content .about-role__link:focus-visible .about-role__arrow {
   transform: none;
 }

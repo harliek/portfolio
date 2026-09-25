@@ -1,20 +1,22 @@
 /*
- * Creative Production (brief v16): each film composed for its footage. A
- * wide moving frame with the title on it; Nickleby as a large 16:9 frame
- * with text around it; Aristocracy as a vertical editorial set; The Night
- * Club across the full width, scrubbed by the scroll.
+ * Creative Production (brief v18): each film composed for its footage, held
+ * compact. A wide moving frame with the title on it, short enough that the
+ * summary shows beneath it; Nickleby as a 16:9 frame with its text beside
+ * it; Aristocracy as a vertical set; The Night Club's wide excerpt beside its
+ * text, scrubbed gently by the scroll.
  */
 
 /* Opening: a wide cinematic frame, the title set on its lower left. */
 .cw-hero {
-  padding: clamp(16px, 3svh, 40px) var(--cx-edge) 0;
+  padding: clamp(24px, 3svh, 32px) var(--cx-edge) 0;
 }
 
 .cw-hero__frame {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 920 / 440;
-  max-height: calc(100svh - var(--header-height) - 180px);
+  aspect-ratio: 21 / 9;
+  max-height: calc(100svh - var(--header-height) - 280px);
+  min-height: 280px;
   width: 100%;
   border-radius: 3px;
   background: #07070a;
@@ -54,7 +56,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--cx-s2) clamp(28px, 4vw, 72px);
   align-items: baseline;
-  padding-top: var(--cx-s3);
+  padding-top: var(--cx-s2);
 }
 
 .cw-hero__text .cx-lede {
@@ -79,7 +81,7 @@
 .cw-name {
   margin: 0;
   font-family: var(--font-editorial);
-  font-size: clamp(2rem, 3.8vw, 4rem);
+  font-size: clamp(1.75rem, 1.3rem + 1.2vw, 2.5rem);
   font-weight: 400;
   line-height: 1.02;
   color: #fff;
@@ -148,12 +150,12 @@
   letter-spacing: 0.08em;
 }
 
-/* Nickleby: the 16:9 frame large on the left, the text around its right edge. */
+/* Nickleby: the 16:9 frame on the left, the text beside it. */
 .cw-nickleby {
   display: grid;
-  grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
-  gap: var(--cx-s3) clamp(28px, 4vw, 72px);
-  align-items: end;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: var(--cx-s3) clamp(28px, 4vw, 64px);
+  align-items: center;
 }
 
 .cw-nickleby__frame video,
@@ -166,8 +168,8 @@
 /* Aristocracy: the text first, then a vertical set, the film tall between two photographs at different heights. */
 .cw-aristocracy {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.6fr);
-  gap: var(--cx-s3) clamp(28px, 4vw, 72px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: var(--cx-s3) clamp(28px, 4vw, 64px);
   align-items: center;
 }
 
@@ -188,21 +190,25 @@
 }
 
 .cw-aristocracy__photo--low {
-  margin-top: 22%;
+  margin-top: 12%;
 }
 
-/* The Night Club: the full width of the window, scrubbed by the scroll; text beneath in two columns. */
+/* The Night Club: the wide excerpt on the right, scrubbed by the scroll; the text beside it. */
 .cw-night {
   display: grid;
-  gap: var(--cx-s3);
-  padding-left: 0;
-  padding-right: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: var(--cx-s3) clamp(28px, 4vw, 64px);
+  align-items: center;
 }
 
 .cw-strip {
+  grid-column: 2;
+  grid-row: 1;
   margin: 0;
   overflow: hidden;
   aspect-ratio: 1280 / 536;
+  border-radius: var(--cx-radius);
+  box-shadow: 0 0 0 1px var(--cx-hair);
   background: #07070a;
 }
 
@@ -214,24 +220,8 @@
 }
 
 .cw-night .cw-text {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: clamp(28px, 4vw, 72px);
-  padding: 0 var(--cx-edge);
-}
-
-.cw-night .cw-text > .cx-kicker,
-.cw-night .cw-text > .cw-name {
   grid-column: 1;
-}
-
-.cw-night .cw-text > .cx-body,
-.cw-night .cw-text > .cw-delivered,
-.cw-night .cw-text > .cw-watch {
-  grid-column: 2;
-}
-
-.cw-night .cw-text > .cx-body {
-  grid-row: 1 / span 2;
+  grid-row: 1;
 }
 
 @media (max-width: 899.98px) {
@@ -242,13 +232,14 @@
   .cw-hero__text,
   .cw-nickleby,
   .cw-aristocracy,
-  .cw-night .cw-text {
+  .cw-night {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .cw-night .cw-text > * {
-    grid-column: 1 !important;
-    grid-row: auto !important;
+  .cw-strip,
+  .cw-night .cw-text {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .cw-aristocracy__set {

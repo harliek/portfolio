@@ -68,8 +68,8 @@ export interface ClientFilm {
 export const CLIENT_WORK = {
   title: 'Creative Production',
   meta: ['Creative Strategy and Client Solutions Intern', 'Shift Content, London', 'January to May 2026'],
-  /** The opening's moving frame: Aristocracy's lit storefront set (75.5s to 84.5s, cropped wide above the subtitles). */
-  hero: { src: '/media/video/creative-hero-920.mp4', poster: '/media/img/creative-hero-poster.jpg', width: 920, height: 440 },
+  /** The opening's moving frame: Aristocracy's lit storefront set (about 76.5s to 83.6s, trimmed inside the fades so the loop never shows black). */
+  hero: { src: '/media/video/creative-hero-trim-920.mp4', poster: '/media/img/creative-hero-poster.jpg', width: 920, height: 440 },
   summary: (
     <p>
       I worked directly with the founder on client films, from <strong>lighting and camera work on set</strong> to editing.
@@ -83,7 +83,7 @@ export const CLIENT_WORK = {
       name: 'Nickleby Capital',
       kind: 'Interview film',
       video: 'nickleby',
-      clip: { src: '/media/video/nickleby-loop-1138.mp4', poster: '/media/img/nickleby-loop-poster.jpg', width: 1138, height: 640 },
+      clip: { src: '/media/video/nickleby-loop-trim-1138.mp4', poster: '/media/img/nickleby-loop-poster.jpg', width: 1138, height: 640 },
       work: (
         <p>
           For a one-day interview shoot, I set up lighting and audio and <strong>filmed B-roll during the interviews</strong>.
@@ -98,7 +98,7 @@ export const CLIENT_WORK = {
       name: 'Aristocracy',
       kind: 'Campaign film',
       video: 'aristocracy',
-      clip: { src: '/media/video/aristocracy-vertical-480.mp4', poster: '/media/img/aristocracy-vertical-poster.jpg', width: 480, height: 600 },
+      clip: { src: '/media/video/aristocracy-vertical-trim-480.mp4', poster: '/media/img/aristocracy-vertical-poster.jpg', width: 480, height: 600 },
       work: (
         <p>
           I helped run a two-day shoot for Aristocracy London’s spring and summer campaign. I handled <strong>lighting, setup, and on-set coordination</strong>{' '}

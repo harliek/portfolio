@@ -7,9 +7,9 @@ import { expandFrame } from '../transition/expandFrame'
 import { isPlainClick, warmProject } from '../transition/projectTransition'
 
 /**
- * The end of a case study: the next project as a frame of its own work (the
- * homepage field's media), its title and one line. Clicking expands the
- * frame into that case study, as on the homepage.
+ * The end of a case study (brief v18): a compact link, a small thumbnail
+ * of the next project's cover, "Next project" and its title. Clicking
+ * carries the thumbnail into that case study's hero, as on the homepage.
  */
 export function NextCase({ current }: { current: Project }) {
   const navigate = useNavigate()
@@ -52,7 +52,6 @@ export function NextCase({ current }: { current: Project }) {
   return (
     <nav className="cx-next" aria-label="Next project">
       <a className="cx-next__link" href={path} onClick={open} onPointerEnter={() => warmProject(path)} onFocus={() => warmProject(path)}>
-        <span className="cx-next__kicker">Next project</span>
         <span className="cx-next__frame">
           <span ref={mediaRef} className="plane__media" data-kind={item.media.kind}>
             <PlaneMedia
@@ -64,8 +63,10 @@ export function NextCase({ current }: { current: Project }) {
           </span>
         </span>
         <span className="cx-next__text">
-          <span className="cx-next__title">{item.title}</span>
-          <span className="cx-next__line">{item.line}</span>
+          <span className="cx-next__kicker">Next project</span>
+          <span className="cx-next__title">
+            {item.title} <span className="cx-next__arrow" aria-hidden="true">→</span>
+          </span>
         </span>
       </a>
     </nav>

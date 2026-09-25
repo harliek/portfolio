@@ -10,15 +10,13 @@ import { prefersReducedMotion } from '../hooks/useReducedMotion'
 import { ScrollTrigger } from '../lib/gsap'
 
 /**
- * The homepage (brief v16): Harlie's original film as the one dominant
- * image, very large PORTFOLIO, darkness and space; then the selected work.
- *
- * The opening holds (a short pin) as scrolling begins: PORTFOLIO rises a
- * little and scales down, the film darkens, and the selected work arrives
- * from below over the same, now faint, film (`--enter`, 0 to 1). The film
- * keeps darkening a little further as the field settles in (`--film-dim`).
- * Both are written by ScrollTrigger straight to the root's style; nothing
- * re-renders on scroll.
+ * The homepage (brief v18): Harlie's original film, clearly visible, with
+ * the identity group (name, PORTFOLIO, one line) about 39% down the opening;
+ * the selected work already shows at the bottom edge and arrives within a
+ * short scroll (no hold). As the opening scrolls out, the title eases up
+ * and fades a little (`--enter`), and the film dims only slightly behind
+ * the work (`--settle`). Both are written by ScrollTrigger straight to the
+ * root's style; nothing re-renders on scroll.
  */
 export function Home() {
   usePageMeta(undefined, SITE.description)
@@ -39,8 +37,8 @@ export function Home() {
     const opening = ScrollTrigger.create({
       trigger: hero,
       start: 'top top+=61',
-      // The hold: the section's extra height beyond one window.
-      end: () => `+=${Math.max(1, hero.offsetHeight - (window.innerHeight - 61))}`,
+      // No hold: the title eases away as the opening scrolls out.
+      end: 'bottom top+=61',
       onUpdate: (self) => set('--enter', self.progress),
       onRefresh: (self) => set('--enter', self.progress),
     })

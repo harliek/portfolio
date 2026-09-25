@@ -21,8 +21,8 @@
   --cx-gutter: 64px;
   --cx-max: 1280px;
   --cx-gap: 24px;
-  --cx-section: clamp(96px, 8.4vw, 120px);
-  --cx-inner: clamp(32px, 3.4vw, 48px);
+  --cx-section: clamp(48px, 4.4vw, 64px);
+  --cx-inner: clamp(24px, 2.2vw, 32px);
   --cx-text: #f3eee7;
   --cx-dim: #aaa49c;
   --cx-pink: var(--red);
@@ -49,7 +49,7 @@
   }
 }
 
-/* The content column and the 12-column grid. */
+/* The content column. */
 .cx-wrap {
   box-sizing: content-box;
   max-width: var(--cx-max);
@@ -57,20 +57,123 @@
   padding: 0 var(--cx-gutter);
 }
 
-.cx-grid {
+/* The compact case layout (CaseSplit, brief v18) ------------------------------------ */
+
+.cs {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--cx-gap);
+  align-items: start;
+  padding-top: clamp(40px, 5vw, 64px);
 }
 
-.cx-section {
-  padding-top: var(--cx-section);
+.cs__intro {
+  grid-column: 1 / span 5;
+  grid-row: 1;
+  display: grid;
+  gap: 16px;
+}
+
+.cs__intro .cx-meta {
+  margin-top: 4px;
+}
+
+.cs__intro .cx-status {
+  margin-top: 4px;
+}
+
+.cs__body {
+  grid-column: 1 / span 5;
+  grid-row: 2;
+  display: grid;
+  gap: 28px;
+  margin-top: var(--cx-section);
+}
+
+/* One artifact, held beside the text while it is read. */
+.cs__media {
+  grid-column: 7 / span 6;
+  grid-row: 1 / span 2;
+  position: sticky;
+  top: calc(var(--header-height) + 32px);
+  align-self: start;
+}
+
+.cs__sec {
+  display: grid;
+  gap: 8px;
+}
+
+.cs__sec h2 {
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.375rem, 1.2rem + 0.5vw, 1.625rem);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--cx-text);
+}
+
+.cs__sec p {
+  max-width: 60ch;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--cx-text);
+}
+
+.cs__note {
+  max-width: 60ch;
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--cx-hair);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--cx-dim);
+}
+
+.cs__media .cx-caption {
+  margin-top: 10px;
+}
+
+@media (max-width: 899.98px) {
+  .cs__intro,
+  .cs__body,
+  .cs__media {
+    grid-column: 1 / -1;
+  }
+
+  .cs__media {
+    grid-row: 2;
+    position: static;
+    margin-top: var(--cx-inner);
+  }
+
+  .cs__body {
+    grid-row: 3;
+    margin-top: var(--cx-section);
+  }
+}
+
+/* A persistent quote above a walkthrough (the request the screenshots answer). */
+.sa-request {
+  margin: 0;
+  padding-left: 14px;
+  border-left: 2px solid var(--cx-pink);
+}
+
+.sa-request p {
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: 1.125rem;
+  line-height: 1.4;
+  color: var(--cx-text);
 }
 
 /* Labels ------------------------------------------------------------------------------ */
 
-.cx-kicker,
-.cx-label {
+.cx-kicker {
   margin: 0;
   font-family: var(--font-sans);
   font-size: 0.8125rem;
@@ -101,9 +204,9 @@
 .cx-title {
   margin: 0;
   font-family: var(--font-editorial);
-  font-size: clamp(2.75rem, 1rem + 7.2vw, 7rem);
+  font-size: clamp(2.25rem, 1.3rem + 2.9vw, 4.5rem);
   font-weight: 400;
-  line-height: 0.96;
+  line-height: 1;
   letter-spacing: -0.01em;
   color: var(--cx-text);
   text-wrap: balance;
@@ -113,44 +216,13 @@
   outline: none;
 }
 
-.cx-h2 {
-  margin: 0;
-  font-family: var(--font-editorial);
-  font-size: clamp(1.875rem, 1.1rem + 2.2vw, 3rem);
-  font-weight: 400;
-  line-height: 1.1;
-  color: var(--cx-text);
-  text-wrap: balance;
-}
-
-.cx-h3 {
-  margin: 0;
-  font-family: var(--font-editorial);
-  font-size: clamp(1.5rem, 1.1rem + 1vw, 2rem);
-  font-weight: 400;
-  line-height: 1.15;
-  color: var(--cx-text);
-}
-
-/* The older statement class now reads as a section heading. */
-.cx-statement {
-  max-width: 24ch;
-  margin: 0;
-  font-family: var(--font-editorial);
-  font-size: clamp(1.875rem, 1.1rem + 2.2vw, 3rem);
-  font-weight: 400;
-  line-height: 1.1;
-  color: var(--cx-text);
-  text-wrap: balance;
-}
-
 /* Reading ------------------------------------------------------------------------------ */
 
 .cx-lede {
   max-width: 44ch;
   margin: 0;
   font-family: var(--font-sans);
-  font-size: clamp(1.1875rem, 1rem + 0.35vw, 1.375rem);
+  font-size: clamp(1.0625rem, 1rem + 0.2vw, 1.125rem);
   line-height: 1.5;
   color: var(--cx-text);
 }
@@ -163,26 +235,13 @@
 .cx-body {
   max-width: 60ch;
   font-family: var(--font-sans);
-  font-size: 1.125rem;
-  line-height: 1.5556;
+  font-size: 1rem;
+  line-height: 1.65;
   color: var(--cx-text);
 }
 
 .cx-body p + p {
   margin-top: 1em;
-}
-
-.cx-body--dim,
-.cx-proof {
-  color: var(--cx-dim);
-}
-
-.cx-proof {
-  max-width: 60ch;
-  margin: 16px 0 0;
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  line-height: 1.55;
 }
 
 .cx strong {
@@ -211,6 +270,11 @@
   transform: translateY(-1px);
 }
 
+/* A single artifact with its caption. */
+.cx-figure {
+  margin: 0;
+}
+
 /* Screenshots: one hairline, 6px corners. */
 .cx-frame {
   position: relative;
@@ -235,27 +299,6 @@
   font-size: 0.9375rem;
   line-height: 1.5;
   color: var(--cx-dim);
-}
-
-/* A two-column closing list with thin dividers. */
-.cx-list {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.cx-list li {
-  padding: 16px 0;
-  border-top: 1px solid var(--cx-hair);
-  font-family: var(--font-sans);
-  font-size: 1.0625rem;
-  line-height: 1.55;
-  color: var(--cx-text);
-}
-
-.cx-list li:last-child {
-  border-bottom: 1px solid var(--cx-hair);
 }
 
 /* Images rise into place as they enter the view (CasePage adds data-in); text is never hidden by it. */
@@ -297,12 +340,7 @@
 /* Chapter demo (ChapterDemo): stationary tabs, one picture, one stable caption. */
 .chapters {
   display: grid;
-  gap: 20px;
-}
-
-.chapters__scope {
-  display: grid;
-  gap: 6px;
+  gap: 14px;
 }
 
 .chapters__tabs {
@@ -326,7 +364,7 @@
   border-top: 2px solid var(--cx-hair);
   background: none;
   font-family: var(--font-sans);
-  font-size: 1rem;
+  font-size: 0.9375rem;
   line-height: 1.35;
   text-align: left;
   color: var(--cx-dim);
@@ -334,10 +372,6 @@
   transition:
     color var(--dur-1) var(--ease-standard),
     border-color var(--dur-1) var(--ease-standard);
-}
-
-.chapters--large .chapters__tab {
-  font-size: 1.125rem;
 }
 
 .chapters__tab:hover {
@@ -392,7 +426,7 @@
   min-height: calc(2 * 1.55em);
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 1.0625rem;
+  font-size: 0.9375rem;
   line-height: 1.55;
   color: var(--cx-text);
 }
@@ -450,205 +484,6 @@
   }
 }
 
-/* The scroll-scrubbed demo (ScrollScrubVideo) ------------------------------------ */
-
-.scrub {
-  position: relative;
-  height: calc(100svh - var(--header-height) + var(--scrub-length, 300svh));
-}
-
-.scrub__pin {
-  position: sticky;
-  top: var(--header-height);
-  display: grid;
-  grid-template-columns: minmax(200px, 19vw) minmax(0, 1fr);
-  gap: clamp(28px, 3.4vw, 64px);
-  align-items: center;
-  height: calc(100svh - var(--header-height));
-  padding: 0 var(--cx-edge);
-}
-
-.scrub__frame {
-  grid-column: 2;
-  grid-row: 1;
-  justify-self: end;
-  width: 100%;
-  max-width: calc((100svh - var(--header-height) - 120px) * 1.98);
-  aspect-ratio: var(--scrub-aspect);
-  overflow: hidden;
-  border-radius: 3px;
-  background: #0b0b0e;
-  box-shadow:
-    0 0 0 1px var(--cx-hair),
-    0 60px 120px -60px rgb(0 0 0 / 0.9);
-}
-
-.scrub__video {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.scrub__moments {
-  grid-column: 1;
-  grid-row: 1;
-  display: grid;
-  gap: clamp(22px, 3svh, 34px);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.scrub__moment {
-  opacity: 0.34;
-  transition: opacity 480ms var(--ease-arrive);
-}
-
-.scrub__moment[data-active] {
-  opacity: 1;
-}
-
-.scrub__index {
-  display: block;
-  font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  color: var(--accent);
-}
-
-.scrub__label {
-  display: block;
-  margin-top: 6px;
-  font-family: var(--font-sans);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1.45;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #fff;
-}
-
-.scrub__note {
-  display: block;
-  max-width: 30ch;
-  max-height: 0;
-  margin-top: 0;
-  overflow: hidden;
-  font-family: var(--font-sans);
-  font-size: 0.9375rem;
-  line-height: 1.5;
-  color: rgb(255 255 255 / 0.72);
-  opacity: 0;
-  transition:
-    max-height 480ms var(--ease-arrive),
-    margin-top 480ms var(--ease-arrive),
-    opacity 480ms var(--ease-arrive);
-}
-
-.scrub__moment[data-active] .scrub__note {
-  max-height: 7em;
-  margin-top: 8px;
-  opacity: 1;
-}
-
-/* Rail: the steps in a row beneath the picture; the active step's note on one line below. */
-.scrub[data-layout='rail'] .scrub__pin {
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  align-content: center;
-  gap: clamp(18px, 2.6svh, 30px);
-}
-
-.scrub[data-layout='rail'] .scrub__frame,
-.scrub[data-layout='rail'] .scrub__moments {
-  grid-column: 1;
-  justify-self: center;
-  width: min(100%, calc((100svh - var(--header-height) - 230px) * 1.98));
-  max-width: none;
-}
-
-.scrub[data-layout='rail'] .scrub__frame {
-  grid-row: 1;
-}
-
-.scrub[data-layout='rail'] .scrub__moments {
-  position: relative;
-  grid-row: 2;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  grid-auto-flow: column;
-  gap: 14px;
-  padding-bottom: 2.2em;
-}
-
-.scrub[data-layout='rail'] .scrub__moment {
-  padding-top: 10px;
-  border-top: 1px solid rgb(255 255 255 / 0.18);
-  transition:
-    opacity 480ms var(--ease-arrive),
-    border-color 480ms var(--ease-arrive);
-}
-
-.scrub[data-layout='rail'] .scrub__moment[data-active] {
-  border-top-color: var(--accent);
-}
-
-.scrub[data-layout='rail'] .scrub__label {
-  font-size: 0.6875rem;
-  letter-spacing: 0.14em;
-}
-
-.scrub[data-layout='rail'] .scrub__note {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  max-width: none;
-  max-height: none;
-  margin: 0;
-  white-space: nowrap;
-}
-
-.scrub[data-layout='rail'] .scrub__moment[data-active] .scrub__note {
-  margin: 0;
-}
-
-/* Phones and reduced motion: the same moments as stills. */
-.scrub--stills {
-  display: grid;
-  gap: var(--cx-s4);
-  height: auto;
-  padding: 0 var(--cx-edge);
-}
-
-.scrub__still {
-  margin: 0;
-}
-
-.scrub__still img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 3px;
-  box-shadow: 0 0 0 1px var(--cx-hair);
-}
-
-.scrub__still figcaption {
-  margin-top: var(--cx-s1);
-}
-
-.scrub__still .scrub__note {
-  max-height: none;
-  margin-top: 6px;
-  opacity: 1;
-}
-
-.scrub__still--text {
-  margin: 0;
-  padding-top: var(--cx-s1);
-  border-top: 1px solid var(--cx-hair);
-}
-
 /* The next project ------------------------------------------------------------------ */
 
 .cx-next {
@@ -659,28 +494,15 @@
 }
 
 .cx-next__link {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  grid-template-areas:
-    'kicker kicker'
-    'frame text';
-  gap: var(--cx-s2) clamp(28px, 4vw, 72px);
-  align-items: end;
+  display: inline-grid;
+  grid-template-columns: 128px auto;
+  gap: 18px;
+  align-items: center;
   color: inherit;
   text-decoration: none;
 }
 
-.cx-next__kicker {
-  grid-area: kicker;
-  font-family: var(--font-sans);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--cx-dim);
-}
-
 .cx-next__frame {
-  grid-area: frame;
   position: relative;
   display: block;
   aspect-ratio: 16 / 10;
@@ -688,54 +510,55 @@
   border: 1px solid var(--cx-hair);
   border-radius: var(--cx-radius);
   background: #0a0a0d;
-  transition: transform 800ms var(--ease-arrive);
 }
 
 .cx-next__text {
-  grid-area: text;
   display: grid;
-  gap: var(--cx-s1);
-  padding-bottom: 4px;
+  gap: 2px;
+}
+
+.cx-next__kicker {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--cx-dim);
 }
 
 .cx-next__title {
   font-family: var(--font-editorial);
-  font-size: clamp(1.875rem, 1.1rem + 2.2vw, 3rem);
-  line-height: 1.05;
+  font-size: 1.5rem;
+  line-height: 1.2;
   color: var(--cx-text);
 }
 
-.cx-next__line {
-  max-width: 40ch;
+/* The arrow in the sans face (the serif draws an ornate one). */
+.cx-next__arrow {
   font-family: var(--font-sans);
-  font-size: 1.0625rem;
-  line-height: 1.5;
-  color: var(--cx-dim);
+  font-size: 0.8em;
 }
 
-.cx-next__link:hover .cx-next__frame,
-.cx-next__link:focus-visible .cx-next__frame {
-  transform: scale(1.015);
+.cx-next__link:hover .cx-next__title {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
 }
 
 .cx-next__link:focus-visible {
   outline: 1px solid var(--color-focus);
-  outline-offset: 8px;
+  outline-offset: 6px;
+}
+
+.cx-next__link[data-leaving] .cx-next__text {
+  opacity: 0;
+  transition: opacity 100ms linear;
 }
 
 @media (max-width: 699.98px) {
-  /* 44 to 56px, and long single words (Merchandising) still fit a 320px screen. */
+  /* 36 to 44px, and long single words (Merchandising) still fit a 320px screen. */
   .cx-title {
-    font-size: clamp(2.25rem, 11.5vw, 3.5rem);
+    font-size: clamp(2rem, 10vw, 2.75rem);
   }
 
-  .cx-next__link {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      'kicker'
-      'frame'
-      'text';
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -745,7 +568,4 @@
     transition: none;
   }
 
-  .cx-next__frame {
-    transition: none;
-  }
 }

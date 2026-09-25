@@ -1,247 +1,57 @@
 /*
- * Jumpstart Finance (brief v16): one pinned composition. The text column
- * holds the title, then each story step in turn (they share one place and
- * crossfade); the trio of original prototype screens stands beside it and
- * the timeline in JumpstartFinance.tsx moves each phone forward in turn.
+ * Jumpstart Finance (brief v18): the three original prototype screens in
+ * one stable row beside the introduction. The middle screen stands a step
+ * forward; a screen lifts slightly on hover. No pinning, no scroll story.
  */
 
-.jf-story {
-  position: relative;
-  height: calc(100svh - var(--header-height) + 520svh);
-}
-
-.jf-stage {
-  position: sticky;
-  top: var(--header-height);
+.jf-trio__row {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: clamp(24px, 4vw, 72px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 24px);
   align-items: center;
-  height: calc(100svh - var(--header-height));
-  padding: 0 var(--cx-edge);
-  overflow: hidden;
-}
-
-/* The panels share one place and crossfade. */
-.jf-text {
-  display: grid;
-  align-items: center;
-}
-
-.jf-panel {
-  grid-area: 1 / 1;
-  display: grid;
-  gap: var(--cx-s2);
-  align-content: center;
-}
-
-.jf-panel--intro .cx-lede {
-  margin-top: var(--cx-s1);
-}
-
-.jf-panel__index {
-  display: flex;
-  gap: 14px;
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.jf-panel__index span {
-  color: var(--cx-dim);
-}
-
-.jf-panel__title {
-  margin: 0;
-  font-family: var(--font-editorial);
-  font-size: clamp(2rem, 3.8vw, 4rem);
-  font-weight: 400;
-  line-height: 1.02;
-  color: #fff;
-}
-
-.jf-panel .cx-body {
-  max-width: 44ch;
-}
-
-.jf-result__figure {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.1em 0.24em;
-  margin: 0;
-  font-family: var(--font-editorial);
-  font-size: clamp(4.5rem, 11vw, 10rem);
-  line-height: 0.9;
-  letter-spacing: -0.02em;
-  color: #fff;
-}
-
-.jf-result__figure span {
-  font-family: var(--font-sans);
-  font-size: clamp(0.75rem, 0.95vw, 0.875rem);
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--cx-dim);
-}
-
-/* The trio: phones stand at the stage's centre; poses come from the timeline. */
-.jf-trio {
-  position: relative;
-  display: grid;
-  height: 100%;
-  margin: 0;
-}
-
-.jf-trio__stage {
-  position: absolute;
-  inset: 0;
-  perspective: 1400px;
-  --jf-phone-h: min(70svh, 640px);
+  padding: clamp(16px, 2vw, 28px);
+  border: 1px solid var(--cx-hair);
+  border-radius: var(--cx-radius);
+  background: radial-gradient(90% 100% at 50% 70%, #16201b, #0b0c0d 72%);
 }
 
 .jf-phone {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: calc(var(--jf-phone-h) * 600 / 1210);
-  /* The timeline owns the transform (centring included); reduced motion sets its own below. */
-  will-change: transform, filter;
+  transition: transform 420ms var(--ease-arrive);
 }
 
 .jf-phone img {
   display: block;
   width: 100%;
   height: auto;
-  filter: drop-shadow(0 36px 40px rgb(0 0 0 / 0.55));
+  filter: drop-shadow(0 24px 28px rgb(0 0 0 / 0.5));
 }
 
-/* A soft contact shadow grounds the group (no glow). */
-.jf-trio__stage::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: calc(50% + var(--jf-phone-h) * 0.52);
-  width: min(90%, calc(var(--jf-phone-h) * 1.5));
-  height: 36px;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(0 0 0 / 0.6), rgb(0 0 0 / 0));
-  transform: translateX(-50%);
-  pointer-events: none;
+/* The middle screen a step forward. */
+.jf-phone:nth-child(2) {
+  transform: scale(1.06);
+  z-index: 1;
 }
 
-.jf-trio__label {
-  position: absolute;
-  right: 0;
-  bottom: clamp(16px, 3svh, 32px);
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--cx-dim);
+.jf-phone:hover {
+  transform: translateY(-6px);
 }
 
-/* Reduced motion: the composition stands still; the story reads in order beside it. */
-.jf-story[data-reduced] {
-  height: auto;
+.jf-phone:nth-child(2):hover {
+  transform: scale(1.06) translateY(-6px);
 }
 
-.jf-story[data-reduced] .jf-stage {
-  position: static;
-  height: auto;
-  min-height: calc(100svh - var(--header-height));
-  padding-block: var(--cx-s4);
-  align-items: start;
-}
-
-.jf-story[data-reduced] .jf-text {
-  gap: var(--cx-s4);
-}
-
-.jf-story[data-reduced] .jf-panel {
-  grid-area: auto;
-}
-
-.jf-story[data-reduced] .jf-trio {
-  position: sticky;
-  top: calc(var(--header-height) + 24px);
-  height: calc(100svh - var(--header-height) - 48px);
-}
-
-.jf-story[data-reduced] .jf-phone:nth-child(1) {
-  transform: translate(-124%, -50%) rotateY(-14deg) scale(0.82);
-  filter: brightness(0.6);
-}
-
-.jf-story[data-reduced] .jf-phone:nth-child(2) {
-  z-index: 2;
-  transform: translate(-50%, -50%);
-}
-
-.jf-story[data-reduced] .jf-phone:nth-child(3) {
-  transform: translate(24%, -50%) rotateY(14deg) scale(0.82);
-  filter: brightness(0.6);
-}
-
-/* Phones and narrow tablets: the trio above, the text beneath, both inside the pin. */
-@media (max-width: 899.98px) {
-  .jf-story {
-    height: calc(100svh - var(--header-height) + 420svh);
+@media (prefers-reduced-motion: reduce) {
+  .jf-phone,
+  .jf-phone:hover,
+  .jf-phone:nth-child(2):hover {
+    transition: none;
   }
 
-  .jf-stage {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    align-content: start;
-    align-items: start;
-    gap: 8px;
-    padding-top: 12px;
+  .jf-phone:hover {
+    transform: none;
   }
 
-  .jf-trio {
-    grid-row: 1;
-    height: 44svh;
-  }
-
-  .jf-text {
-    grid-row: 2;
-    align-items: start;
-  }
-
-  .jf-trio__stage {
-    --jf-phone-h: min(38svh, 400px);
-  }
-
-  .jf-trio__label {
-    display: none;
-  }
-
-  .jf-panel .cx-body {
-    font-size: 0.9375rem;
-  }
-
-  .jf-panel__title {
-    font-size: clamp(1.625rem, 7vw, 2.25rem);
-  }
-
-  .jf-result__figure {
-    font-size: clamp(3.5rem, 18vw, 5rem);
-  }
-
-  .jf-story[data-reduced] .jf-stage {
-    grid-template-rows: auto auto;
-  }
-
-  .jf-story[data-reduced] .jf-trio {
-    position: relative;
-    top: 0;
-    height: 52svh;
+  .jf-phone:nth-child(2):hover {
+    transform: scale(1.06);
   }
 }

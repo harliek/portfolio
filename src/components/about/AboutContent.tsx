@@ -23,16 +23,17 @@ const PORTRAIT_SIZES = '(min-width: 960px) 360px, (min-width: 720px) 300px, 260p
  *
  * 1. Opening (brief v17). The photograph of Harlie, static, on the left
  *    (about 40%), its top level with the pink serif greeting; on the right
- *    (about 60%) the greeting, the lead and its concrete follow-up, three
- *    short paragraphs (what I build, how cognitive science informs it, the
- *    work I want next) and Selected experience in three factual sentences.
+ *    (about 60%) the greeting, the lead and its concrete follow-up, and
+ *    three short paragraphs (what I build, how cognitive science informs
+ *    it, the work I want next). The roles are listed once, under Experience.
  *    Phones: the greeting and lead, then the portrait, then the rest.
  * 2. Below a full-width divider, Education (about 40%, a short block: the
  *    school, degree, minor, certificate and dates) beside Experience (about
  *    60%). Each role has one first-person contribution and, where there is
  *    one, a quiet text link to its case study.
- * 3. Creative work, below another divider. Two equal cards with the same
- *    frame, badge and title: the Creative Portfolio (its Art tile; opens the
+ * 3. Creative work, below another divider, in the same 40/60 grid (the
+ *    heading left, two equal cards right, brief v18). The same frame, badge
+ *    and title: the Creative Portfolio (its Art tile; opens the
  *    original creative homepage at /creative/, a separate build, so a plain
  *    link) and An Artistic End (its authentic poster; plays the film, with
  *    the YouTube player requested only after that press).
@@ -61,16 +62,6 @@ export function AboutContent() {
               {p}
             </p>
           ))}
-          <section className="about-selected" aria-labelledby="about-selected-title">
-            <h2 id="about-selected-title" className="about-selected__title">
-              {ABOUT.selectedTitle}
-            </h2>
-            <ul className="about-selected__list">
-              {ABOUT.selected.map((x) => (
-                <li key={x}>{x}</li>
-              ))}
-            </ul>
-          </section>
         </div>
       </div>
 
@@ -156,7 +147,6 @@ export function AboutContent() {
             <FeaturedFilm />
           </div>
         </section>
-
       </div>
     </div>
   )

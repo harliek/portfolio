@@ -2,12 +2,11 @@ import type { ImageId } from './media'
 import type { ProjectId } from './projects'
 
 /**
- * The homepage's project field: each project is a 16:10 cover of its own
- * work, art-directed around one recognizable feature (brief v17: the
- * catalog beside the replenishment working, the finished sheet beside its
- * request, the storefront header and categories, the original app screens,
- * the leasing conversation, the Nickleby footage), never a device. Order: Merchandising and
- * Spreadsheet never adjacent; the field loops.
+ * The homepage's project field, in the site's project order (brief v19, by
+ * impact; projects.ts). Each project is a 16:10 picture of its own work: the
+ * leasing conversation, the three original app screens (floating cutouts, no
+ * card), the Inventory screen, the whole Spreadsheet Agent interface, the
+ * storefront header and the Nickleby footage. The field loops endlessly.
  *
  * `line` is one plain sentence per project, kept to what the case studies
  * support (prototypes stay prototypes; qualifiers such as simulated AI
@@ -31,39 +30,11 @@ export const FIELD_YEARS = '2024–2026'
 
 export const FIELD: readonly FieldProject[] = [
   {
-    id: 'merchandising-platform',
-    title: 'Merchandising Platform',
-    line: 'A prototype that brings product, inventory, vendor, promotion, and replenishment data into one view.',
-    media: { kind: 'image', image: 'merch-cover' },
-    alt: 'The catalog beside a replenishment calculation in the Merchandising Platform prototype',
-  },
-  {
-    id: 'cafepress-uk',
-    title: 'CafePress UK',
-    line: 'UK market research and a localized storefront prototype for a potential launch.',
-    media: { kind: 'image', image: 'cp-cover' },
-    alt: 'The header and category navigation of the CafePress Business UK storefront prototype',
-  },
-  {
-    id: 'spreadsheet-agent',
-    title: 'Spreadsheet Agent',
-    line: 'A prototype that turns a written request into a reviewed plan and an editable spreadsheet.',
-    media: { kind: 'image', image: 'sa-cover' },
-    alt: 'A finished sheet beside the request and rules that built it, in the Spreadsheet Agent prototype',
-  },
-  {
     id: 'ai-leasing-agent',
     title: 'AI Leasing Agent',
     line: 'Defined the workflow and development requirements for an AI leasing assistant.',
     media: { kind: 'image', image: 'la-cover' },
     alt: 'An illustrative leasing conversation annotated with data needs, approval boundaries and human handoff',
-  },
-  {
-    id: 'client-work',
-    title: 'Creative Production',
-    line: 'Creative strategy, production, and client support at Shift Content.',
-    media: { kind: 'video', src: '/media/video/nickleby-loop-1138.mp4', poster: '/media/img/nickleby-loop-poster.jpg', position: '40% 45%' },
-    alt: 'Footage from the Nickleby Capital interview film',
   },
   {
     id: 'jumpstart-finance',
@@ -74,5 +45,33 @@ export const FIELD: readonly FieldProject[] = [
       screens: ['jf-screen-lessons', 'jf-screen-progress', 'jf-screen-community'],
     },
     alt: 'Three screens of the original 2024 Jumpstart prototype: lessons, progress and community',
+  },
+  {
+    id: 'merchandising-platform',
+    title: 'Merchandising Platform',
+    line: 'A prototype that brings product, inventory, vendor, promotion, and replenishment data into one view.',
+    media: { kind: 'image', image: 'merch-tile' },
+    alt: 'The Inventory screen of the Merchandising Platform prototype, with suggested order quantities',
+  },
+  {
+    id: 'spreadsheet-agent',
+    title: 'Spreadsheet Agent',
+    line: 'A prototype that turns a written request into a reviewed plan and an editable spreadsheet.',
+    media: { kind: 'image', image: 'sa-ui-sheet' },
+    alt: 'The whole Spreadsheet Agent interface, with a finished sheet beside the request and the rules that built it',
+  },
+  {
+    id: 'cafepress-uk',
+    title: 'CafePress UK',
+    line: 'UK market research and a localized storefront prototype for a potential launch.',
+    media: { kind: 'image', image: 'cp-cover' },
+    alt: 'The header and category navigation of the CafePress Business UK storefront prototype',
+  },
+  {
+    id: 'client-work',
+    title: 'Creative Production',
+    line: 'Creative strategy, production, and client support at Shift Content.',
+    media: { kind: 'video', src: '/media/video/nickleby-loop-trim-1138.mp4', poster: '/media/img/nickleby-loop-poster.jpg', position: '40% 45%' },
+    alt: 'Footage from the Nickleby Capital interview film',
   },
 ]

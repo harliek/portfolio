@@ -488,11 +488,11 @@ export const IMAGES = {
   }),
   // Brief v17: art-directed crops of the Merch Console recording (PlanetArt/Merchandising Dashboard/Dashboard Video.mov).
   'merch-cover': img({
-    id: 'merch-cover', file: 'merch-cover', width: 2060, height: 1287, widths: [800, 1200, 1600, 2060], fallback: 'jpg',
-    alt: 'Merch Console in the synthetic demo: the catalog list beside the Canyon Pouch drawer, which recommends 200 units and shows the working behind that quantity.',
-    caption: 'The catalog beside one product’s replenishment calculation.',
+    id: 'merch-cover', file: 'merch-cover', width: 2240, height: 1400, widths: [800, 1200, 1600, 2240], fallback: 'jpg',
+    alt: 'Merch Console Overview in the synthetic demo: net revenue, contribution and revenue at risk, a daily revenue chart against the prior 28 days, the category mix, and the list of products that need a decision.',
+    caption: 'The Overview, with product, vendor, inventory, pricing, promotion and sales data in one view.',
     provenance: 'independent-prototype', synthetic: true,
-    source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising cover and case hero (x 880–2940, y 0–1287 of the 15.2s frame)', timestamp: 15.2,
+    source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising cover and case hero (x 0–2240, y 0–1400 of the 0.5s frame)', timestamp: 0.5,
   }),
   'merch-working': img({
     id: 'merch-working', file: 'merch-working', width: 1040, height: 1130, widths: [640, 960, 1040], fallback: 'jpg',
@@ -507,6 +507,43 @@ export const IMAGES = {
     caption: 'Inventory ends in an order sheet export, not an order.',
     provenance: 'independent-prototype', synthetic: true,
     source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising decision 3 (x 430–2940, y 0–1255 of the 21.6s frame)', timestamp: 21.6,
+  }),
+  // Brief v19: the Inventory screen as the homepage tile (the clearest replenishment view), main content with its right edge whole.
+  'merch-tile': img({
+    id: 'merch-tile', file: 'merch-tile', width: 2437, height: 1523, widths: [800, 1200, 1600, 2437], fallback: 'jpg',
+    alt: 'The Inventory screen of the Merchandising Platform prototype: 51 SKUs at or below their reorder point, suggested units, order cost and margin at risk, and products ranked with their suggested order quantities.',
+    caption: 'Inventory, with suggested order quantities ranked by margin at risk.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising homepage tile (x 466–2903 of the 21.6s frame, 37px of the page ground added above for 16:10)', timestamp: 21.6,
+  }),
+  // Brief v19: the whole Spreadsheet Agent interface at 16:10, nothing cropped at either side.
+  'sa-ui-request': img({
+    id: 'sa-ui-request', file: 'sa-ui-request', width: 2880, height: 1800, widths: [800, 1200, 1600, 2400], fallback: 'jpg',
+    alt: 'Spreadsheet Agent with an empty untitled sheet; the assistant panel holds the request “Create a sheet of B2B products with vendor, cost, retail price, and margin.”',
+    caption: 'The request, before anything is built.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'spreadsheetagent.netlify.app (live prototype, captured 2026-09-25 at 1440 × 900 with the request “Create a sheet of B2B products with vendor, cost, retail price, and margin”)', role: 'Spreadsheet Agent step 1',
+  }),
+  'sa-ui-plan': img({
+    id: 'sa-ui-plan', file: 'sa-ui-plan', width: 2880, height: 1800, widths: [800, 1200, 1600, 2400], fallback: 'jpg',
+    alt: 'The build plan for the request: source Northwind product catalog with 1,200 synthetic records, no filters, the columns SKU, Product Name, Vendor, Cost, Retail Price and Margin Percent, sorted by product name, with Discard and Build sheet.',
+    caption: 'The plan, waiting for review.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'spreadsheetagent.netlify.app (live prototype, captured 2026-09-25 at 1440 × 900 with the request “Create a sheet of B2B products with vendor, cost, retail price, and margin”)', role: 'Spreadsheet Agent step 2',
+  }),
+  'sa-ui-sheet': img({
+    id: 'sa-ui-sheet', file: 'sa-ui-sheet', width: 2880, height: 1800, widths: [800, 1200, 1600, 2400], fallback: 'jpg',
+    alt: 'The finished Vendor Pricing and Margin sheet with 1,200 rows and six columns, beside the request and the rules applied to it.',
+    caption: 'The finished sheet beside the request and its rules.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'spreadsheetagent.netlify.app (live prototype, captured 2026-09-25 at 1440 × 900 with the request “Create a sheet of B2B products with vendor, cost, retail price, and margin”)', role: 'Spreadsheet Agent homepage tile and step 3',
+  }),
+  'sa-ui-detail': img({
+    id: 'sa-ui-detail', file: 'sa-ui-detail', width: 2880, height: 1800, widths: [800, 1200, 1600, 2400], fallback: 'jpg',
+    alt: 'The finished sheet with the Vendor cell Atlas Goods selected and its source detail open: dataset Northwind Goods product catalog v1.0.0, record B2B-1595, the field northwind.catalog.products[].vendor.name, the definition Supplier of record for the item, and why this column was chosen.',
+    caption: 'A selected value with its source detail.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'spreadsheetagent.netlify.app (live prototype, captured 2026-09-25 at 1440 × 900 with the request “Create a sheet of B2B products with vendor, cost, retail price, and margin”)', role: 'Spreadsheet Agent step 4',
   }),
   'sa-cover': img({
     id: 'sa-cover', file: 'sa-cover', width: 2060, height: 1287, widths: [800, 1200, 1600, 2060], fallback: 'jpg',
@@ -549,6 +586,13 @@ export const IMAGES = {
     caption: 'The finished sheet.',
     provenance: 'independent-prototype', synthetic: true,
     source: 'spreadsheetagent.netlify.app (live prototype, captured 2026-09-25 with the request “Create a sheet of B2B products with vendor, cost, retail price, and margin”)', role: 'Spreadsheet Agent stage 3',
+  }),
+  'sa-stage-detail': img({
+    id: 'sa-stage-detail', file: 'sa-stage-detail', width: 2060, height: 1287, widths: [800, 1200, 1600, 2060], fallback: 'jpg',
+    alt: 'The finished sheet with the Vendor cell Atlas Goods selected and its source detail open: the field northwind.catalog.products[].vendor.name, dataset Northwind Goods product catalog v1.0.0, record B2B-1595, the definition Supplier of record for the item, and why this column was chosen.',
+    caption: 'A selected value with its source detail.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'spreadsheetagent.netlify.app (live prototype, captured 2026-09-25 with the request “Create a sheet of B2B products with vendor, cost, retail price, and margin”)', role: 'Spreadsheet Agent stage 4 (x 230–2290, y 0–1287)',
   }),
   'sa-trace-cell': img({
     id: 'sa-trace-cell', file: 'sa-trace-cell', width: 824, height: 360, widths: [600, 824], fallback: 'jpg',

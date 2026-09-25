@@ -190,3 +190,15 @@ html[data-motion='reduce'] .pointer-trail {
 .slot-debug__id {
   font-weight: var(--weight-label);
 }
+
+/* The homepage film's slot (HomeFilm portals into it): above the ground, below every page's content. */
+.stage-film {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.stage-film:empty {
+  display: none;
+}

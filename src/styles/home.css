@@ -18,7 +18,7 @@
   --field-hold: 110svh;
   --field-overlap: 38svh;
   --edge: clamp(20px, 6.2vw, 120px);
-  --horizon: 47%;
+  --horizon: 42%;
 
   position: relative;
   isolation: isolate;
@@ -66,7 +66,7 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgb(0 0 0 / 0.64) 0%, rgb(0 0 0 / 0.36) 28%, rgb(0 0 0 / 0) 58%),
+    linear-gradient(90deg, rgb(0 0 0 / 0.78) 0%, rgb(0 0 0 / 0.52) 30%, rgb(0 0 0 / 0.12) 52%, rgb(0 0 0 / 0) 64%),
     radial-gradient(125% 95% at 62% 50%, rgb(0 0 0 / 0) 48%, rgb(0 0 0 / 0.62) 100%),
     linear-gradient(to bottom, rgb(0 0 0 / 0.4), rgb(0 0 0 / 0) 18%, rgb(0 0 0 / 0) 72%, rgb(0 0 0 / 0.55));
 }
@@ -84,25 +84,26 @@
   opacity: 0.94;
 }
 
-/* The opening --------------------------------------------------------------- */
+/* The opening ---------------------------------------------------------------- */
 
 .hero {
   position: relative;
   height: calc(100svh - var(--header-height) + var(--hero-hold));
 }
 
+/* One block, about 64px from the left and slightly below the vertical centre; the right of the film stays open. */
 .hero__stage {
   position: sticky;
   top: var(--header-height);
   height: calc(100svh - var(--header-height));
   display: flex;
   align-items: center;
-  padding: 6svh var(--edge) 0;
+  padding: 10svh 0 0 clamp(24px, 4.45vw, 64px);
   overflow: hidden;
 }
 
 .hero__group {
-  transform: translate3d(0, calc(var(--enter) * -9svh), 0) scale(calc(1 - var(--enter) * 0.16));
+  transform: translate3d(0, calc(var(--enter) * -9svh), 0) scale(calc(1 - var(--enter) * 0.14));
   transform-origin: 0 50%;
   opacity: calc(1 - var(--enter) * 0.45);
   will-change: transform;
@@ -114,33 +115,22 @@
 }
 
 .hero__name {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin: 0 0 clamp(14px, 2.4svh, 26px);
+  display: block;
+  margin: 0 0 12px;
   font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 400;
-  line-height: 18px;
-  letter-spacing: 0.5em;
-  text-transform: uppercase;
-  color: rgb(255 255 255 / 0.86);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  color: #f3eee7;
 }
 
-.hero__name::before {
-  content: '';
-  flex: none;
-  width: 56px;
-  height: 1px;
-  background: rgb(255 255 255 / 0.7);
-}
-
-/* PORTFOLIO: the original homepage's Playfair Display in white capitals, far larger, set as part of the picture. */
+/* PORTFOLIO: the original homepage's Playfair Display in white capitals. */
 .hero__word {
   display: block;
   margin-left: -0.045em;
   font-family: var(--font-editorial);
-  font-size: clamp(52px, 11.4vw, 236px);
+  font-size: clamp(88px, 12vw, 180px);
   font-weight: 400;
   line-height: 0.9;
   letter-spacing: -0.012em;
@@ -150,19 +140,38 @@
   -webkit-text-stroke: 0.008em currentColor;
 }
 
-.hero__roles {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  margin: clamp(22px, 3.4svh, 38px) 0 0;
+.hero__line {
+  max-width: 34ch;
+  margin: 20px 0 0;
   font-family: var(--font-sans);
-  font-size: clamp(0.75rem, 0.62vw, 0.875rem);
-  font-weight: 500;
+  font-size: 1.375rem;
   line-height: 1.4;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: rgb(255 255 255 / 0.74);
+  color: rgb(243 238 231 / 0.9);
+  opacity: calc(1 - var(--enter) * 1.6);
+}
+
+.hero__explore {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 20px;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: #f3eee7;
+  text-decoration: none;
+  border-bottom: 1px solid rgb(243 238 231 / 0.35);
   opacity: calc(1 - var(--enter) * 1.8);
+  transition: border-color var(--dur-1) var(--ease-standard);
+}
+
+.hero__explore:hover {
+  border-bottom-color: var(--red);
+}
+
+.hero__explore:focus-visible {
+  outline: 1px solid var(--color-focus);
+  outline-offset: 4px;
 }
 
 /* The selected work ----------------------------------------------------------- */
@@ -236,21 +245,32 @@
   left: 50%;
   top: var(--horizon);
   display: block;
-  width: var(--plane-w, 36vw);
-  height: var(--plane-h, 22.5vw);
-  overflow: hidden;
-  border-radius: 2px;
-  background: #0a0a0d;
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.07),
-    0 40px 80px -40px rgb(0 0 0 / 0.9);
-  transform-origin: 50% 50%;
+  width: var(--plane-w, 57vw);
+  color: inherit;
+  text-decoration: none;
+  transform-origin: 50% calc(var(--plane-h, 35vw) / 2);
   will-change: transform;
   -webkit-user-drag: none;
-  transition: opacity 600ms var(--ease-arrive);
+  transition: opacity 400ms var(--ease-arrive);
+}
+
+/* The 16:10 cover: one hairline, 6px corners (the case studies' screenshot treatment). */
+.plane__frame {
+  position: relative;
+  display: block;
+  height: var(--plane-h, 35vw);
+  overflow: hidden;
+  border: 1px solid rgb(243 238 231 / 0.14);
+  border-radius: 6px;
+  background: #0a0a0d;
+  box-shadow: 0 40px 80px -40px rgb(0 0 0 / 0.9);
 }
 
 .plane:focus-visible {
+  outline: none;
+}
+
+.plane:focus-visible .plane__frame {
   outline: 1px solid var(--color-focus);
   outline-offset: 6px;
 }
@@ -263,66 +283,81 @@
   pointer-events: none;
 }
 
-/* The centred project's title and line, attached to its frame's lower left. */
-.field__caption {
+/* Each card's own caption: the title 20px below the cover, the line 8px below it, the same height for every card. */
+.plane__caption {
+  display: block;
+  padding-top: 20px;
+  opacity: calc(1 - var(--depth, 0) * 0.3);
+  transition: opacity 100ms linear;
+}
+
+.plane__title {
+  display: block;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.375rem, 1rem + 0.8vw, 1.75rem);
+  font-weight: 400;
+  line-height: 1.15;
+  color: #f3eee7;
+}
+
+.plane__line {
+  display: block;
+  min-height: calc(2 * 1.5em);
+  max-width: 56ch;
+  margin-top: 8px;
+  font-family: var(--font-sans);
+  font-size: clamp(0.9375rem, 0.85rem + 0.2vw, 1.0625rem);
+  line-height: 1.5;
+  color: #b4aea6;
+}
+
+/* Previous, the counter and next, beneath the carousel. */
+.field__controls {
   position: absolute;
   left: 50%;
-  top: calc(var(--horizon) + var(--plane-h, 22.5vw) / 2 + clamp(20px, 3.4svh, 34px));
-  z-index: 200;
-  width: min(var(--plane-w, 36vw), calc(100vw - 40px));
+  bottom: clamp(16px, 3svh, 36px);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 18px;
   transform: translateX(-50%);
-  pointer-events: none;
 }
 
-.field__caption-item {
-  position: absolute;
-  inset: 0 0 auto;
+.field__step {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgb(243 238 231 / 0.3);
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.3);
+  font-size: 1rem;
+  color: #f3eee7;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-1) var(--ease-standard),
+    background-color var(--dur-1) var(--ease-standard);
 }
 
-.field__title {
+.field__step:hover {
+  border-color: rgb(243 238 231 / 0.7);
+  background: rgb(243 238 231 / 0.06);
+}
+
+.field__step:focus-visible {
+  outline: 1px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.field__count {
+  min-width: 4.5em;
   margin: 0;
-  font-family: var(--font-editorial);
-  font-size: clamp(1.375rem, 1.9vw, 1.875rem);
-  font-weight: 400;
-  line-height: 1.1;
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
-  color: #fff;
-}
-
-.field__line {
-  max-width: 46ch;
-  margin: 10px 0 0;
   font-family: var(--font-sans);
-  font-size: clamp(0.875rem, 1.05vw, 1rem);
-  line-height: 1.5;
-  color: rgb(255 255 255 / 0.76);
-}
-
-.field__caption-item[data-state='in'] {
-  animation: caption-in 560ms var(--ease-arrive) 120ms both;
-}
-
-.field__caption-item[data-state='out'] {
-  animation: caption-out 260ms var(--ease-standard) both;
-}
-
-@keyframes caption-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes caption-out {
-  to {
-    opacity: 0;
-  }
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  text-align: center;
+  color: #b4aea6;
 }
 
 /* The motion pause exists for keyboard users only (it appears when focused). */
@@ -356,10 +391,15 @@
 
 /* Leaving for a case study: everything but the chosen frame recedes. */
 .home[data-leaving] .plane:not([aria-current]),
-.home[data-leaving] .field__caption,
-.home[data-leaving] .field__label {
+.home[data-leaving] .field__label,
+.home[data-leaving] .field__controls {
   opacity: 0;
-  transition: opacity 500ms var(--ease-arrive);
+  transition: opacity 300ms var(--ease-arrive);
+}
+
+/* The captions leave first (within 100ms), so no title rides on the moving cover. */
+.home[data-leaving] .plane__caption {
+  opacity: 0;
 }
 
 /* Tablets: simpler depth, a slightly shorter hold. */
@@ -369,40 +409,25 @@
   }
 }
 
-/* Phones: one plane and glimpses of its neighbours, captions directly beneath. */
+/* Phones: one card and glimpses of its neighbours, captions directly beneath. */
 @media (max-width: 699.98px) {
   .home {
     --hero-hold: 40svh;
     --field-hold: 70svh;
     --field-overlap: 26svh;
-    --horizon: 42%;
+    --horizon: 36%;
   }
 
   .hero__stage {
-    align-items: center;
-    padding-top: 0;
+    padding-top: 6svh;
   }
 
   .hero__word {
-    font-size: 13.4vw;
+    font-size: 14vw;
   }
 
-  .hero__name {
-    gap: 14px;
-    letter-spacing: 0.42em;
-  }
-
-  .hero__name::before {
-    width: 36px;
-  }
-
-  .hero__roles {
-    font-size: 0.6875rem;
-    letter-spacing: 0.22em;
-  }
-
-  .field__caption {
-    width: calc(100vw - 2 * var(--edge));
+  .hero__line {
+    font-size: 1.1875rem;
   }
 
   .field__label {
@@ -424,18 +449,13 @@
   }
 
   .hero__group,
-  .hero__roles {
+  .hero__line,
+  .hero__explore {
     transform: none;
     opacity: 1;
   }
 
-  .plane__picture[data-pan] img,
   .plane__screen img {
     animation: none;
-  }
-
-  .field__caption-item[data-state] {
-    animation-duration: 1ms;
-    animation-delay: 0ms;
   }
 }

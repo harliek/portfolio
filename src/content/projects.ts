@@ -108,7 +108,7 @@ export const PROJECTS: Project[] = [
     meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Working prototype' },
     cover: 'obj-merchandising-platform',
     // The edited preview's poster (the Canyon Pouch drawer with its quantity), until the preview plays over it.
-    hero: [{ image: 'merch-overview', sizes: '(min-width: 1100px) 66vw, 100vw' }],
+    hero: [{ image: 'merch-cover', sizes: '(min-width: 1408px) 1280px, calc(100vw - 48px)' }],
     accent: 'merchandising-platform',
     next: 'cafepress-uk',
     seo: {

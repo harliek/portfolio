@@ -508,6 +508,27 @@ export const IMAGES = {
     provenance: 'independent-prototype', synthetic: true,
     source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising decision 3 (x 430–2940, y 0–1255 of the 21.6s frame)', timestamp: 21.6,
   }),
+  'sa-cover': img({
+    id: 'sa-cover', file: 'sa-cover', width: 2060, height: 1287, widths: [800, 1200, 1600, 2060], fallback: 'jpg',
+    alt: 'Spreadsheet Agent: the finished Vendor Pricing and Margin sheet beside the request that built it and the rules applied to it.',
+    caption: 'A finished sheet beside the request and the rules that built it.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'spreadsheetagent.netlify.app (live prototype, captured 2026-09-25 with the request “Create a sheet of B2B products with vendor, cost, retail price, and margin”)', role: 'Spreadsheet Agent cover and case hero (x 880–2940, y 0–1287 of a 2940×1486 capture)',
+  }),
+  'cp-cover': img({
+    id: 'cp-cover', file: 'cp-cover', width: 1120, height: 700, widths: [800, 1120], fallback: 'jpg',
+    alt: 'The CafePress Business UK storefront prototype: UK delivery and volume discount notices, the logo and search, the category navigation, and the headline Branded Promotional Products for UK Businesses.',
+    caption: 'The storefront header and category navigation.',
+    provenance: 'original-artifact', synthetic: false,
+    source: 'PlanetArt/cafepress uk/uk web.png', role: 'CafePress UK homepage cover (x 0–1120, y 0–700)',
+  }),
+  'la-cover': img({
+    id: 'la-cover', file: 'la-cover', width: 1506, height: 941, widths: [800, 1200, 1506], fallback: 'jpg',
+    alt: 'An illustrative leasing web chat between a renter, the AI assistant and a staff member, with notes on live data and human approval.',
+    caption: 'Illustrative conversation.',
+    provenance: 'synthetic-example', synthetic: true,
+    source: 'valiance-messages (x 83–1589)', role: 'AI Leasing Agent homepage cover',
+  }),
   'merch-ask': img({
     id: 'merch-ask', file: 'merch-ask', width: 2940, height: 1486, widths: [800, 1200, 1600], fallback: 'jpg',
     alt: 'Merch Console Ask screen in the synthetic demo, matching the question What is out of stock against fixed query shapes and listing products at risk of stocking out.',

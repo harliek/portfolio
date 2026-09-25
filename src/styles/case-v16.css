@@ -284,8 +284,14 @@
     transform 320ms var(--ease-arrive);
 }
 
-[data-hero-waiting] [data-hero-media] {
+[data-hero-flying] [data-hero-media] {
   visibility: hidden;
+}
+
+.cx-next__link[data-leaving] .cx-next__text,
+.cx-next__link[data-leaving] .cx-next__kicker {
+  opacity: 0;
+  transition: opacity 100ms linear;
 }
 
 /* Chapter demo (ChapterDemo): stationary tabs, one picture, one stable caption. */

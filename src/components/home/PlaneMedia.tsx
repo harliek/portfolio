@@ -34,13 +34,13 @@ export function PlaneMedia({ item, videoRef }: { item: FieldProject; videoRef: (
   if (media.kind === 'image') {
     const asset = getImage(media.image)
     return (
-      <picture className="plane__picture" data-pan={media.pan}>
-        <source type="image/avif" srcSet={srcSet(asset, 'avif')} sizes="(min-width: 1100px) 36vw, 80vw" />
-        <source type="image/webp" srcSet={srcSet(asset, 'webp')} sizes="(min-width: 1100px) 36vw, 80vw" />
+      <picture className="plane__picture">
+        <source type="image/avif" srcSet={srcSet(asset, 'avif')} sizes="(min-width: 1100px) 57vw, 84vw" />
+        <source type="image/webp" srcSet={srcSet(asset, 'webp')} sizes="(min-width: 1100px) 57vw, 84vw" />
         <img
           src={fallbackSrc(asset, 1200)}
           srcSet={srcSet(asset, 'jpg')}
-          sizes="(min-width: 1100px) 36vw, 80vw"
+          sizes="(min-width: 1100px) 57vw, 84vw"
           alt=""
           width={asset.width}
           height={asset.height}

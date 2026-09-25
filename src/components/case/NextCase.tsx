@@ -39,13 +39,13 @@ export function NextCase({ current }: { current: Project }) {
   const open = (e: MouseEvent<HTMLAnchorElement>) => {
     if (!isPlainClick(e)) return
     e.preventDefault()
-    const title = e.currentTarget.querySelector<HTMLElement>('.cx-next__title')
+    const link = e.currentTarget
     expandFrame({
       media: mediaRef.current,
-      title: item.title,
-      titleSize: title ? parseFloat(getComputedStyle(title).fontSize) : undefined,
       path,
       navigate,
+      // The next project's own title and line fade first; only the frame travels.
+      onStart: () => link.setAttribute('data-leaving', ''),
     })
   }
 

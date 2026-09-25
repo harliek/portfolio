@@ -47,38 +47,35 @@ interface Layout {
   veil: number[]
 }
 
-/** Composition per viewport: three primary planes on desktop, simpler depth on tablets, one plane and glimpses on phones. */
+/**
+ * Composition per viewport (brief v17): the centred card at about 57% of
+ * the window's width (a 16:10 frame), neighbours at 80% and partly visible
+ * at the edges, lightly veiled so they stay recognizable. The frame's height
+ * leaves room for each card's caption and the controls beneath.
+ */
 function layoutFor(vw: number, vh: number): Layout {
-  const avail = vh - 61
-  let w: number, aspect: number, scale: number[], turn: number[], veil: number[], gap: number, tuck: number
+  const room = vh - 61 - 250
+  const aspect = 1.6
+  let w: number, scale: number[], veil: number[], gap: number
   if (vw >= 1100) {
-    aspect = 1.55
-    w = Math.min(vw * 0.4, avail * 0.56 * aspect)
-    scale = [1, 0.8, 0.64, 0.52]
-    turn = [0, 11, 18, 22]
-    veil = [0, 0.38, 0.66, 0.82]
-    gap = vw * 0.022
-    tuck = vw * 0.07
-  } else if (vw >= 700) {
-    aspect = 1.6
-    w = Math.min(vw * 0.5, avail * 0.46 * aspect)
-    scale = [1, 0.8, 0.64, 0.52]
-    turn = [0, 7, 12, 14]
-    veil = [0, 0.42, 0.68, 0.84]
+    w = Math.min(vw * 0.57, room * aspect)
+    scale = [1, 0.8, 0.66, 0.56]
+    veil = [0, 0.26, 0.5, 0.7]
     gap = vw * 0.03
-    tuck = vw * 0.08
+  } else if (vw >= 700) {
+    w = Math.min(vw * 0.64, room * aspect)
+    scale = [1, 0.8, 0.66, 0.56]
+    veil = [0, 0.26, 0.5, 0.7]
+    gap = vw * 0.035
   } else {
-    aspect = 4 / 3
-    w = Math.min(vw * 0.8, avail * 0.44 * aspect)
+    w = Math.min(vw * 0.84, room * aspect)
     scale = [1, 0.84, 0.7, 0.6]
-    turn = [0, 0, 0, 0]
-    veil = [0, 0.46, 0.7, 0.85]
+    veil = [0, 0.3, 0.55, 0.75]
     gap = vw * 0.045
-    tuck = 0
   }
   const x = [0]
-  for (let k = 1; k < 4; k++) x.push(x[k - 1] + (w * (scale[k - 1] + scale[k])) / 2 + gap - (k > 1 ? tuck : 0))
-  return { w, h: w / aspect, scale, x, turn, veil }
+  for (let k = 1; k < 4; k++) x.push(x[k - 1] + (w * (scale[k - 1] + scale[k])) / 2 + gap)
+  return { w, h: w / aspect, scale, x, turn: [0, 0, 0, 0], veil }
 }
 
 const lerpSteps = (steps: number[], a: number) => {
@@ -97,24 +94,24 @@ function readStored() {
 }
 
 /**
- * The selected work (brief v16): a controlled field of rectangular media
- * planes in perspective. The centred project is the largest, sharpest and
- * brightest; its neighbours sit a step back (about 80% scale, turned
- * slightly inward, under a dark veil); the next layer is only glimpsed at
- * the edges. Only the centred project shows its title and one line, which
- * crossfade as the centre changes. No arrows, counters, pause buttons or
- * video controls: the field drifts slowly on its own, follows vertical
- * scroll velocity while it is on screen, and can be dragged or swiped.
+ * The selected work (brief v17): a carousel of 16:10 covers in which each
+ * project travels as one unit (its cover, its title 20px below, its line 8px
+ * below that, the same caption height for every card). The centred card is
+ * about 57% of the window's width and at full brightness; its neighbours sit
+ * at 80%, partly visible at the edges and only lightly veiled. A counter and
+ * previous/next controls sit beneath. The field still drifts slowly, follows
+ * vertical scroll velocity while it fills the view, and can be dragged or
+ * swiped.
  *
- * Clicking the centred plane expands its frame to the window edges while
- * the others recede, then opens the case study; clicking a neighbour
- * brings it to the centre first. Keyboard: every plane is a link; focusing
- * one centres it and holds the motion; Enter opens it. Motion also holds
- * while the pointer rests on the centred plane, and a pause control appears
- * on keyboard focus (WCAG 2.2.2). Reduced motion: no drift and no scroll
+ * Clicking the centred card freezes its cover and carries that same frame
+ * into the case study's hero (expandFrame); clicking a neighbour brings it
+ * to the centre first. Keyboard: every card is a link; focusing one centres
+ * it and holds the motion; Enter opens it. Motion also holds while the
+ * pointer rests on the centred card, and a pause control appears on
+ * keyboard focus (WCAG 2.2.2). Reduced motion: no drift and no scroll
  * coupling; the centre changes only on request.
  *
- * Per frame everything is written straight to the planes' styles; React
+ * Per frame everything is written straight to the cards' styles; React
  * state changes only when the centred project changes.
  */
 export function ProjectField() {
@@ -127,7 +124,6 @@ export function ProjectField() {
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
   const [initial] = useState(readStored)
   const [active, setActive] = useState(initial)
-  const [caption, setCaption] = useState<{ current: number; previous: number | null }>({ current: initial, previous: null })
   const [userPaused, setUserPaused] = useState(false)
   const [running, setRunning] = useState(false)
 
@@ -153,16 +149,13 @@ export function ProjectField() {
     motion.current.paused = userPaused
   }, [userPaused])
 
-  // The caption crossfades: the previous line fades out while the new one arrives.
+  // Back returns to the same project.
   useEffect(() => {
-    setCaption((c) => (c.current === active ? c : { current: active, previous: c.current }))
-    const t = window.setTimeout(() => setCaption((c) => ({ current: c.current, previous: null })), 520)
     try {
       sessionStorage.setItem(STORAGE_KEY, String(active))
     } catch {
       /* private mode */
     }
-    return () => window.clearTimeout(t)
   }, [active])
 
   // Only the centred plane and its neighbours load and play their footage, and only while the field is on screen.
@@ -188,10 +181,11 @@ export function ProjectField() {
       const side = Math.sign(d)
       const s = lerpSteps(L.scale, a)
       const x = side * lerpSteps(L.x, a)
-      const turn = side * lerpSteps(L.turn, a)
-      el.style.transform = `translate3d(${(x - L.w / 2).toFixed(2)}px, ${(-L.h / 2).toFixed(2)}px, 0) rotateY(${turn.toFixed(2)}deg) scale(${s.toFixed(4)})`
+      // Flat depth (no turn), so each card's caption stays level and readable as it travels.
+      el.style.transform = `translate3d(${(x - L.w / 2).toFixed(2)}px, ${(-L.h / 2).toFixed(2)}px, 0) scale(${s.toFixed(4)})`
       el.style.zIndex = String(100 - Math.round(a * 10))
-      el.style.visibility = a > 2.9 ? 'hidden' : ''
+      el.style.visibility = a > 2.4 ? 'hidden' : ''
+      el.style.setProperty('--depth', Math.min(1, a).toFixed(3))
       const veil = veilRefs.current[i]
       if (veil) veil.style.opacity = lerpSteps(L.veil, a).toFixed(3)
     }
@@ -297,20 +291,29 @@ export function ProjectField() {
     [apply],
   )
 
+  /** Previous and next: one project along the loop, from wherever the field is heading. */
+  const step = (dir: number) => {
+    const m = motion.current
+    const from = m.goal !== null ? m.goal : Math.round(m.pos)
+    m.idleDir = dir
+    if (prefersReducedMotion()) {
+      m.pos = from + dir
+      m.goal = null
+      apply()
+    } else m.goal = from + dir
+  }
+
   /** The project the field is showing or on its way to. */
   const target = () => {
     const m = motion.current
     return m.goal !== null ? mod(Math.round(m.goal), N) : m.active
   }
 
-  /** Expands the centred plane to the window, lets the rest recede, then opens the case study. */
+  /** Freezes the centred cover and carries it into the case study's hero; the rest recede and the captions fade first. */
   const open = (i: number) => {
     const item = FIELD[i]
-    const captionTitle = sectionRef.current?.querySelector<HTMLElement>('.field__caption-item[data-state="in"] .field__title')
     expandFrame({
       media: planeRefs.current[i]?.querySelector<HTMLElement>('.plane__media') ?? null,
-      title: item.title,
-      titleSize: captionTitle ? parseFloat(getComputedStyle(captionTitle).fontSize) : undefined,
       path: projectPath(projectById(item.id)),
       navigate,
       onStart: () => {
@@ -407,10 +410,8 @@ export function ProjectField() {
     }
   }, [apply])
 
-  const shown = [caption.previous, caption.current].filter((v): v is number => v !== null)
-
   return (
-    <section ref={sectionRef} className="field" aria-labelledby="field-label" data-reduced={reduced || undefined}>
+    <section ref={sectionRef} id="selected-work" className="field" aria-labelledby="field-label" data-reduced={reduced || undefined}>
       <div className="field__pin">
         <h2 className="field__label" id="field-label">
           Selected work <span className="field__years">{FIELD_YEARS}</span>
@@ -446,31 +447,44 @@ export function ProjectField() {
                   motion.current.hover = false
                 }}
               >
-                <span className="plane__media" data-kind={item.media.kind}>
-                  <PlaneMedia
-                    item={item}
-                    videoRef={(el) => {
-                      videoRefs.current[i] = el
+                <span className="plane__frame">
+                  <span className="plane__media" data-kind={item.media.kind}>
+                    <PlaneMedia
+                      item={item}
+                      videoRef={(el) => {
+                        videoRefs.current[i] = el
+                      }}
+                    />
+                  </span>
+                  <span
+                    className="plane__veil"
+                    ref={(el) => {
+                      veilRefs.current[i] = el
                     }}
                   />
                 </span>
-                <span
-                  className="plane__veil"
-                  ref={(el) => {
-                    veilRefs.current[i] = el
-                  }}
-                />
+                <span className="plane__caption" aria-hidden="true">
+                  <span className="plane__title">{item.title}</span>
+                  <span className="plane__line">{item.line}</span>
+                </span>
               </a>
             )
           })}
-          <div className="field__caption" aria-hidden="true">
-            {shown.map((i) => (
-              <div key={`${i}-${i === caption.current ? 'in' : 'out'}`} className="field__caption-item" data-state={i === caption.current ? 'in' : 'out'}>
-                <p className="field__title">{FIELD[i].title}</p>
-                <p className="field__line">{FIELD[i].line}</p>
-              </div>
-            ))}
-          </div>
+        </div>
+        <div className="field__controls">
+          <button type="button" className="field__step" aria-label="Previous project" onClick={() => step(-1)}>
+            <span aria-hidden="true">←</span>
+          </button>
+          <p className="field__count" aria-live="polite">
+            <span className="visually-hidden">Project </span>
+            {String(active + 1).padStart(2, '0')}
+            <span aria-hidden="true"> / </span>
+            <span className="visually-hidden"> of </span>
+            {String(N).padStart(2, '0')}
+          </p>
+          <button type="button" className="field__step" aria-label="Next project" onClick={() => step(1)}>
+            <span aria-hidden="true">→</span>
+          </button>
         </div>
         <button type="button" className="field__motion" aria-pressed={userPaused} onClick={() => setUserPaused((p) => !p)}>
           {userPaused ? 'Resume motion' : 'Pause motion'}

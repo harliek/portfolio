@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, type MouseEvent } from 'react'
 import { createPortal } from 'react-dom'
 import '../styles/home.css'
 import { HomeFilm } from '../components/home/HomeFilm'
@@ -6,6 +6,7 @@ import { useFilmSlot } from '../components/layout/filmSlot'
 import { ProjectField } from '../components/home/ProjectField'
 import { SITE } from '../content/site'
 import { usePageMeta } from '../hooks/usePageMeta'
+import { prefersReducedMotion } from '../hooks/useReducedMotion'
 import { ScrollTrigger } from '../lib/gsap'
 
 /**
@@ -63,6 +64,16 @@ export function Home() {
     }
   }, [filmSlot])
 
+  /** Scrolls to the selected work (smoothly, unless reduced motion) and moves focus there. */
+  const exploreWork = (e: MouseEvent<HTMLAnchorElement>) => {
+    const field = document.getElementById('selected-work')
+    if (!field) return
+    e.preventDefault()
+    const top = field.getBoundingClientRect().top + window.scrollY - 61
+    window.scrollTo({ top, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+    field.querySelector<HTMLElement>('.plane[aria-current]')?.focus({ preventScroll: true })
+  }
+
   return (
     <div ref={rootRef} className="home">
       {filmSlot && createPortal(<HomeFilm />, filmSlot)}
@@ -72,9 +83,10 @@ export function Home() {
             <h1 className="hero__title" id="home-title">
               <span className="hero__name">{SITE.name}</span> <span className="hero__word">Portfolio</span>
             </h1>
-            <p className="hero__roles">
-              <span>AI Implementation &amp; Strategy</span> <span>Product Development &amp; Prototyping</span>
-            </p>
+            <p className="hero__line">AI implementation, product strategy, and working prototypes.</p>
+            <a className="hero__explore" href="#selected-work" onClick={exploreWork}>
+              Explore selected work <span aria-hidden="true">↓</span>
+            </a>
           </div>
         </div>
       </section>

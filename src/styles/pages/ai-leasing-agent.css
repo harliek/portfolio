@@ -1,161 +1,297 @@
 /*
- * AI Leasing Agent page (src/pages/work/AILeasingAgent.tsx). Scope every
- * selector under .page-ai-leasing-agent. The layout, the media bar, the zoom
- * control and its hover edge come from the shared case styles (case.css); this
- * file places the conversation in the stage and draws its moments
- * (components/pages/ai-leasing-agent/ConversationStage.tsx).
+ * AI Leasing Agent (brief v16): the illustrative conversation, the problem
+ * as a statement, the requirements as a routing diagram, the rollout path
+ * and the adoption figure.
  */
 
-.page-ai-leasing-agent {
-  /* The illustration's own page colour behind its images, so a loading image never shows a dark box. */
-  --conv-paper: #fbfbf9;
-  /* The frame's line: the page's pale gold deepened so it reads on the white conversation. */
-  --ala-edge: color-mix(in oklch, var(--case-accent) 72%, #7a5a12);
-  /* The veil over the rest of the exchange: it softens the other messages, which stay readable. */
-  --ala-veil: rgb(251 251 249 / 0.58);
-  --ala-glide: cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.page-ai-leasing-agent .cs-layer:not([data-transparent]) .cs-canvas {
-  background: var(--conv-paper);
-}
-
-/* ----------------------------------------------------------------------- */
-/* The conversation beside the story (desktop) and stacked (tablets)        */
-/* ----------------------------------------------------------------------- */
-
-/* Beside the story the custom box is the visible stage; the conversation and its bar sit in its middle. */
-.page-ai-leasing-agent .cs-custom[data-variant='sticky'] {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* As wide as the column allows while the conversation and the bar under it fit the stage. */
-.page-ai-leasing-agent .ala-conv[data-variant='sticky'] {
-  width: min(100%, calc((var(--cs-mh) - var(--cs-bar)) * var(--stage-r)));
-}
-
-/* Stacked (tablets): the column's width, bounded by the viewport height. */
-.page-ai-leasing-agent .ala-conv[data-variant='inline'] {
-  width: min(100%, calc(72svh * var(--stage-r)));
-  margin-inline: auto;
-}
-
-.page-ai-leasing-agent .ala-conv__stage {
-  aspect-ratio: var(--stage-r);
-  container-type: size;
-}
-
-/*
- * The emphasised message: an accent frame, a soft glow, and a light veil over everything outside it (the canvas clips
- * it to the conversation). It glides from one message to the next, so the conversation itself never changes.
- */
-.page-ai-leasing-agent .ala-frame {
-  position: absolute;
-  z-index: 1;
-  border-radius: 14px;
-  box-shadow:
-    0 0 0 2px var(--ala-edge),
-    0 0 20px 2px rgb(var(--case-accent-rgb) / 0.55),
-    0 0 0 200vmax var(--ala-veil);
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    left 520ms var(--ala-glide),
-    top 520ms var(--ala-glide),
-    width 520ms var(--ala-glide),
-    height 520ms var(--ala-glide),
-    opacity 260ms linear;
-}
-
-.page-ai-leasing-agent .ala-frame[data-on] {
-  opacity: 1;
-}
-
-/* A role tag on a message's name row, at the right end of its bubble: dark, so it reads as a note on the illustration. */
-.page-ai-leasing-agent .ala-tag {
-  display: inline-block;
-  padding: 3px 10px 4px;
-  border-radius: 999px;
-  background: rgb(24 30 26 / 0.92);
-  box-shadow: inset 0 0 0 1px rgb(var(--case-accent-rgb) / 0.4);
-  color: var(--case-accent);
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-}
-
-.page-ai-leasing-agent .ala-conv .ala-tag {
-  position: absolute;
-  z-index: 2;
-  /* Smaller on a small stage, so it stays within the name row. */
-  font-size: clamp(0.6875rem, 1.9cqw, 0.78rem);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-50%) translateX(4px);
-  transition:
-    opacity 240ms var(--ease-out),
-    transform 240ms var(--ease-out);
-}
-
-.page-ai-leasing-agent .ala-conv .ala-tag[data-on] {
-  opacity: 1;
-  transform: translateY(-50%);
-}
-
-/* ----------------------------------------------------------------------- */
-/* Phones: the three messages' text, one after another                      */
-/* ----------------------------------------------------------------------- */
-
-.page-ai-leasing-agent .ala-strips__list {
+.la-hero {
   display: grid;
-  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: var(--cx-s3) clamp(28px, 4vw, 72px);
+  align-items: end;
+  padding: clamp(40px, 7svh, 96px) var(--cx-edge) 0;
+}
+
+.la-hero__text {
+  display: grid;
+  gap: var(--cx-s2);
+  padding-bottom: 36px;
+}
+
+.la-hero__text .cx-lede {
+  margin-top: var(--cx-s1);
+}
+
+.la-hero__media {
+  margin: 0;
+}
+
+.la-hero__media img {
+  width: 100%;
+  height: auto;
+}
+
+/* The problem. */
+.la-problem {
+  display: grid;
+  gap: var(--cx-s2);
+  padding: var(--cx-s5) var(--cx-edge) 0;
+}
+
+.la-problem__lead {
+  max-width: 56ch;
+  margin: var(--cx-s1) 0 0;
+  font-family: var(--font-sans);
+  font-size: clamp(1.0625rem, 1.2vw, 1.25rem);
+  line-height: 1.55;
+  color: var(--cx-dim);
+}
+
+.la-problem__statement {
+  max-width: 26ch;
+}
+
+/* The routing diagram: one incoming question branching into three routes. */
+.la-routing {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr);
+  grid-template-areas:
+    'head diagram'
+    'notes diagram';
+  gap: var(--cx-s3) clamp(28px, 5vw, 96px);
+  align-items: start;
+  padding: var(--cx-s5) var(--cx-edge) 0;
+}
+
+.la-routing__head {
+  grid-area: head;
+  display: grid;
+  gap: var(--cx-s2);
+}
+
+.la-routing__title {
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.75rem, 2.8vw, 3rem);
+  font-weight: 400;
+  line-height: 1.08;
+  color: #fff;
+}
+
+.la-diagram {
+  grid-area: diagram;
+  display: grid;
+  justify-items: center;
+}
+
+.la-diagram__in {
+  margin: 0;
+  padding: 14px 24px;
+  border: 1px solid rgb(var(--accent-rgb) / 0.7);
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.la-diagram__lines {
+  display: block;
+  width: 66.7%;
+  height: clamp(80px, 10vw, 140px);
+  overflow: visible;
+}
+
+.la-diagram__lines path {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.35);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  transition: stroke-dashoffset 1400ms var(--ease-arrive) 150ms;
+}
+
+.la-diagram[data-in] .la-diagram__lines path {
+  stroke-dashoffset: 0;
+}
+
+.la-diagram__routes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(14px, 2vw, 32px);
+  width: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.page-ai-leasing-agent .ala-strip {
+.la-route {
   display: grid;
-  justify-items: start;
-  gap: var(--space-2);
+  gap: 10px;
+  align-content: start;
+  padding: 18px 18px 20px;
+  border: 1px solid var(--cx-hair);
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.025);
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 700ms var(--ease-arrive),
+    transform 700ms var(--ease-arrive);
 }
 
-.page-ai-leasing-agent .ala-strip__text {
-  display: block;
-  width: 100%;
-  overflow: hidden;
-  /* The bubble's own colour around the crop, so its text never touches the edge. */
-  padding: 6px 4px 6px 8px;
-  border-radius: 12px;
-  background: var(--paper, var(--conv-paper));
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08);
+.la-diagram[data-in] .la-route {
+  opacity: 1;
+  transform: none;
 }
 
-.page-ai-leasing-agent .ala-strip__text .picture,
-.page-ai-leasing-agent .ala-strip__text img {
-  display: block;
-  width: 100%;
-  height: auto;
+.la-route__title {
+  font-family: var(--font-editorial);
+  font-size: clamp(1.25rem, 1.7vw, 1.75rem);
+  line-height: 1.1;
+  color: #fff;
 }
 
-/* On phones the enlarge control is a visible 44px button (there is no image button over the messages). */
-.page-ai-leasing-agent .ala-strips {
-  --cs-expand: 44px;
+.la-route__body {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--cx-dim);
 }
 
-.page-ai-leasing-agent .ala-strips .cs-expand {
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22);
-  color: var(--color-text);
+.la-routing__notes {
+  grid-area: notes;
+  display: grid;
+  gap: 12px;
 }
 
-/* ----------------------------------------------------------------------- */
-/* Reduced motion: the emphasis moves at once                               */
-/* ----------------------------------------------------------------------- */
+.la-routing__label {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cx-dim);
+}
 
-html[data-motion='reduce'] .page-ai-leasing-agent :is(.ala-frame, .ala-tag) {
-  transition: none !important;
+.la-tested {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.la-tested li {
+  padding: 6px 12px;
+  border: 1px solid var(--cx-hair);
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--cx-text);
+}
+
+/* The rollout: three steps on one line. */
+.la-rollout {
+  padding: var(--cx-s5) var(--cx-edge) 0;
+}
+
+.la-rollout__path {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.375rem, 2.4vw, 2.5rem);
+  line-height: 1.1;
+  color: #fff;
+}
+
+.la-rollout__path li {
+  position: relative;
+  padding-top: var(--cx-s2);
+  border-top: 1px solid rgb(255 255 255 / 0.2);
+}
+
+.la-rollout__path li:last-child {
+  border-top-color: var(--accent);
+}
+
+/* The result. */
+.la-result {
+  display: grid;
+  gap: var(--cx-s2);
+  padding: var(--cx-s6) var(--cx-edge) 0;
+}
+
+.la-result__figure {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2em;
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(5rem, 16vw, 15rem);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.la-result__figure span {
+  font-family: var(--font-sans);
+  font-size: clamp(0.75rem, 1vw, 0.9375rem);
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--cx-dim);
+}
+
+.la-result__text {
+  max-width: 48ch;
+}
+
+@media (max-width: 899.98px) {
+  .la-hero,
+  .la-routing {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'head'
+      'diagram'
+      'notes';
+  }
+
+  .la-hero {
+    grid-template-areas: none;
+  }
+}
+
+@media (max-width: 699.98px) {
+  .la-diagram__lines {
+    display: none;
+  }
+
+  .la-diagram__routes,
+  .la-rollout__path {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .la-diagram__lines path {
+    stroke-dashoffset: 0;
+    transition: none;
+  }
+
+  .la-route {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }

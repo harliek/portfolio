@@ -25,17 +25,6 @@ export type ProjectId =
 /** Each project's accent (src/content/accents.ts). */
 export type ProjectAccent = AccentId
 
-
-/**
- * `sizes` of the case studies' media stage: CaseScroll STAGE_SIZES (the video
- * poster, the states stage and its stacked figure) and ConversationStage SIZES.
- */
-const STAGE_SIZES = '(min-width: 1368px) 645px, (min-width: 960px) 47vw, calc(100vw - 40px)'
-
-
-/** Where a page shows a different crop on phones (ConversationStage PHONE). */
-const WIDE = '(min-width: 600px)'
-
 /**
  * An image a case study shows first beside its heading, with the `sizes` its
  * component passes, so the route transition fetches and decodes the very
@@ -200,7 +189,7 @@ export const PROJECTS: Project[] = [
     meta: { company: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'October 2024 to June 2025', status: 'Adopted across 18 properties' },
     cover: 'obj-ai-leasing-agent',
     // The conversation (ConversationStage); phones read it as three message strips further down the page.
-    hero: [{ image: 'ala-conversation', sizes: STAGE_SIZES, media: WIDE }],
+    hero: [{ image: 'valiance-messages', sizes: '(min-width: 1100px) 58vw, 100vw' }],
     accent: 'ai-leasing-agent',
     next: 'client-work',
     seo: {

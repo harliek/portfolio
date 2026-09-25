@@ -475,7 +475,7 @@ html.is-dialog-open {
 
 /*
  * A transparent pill (a faint blurred glass and a light outline, Harlie's
- * request) that turns a translucent red on hover and focus. When pressed, a
+ * request) that turns a translucent true red on hover and focus. When pressed, a
  * spinning loader grows in before the label while the action runs, then a
  * check replaces it for two seconds.
  */
@@ -498,14 +498,15 @@ html.is-dialog-open {
 
 .stateful:hover,
 .stateful:focus-visible,
-:hover > .stateful,
-:focus-visible > .stateful {
-  border-color: rgb(var(--red-rgb) / 0.75);
-  background: rgb(var(--red-rgb) / 0.3);
+:is(a, button):hover > .stateful,
+:is(a, button):focus-visible > .stateful {
+  /* A true red, see-through (not the coral accent, which reads pink). */
+  border-color: rgb(229 36 36 / 0.8);
+  background: rgb(214 28 28 / 0.34);
 }
 
 .stateful:focus-visible,
-:focus-visible > .stateful {
+:is(a, button):focus-visible > .stateful {
   outline: 1px solid var(--color-focus);
   outline-offset: 3px;
 }

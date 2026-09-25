@@ -7,8 +7,8 @@ import type { ImageId } from '../media'
  * - Introduction (brief v21; copy from Harlie's editorial pass, v23): the
  *   label, name, descriptor and three short paragraphs (ABOUT.intro).
  * - Education: the résumé (public/resume/harlie-katz-resume.pdf). School,
- *   degree, minor, certificate and Sutardja Center, "Aug 2023 - May 2026"
- *   and "Completed in 3 years". GPA is left out on purpose. The two
+ *   degree, minor, certificate and Sutardja Center, "Aug 2023 - May 2026".
+ *   GPA is left out on purpose. Wording and paragraph are Harlie's (v26). The two
  *   paragraphs are Harlie's (brief v8, section 15) with one accuracy edit:
  *   "psychology" is dropped from the subjects, because the résumé's
  *   coursework (Artificial Intelligence, Large Language Models, Machine
@@ -42,21 +42,20 @@ export const ABOUT = {
   intro: [
     'My experience spans AI implementation, product strategy, and software development, including leasing operations, merchandising research, and independent software prototypes.',
     'I graduated from UC Berkeley in three years with a B.A. in Cognitive Science and a minor in Data Science.',
-    'My creative work includes filmmaking and charcoal drawing.',
+    // Harlie's paragraph (v26), word for word apart from one typo ("invest" to "invested").
+    'I am incredibly invested in the future of AI implementation. Across my experience, I have consistently moved beyond my defined role to identify operational friction, uncover opportunities, and develop solutions. I am pursuing early-career roles in AI product management, strategy, and implementation.',
   ],
   portraitLabel: 'Portrait of Harlie Katz',
 
   educationTitle: 'Education',
   education: {
+    /** Harlie's wording (v26): three lines, the school with its years, then the degree and the certificate. */
     school: 'University of California, Berkeley',
-    credentials: ['B.A. in Cognitive Science', 'Minor in Data Science'],
-    certificate: 'Certificate in Entrepreneurship and Technology',
-    certificateSource: 'Sutardja Center',
     dates: '2023 to 2026',
-    /** Harlie's editorial pass (v23); the subjects are the résumé's coursework and the degree. */
+    lines: ['B.A. in Cognitive Science – Data Science minor', 'Certificate in Entrepreneurship and Technology – Sutardja Center'],
+    /** Harlie's paragraph, word for word (v26). */
     text: [
-      'My coursework covered machine learning, computational cognitive modeling, data analytics, computer science, user experience, and human cognition.',
-      'This interdisciplinary training combined the study of human behavior with computational approaches to intelligence and system design.',
+      'Studied intelligence across cognitive and computational systems, with coursework spanning machine learning, data science, user experience, computer science, psychology, and human cognition. Developed an interdisciplinary foundation for understanding how people think, how intelligent systems are built, and how technology can be designed around human behavior.',
     ],
   },
 

@@ -23,7 +23,7 @@
    * bottom edge on arrival and centred a little below the middle once held.
    */
   --horizon: 51%;
-  --tile-h: min(23.75vw, 100svh - 261px);
+  --tile-h: min(21.25vw, 100svh - 261px);
 
   position: relative;
   isolation: isolate;
@@ -104,7 +104,8 @@
 .hero__group {
   position: absolute;
   top: calc((100svh - var(--header-height)) * 0.39);
-  left: var(--edge);
+  /* As on the old portfolio: 8% in from the left. */
+  left: max(var(--edge), 8%);
   right: var(--edge);
   transform: translate3d(0, calc(-50% - var(--enter) * 6svh), 0);
   opacity: calc(1 - var(--enter) * 0.6);
@@ -116,43 +117,43 @@
   font-weight: 400;
 }
 
-/* The name as on the old portfolio: a thin rule, then HARLIE KATZ in small, widely tracked capitals, well above PORTFOLIO. */
+/* The name exactly as on the old portfolio (/creative/): a 56px rule, a 20px gap, 12px capitals tracked 0.5em, 24px above PORTFOLIO. */
 .hero__name {
   display: flex;
   align-items: center;
-  gap: clamp(18px, 2.6vw, 38px);
-  margin: 0 0 clamp(36px, 7vw, 104px);
+  gap: 20px;
+  margin: 0 0 24px;
   font-family: var(--font-sans);
-  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.9375rem);
+  font-size: 0.75rem;
   font-weight: 400;
-  line-height: 1.4;
-  letter-spacing: 0.34em;
+  line-height: 1.5;
+  letter-spacing: 0.5em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: rgb(243 238 231 / 0.86);
+  color: rgb(255 255 255 / 0.85);
 }
 
 .hero__name::before {
   content: '';
   flex: none;
-  width: clamp(48px, 7.2vw, 104px);
+  width: 56px;
   height: 1px;
-  background: rgb(243 238 231 / 0.62);
+  background: rgb(255 255 255 / 0.7);
 }
 
-/* PORTFOLIO: the original homepage's Playfair Display in white capitals. */
+/* PORTFOLIO: the old portfolio's Playfair Display in white capitals. */
 .hero__word {
   display: block;
-  margin-left: -0.045em;
   font-family: var(--font-editorial);
   font-size: clamp(64px, 8.8vw, 126px);
   font-weight: 400;
-  line-height: 0.9;
-  letter-spacing: -0.012em;
+  /* The old portfolio's medium weight (Playfair Display 500): the self-hosted regular face, thickened by a fine outline. */
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
   white-space: nowrap;
   color: #fff;
-  -webkit-text-stroke: 0.008em currentColor;
+  -webkit-text-stroke: 0.022em currentColor;
 }
 
 /*
@@ -535,13 +536,13 @@
 /* Phones: one tile and glimpses of its neighbours, captions directly beneath. */
 @media (min-width: 700px) and (max-width: 1099.98px) {
   .home {
-    --tile-h: min(32.5vw, 100svh - 261px);
+    --tile-h: min(29.375vw, 100svh - 261px);
   }
 }
 
 @media (max-width: 699.98px) {
   .home {
-    --tile-h: min(46.25vw, 100svh - 261px);
+    --tile-h: min(42.5vw, 100svh - 261px);
   }
 
   /* The tagline wraps on phones; the typing bar would stand beside both lines, so it is left out there. */

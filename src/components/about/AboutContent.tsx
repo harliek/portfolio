@@ -73,20 +73,14 @@ export function AboutContent() {
         </h2>
         <div className="about-education__grid">
           <div className="about-school">
-            <p className="about-school__name">{edu.school}</p>
-            <ul className="about-school__credentials" role="list">
-              {edu.credentials.map((c) => (
-                <li key={c}>{c}</li>
-              ))}
-              <li>
-                {edu.certificate}
-                <span className="visually-hidden">, </span>
-                <span className="about-school__source">{edu.certificateSource}</span>
-              </li>
-            </ul>
-            <p className="about-school__dates tabular">
-              {edu.dates}
+            <p className="about-school__name">
+              {edu.school} <span className="about-school__dates tabular">{edu.dates}</span>
             </p>
+            <ul className="about-school__credentials" role="list">
+              {edu.lines.map((l) => (
+                <li key={l}>{l}</li>
+              ))}
+            </ul>
           </div>
           <div className="about-school__text">
             {edu.text.map((p) => (

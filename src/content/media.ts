@@ -538,10 +538,10 @@ export const IMAGES = {
     crop: 'Trimmed to its content.',
   }),
   'cp-object': img({
-    id: 'cp-object', file: 'cp-object', width: 1536, height: 1024, widths: [768, 1536], fallback: 'png', transparent: true,
+    id: 'cp-object', file: 'cp-object', width: 1489, height: 933, widths: [745, 1489], fallback: 'png', transparent: true,
     alt: 'An illustrative CafePress Business UK storefront mockup with a T-shirt, tote bag and mug priced in pounds.',
     provenance: 'synthetic-example', synthetic: true,
-    source: 'PNG Tiles/cafepress uk.png (a mockup made for the tile by Harlie, transparent; replaced 2026-09-25 14:24)', role: 'CafePress UK homepage tile (illustrative)',
+    source: 'PNG Tiles/cafepress uk.png (a mockup made for the tile by Harlie, transparent; replaced 2026-09-25 14:57)', role: 'CafePress UK homepage tile (illustrative)',
     crop: 'Trimmed to its content.',
   }),
   'sa-object': img({

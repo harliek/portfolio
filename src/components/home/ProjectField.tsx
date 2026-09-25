@@ -27,7 +27,7 @@ interface Layout {
 }
 
 /**
- * Composition per viewport (brief v19): the centred tile at about 38% of the
+ * Composition per viewport (brief v19; a little smaller since v26): the centred tile at about 34% of the
  * window's width, never taller than the room left for its caption; its
  * neighbours at 82%, clearly visible and only lightly veiled.
  */
@@ -36,17 +36,17 @@ function layoutFor(vw: number, vh: number): Layout {
   const aspect = 1.6
   let w: number, scale: number[], veil: number[], gap: number
   if (vw >= 1100) {
-    w = Math.min(vw * 0.38, room * aspect)
+    w = Math.min(vw * 0.34, room * aspect)
     scale = [1, 0.82, 0.68]
     veil = [0, 0.2, 0.45]
     gap = vw * 0.03
   } else if (vw >= 700) {
-    w = Math.min(vw * 0.52, room * aspect)
+    w = Math.min(vw * 0.47, room * aspect)
     scale = [1, 0.82, 0.68]
     veil = [0, 0.22, 0.45]
     gap = vw * 0.035
   } else {
-    w = Math.min(vw * 0.74, room * aspect)
+    w = Math.min(vw * 0.68, room * aspect)
     scale = [1, 0.84, 0.7]
     veil = [0, 0.25, 0.5]
     gap = vw * 0.045
@@ -79,8 +79,9 @@ function readStored() {
 /**
  * Selected work (Harlie's v23 request). The projects form a loop (after the
  * last comes the first, both ways) that moves continuously to the left in one
- * steady motion, easing to a stop while a tile is hovered or a tile's link
- * has focus and easing back when it is left. The page ends here: the
+ * steady motion, and keeps moving under the pointer (Harlie's request); it
+ * eases to a stop only while a tile's link has keyboard focus or a tile is
+ * being dragged. The page ends here: the
  * collection fills the window between the header and the footer, which sits
  * just below it, so the page never scrolls further; scrolling on down from
  * there (wheel, trackpad or a swipe) keeps moving the projects instead, so the
@@ -277,7 +278,8 @@ export function ProjectField() {
       last = now
       if (s.frozen) return
       const reducedNow = prefersReducedMotion()
-      const held = s.hover || s.focus || s.dragging || s.userPaused || reducedNow || document.hidden
+      // Hovering does not stop it (Harlie's request: keep moving); keyboard focus and dragging do.
+      const held = s.focus || s.dragging || s.userPaused || reducedNow || document.hidden
       const want = held ? 0 : SPEED
       s.v += (want - s.v) * (1 - Math.exp(-dt / EASE_V))
       if (Math.abs(s.v - want) < 0.0005) s.v = want

@@ -100,7 +100,7 @@ export const FIELD: readonly FieldProject[] = [
     title: 'CafePress UK',
     line: 'Market research, assortment planning, and early UK storefront prototyping.',
     // An illustrative mockup Harlie made for the tile (PNG Tiles/cafepress uk tile.png).
-    media: { kind: 'cutouts', pieces: [{ image: 'cp-object', x: 5.9, y: 3, w: 88.1 }] },
+    media: { kind: 'cutouts', pieces: [{ image: 'cp-object', x: 3.1, y: 3, w: 93.8 }] },
     alt: 'An illustrative CafePress Business UK storefront mockup with a T-shirt, tote bag and mug priced in pounds',
   },
   {

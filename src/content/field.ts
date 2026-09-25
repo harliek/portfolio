@@ -60,8 +60,8 @@ export const FIELD: readonly FieldProject[] = [
     id: 'client-work',
     title: 'Creative Production',
     line: 'Creative strategy, production, and client support at Shift Content.',
-    media: { kind: 'video', src: '/media/video/plane-creative-960.mp4', poster: '/media/img/plane-creative-poster.jpg', position: '50% 50%' },
-    alt: 'Footage from the Aristocracy campaign film',
+    media: { kind: 'video', src: '/media/video/nickleby-loop-1138.mp4', poster: '/media/img/nickleby-loop-poster.jpg', position: '40% 45%' },
+    alt: 'Footage from the Nickleby Capital interview film',
   },
   {
     id: 'jumpstart-finance',

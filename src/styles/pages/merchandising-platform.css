@@ -1,268 +1,345 @@
 /*
- * Merchandising Platform (brief v16): the interface as the hero, the scrubbed
- * demo, the problem as type with converging fragments, one large visual with
- * the three decisions, and a typographic outcome.
+ * Merchandising Platform (brief v17), on the case foundation's 12-column
+ * grid: the hero, the problem (text in four columns, the convergence in
+ * eight), three decisions laid out differently to show progression, the
+ * chapter demo, and the two-column closing.
  */
 
-/* Hero: the title across the top; the real interface fills most of the view, bleeding to the right edge. */
+/* Hero: title and metadata, the lede with the status beside it, then the composed image. */
 .mp-hero {
-  display: grid;
-  grid-template-columns: minmax(260px, 27vw) minmax(0, 1fr);
-  grid-template-areas:
-    'title title'
-    'text media';
-  gap: var(--cx-s3) clamp(28px, 3.6vw, 64px);
-  align-items: start;
-  padding: clamp(40px, 7svh, 96px) 0 var(--cx-s5) var(--cx-edge);
-}
-
-.mp-hero__title {
-  grid-area: title;
-  padding-right: var(--cx-edge);
+  padding-top: clamp(48px, 6vw, 88px);
 }
 
 .mp-hero__text {
-  grid-area: text;
-  padding-top: 6px;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--cx-gap);
+  align-items: end;
+  margin-top: var(--cx-inner);
+}
+
+.mp-hero__text .cx-lede {
+  grid-column: 1 / span 7;
+}
+
+.mp-hero__text .cx-status {
+  grid-column: 9 / span 4;
+  margin: 0;
 }
 
 .mp-hero__media {
-  grid-area: media;
-  border-radius: 3px 0 0 3px;
+  margin-top: var(--cx-inner);
 }
 
-.mp-hero__media img {
-  width: 100%;
-  height: auto;
-}
-
-/* The demo sits a step below the hero, with its own breathing room. */
-.mp-demo {
-  margin-bottom: var(--cx-s4);
-}
-
-/* The problem: a pinned passage where fragments converge into the platform. */
-.mp-problem {
-  position: relative;
-  height: calc(100svh - var(--header-height) + 180svh);
-}
-
-.mp-problem__pin {
-  position: sticky;
-  top: var(--header-height);
-  height: calc(100svh - var(--header-height));
-  overflow: hidden;
-}
-
+/* The problem: four columns of text that never move, eight columns of convergence. */
 .mp-problem__text {
-  position: absolute;
-  left: var(--cx-edge);
-  top: 50%;
-  z-index: 2;
+  grid-column: 1 / span 4;
   display: grid;
-  gap: var(--cx-s2);
-  max-width: min(46rem, 60vw);
-  transform: translateY(-50%);
-}
-
-.mp-problem__statement span {
-  display: block;
-}
-
-.mp-problem__body {
-  max-width: 44ch;
-}
-
-.mp-fragments {
-  position: absolute;
-  inset: 6% 4%;
-  z-index: 1;
-}
-
-.mp-fragment {
-  position: absolute;
-  display: grid;
-  gap: 8px;
-  width: clamp(132px, 12vw, 196px);
-  padding: 12px 14px 14px;
-  border: 1px solid rgb(255 255 255 / 0.2);
-  border-radius: 3px;
-  background: rgb(14 16 15 / 0.82);
-  box-shadow: 0 24px 48px -24px rgb(0 0 0 / 0.9);
-  transform: rotate(var(--r, 0deg)) scale(var(--s, 1));
-}
-
-.mp-fragment__bar {
-  display: block;
-  width: 26px;
-  height: 3px;
-  border-radius: 2px;
-  background: rgb(var(--accent-rgb) / 0.8);
-}
-
-.mp-fragment__field {
-  font-family: var(--font-sans);
-  font-size: 0.625rem;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgb(255 255 255 / 0.8);
-}
-
-/* A few faint rows: the idea of a sheet, not an invented one. */
-.mp-fragment__rows {
-  display: block;
-  height: 30px;
-  background: repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.12) 0 1px, transparent 1px 10px);
+  gap: 20px;
+  align-content: start;
 }
 
 .mp-converge {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
+  grid-column: 5 / span 8;
   display: grid;
-  place-items: center;
+  gap: 16px;
+}
+
+.mp-converge__field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(40px, 0.34fr) minmax(0, 0.95fr);
+  align-items: center;
+  overflow: hidden;
+}
+
+.mp-sources {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mp-source {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--cx-hair);
+  border-radius: var(--cx-radius);
+  background: #121215;
+  transform-origin: 100% 50%;
+}
+
+.mp-source__name {
+  margin: 0 0 4px;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--cx-text);
+}
+
+.mp-source__field,
+.mp-record__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
   margin: 0;
-  pointer-events: none;
-}
-
-.mp-converge__frame {
-  width: min(62vw, calc((100svh - var(--header-height) - 140px) * 1.98));
-  opacity: 0;
-}
-
-.mp-problem[data-reduced] {
-  height: auto;
-}
-
-.mp-problem[data-reduced] .mp-problem__pin {
-  position: static;
-  height: auto;
-  padding: var(--cx-s4) var(--cx-edge);
-}
-
-.mp-problem[data-reduced] .mp-problem__text {
-  position: static;
-  transform: none;
-}
-
-.mp-problem[data-reduced] .mp-fragments {
-  display: none;
-}
-
-.mp-problem[data-reduced] .mp-converge {
-  position: static;
-  margin-top: var(--cx-s4);
-}
-
-.mp-problem[data-reduced] .mp-converge__frame {
-  width: 100%;
-  opacity: 1;
-}
-
-/* What I built: one large view, the three decisions beneath it as a row. */
-.mp-built {
-  padding: var(--cx-s5) var(--cx-edge) 0;
-}
-
-.mp-built__media {
-  width: min(100%, 1500px);
-  margin: 0 auto;
-}
-
-.mp-built__decisions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--cx-s3) clamp(28px, 3.6vw, 64px);
-  width: min(100%, 1500px);
-  margin: var(--cx-s3) auto 0;
-  padding: 0;
-  list-style: none;
-}
-
-.mp-built__decisions li {
-  padding-top: var(--cx-s2);
-  border-top: 1px solid var(--cx-hair);
-}
-
-.mp-built__index {
   font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  color: var(--accent);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--cx-text);
 }
 
-.mp-built__title {
-  margin: 10px 0 0;
-  font-family: var(--font-editorial);
-  font-size: clamp(1.375rem, 1.9vw, 1.875rem);
-  font-weight: 400;
-  line-height: 1.15;
-  color: #fff;
-}
-
-.mp-built__body {
-  max-width: 34ch;
-  margin: 10px 0 0;
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  line-height: 1.55;
+.mp-source__field span,
+.mp-record__row span {
   color: var(--cx-dim);
 }
 
-/* The outcome: type and space. */
-.mp-outcome {
-  display: grid;
-  gap: var(--cx-s3);
-  padding: var(--cx-s6) var(--cx-edge) 0;
+.mp-link {
+  width: 100%;
+  height: 100%;
+  min-height: 160px;
 }
 
-.mp-outcome__text {
-  max-width: 30ch;
-  font-size: clamp(1.625rem, 3vw, 3rem);
+.mp-link path {
+  fill: none;
+  stroke: rgb(var(--cx-pink-rgb) / 0.55);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+.mp-record {
+  display: grid;
+  gap: 6px;
+  padding: 18px 20px 16px;
+  border: 1px solid rgb(var(--cx-pink-rgb) / 0.55);
+  border-radius: var(--cx-radius);
+  background: #151518;
+}
+
+.mp-record__title {
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: 1.5rem;
   line-height: 1.15;
+  color: var(--cx-text);
+}
+
+.mp-record__sub {
+  margin: 0 0 8px;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--cx-dim);
+}
+
+.mp-record__row {
+  padding-top: 6px;
+  border-top: 1px solid var(--cx-hair);
+}
+
+.mp-record__row:last-child span,
+.mp-record__row:last-child {
+  color: var(--cx-text);
+  font-weight: 600;
+}
+
+/* The two permanent labels, with the connector between them. */
+.mp-converge__labels {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(40px, 0.34fr) minmax(0, 0.95fr);
+  align-items: center;
+}
+
+.mp-converge__rule {
+  height: 1px;
+  margin: 0 12px;
+  background: linear-gradient(90deg, var(--cx-hair), rgb(var(--cx-pink-rgb) / 0.7));
+}
+
+.mp-converge__after {
+  color: var(--cx-text);
+}
+
+.mp-converge__note {
+  margin: 0;
+}
+
+/* Decision 1: heading and reason in one row, the wide table-and-panel view, the proof beneath. */
+.mp-decision__head {
+  grid-column: 1 / span 6;
+  display: grid;
+  gap: 16px;
+  align-content: end;
+}
+
+.mp-decision__why {
+  grid-column: 7 / span 6;
+  align-self: end;
+}
+
+.mp-decision--together .mp-decision__media {
+  grid-column: 1 / -1;
+  margin-top: var(--cx-inner);
+}
+
+.mp-decision--together .mp-decision__proof {
+  grid-column: 1 / span 8;
+}
+
+/* Decision 2: the reason on the left, the calculation large, two numbered notes at the right edge. */
+.mp-decision--reasoning .mp-decision__text {
+  grid-column: 1 / span 4;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.mp-working {
+  position: relative;
+  grid-column: 5 / span 6;
+  margin: 0;
+}
+
+.mp-note {
+  position: absolute;
+  left: calc(100% + var(--cx-gap));
+  width: calc(200% / 6 + var(--cx-gap) / 3);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--cx-dim);
+  transform: translateY(-0.7em);
+}
+
+/* A short pink line from the note back onto the image's edge, level with the line it refers to. */
+.mp-note::before {
+  content: '';
+  position: absolute;
+  right: calc(100% + 6px);
+  top: 0.7em;
+  width: calc(var(--cx-gap) + 28px);
+  height: 1px;
+  background: var(--cx-pink);
+}
+
+.mp-note__num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--cx-pink);
+  border-radius: 50%;
+  font-size: 0.75rem;
+  color: var(--cx-text);
+}
+
+.mp-note__text strong {
+  display: block;
+  font-weight: 600;
+  color: var(--cx-text);
+}
+
+/* Decision 3: the export view, the scope beside it. */
+.mp-decision--control .mp-decision__media {
+  grid-column: 1 / span 8;
+}
+
+.mp-decision--control .mp-decision__text {
+  grid-column: 9 / span 4;
+  display: grid;
+  gap: 16px;
+  align-content: center;
+}
+
+/* The demonstration. */
+.mp-demo__title {
+  margin-bottom: var(--cx-inner);
+}
+
+.mp-demo__also {
+  margin-top: 16px;
+}
+
+/* The closing: two columns of plain statements between thin dividers. */
+.mp-closing__cols {
+  margin-top: var(--cx-inner);
+  row-gap: var(--cx-inner);
+}
+
+.mp-closing__cols > div {
+  grid-column: span 6;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+@media (max-width: 1099.98px) {
+  .mp-working {
+    grid-column: 5 / -1;
+  }
+
+  .mp-note {
+    position: static;
+    width: auto;
+    margin-top: 12px;
+    transform: none;
+  }
+
+  .mp-note::before {
+    display: none;
+  }
 }
 
 @media (max-width: 899.98px) {
-  .mp-hero {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'title'
-      'text'
-      'media';
-    padding-right: 0;
+  .mp-hero__text .cx-lede,
+  .mp-hero__text .cx-status,
+  .mp-problem__text,
+  .mp-converge,
+  .mp-decision__head,
+  .mp-decision__why,
+  .mp-decision--together .mp-decision__proof,
+  .mp-decision--reasoning .mp-decision__text,
+  .mp-working,
+  .mp-decision--control .mp-decision__media,
+  .mp-decision--control .mp-decision__text,
+  .mp-closing__cols > div {
+    grid-column: 1 / -1;
   }
 
-  .mp-hero__text {
-    padding-right: var(--cx-edge);
-  }
-
-  .mp-problem__text {
-    max-width: calc(100vw - 2 * var(--cx-edge));
-  }
-
-  .mp-built__decisions {
-    grid-template-columns: 1fr;
+  .mp-hero__text .cx-status,
+  .mp-converge,
+  .mp-decision__why,
+  .mp-working,
+  .mp-decision--control .mp-decision__text {
+    margin-top: var(--cx-inner);
   }
 }
 
-@media (max-width: 699.98px) {
-  .mp-problem {
-    height: calc(100svh - var(--header-height) + 120svh);
+@media (max-width: 599.98px) {
+  .mp-converge__field,
+  .mp-converge__labels {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .mp-fragment {
-    width: 104px;
-    padding: 8px;
-  }
-
-  /* Phones: the statement spans the width, so only the fragments above and below it stay. */
-  .mp-fragment[data-mid] {
+  .mp-link,
+  .mp-converge__rule {
     display: none;
   }
 
-  .mp-converge__frame {
-    width: 92vw;
+  .mp-record {
+    margin-top: 12px;
+  }
+
+  .mp-source {
+    padding: 12px;
+  }
+
+  .mp-source__field {
+    display: grid;
+    gap: 0;
   }
 }

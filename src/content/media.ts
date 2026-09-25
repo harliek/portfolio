@@ -486,6 +486,28 @@ export const IMAGES = {
     provenance: 'independent-prototype', synthetic: true,
     source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising Platform scrub still (inventory)', timestamp: 21.6,
   }),
+  // Brief v17: art-directed crops of the Merch Console recording (PlanetArt/Merchandising Dashboard/Dashboard Video.mov).
+  'merch-cover': img({
+    id: 'merch-cover', file: 'merch-cover', width: 2060, height: 1287, widths: [800, 1200, 1600, 2060], fallback: 'jpg',
+    alt: 'Merch Console in the synthetic demo: the catalog list beside the Canyon Pouch drawer, which recommends 200 units and shows the working behind that quantity.',
+    caption: 'The catalog beside one product’s replenishment calculation.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising cover and case hero (x 880–2940, y 0–1287 of the 15.2s frame)', timestamp: 15.2,
+  }),
+  'merch-working': img({
+    id: 'merch-working', file: 'merch-working', width: 1040, height: 1130, widths: [640, 960, 1040], fallback: 'jpg',
+    alt: 'The replenishment calculation for Canyon Pouch: sales velocity, daily standard deviation and a 45 day vendor lead time lead to a reorder point and an order of 197.1 units, rounded up to the 200 unit minimum order quantity.',
+    caption: 'The calculation behind one suggested quantity.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising decision 2 (x 1900–2940, y 150–1280 of the 15.2s frame)', timestamp: 15.2,
+  }),
+  'merch-export': img({
+    id: 'merch-export', file: 'merch-export', width: 2510, height: 1255, widths: [800, 1200, 1600, 2400], fallback: 'jpg',
+    alt: 'The Inventory screen in the synthetic demo with an Export order sheet button, totals for suggested units, order cost and margin at risk, and products ranked with their suggested order quantities.',
+    caption: 'Inventory ends in an order sheet export, not an order.',
+    provenance: 'independent-prototype', synthetic: true,
+    source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising decision 3 (x 430–2940, y 0–1255 of the 21.6s frame)', timestamp: 21.6,
+  }),
   'merch-ask': img({
     id: 'merch-ask', file: 'merch-ask', width: 2940, height: 1486, widths: [800, 1200, 1600], fallback: 'jpg',
     alt: 'Merch Console Ask screen in the synthetic demo, matching the question What is out of stock against fixed query shapes and listing products at risk of stocking out.',

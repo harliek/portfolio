@@ -19,11 +19,11 @@ export default function AILeasingAgent() {
   return (
     <CasePage project={project} className="page-ai-leasing-agent">
       <header className="la-hero">
-        <div className="la-hero__text">
+        <div className="la-hero__text" data-hero-reveal>
           <CaseTitle title={C.title} meta={C.meta} />
           <div className="cx-lede">{C.summary}</div>
         </div>
-        <figure className="la-hero__media">
+        <figure className="la-hero__media" data-hero-media>
           <div className="cx-frame">
             <ResponsiveImage image="valiance-messages" sizes="(min-width: 1100px) 58vw, 100vw" priority />
           </div>

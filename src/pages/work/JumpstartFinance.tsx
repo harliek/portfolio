@@ -99,7 +99,7 @@ export default function JumpstartFinance() {
       <section ref={rootRef} className="jf-story" data-reduced={reduced || undefined} aria-label="Jumpstart Finance, told through the prototype">
         <div className="jf-stage">
           <div className="jf-text">
-            <header className="jf-panel jf-panel--intro">
+            <header className="jf-panel jf-panel--intro" data-hero-reveal>
               <CaseTitle title={C.title} meta={C.meta} />
               <div className="cx-lede">{C.summary}</div>
             </header>
@@ -125,7 +125,7 @@ export default function JumpstartFinance() {
               <div className="cx-body">{C.result.body}</div>
             </section>
           </div>
-          <figure className="jf-trio" aria-label={`${C.label}: lessons, progress and community screens`}>
+          <figure className="jf-trio" data-hero-media aria-label={`${C.label}: lessons, progress and community screens`}>
             <div className="jf-trio__stage">
               {C.phones.map((p) => (
                 <div key={p.image} className="jf-phone">

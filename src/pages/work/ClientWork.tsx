@@ -164,13 +164,13 @@ export default function ClientWork() {
   return (
     <CasePage project={project} className="page-client-work">
       <header className="cw-hero">
-        <div className="cw-hero__frame">
+        <div className="cw-hero__frame" data-hero-media>
           <Loop clip={C.hero} className="cw-hero__video" />
           <div className="cw-hero__title">
             <CaseTitle title={C.title} meta={C.meta} />
           </div>
         </div>
-        <div className="cw-hero__text">
+        <div className="cw-hero__text" data-hero-reveal>
           <div className="cx-lede">{C.summary}</div>
           <p className="cx-status">{C.status}</p>
         </div>

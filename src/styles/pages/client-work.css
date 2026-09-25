@@ -1,75 +1,68 @@
 /*
- * Creative Production (brief v18): each film composed for its footage, held
- * compact. A wide moving frame with the title on it, short enough that the
- * summary shows beneath it; Nickleby as a 16:9 frame with its text beside
- * it; Aristocracy as a vertical set; The Night Club's wide excerpt beside its
- * text, scrubbed gently by the scroll.
+ * Creative Production (brief v19): a compact introduction, then the three
+ * films presented the same way (Nickleby's treatment): one 16:9 frame with
+ * the whole picture (contained, never cropped or stretched; Aristocracy's
+ * 4:3 picture sits inside it with dark sides), the text beside it, the
+ * frames alternating sides down the page.
  */
 
-/* Opening: a wide cinematic frame, the title set on its lower left. */
-.cw-hero {
-  padding: clamp(24px, 3svh, 32px) var(--cx-edge) 0;
+.cw-intro {
+  display: grid;
+  gap: 16px;
+  padding-top: clamp(40px, 5vw, 64px);
 }
 
-.cw-hero__frame {
+.cw-intro .cx-lede {
+  max-width: 44ch;
+}
+
+.cw-intro .cx-status {
+  margin: 4px 0 0;
+}
+
+/* Each film: the frame in the wider column, its text beside it. */
+.cw-film {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: var(--cx-s3) clamp(28px, 4vw, 64px);
+  align-items: center;
+  box-sizing: content-box;
+  max-width: var(--cx-max);
+  margin: 0 auto;
+  padding: var(--cx-section) var(--cx-gutter) 0;
+}
+
+.cw-film[data-side='right'] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+}
+
+.cw-film[data-side='right'] .cw-frame {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.cw-film[data-side='right'] .cw-text {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.cw-frame {
   position: relative;
+  margin: 0;
   overflow: hidden;
-  aspect-ratio: 21 / 9;
-  max-height: calc(100svh - var(--header-height) - 280px);
-  min-height: 280px;
-  width: 100%;
-  border-radius: 3px;
-  background: #07070a;
-  box-shadow: 0 0 0 1px var(--cx-hair);
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--cx-hair);
+  border-radius: var(--cx-radius);
+  background: #000;
 }
 
-.cw-hero__video {
+.cw-frame__video {
   position: absolute;
   inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-}
-
-.cw-hero__frame::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgb(0 0 0 / 0.72), rgb(0 0 0 / 0.1) 55%, rgb(0 0 0 / 0));
-  pointer-events: none;
-}
-
-.cw-hero__title {
-  position: absolute;
-  left: clamp(20px, 3.4vw, 56px);
-  right: clamp(20px, 3.4vw, 56px);
-  bottom: clamp(18px, 3.4vw, 52px);
-  z-index: 1;
-}
-
-.cw-hero__title .cx-meta {
-  color: rgb(255 255 255 / 0.78);
-}
-
-.cw-hero__text {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--cx-s2) clamp(28px, 4vw, 72px);
-  align-items: baseline;
-  padding-top: var(--cx-s2);
-}
-
-.cw-hero__text .cx-lede {
-  max-width: 40ch;
-}
-
-.cw-hero__text .cx-status {
-  margin: 0;
-}
-
-/* Each film: its name, Harlie's part, what the team delivered, and the way to watch it. */
-.cw-film {
-  padding: var(--cx-s5) var(--cx-edge) 0;
+  object-fit: contain;
 }
 
 .cw-text {
@@ -150,107 +143,15 @@
   letter-spacing: 0.08em;
 }
 
-/* Nickleby: the 16:9 frame on the left, the text beside it. */
-.cw-nickleby {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: var(--cx-s3) clamp(28px, 4vw, 64px);
-  align-items: center;
-}
-
-.cw-nickleby__frame video,
-.cw-aristocracy__film video {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-/* Aristocracy: the text first, then a vertical set, the film tall between two photographs at different heights. */
-.cw-aristocracy {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
-  gap: var(--cx-s3) clamp(28px, 4vw, 64px);
-  align-items: center;
-}
-
-.cw-aristocracy__set {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(12px, 1.6vw, 28px);
-  align-items: start;
-}
-
-.cw-aristocracy__photo img {
-  width: 100%;
-  height: auto;
-}
-
-.cw-aristocracy__photo--high {
-  margin-top: -6%;
-}
-
-.cw-aristocracy__photo--low {
-  margin-top: 12%;
-}
-
-/* The Night Club: the wide excerpt on the right, scrubbed by the scroll; the text beside it. */
-.cw-night {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
-  gap: var(--cx-s3) clamp(28px, 4vw, 64px);
-  align-items: center;
-}
-
-.cw-strip {
-  grid-column: 2;
-  grid-row: 1;
-  margin: 0;
-  overflow: hidden;
-  aspect-ratio: 1280 / 536;
-  border-radius: var(--cx-radius);
-  box-shadow: 0 0 0 1px var(--cx-hair);
-  background: #07070a;
-}
-
-.cw-strip__video {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.cw-night .cw-text {
-  grid-column: 1;
-  grid-row: 1;
-}
-
 @media (max-width: 899.98px) {
-  .cw-hero__frame {
-    aspect-ratio: 4 / 3;
-  }
-
-  .cw-hero__text,
-  .cw-nickleby,
-  .cw-aristocracy,
-  .cw-night {
+  .cw-film,
+  .cw-film[data-side='right'] {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .cw-strip,
-  .cw-night .cw-text {
+  .cw-film[data-side='right'] .cw-frame,
+  .cw-film[data-side='right'] .cw-text {
     grid-column: 1;
     grid-row: auto;
-  }
-
-  .cw-aristocracy__set {
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  }
-
-  .cw-aristocracy__photo--low {
-    display: none;
-  }
-
-  .cw-aristocracy__photo--high {
-    margin-top: 18%;
   }
 }

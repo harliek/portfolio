@@ -61,15 +61,13 @@ export interface ClientFilm {
   work: ReactNode
   /** What the Shift Content team delivered. */
   delivered: ReactNode
-  /** The moving frame on the page (a short muted excerpt; the full film opens with sound on request). */
+  /** The moving frame on the page (a short muted excerpt, its whole frame; the full film opens with sound on request). */
   clip: { src: string; poster: string; width: number; height: number }
 }
 
 export const CLIENT_WORK = {
   title: 'Creative Production',
   meta: ['Creative Strategy and Client Solutions Intern', 'Shift Content, London', 'January to May 2026'],
-  /** The opening's moving frame: Aristocracy's lit storefront set (about 76.5s to 83.6s, trimmed inside the fades so the loop never shows black). */
-  hero: { src: '/media/video/creative-hero-trim-920.mp4', poster: '/media/img/creative-hero-poster.jpg', width: 920, height: 440 },
   summary: (
     <p>
       I worked directly with the founder on client films, from <strong>lighting and camera work on set</strong> to editing.
@@ -98,7 +96,8 @@ export const CLIENT_WORK = {
       name: 'Aristocracy',
       kind: 'Campaign film',
       video: 'aristocracy',
-      clip: { src: '/media/video/aristocracy-vertical-trim-480.mp4', poster: '/media/img/aristocracy-vertical-poster.jpg', width: 480, height: 600 },
+      // The whole 4:3 frame (27.0s to 34.4s of the film), shown inside the same 16:9 frame as the others.
+      clip: { src: '/media/video/aristocracy-loop-854.mp4', poster: '/media/img/aristocracy-loop-poster.jpg', width: 854, height: 640 },
       work: (
         <p>
           I helped run a two-day shoot for Aristocracy London’s spring and summer campaign. I handled <strong>lighting, setup, and on-set coordination</strong>{' '}
@@ -112,8 +111,8 @@ export const CLIENT_WORK = {
       name: 'The Night Club Global Tour',
       kind: 'Event film',
       video: 'heck',
-      // Scrubbed by the scroll as it passes (a keyframe-dense 7s excerpt, 14.5s to 21.5s of the film).
-      clip: { src: '/media/video/heck-scrub-1280.mp4', poster: '/media/img/heck-scrub-poster.jpg', width: 1280, height: 536 },
+      // The whole 16:9 frame (14.6s to 21.5s of the film).
+      clip: { src: '/media/video/heck-loop-1138.mp4', poster: '/media/img/heck-loop-poster.jpg', width: 1138, height: 640 },
       work: (
         <p>
           The tour, powered by Gymshark, brought women together to run after dark. I <strong>filmed the participants</strong> and supported the production team at

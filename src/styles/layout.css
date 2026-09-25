@@ -383,9 +383,10 @@ a:focus-visible > .site-nav__mark {
 
 /*
  * Positioned against the sticky header (its nearest positioned ancestor),
- * full width under it; the page never moves. A solid surface with its own
- * edges and a deep shadow, and the page below dimmed while it is open, so
- * the shelf never reads as part of the content behind it.
+ * full width under it; the page never moves. The layer itself is clear: its
+ * one solid panel (the list) sits at the right under the navigation, one
+ * project per row, and the page below is dimmed while it is open, so the
+ * menu never reads as part of the content behind it.
  */
 .work-shelf {
   position: absolute;
@@ -393,11 +394,7 @@ a:focus-visible > .site-nav__mark {
   left: 0;
   right: 0;
   z-index: 1;
-  padding-block: 14px 22px;
-  border-top: 1px solid rgb(255 255 255 / 0.07);
-  border-bottom: 1px solid rgb(255 255 255 / 0.14);
-  background: #0b0c12;
-  box-shadow: 0 30px 60px -20px rgb(0 0 0 / 0.95);
+  padding-block: 8px 0;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-6px);
@@ -408,18 +405,18 @@ a:focus-visible > .site-nav__mark {
 }
 
 /*
- * The dimmed page below the shelf (a press there only closes the shelf;
- * Header.tsx cancels its click), from the shelf's lower edge to the window's
- * (the header is always at the top of the window), so neither the open nor
- * the closed shelf ever adds scrolling below the page.
+ * The dimmed page (a press there only closes the menu; Header.tsx cancels
+ * its click), from the header's lower edge to the window's, behind the
+ * panel, so the open menu never adds scrolling below the page.
  */
 .work-shelf::after {
   content: '';
   position: absolute;
-  top: calc(100% + 1px);
+  top: 0;
   left: 0;
   right: 0;
-  height: max(0px, calc(100vh - var(--header-height) - 100% - 2px));
+  z-index: -1;
+  height: calc(100vh - var(--header-height));
   background: rgb(3 4 7 / 0.5);
   pointer-events: none;
 }
@@ -434,11 +431,30 @@ a:focus-visible > .site-nav__mark {
     visibility 0s;
 }
 
+/* The panel: one project per row, each name on one line. */
 .work-shelf__list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+  padding: 8px;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 12px;
+  background: #0b0c12;
+  box-shadow: 0 30px 60px -20px rgb(0 0 0 / 0.95);
   list-style: none;
+}
+
+.work-shelf .shelf-item {
+  min-height: 60px;
+  padding: 6px 18px 6px 8px;
+}
+
+.work-shelf .shelf-item__name,
+.work-shelf .shelf-item__meta {
+  white-space: nowrap;
 }
 
 /* Entries arrive from the Work side with a short stagger. */
@@ -595,7 +611,6 @@ html.is-menu-open {
 
 /* The ending: one compact row (Footer.tsx). */
 .site-end {
-  margin-top: 64px;
   border-top: 1px solid rgb(243 238 231 / 0.12);
   background: #050507;
 }

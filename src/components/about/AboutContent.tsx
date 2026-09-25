@@ -27,9 +27,9 @@ const PORTRAIT_SIZES = '(min-width: 960px) 360px, (min-width: 720px) 300px, 260p
  *    three short paragraphs (what I build, how cognitive science informs
  *    it, the work I want next). The roles are listed once, under Experience.
  *    Phones: the greeting and lead, then the portrait, then the rest.
- * 2. Below a full-width divider, Education (about 40%, a short block: the
- *    school, degree, minor, certificate and dates) beside Experience (about
- *    60%). Each role has one first-person contribution and, where there is
+ * 2. Below a full-width divider, Education (about 40%: the school, degree,
+ *    minor, certificate and dates, then Harlie's two written paragraphs)
+ *    beside Experience (about 60%). Each role has one first-person contribution and, where there is
  *    one, a quiet text link to its case study.
  * 3. Creative work, below another divider, in the same 40/60 grid (the
  *    heading left, two equal cards right, brief v18). The same frame, badge
@@ -89,6 +89,11 @@ export function AboutContent() {
                 <span className="visually-hidden">, </span>
                 {edu.pace}
               </p>
+            </div>
+            <div className="about-school__text">
+              {edu.text.map((p) => (
+                <p key={p}>{p}</p>
+              ))}
             </div>
           </section>
 

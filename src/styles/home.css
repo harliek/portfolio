@@ -15,7 +15,7 @@
   --enter: 0;
   --settle: 0;
   --edge: clamp(24px, 4.45vw, 64px);
-  --horizon: 44%;
+  --horizon: 42%;
 
   position: relative;
   isolation: isolate;
@@ -84,9 +84,9 @@
 
 .hero {
   position: relative;
-  /* A little shorter than the window, so the selected work already shows at the bottom edge. */
-  height: calc(100svh - var(--header-height) - 12svh);
-  min-height: 420px;
+  /* Well short of the window, so the selected work already shows beneath the title and pins after a short scroll. */
+  height: calc(100svh - var(--header-height) - 36svh);
+  min-height: 300px;
 }
 
 /* The identity group sits about 38 to 40% down the opening, about 64px from the left. */
@@ -144,30 +144,6 @@
   line-height: 1.45;
   color: rgb(243 238 231 / 0.9);
   opacity: calc(1 - var(--enter) * 1.6);
-}
-
-.hero__explore {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  margin-top: 12px;
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  color: #f3eee7;
-  text-decoration: none;
-  border-bottom: 1px solid rgb(243 238 231 / 0.35);
-  opacity: calc(1 - var(--enter) * 1.8);
-  transition: border-color var(--dur-1) var(--ease-standard);
-}
-
-.hero__explore:hover {
-  border-bottom-color: var(--red);
-}
-
-.hero__explore:focus-visible {
-  outline: 1px solid var(--color-focus);
-  outline-offset: 4px;
 }
 
 /* The selected work ----------------------------------------------------------- */
@@ -279,6 +255,24 @@
   pointer-events: none;
 }
 
+/* Jumpstart: the three phones float over the page like cutouts, with no ground, frame or shadowed card. */
+.plane[data-kind='screens'] .plane__frame {
+  overflow: visible;
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+}
+
+.plane[data-kind='screens'] .plane__veil {
+  display: none;
+}
+
+/* Receding like the other tiles, by dimming the phones themselves rather than laying a dark box over them. */
+.plane[data-kind='screens'] .plane__media {
+  overflow: visible;
+  filter: brightness(calc(1 - var(--veil, 0)));
+}
+
 /* Each card's own caption: the title 20px below the cover, the line 8px below it, the same height for every card. */
 .plane__caption {
   display: block;
@@ -307,88 +301,9 @@
   color: #b4aea6;
 }
 
-/* Previous, the counter and next, beneath the carousel. */
-.field__controls {
-  position: absolute;
-  left: 50%;
-  bottom: clamp(16px, 3svh, 36px);
-  z-index: 300;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  transform: translateX(-50%);
-}
-
-.field__step {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid rgb(243 238 231 / 0.3);
-  border-radius: 50%;
-  background: rgb(0 0 0 / 0.3);
-  font-size: 1rem;
-  color: #f3eee7;
-  cursor: pointer;
-  transition:
-    border-color var(--dur-1) var(--ease-standard),
-    background-color var(--dur-1) var(--ease-standard);
-}
-
-.field__step:hover {
-  border-color: rgb(243 238 231 / 0.7);
-  background: rgb(243 238 231 / 0.06);
-}
-
-.field__step:focus-visible {
-  outline: 1px solid var(--color-focus);
-  outline-offset: 3px;
-}
-
-.field__count {
-  min-width: 4.5em;
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 0.8125rem;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.06em;
-  text-align: center;
-  color: #b4aea6;
-}
-
-/* The motion pause exists for keyboard users only (it appears when focused). */
-.field__motion:not(:focus-visible) {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.field__motion:focus-visible {
-  position: absolute;
-  right: var(--edge);
-  bottom: 24px;
-  z-index: 300;
-  min-height: 44px;
-  padding: 0 18px;
-  border: 1px solid rgb(255 255 255 / 0.4);
-  border-radius: 0;
-  background: rgb(0 0 0 / 0.6);
-  font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: #fff;
-  outline: 1px solid var(--color-focus);
-  outline-offset: 3px;
-}
-
 /* Leaving for a case study: everything but the chosen frame recedes. */
 .home[data-leaving] .plane:not([aria-current]),
-.home[data-leaving] .field__label,
-.home[data-leaving] .field__controls {
+.home[data-leaving] .field__label {
   opacity: 0;
   transition: opacity 300ms var(--ease-arrive);
 }
@@ -398,16 +313,10 @@
   opacity: 0;
 }
 
-/* A step is unavailable at either end of the collection. */
-.field__step:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
 /* Phones: one tile and glimpses of its neighbours, captions directly beneath. */
 @media (max-width: 699.98px) {
   .home {
-    --horizon: 38%;
+    --horizon: 42%;
   }
 
   .hero__word {
@@ -433,9 +342,5 @@
   .hero__group {
     transform: translate3d(0, -50%, 0);
     opacity: 1;
-  }
-
-  .plane__screen img {
-    animation: none;
   }
 }

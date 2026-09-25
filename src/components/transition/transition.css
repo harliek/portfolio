@@ -394,12 +394,18 @@ html[data-page-transition] .route-reveal {
   display: block;
 }
 
-.frame-expand__media video,
-.frame-expand__media picture,
-.frame-expand__media img {
+.frame-expand__media:not([data-kind='screens']) video,
+.frame-expand__media:not([data-kind='screens']) picture,
+.frame-expand__media:not([data-kind='screens']) img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Jumpstart's three phones travel as themselves: no ground, no frame, each phone keeping its own shape and place. */
+.frame-expand[data-kind='screens'] {
+  overflow: visible;
+  background: transparent;
 }

@@ -109,7 +109,7 @@ export const PROJECTS: Project[] = [
     meta: { company: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'October 2024 to June 2025', status: 'Adopted across 18 properties' },
     cover: 'obj-ai-leasing-agent',
     // The illustrative conversation beside the introduction.
-    hero: [{ image: 'valiance-messages', sizes: '(min-width: 1408px) 640px, (min-width: 900px) 48vw, calc(100vw - 48px)' }],
+    hero: [{ image: 'valiance-messages', sizes: '(min-width: 1408px) 1240px, (min-width: 900px) 92vw, 200vw' }],
     accent: 'ai-leasing-agent',
     next: 'jumpstart-finance',
     seo: {
@@ -137,9 +137,9 @@ export const PROJECTS: Project[] = [
     cover: 'obj-jumpstart-finance',
     // The three original prototype screens beside the introduction.
     hero: [
-      { image: 'jf-screen-lessons', sizes: '(min-width: 1100px) 200px, 30vw' },
-      { image: 'jf-screen-progress', sizes: '(min-width: 1100px) 200px, 30vw' },
-      { image: 'jf-screen-community', sizes: '(min-width: 1100px) 200px, 30vw' },
+      { image: 'jf-screen-lessons', sizes: '(min-width: 1100px) 190px, 28vw' },
+      { image: 'jf-screen-progress', sizes: '(min-width: 1100px) 190px, 28vw' },
+      { image: 'jf-screen-community', sizes: '(min-width: 1100px) 190px, 28vw' },
     ],
     accent: 'jumpstart-finance',
     next: 'merchandising-platform',
@@ -193,8 +193,8 @@ export const PROJECTS: Project[] = [
     description: 'A request, a reviewable plan, and an editable spreadsheet.',
     meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Prototype with simulated AI responses' },
     cover: 'obj-spreadsheet-agent',
-    // The walkthrough's first stage (the request).
-    hero: [{ image: 'sa-stage-request', sizes: '(min-width: 1408px) 640px, (min-width: 900px) 48vw, calc(100vw - 48px)' }],
+    // The first step's screenshot (the request), the whole interface.
+    hero: [{ image: 'sa-ui-request', sizes: '(min-width: 1408px) 620px, (min-width: 900px) 46vw, calc(100vw - 48px)' }],
     accent: 'spreadsheet-agent',
     next: 'cafepress-uk',
     seo: {
@@ -221,7 +221,7 @@ export const PROJECTS: Project[] = [
     meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
     cover: 'obj-cafepress-uk',
     // The storefront prototype beside the introduction.
-    hero: [{ image: 'cp-storefront', sizes: '(min-width: 1408px) 640px, (min-width: 900px) 48vw, calc(100vw - 48px)' }],
+    hero: [{ image: 'cp-storefront', sizes: '(min-width: 1408px) 1240px, (min-width: 900px) 92vw, 200vw' }],
     accent: 'cafepress-uk',
     next: 'client-work',
     seo: {

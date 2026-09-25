@@ -72,9 +72,9 @@ export const ABOUT = {
     'Recently that has meant a merchandising console that explains its reorder quantities, a spreadsheet agent that shows its plan before it builds, and the requirements for an AI leasing assistant.',
   /** What I build; how cognitive science informs it; the work I want next. */
   bio: [
-    'I work on the everyday systems decisions depend on, such as spreadsheets, handoffs, and lookups. I start from the workflow as it really runs and build the tool around it, as a working prototype or a clear set of requirements.',
-    'Cognitive science at Berkeley, with a minor in data science, taught me to ask how people interpret and trust a technical system, so my tools show their reasoning and leave the decision with the person.',
-    'I’m interested in product and AI implementation work that connects research, prototyping, and operations.',
+    'I work on the everyday systems that decisions depend on, such as spreadsheets, handoffs, and lookups. I start from the workflow as it really runs and build the tool around it, as a working prototype or a clear set of requirements.',
+    'Studying cognitive science at Berkeley, with a minor in data science, taught me to ask how people interpret, trust, and use a technical system. That is why my tools show their reasoning and leave the decision with the person using them.',
+    'I’m interested in product and AI implementation work that connects research, prototyping, and day-to-day operations.',
   ],
   portraitLabel: 'Portrait of Harlie Katz',
 
@@ -86,6 +86,11 @@ export const ABOUT = {
     certificateSource: 'Sutardja Center',
     dates: 'August 2023 to May 2026',
     pace: 'Completed in three years',
+    /** Harlie's two paragraphs (brief v8, section 15), restored word for word from the earlier About (brief v19). */
+    text: [
+      'I studied intelligence across cognitive and computational systems, with coursework spanning machine learning, data science, computer science, user experience, and human cognition.',
+      'This gave me an interdisciplinary foundation for understanding how people think, how intelligent systems are built, and how technology can be designed around human behavior.',
+    ],
   },
 
   experienceTitle: 'Experience',

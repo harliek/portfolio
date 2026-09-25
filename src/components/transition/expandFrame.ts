@@ -21,7 +21,10 @@ import { warmProject } from './projectTransition'
  *      fades away; where the hero is a different picture, this is the only
  *      crossfade, after the landing.
  *
- * No titles ride on the frame, and there is no fade-to-black stage. If the
+ * No titles ride on the frame, and there is no fade-to-black stage. A
+ * picture made of several cutouts (Jumpstart's three phones, `data-kind`
+ * "screens") travels without a ground or frame, the phones keeping their
+ * arrangement as the box moves, and lands on the page's own three phones. If the
  * destination has no hero image (or it cannot be found within 1.5s), the
  * frame fades out over the new page. Reduced motion: a plain navigation
  * (the page's own short opacity reveal).
@@ -48,6 +51,7 @@ export function expandFrame({
   const overlay = document.createElement('div')
   overlay.className = 'frame-expand'
   overlay.setAttribute('aria-hidden', 'true')
+  if (media.dataset.kind) overlay.dataset.kind = media.dataset.kind
   const clone = media.cloneNode(true) as HTMLElement
   clone.classList.add('frame-expand__media')
   const sourceVideo = media.querySelector('video')

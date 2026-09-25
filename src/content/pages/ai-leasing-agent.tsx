@@ -1,7 +1,8 @@
 /**
- * AI Leasing Agent (brief v18): a compact page. The introduction beside the
- * illustrative conversation (labelled as illustrative), then responsibilities,
- * testing, and rollout in three short passages.
+ * AI Leasing Agent (brief v19): a compact page. The introduction and three
+ * short passages (responsibilities, testing, rollout), with the illustrative
+ * conversation (labelled as illustrative) fixed beside them, moving to the
+ * part each passage is about.
  *
  * Facts (unchanged from the verified copy): Leasing and Operations Associate,
  * Valiance Capital, Berkeley, October 2024 to June 2025; CRM and leasing
@@ -20,6 +21,8 @@ export const LEASING = {
     </p>
   ),
   conversationLabel: 'Illustrative conversation, not a transcript.',
+  /** Where each passage sits in the illustration (source pixels): the Behind the scenes panel, the conversation, then all of it. */
+  regions: [{ x: 1160, y: 350, w: 500, h: 400 }, { x: 260, y: 215, w: 830, h: 620 }, null],
   sections: [
     {
       title: 'Responsibilities',

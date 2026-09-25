@@ -1,38 +1,27 @@
 import { CasePage } from '../../components/case/CasePage'
-import { CaseSection, CaseSplit } from '../../components/case/CaseSplit'
-import { ResponsiveImage } from '../../components/media/ResponsiveImage'
+import { CaseStory } from '../../components/case/CaseStory'
 import { LEASING as C } from '../../content/pages/ai-leasing-agent'
 import { projectById } from '../../content/projects'
 
 const project = projectById('ai-leasing-agent')
 
 /**
- * AI Leasing Agent (brief v18; route /work/valiance): the introduction
- * beside the illustrative conversation (labelled), then responsibilities,
- * testing, and rollout, with the 18 properties in a sentence.
+ * AI Leasing Agent (brief v19; route /work/valiance): the introduction and
+ * three passages on the left (responsibilities, testing, rollout, with the
+ * 18 properties in a sentence); the illustrative conversation (labelled)
+ * fixed on the right, moving to the part each passage is about.
  */
 export default function AILeasingAgent() {
   return (
     <CasePage project={project} className="page-ai-leasing-agent">
-      <CaseSplit
+      <CaseStory
         title={C.title}
         meta={C.meta}
         lede={C.lede}
-        media={
-          <figure className="cx-figure">
-            <div className="cx-frame">
-              <ResponsiveImage image="valiance-messages" sizes="(min-width: 1408px) 640px, (min-width: 900px) 48vw, calc(100vw - 48px)" priority />
-            </div>
-            <figcaption className="cx-caption">{C.conversationLabel}</figcaption>
-          </figure>
-        }
-      >
-        {C.sections.map((s) => (
-          <CaseSection key={s.title} title={s.title}>
-            {s.text}
-          </CaseSection>
-        ))}
-      </CaseSplit>
+        steps={C.sections}
+        stage={{ kind: 'zoom', image: 'valiance-messages', regions: C.regions }}
+        caption={C.conversationLabel}
+      />
     </CasePage>
   )
 }

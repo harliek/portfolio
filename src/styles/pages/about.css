@@ -24,7 +24,7 @@
 
 .page-about {
   padding-top: clamp(var(--space-5), 4.5vw, 56px);
-  padding-bottom: var(--space-2);
+  padding-bottom: clamp(48px, 4.4vw, 64px);
 }
 
 .about-content {
@@ -295,6 +295,23 @@
 .about-content .about-school__dates {
   margin-top: var(--space-2);
   color: var(--about-ink-muted);
+}
+
+.about-content .about-school__text {
+  display: grid;
+  gap: 12px;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--about-rule);
+  color: var(--about-ink);
+  font-size: 1rem;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+/* The measure is on the paragraphs, so the rule above them spans the column like the others. */
+.about-content .about-school__text p {
+  max-width: var(--about-measure);
+  margin: 0;
 }
 
 .about-content .about-roles {

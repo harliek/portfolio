@@ -1,10 +1,10 @@
-import type { Chapter } from '../../components/case/ChapterDemo'
 
 /**
- * Merchandising Platform (brief v18): a compact page. The introduction, the
- * recording as a walkthrough beside it (its poster and first frame are the
- * Overview, the same view as the homepage tile), three decisions, one scope
- * line.
+ * Merchandising Platform (brief v19): a compact page. The introduction and
+ * three decisions on the left; the recording fixed beside them, its time
+ * following the scroll through each decision's segment (the Overview and
+ * catalog, the Canyon Pouch panel and its working, Inventory with its order
+ * sheet); one scope line.
  *
  * Facts (the recording, PlanetArt/Merchandising Dashboard/Dashboard
  * Video.mov; footer: "Portfolio project. Synthetic catalog, no backend,
@@ -25,11 +25,13 @@ export const MERCH = {
     </p>
   ),
   status: 'Working prototype with synthetic data. It does not place orders.',
-  chapters: [
-    { label: 'Bring information together', caption: 'The overview and catalog put each product’s vendor, stock, and recent sales on one row.', start: 0, end: 11.5, still: 0.5 },
-    { label: 'Explain the quantity', caption: 'A product panel suggests 200 units and opens the working behind that number.', start: 11.5, end: 20.4, still: 15.2 },
-    { label: 'Keep the merchandiser in control', caption: 'Inventory ranks what needs replenishment and ends in an order sheet to review.', start: 20.4, end: 25.5, still: 21.6 },
-  ] satisfies Chapter[],
+  /** The recording's segment for each decision (seconds), and one still per step for reduced motion. */
+  segments: [
+    [0, 11.5],
+    [11.5, 20.4],
+    [20.4, 25.5],
+  ] as const,
+  stills: [0.5, 15.2, 21.6],
   decisions: [
     {
       title: 'Bring information together',

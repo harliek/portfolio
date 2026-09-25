@@ -1,8 +1,7 @@
 /*
  * A project's picture inside its frame (PlaneMedia, brief v16): the homepage
  * field and each case study's next-project link. Footage and stills fill the
- * frame; stills drift very slowly (a moving crop); Jumpstart shows the app's
- * own screens taking focus in turn.
+ * frame; Jumpstart shows the app's own three screens, standing still.
  */
 
 .plane__media {
@@ -43,7 +42,11 @@
   }
 }
 
-/* Jumpstart: the original 2024 prototype screens, each taking focus in turn (no glow). */
+/*
+ * Jumpstart: the three original 2024 prototype screens side by side, all
+ * visible at once, the middle one a step forward. Transparent cutouts: no
+ * ground behind them (the frame is clear, home.css), only their own shadow.
+ */
 .plane__screens {
   position: absolute;
   inset: 0;
@@ -51,13 +54,16 @@
   align-items: center;
   justify-content: center;
   gap: 5%;
-  background: radial-gradient(90% 100% at 50% 70%, #18211c, #08090a 72%);
 }
 
 .plane__screen {
   display: block;
-  height: 84%;
+  height: 88%;
   aspect-ratio: 600 / 1210;
+}
+
+.plane__screen:nth-child(2) {
+  transform: scale(1.06);
 }
 
 .plane__screen img {
@@ -65,32 +71,11 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  animation: screen-focus 12s var(--ease-exchange) infinite;
-  animation-delay: calc(var(--k) * -8s);
-}
-
-@keyframes screen-focus {
-  0%,
-  27% {
-    opacity: 1;
-    transform: translateY(-2%) scale(1.06);
-  }
-
-  36%,
-  91% {
-    opacity: 0.5;
-    transform: none;
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(-2%) scale(1.06);
-  }
+  filter: drop-shadow(0 14px 18px rgb(0 0 0 / 0.45));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .plane__picture[data-pan] img,
-  .plane__screen img {
+  .plane__picture[data-pan] img {
     animation: none;
   }
 }

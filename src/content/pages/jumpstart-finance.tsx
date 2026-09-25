@@ -1,9 +1,10 @@
 import type { ImageId } from '../media'
 
 /**
- * Jumpstart Finance (brief v18): a compact page. The introduction with the
- * three original 2024 prototype screens beside it (a stable composition),
- * a short line for each, and the qualified result.
+ * Jumpstart Finance (brief v19): a compact page. The introduction and a
+ * short passage for each of the three original 2024 prototype screens, the
+ * screens fixed beside them (the passage's own screen comes forward), and the
+ * qualified result.
  *
  * Facts: student venture at the European Innovation Academy, Porto, June to
  * July 2024; Harlie was Founder and Product Lead of a five-person team

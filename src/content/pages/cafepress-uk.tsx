@@ -1,6 +1,8 @@
 /**
- * CafePress UK (brief v18): a compact page. The research question, the
- * storefront prototype beside it, and three short findings.
+ * CafePress UK (brief v19): a compact page. The research question and three
+ * short findings, with the storefront prototype fixed beside them, moving to
+ * the part each finding is about (the header's UK details, the products, the
+ * category row).
  *
  * Sources: the internship deck (PlanetArt/planetart presentation.pdf,
  * "CafePress UK B2B Launch", 08/20/2026) and the storefront prototype
@@ -25,6 +27,13 @@ export const CAFEPRESS = {
     </p>
   ),
   status: 'Research, recommendations, and a storefront prototype for a potential UK launch. Nothing was launched.',
+  caption: 'The storefront prototype, coded from the research.',
+  /** Where each finding sits in the storefront (source pixels; crops/cafepress-uk.ts): the header's UK details, the products, the category row. */
+  regions: [
+    { x: 960, y: 10, w: 712, h: 401 },
+    { x: 776, y: 228, w: 896, h: 444 },
+    { x: 0, y: 0, w: 1040, h: 585 },
+  ],
   findings: [
     {
       title: 'Localization',

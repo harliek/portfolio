@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type MouseEvent } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import '../styles/home.css'
 import { HomeFilm } from '../components/home/HomeFilm'
@@ -6,14 +6,13 @@ import { useFilmSlot } from '../components/layout/filmSlot'
 import { ProjectField } from '../components/home/ProjectField'
 import { SITE } from '../content/site'
 import { usePageMeta } from '../hooks/usePageMeta'
-import { prefersReducedMotion } from '../hooks/useReducedMotion'
 import { ScrollTrigger } from '../lib/gsap'
 
 /**
- * The homepage (brief v18): Harlie's original film, clearly visible, with
+ * The homepage (brief v19): Harlie's original film, clearly visible, with
  * the identity group (name, PORTFOLIO, one line) about 39% down the opening;
- * the selected work already shows at the bottom edge and arrives within a
- * short scroll (no hold). As the opening scrolls out, the title eases up
+ * the selected work already shows beneath it and pins after a short scroll
+ * (no hold). As the opening scrolls out, the title eases up
  * and fades a little (`--enter`), and the film dims only slightly behind
  * the work (`--settle`). Both are written by ScrollTrigger straight to the
  * root's style; nothing re-renders on scroll.
@@ -62,16 +61,6 @@ export function Home() {
     }
   }, [filmSlot])
 
-  /** Scrolls to the selected work (smoothly, unless reduced motion) and moves focus there. */
-  const exploreWork = (e: MouseEvent<HTMLAnchorElement>) => {
-    const field = document.getElementById('selected-work')
-    if (!field) return
-    e.preventDefault()
-    const top = field.getBoundingClientRect().top + window.scrollY - 61
-    window.scrollTo({ top, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
-    field.querySelector<HTMLElement>('.plane[aria-current]')?.focus({ preventScroll: true })
-  }
-
   return (
     <div ref={rootRef} className="home">
       {filmSlot && createPortal(<HomeFilm />, filmSlot)}
@@ -82,9 +71,6 @@ export function Home() {
               <span className="hero__name">{SITE.name}</span> <span className="hero__word">Portfolio</span>
             </h1>
             <p className="hero__line">AI implementation, product strategy, and working prototypes.</p>
-            <a className="hero__explore" href="#selected-work" onClick={exploreWork}>
-              Explore selected work <span aria-hidden="true">↓</span>
-            </a>
           </div>
         </div>
       </section>

@@ -12,8 +12,10 @@ const N = FIELD.length
 const STORAGE_KEY = 'field-active'
 const HEADER = 61
 
-/** Scroll distance per project, as a share of the window's height: one deliberate gesture moves one project. */
-const STEP = 0.4
+/** Scroll distance per project, as a share of the window's height: one ordinary wheel or trackpad gesture moves one project. */
+const STEP = 0.28
+/** Homepage footage plays at twice its speed (a quick preview, muted). */
+const PREVIEW_RATE = 2
 
 interface Layout {
   w: number
@@ -25,26 +27,26 @@ interface Layout {
 }
 
 /**
- * Composition per viewport (brief v18): the centred tile at about 42% of the
- * window's width, never taller than the room left for its caption and the
- * controls; neighbours at 82%, clearly visible and only lightly veiled.
+ * Composition per viewport (brief v19): the centred tile at about 38% of the
+ * window's width, never taller than the room left for its caption; its
+ * neighbours at 82%, clearly visible and only lightly veiled.
  */
 function layoutFor(vw: number, vh: number): Layout {
-  const room = vh - HEADER - 250
+  const room = vh - HEADER - 200
   const aspect = 1.6
   let w: number, scale: number[], veil: number[], gap: number
   if (vw >= 1100) {
-    w = Math.min(vw * 0.42, room * aspect)
+    w = Math.min(vw * 0.38, room * aspect)
     scale = [1, 0.82, 0.68]
     veil = [0, 0.2, 0.45]
     gap = vw * 0.03
   } else if (vw >= 700) {
-    w = Math.min(vw * 0.56, room * aspect)
+    w = Math.min(vw * 0.52, room * aspect)
     scale = [1, 0.82, 0.68]
     veil = [0, 0.22, 0.45]
     gap = vw * 0.035
   } else {
-    w = Math.min(vw * 0.78, room * aspect)
+    w = Math.min(vw * 0.74, room * aspect)
     scale = [1, 0.84, 0.7]
     veil = [0, 0.25, 0.5]
     gap = vw * 0.045
@@ -61,6 +63,10 @@ const lerpSteps = (steps: number[], a: number) => {
 }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
+/** v wrapped into [0, n). */
+const mod = (v: number, n: number) => ((v % n) + n) % n
+/** The shortest signed distance from b to a around a loop of n, in [-n/2, n/2). */
+const around = (a: number, b: number) => mod(a - b + N / 2, N) - N / 2
 
 function readStored() {
   try {
@@ -72,23 +78,27 @@ function readStored() {
 }
 
 /**
- * Selected work (brief v18). Once the collection reaches its place under the
- * header it stays put (a sticky pin) while vertical scrolling advances the
- * projects horizontally: the page's scroll position within the pin maps
- * directly to the project in the centre, about 40% of a window's height per
- * project, so one deliberate wheel or trackpad gesture visibly moves to the
- * next. When scrolling stops, the page settles on the nearest project.
- * Scrolling up at the start returns to the title; past the last project the
- * page continues to its end (no trap, no blank stretch). There is no idle
- * drift to fight the visitor.
+ * Selected work (brief v19). The projects form a loop: the tile after the
+ * last is the first, on both sides, with no reset, gap or reversal. Once the
+ * collection reaches its place under the header it stays put (a sticky pin)
+ * while vertical scrolling moves the tiles: the scroll position within the
+ * pin maps to one full turn of the loop, about 28% of a window's height per
+ * project, so an ordinary wheel or trackpad gesture moves one project
+ * promptly, and the page settles on it in the direction of travel. After the
+ * turn (back at the first project) the page continues to its end, and
+ * scrolling up at the start returns to the title: no trap, no blank stretch,
+ * no idle drift to fight the visitor.
  *
- * Previous/next, the counter, horizontal trackpad gestures, drag and swipe
- * all move the same scroll position, so every input agrees. Each tile
- * carries its own title and one-sentence line. Clicking the centred tile
- * opens its case study (the frame travels into the hero, expandFrame);
- * clicking a neighbour brings it to the centre. Keyboard: each tile is a
- * link; focusing one centres it; Enter opens it. Reduced motion: the same
- * mapping without easing or settling animation.
+ * Drag, swipe, horizontal trackpad gestures and the arrow keys move the same
+ * scroll position and wrap around the loop without end (the pin's two ends
+ * show the same arrangement, so the jump between them is invisible). There
+ * are no buttons and no counter. Each tile carries its own title and
+ * one-sentence line. Clicking the centred tile opens its case study (the
+ * picture travels into the page, expandFrame); clicking a neighbour brings
+ * it to the centre. Keyboard: each tile is a link; focusing one centres it;
+ * Enter opens it. Footage plays muted at twice its speed on the centred tile
+ * and its neighbours only. Reduced motion: the same mapping without easing
+ * or settling, and posters instead of footage.
  */
 export function ProjectField() {
   const navigate = useNavigate()
@@ -101,7 +111,17 @@ export function ProjectField() {
   const [initial] = useState(readStored)
   const [active, setActive] = useState(initial)
   const [running, setRunning] = useState(false)
-  const m = useRef({ pos: initial, target: initial, active: initial, layout: null as Layout | null, trigger: null as ScrollTrigger | null, frozen: false, dragEndedAt: 0 })
+  const m = useRef({
+    pos: initial,
+    target: initial,
+    active: initial,
+    layout: null as Layout | null,
+    trigger: null as ScrollTrigger | null,
+    frozen: false,
+    dragEndedAt: 0,
+    /** Set while the arrow keys move focus, so the focus handler leaves the smooth move alone. */
+    keyed: false,
+  })
 
   const apply = useCallback(() => {
     const s = m.current
@@ -110,7 +130,7 @@ export function ProjectField() {
     for (let i = 0; i < N; i++) {
       const el = planeRefs.current[i]
       if (!el) continue
-      const d = i - s.pos
+      const d = around(i, s.pos)
       const a = Math.abs(d)
       const side = Math.sign(d)
       const sc = lerpSteps(L.scale, a)
@@ -119,10 +139,12 @@ export function ProjectField() {
       el.style.zIndex = String(100 - Math.round(a * 10))
       el.style.visibility = a > 2.2 ? 'hidden' : ''
       el.style.setProperty('--depth', Math.min(1, a).toFixed(3))
+      const v = lerpSteps(L.veil, a).toFixed(3)
       const veil = veilRefs.current[i]
-      if (veil) veil.style.opacity = lerpSteps(L.veil, a).toFixed(3)
+      if (veil) veil.style.opacity = v
+      el.style.setProperty('--veil', v)
     }
-    const centred = clamp(Math.round(s.pos), 0, N - 1)
+    const centred = mod(Math.round(s.pos), N)
     if (centred !== s.active) {
       s.active = centred
       setActive(centred)
@@ -138,12 +160,14 @@ export function ProjectField() {
     }
   }, [active])
 
-  // Footage plays only on the centred tile and its neighbours, while the field is on screen.
+  // Footage plays (muted, at twice its speed) only on the centred tile and its neighbours, while the field is on screen.
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return
-      const near = Math.abs(i - active) <= 1
+      const near = Math.abs(around(i, active)) <= 1
       if (near && !video.getAttribute('src') && video.dataset.src) video.setAttribute('src', video.dataset.src)
+      video.defaultPlaybackRate = PREVIEW_RATE
+      video.playbackRate = PREVIEW_RATE
       if (near && running && !reduced) void video.play().catch(() => {})
       else if (!video.paused) video.pause()
     })
@@ -165,7 +189,7 @@ export function ProjectField() {
     return () => window.removeEventListener('resize', measure)
   }, [apply])
 
-  // The pin's scroll range maps to the projects; the page settles on the nearest one.
+  // The pin's scroll range maps to one turn of the loop; the page settles on a project in the direction of travel.
   useLayoutEffect(() => {
     const section = sectionRef.current
     if (!section) return
@@ -175,12 +199,12 @@ export function ProjectField() {
       start: `top top+=${HEADER}`,
       end: 'bottom bottom',
       onUpdate: (self) => {
-        s.target = self.progress * (N - 1)
+        s.target = self.progress * N
       },
-      snap: prefersReducedMotion() ? undefined : { snapTo: 1 / (N - 1), duration: { min: 0.2, max: 0.45 }, delay: 0.12, ease: 'power2.out', inertia: false },
+      snap: prefersReducedMotion() ? undefined : { snapTo: 1 / N, directional: true, duration: { min: 0.18, max: 0.4 }, delay: 0.08, ease: 'power2.out', inertia: false },
     })
     s.trigger = trigger
-    s.target = trigger.progress * (N - 1)
+    s.target = trigger.progress * N
     return () => {
       trigger.kill()
       s.trigger = null
@@ -206,30 +230,40 @@ export function ProjectField() {
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
       if (s.frozen) return
-      const goal = clamp(s.target, 0, N - 1)
-      const next = prefersReducedMotion() ? goal : s.pos + (goal - s.pos) * (1 - Math.exp(-dt / 0.09))
-      const settled = Math.abs(goal - next) < 0.0005
-      if (Math.abs(next - s.pos) > 0.0002 || (settled && s.pos !== goal)) {
-        s.pos = settled ? goal : next
+      // Around the loop by the shorter way, so the jump between the pin's two ends never shows.
+      const gap = around(s.target, s.pos)
+      const step = prefersReducedMotion() ? gap : gap * (1 - Math.exp(-dt / 0.08))
+      const settled = Math.abs(gap - step) < 0.0005
+      if (Math.abs(step) > 0.0002 || (settled && gap !== 0)) {
+        s.pos = mod(settled ? s.target : s.pos + step, N)
         apply()
       }
     })
     return () => cancelAnimationFrame(frame)
   }, [running, apply])
 
-  /** Scrolls the page to project i (the pin maps it to the centre). */
-  const goTo = useCallback((i: number, smooth = true) => {
-    const t = m.current.trigger
-    const k = clamp(i, 0, N - 1)
-    if (!t) {
-      m.current.target = k
-      return
-    }
-    const y = t.start + ((t.end - t.start) * k) / (N - 1)
-    window.scrollTo({ top: y, behavior: smooth && !prefersReducedMotion() ? 'smooth' : 'auto' })
-  }, [])
-
-  const step = (dir: number) => goTo(m.current.active + dir)
+  /** Scrolls the page to project i by the shorter way around the loop (the pin maps it to the centre). */
+  const goTo = useCallback(
+    (i: number, smooth = true) => {
+      const s = m.current
+      const t = s.trigger
+      if (!t) {
+        s.target = mod(i, N)
+        return
+      }
+      const len = t.end - t.start
+      const now = ((window.scrollY - t.start) / len) * N
+      let dest = now + around(i, now)
+      // Past either end, continue from the other one (the same picture), so the loop never stops.
+      if (dest < -0.001 || dest > N + 0.001) {
+        const jump = dest < 0 ? now + N : now - N
+        window.scrollTo({ top: t.start + (len * clamp(jump, 0, N)) / N, behavior: 'auto' })
+        dest = mod(dest, N) === 0 && dest > 0 ? N : mod(dest, N)
+      }
+      window.scrollTo({ top: t.start + (len * clamp(dest, 0, N)) / N, behavior: smooth && !prefersReducedMotion() ? 'smooth' : 'auto' })
+    },
+    [],
+  )
 
   /** Freezes the centred cover and carries it into the case study's hero; the rest recede and the captions fade first. */
   const open = (i: number) => {
@@ -258,11 +292,20 @@ export function ProjectField() {
     else open(i)
   }
 
-  const onPlaneKey = (e: KeyboardEvent<HTMLAnchorElement>) => {
+  /** Space opens like Enter; the arrow keys move around the loop (focus follows the centred tile). */
+  const onPlaneKey = (e: KeyboardEvent<HTMLAnchorElement>, i: number) => {
     if (e.key === ' ') {
       e.preventDefault()
       e.currentTarget.click()
+      return
     }
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
+    e.preventDefault()
+    const j = mod(i + (e.key === 'ArrowRight' ? 1 : -1), N)
+    goTo(j)
+    m.current.keyed = true
+    planeRefs.current[j]?.focus({ preventScroll: true })
+    m.current.keyed = false
   }
 
   // Drag and swipe (horizontal) and horizontal trackpad gestures move the same scroll position.
@@ -274,7 +317,16 @@ export function ProjectField() {
     const perPx = () => {
       const t = s.trigger
       const slot = s.layout?.x[1] || 400
-      return t ? (t.end - t.start) / (N - 1) / slot : 1
+      return t ? (t.end - t.start) / N / slot : 1
+    }
+    /** Moves the page to y, wrapped around the pin (its two ends are the same picture), so dragging never stops. */
+    const wrapTo = (y: number) => {
+      const t = s.trigger
+      if (!t) return 0
+      const len = t.end - t.start
+      const w = t.start + mod(y - t.start, len)
+      window.scrollTo({ top: w, behavior: 'auto' })
+      return w - y
     }
     const down = (e: PointerEvent) => {
       if (e.button !== 0 || s.frozen || e.pointerType === 'touch') return
@@ -289,7 +341,9 @@ export function ProjectField() {
         stage.setPointerCapture(e.pointerId)
         stage.dataset.dragging = ''
       }
-      window.scrollTo({ top: drag.y - dx * perPx(), behavior: 'auto' })
+      const to = drag.y - dx * perPx()
+      drag.y = to + wrapTo(to)
+      drag.x0 = e.clientX
     }
     const up = (e: PointerEvent) => {
       if (!drag || e.pointerId !== drag.id) return
@@ -302,7 +356,7 @@ export function ProjectField() {
     const wheel = (e: WheelEvent) => {
       if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || s.frozen) return
       e.preventDefault()
-      window.scrollBy({ top: e.deltaX * perPx() * 0.9, behavior: 'auto' })
+      wrapTo(window.scrollY + e.deltaX * perPx() * 0.9)
     }
     // Touch: a horizontal swipe also moves between projects (vertical swipes scroll, which the pin maps the same way).
     let touch: { x: number; y: number; sy: number; horizontal: boolean | null } | null = null
@@ -316,7 +370,11 @@ export function ProjectField() {
       const dx = t.clientX - touch.x
       const dy = t.clientY - touch.y
       if (touch.horizontal === null && Math.hypot(dx, dy) > 8) touch.horizontal = Math.abs(dx) > Math.abs(dy)
-      if (touch.horizontal) window.scrollTo({ top: touch.sy - dx * perPx(), behavior: 'auto' })
+      if (touch.horizontal) {
+        const to = touch.sy - dx * perPx()
+        touch.sy = to + wrapTo(to)
+        touch.x = t.clientX
+      }
     }
     const tEnd = () => {
       if (touch?.horizontal) s.dragEndedAt = performance.now()
@@ -349,7 +407,7 @@ export function ProjectField() {
       className="field"
       aria-labelledby="field-label"
       data-reduced={reduced || undefined}
-      style={{ '--field-steps': `${(N - 1) * STEP * 100}svh` } as CSSProperties}
+      style={{ '--field-steps': `${N * STEP * 100}svh` } as CSSProperties}
     >
       <div className="field__pin">
         <h2 className="field__label" id="field-label">
@@ -365,14 +423,15 @@ export function ProjectField() {
                   planeRefs.current[i] = el
                 }}
                 className="plane"
+                data-kind={item.media.kind}
                 href={projectPath(project)}
                 aria-label={`${item.title}. ${item.alt}. Open the case study`}
                 aria-current={i === active ? 'true' : undefined}
                 draggable={false}
                 onClick={(e) => onPlaneClick(e, i)}
-                onKeyDown={onPlaneKey}
+                onKeyDown={(e) => onPlaneKey(e, i)}
                 onFocus={(e) => {
-                  if (e.currentTarget.matches(':focus-visible') && i !== m.current.active) goTo(i, false)
+                  if (!m.current.keyed && e.currentTarget.matches(':focus-visible') && i !== m.current.active) goTo(i, false)
                 }}
                 onPointerEnter={(e) => {
                   if (e.pointerType === 'mouse') warmProject(projectPath(project))
@@ -402,21 +461,9 @@ export function ProjectField() {
             )
           })}
         </div>
-        <div className="field__controls">
-          <button type="button" className="field__step" aria-label="Previous project" onClick={() => step(-1)} disabled={active === 0}>
-            <span aria-hidden="true">←</span>
-          </button>
-          <p className="field__count" aria-live="polite">
-            <span className="visually-hidden">Project </span>
-            {String(active + 1).padStart(2, '0')}
-            <span aria-hidden="true"> / </span>
-            <span className="visually-hidden"> of </span>
-            {String(N).padStart(2, '0')}
-          </p>
-          <button type="button" className="field__step" aria-label="Next project" onClick={() => step(1)} disabled={active === N - 1}>
-            <span aria-hidden="true">→</span>
-          </button>
-        </div>
+        <p className="visually-hidden" aria-live="polite">
+          {FIELD[active].title}, {active + 1} of {N}
+        </p>
       </div>
     </section>
   )

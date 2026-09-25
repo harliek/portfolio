@@ -1,19 +1,16 @@
 import '../../styles/pages/client-work.css'
 import { useEffect, useRef, useState } from 'react'
 import { CasePage, CaseTitle } from '../../components/case/CasePage'
-import { ResponsiveImage } from '../../components/media/ResponsiveImage'
 import { FilmDialog } from '../../components/pages/client-work/FilmDialog'
 import { fallbackSrc, getImage, getVideo } from '../../content/media'
 import { CLIENT_WORK as C, type ClientFilm } from '../../content/pages/client-work'
 import { projectById } from '../../content/projects'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
-import { ScrollTrigger } from '../../lib/gsap'
 
 const project = projectById('client-work')
-const [NICKLEBY, ARISTOCRACY, NIGHT_CLUB] = C.films
 
 /** A muted excerpt that plays only while on screen (the poster under reduced motion). Decorative: the film is named beside it. */
-function Loop({ clip, className }: { clip: ClientFilm['clip'] | typeof C.hero; className?: string }) {
+function Loop({ clip }: { clip: ClientFilm['clip'] }) {
   const ref = useRef<HTMLVideoElement>(null)
   const reduced = useReducedMotion()
   useEffect(() => {
@@ -34,69 +31,12 @@ function Loop({ clip, className }: { clip: ClientFilm['clip'] | typeof C.hero; c
   return (
     <video
       ref={ref}
-      className={className}
+      className="cw-frame__video"
       poster={clip.poster}
       width={clip.width}
       height={clip.height}
       muted
       loop
-      playsInline
-      preload="none"
-      disablePictureInPicture
-      disableRemotePlayback
-      tabIndex={-1}
-      aria-hidden="true"
-    />
-  )
-}
-
-/**
- * A film scrubbed gently by the scroll: its time follows the frame's passage
- * through the window (no pinning), eased toward the target and never queuing
- * seeks. The excerpt is encoded keyframe-dense so seeks land quickly.
- */
-function Strip({ clip }: { clip: ClientFilm['clip'] }) {
-  const ref = useRef<HTMLVideoElement>(null)
-  const reduced = useReducedMotion()
-  useEffect(() => {
-    const video = ref.current
-    if (!video || reduced) return
-    let target = 0
-    let frame = 0
-    const io = new IntersectionObserver(([e]) => e.isIntersecting && !video.getAttribute('src') && video.setAttribute('src', clip.src), { rootMargin: '100% 0px' })
-    io.observe(video)
-    const tick = () => {
-      frame = 0
-      if (video.readyState >= 1 && !video.seeking && video.duration) {
-        const t = target * (video.duration - 0.05)
-        const diff = t - video.currentTime
-        if (Math.abs(diff) > 1 / 50) video.currentTime += diff * 0.35
-      }
-      if (Math.abs(target * (video.duration || 0) - video.currentTime) > 0.02) frame = requestAnimationFrame(tick)
-    }
-    const trigger = ScrollTrigger.create({
-      trigger: video,
-      start: 'top bottom',
-      end: 'bottom top',
-      onUpdate: (self) => {
-        target = self.progress
-        if (!frame) frame = requestAnimationFrame(tick)
-      },
-    })
-    return () => {
-      io.disconnect()
-      trigger.kill()
-      cancelAnimationFrame(frame)
-    }
-  }, [clip.src, reduced])
-  return (
-    <video
-      ref={ref}
-      className="cw-strip__video"
-      poster={clip.poster}
-      width={clip.width}
-      height={clip.height}
-      muted
       playsInline
       preload="none"
       disablePictureInPicture
@@ -136,74 +76,48 @@ function WatchFilm({ film }: { film: ClientFilm }) {
   )
 }
 
-function FilmText({ film, id }: { film: ClientFilm; id: string }) {
+/** One film: the same 16:9 frame (the whole picture, never cropped or stretched) beside its text, on alternating sides. */
+function Film({ film, index }: { film: ClientFilm; index: number }) {
+  const id = `cw-${film.id}`
   return (
-    <div className="cw-text">
-      <p className="cx-kicker">{film.kind}</p>
-      <h2 className="cw-name" id={id}>
-        {film.name}
-      </h2>
-      <div className="cx-body">{film.work}</div>
-      <div className="cw-delivered">{film.delivered}</div>
-      <WatchFilm film={film} />
-    </div>
+    <section className="cw-film" id={film.id} aria-labelledby={id} data-side={index % 2 ? 'right' : 'left'}>
+      <figure className="cw-frame" {...(index === 0 ? { 'data-hero-media': '' } : { 'data-reveal': '' })}>
+        <Loop clip={film.clip} />
+      </figure>
+      <div className="cw-text">
+        <p className="cx-kicker">{film.kind}</p>
+        <h2 className="cw-name" id={id}>
+          {film.name}
+        </h2>
+        <div className="cx-body">{film.work}</div>
+        <div className="cw-delivered">{film.delivered}</div>
+        <WatchFilm film={film} />
+      </div>
+    </section>
   )
 }
 
 /**
- * Creative Production (brief v16): three client films, each composed for
- * its footage rather than placed in a player. The opening is a wide moving
- * frame from Aristocracy's lit set with the title on it; Nickleby Capital
- * is a large 16:9 frame with the text around it; Aristocracy becomes a
- * vertical editorial arrangement of the film and two campaign photographs;
- * The Night Club runs across the full width, scrubbed by the scroll. Each
- * complete film opens with sound in the film viewer on request. Status: the
- * films are the Shift Content team's; Harlie's part is stated for each.
+ * Creative Production (brief v19): a compact introduction, then the three
+ * client films, each presented the same way as Nickleby: a 16:9 frame with
+ * a short muted excerpt that plays while it is on screen (the whole frame;
+ * Aristocracy's 4:3 picture sits inside it with dark sides), its text beside
+ * it, and the complete film with sound on request. The frames alternate
+ * sides down the page. The first film's frame is where the homepage tile
+ * (its footage) lands. Status: the films are the Shift Content team's;
+ * Harlie's part is stated for each.
  */
 export default function ClientWork() {
   return (
     <CasePage project={project} className="page-client-work">
-      <header className="cw-hero">
-        <div className="cw-hero__frame" data-hero-media>
-          <Loop clip={C.hero} className="cw-hero__video" />
-          <div className="cw-hero__title">
-            <CaseTitle title={C.title} meta={C.meta} />
-          </div>
-        </div>
-        <div className="cw-hero__text" data-hero-reveal>
-          <div className="cx-lede">{C.summary}</div>
-          <p className="cx-status">{C.status}</p>
-        </div>
+      <header className="cw-intro cx-wrap" data-hero-reveal>
+        <CaseTitle title={C.title} meta={C.meta} />
+        <div className="cx-lede">{C.summary}</div>
+        <p className="cx-status">{C.status}</p>
       </header>
-
-      <section className="cw-film cw-nickleby" id={NICKLEBY.id} aria-labelledby="cw-nickleby">
-        <figure className="cw-nickleby__frame cx-frame" data-reveal>
-          <Loop clip={NICKLEBY.clip} />
-        </figure>
-        <FilmText film={NICKLEBY} id="cw-nickleby" />
-      </section>
-
-      <section className="cw-film cw-aristocracy" id={ARISTOCRACY.id} aria-labelledby="cw-aristocracy">
-        <FilmText film={ARISTOCRACY} id="cw-aristocracy" />
-        <div className="cw-aristocracy__set">
-          <figure className="cw-aristocracy__film cx-frame" data-reveal>
-            <Loop clip={ARISTOCRACY.clip} />
-          </figure>
-          <figure className="cw-aristocracy__photo cw-aristocracy__photo--high cx-frame" data-reveal>
-            <ResponsiveImage image="aristocracy-photo-234" sizes="(min-width: 1100px) 20vw, 44vw" />
-          </figure>
-          <figure className="cw-aristocracy__photo cw-aristocracy__photo--low cx-frame" data-reveal>
-            <ResponsiveImage image="aristocracy-photo-103" sizes="(min-width: 1100px) 20vw, 44vw" />
-          </figure>
-        </div>
-      </section>
-
-      <section className="cw-film cw-night" id={NIGHT_CLUB.id} aria-labelledby="cw-night">
-        <figure className="cw-strip">
-          <Strip clip={NIGHT_CLUB.clip} />
-        </figure>
-        <FilmText film={NIGHT_CLUB} id="cw-night" />
-      </section>
+      {C.films.map((film, i) => (
+        <Film key={film.id} film={film} index={i} />
+      ))}
     </CasePage>
   )
 }

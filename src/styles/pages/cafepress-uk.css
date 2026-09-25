@@ -1,14 +1,259 @@
 /*
- * CafePress UK page (src/pages/work/CafePressUK.tsx). Scope every selector
- * under .page-cafepress-uk. The layout, stage, highlights and ending come from
- * the shared case styles (case.css).
+ * CafePress UK (brief v16): the storefront as an editorial composition,
+ * categories as type, the US to UK wording as a scroll-played list, the
+ * assortment large, and the recommendations.
  */
 
-.page-cafepress-uk {
-  /* The storefront's own page colour behind its images, so a loading layer never shows a dark box. */
-  --store-paper: #fafbf8;
+/* Opening: text on the left; the whole storefront with a magnified UK detail laid over its lower left. */
+.cp-hero {
+  display: grid;
+  grid-template-columns: minmax(260px, 30vw) minmax(0, 1fr);
+  grid-template-areas:
+    'title title'
+    'text collage';
+  gap: var(--cx-s3) clamp(28px, 4vw, 72px);
+  align-items: start;
+  padding: clamp(40px, 7svh, 96px) var(--cx-edge) var(--cx-s5);
 }
 
-.page-cafepress-uk .cs-layer:not([data-transparent]) .cs-canvas {
-  background: var(--store-paper);
+.cp-hero__title {
+  grid-area: title;
+}
+
+.cp-hero__text {
+  grid-area: text;
+  padding-top: 6px;
+}
+
+.cp-collage {
+  grid-area: collage;
+  position: relative;
+  margin: 0 0 clamp(40px, 7vw, 110px);
+}
+
+.cp-collage__page {
+  width: 100%;
+}
+
+.cp-collage__page img,
+.cp-collage__detail img {
+  width: 100%;
+  height: auto;
+}
+
+.cp-collage__detail {
+  position: absolute;
+  left: -8%;
+  bottom: -18%;
+  width: 42%;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.16),
+    0 50px 90px -30px rgb(0 0 0 / 0.95);
+}
+
+/* Categories: the navigation itself, set as type, with the storefront's own category row beneath. */
+.cp-categories {
+  display: grid;
+  gap: var(--cx-s3);
+  padding: var(--cx-s4) var(--cx-edge) 0;
+}
+
+.cp-categories__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1em 0;
+  max-width: 1400px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.75rem, 3.6vw, 3.75rem);
+  line-height: 1.18;
+  color: #fff;
+}
+
+.cp-categories__list li:not(:last-child)::after {
+  content: '/';
+  margin: 0 0.42em;
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+/* The category row cropped from the storefront (source rows 168 to 232 of 941). */
+.cp-strip {
+  aspect-ratio: 1672 / 64;
+}
+
+.cp-strip picture,
+.cp-strip img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.cp-strip img {
+  transform: translateY(-17.85%);
+}
+
+.cp-categories__body {
+  max-width: 52ch;
+}
+
+/* Localization: the storefront's UK details beside the wording the research recommended. */
+.cp-local {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--cx-s4) clamp(32px, 6vw, 120px);
+  align-items: start;
+  padding: var(--cx-s5) var(--cx-edge) 0;
+}
+
+.cp-local__text {
+  display: grid;
+  gap: var(--cx-s2);
+}
+
+.cp-local__detail {
+  margin-top: var(--cx-s2);
+}
+
+.cp-local__detail img {
+  width: 100%;
+  height: auto;
+}
+
+.cp-pairs__label {
+  margin: 0 0 var(--cx-s2);
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cx-dim);
+}
+
+.cp-pairs__list {
+  display: grid;
+  gap: clamp(6px, 1vw, 14px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cp-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: clamp(12px, 1.6vw, 28px);
+  align-items: baseline;
+  padding-bottom: clamp(6px, 1vw, 14px);
+  border-bottom: 1px solid var(--cx-hair);
+  font-family: var(--font-editorial);
+  font-size: clamp(1.5rem, 2.6vw, 2.75rem);
+  line-height: 1.1;
+}
+
+.cp-pair__us {
+  color: rgb(255 255 255 / 0.9);
+}
+
+.cp-pair__arrow {
+  font-family: var(--font-sans);
+  font-size: 0.5em;
+  color: var(--accent);
+}
+
+.cp-pair__uk {
+  color: #fff;
+}
+
+/* Assortment: the storefront's product photograph, large; the note set against its lower right. */
+.cp-assortment {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr);
+  gap: var(--cx-s3) clamp(28px, 4vw, 72px);
+  align-items: end;
+  padding: var(--cx-s5) var(--cx-edge) 0 0;
+}
+
+.cp-assortment__media {
+  border-radius: 0 3px 3px 0;
+}
+
+.cp-assortment__media img {
+  width: 100%;
+  height: auto;
+}
+
+.cp-assortment__text {
+  display: grid;
+  gap: var(--cx-s2);
+  padding-bottom: var(--cx-s2);
+}
+
+/* The result: three recommendations as a numbered list, set large. */
+.cp-result {
+  display: grid;
+  gap: var(--cx-s3);
+  padding: var(--cx-s6) var(--cx-edge) 0;
+}
+
+.cp-result__lead {
+  max-width: 24ch;
+}
+
+.cp-result__list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--cx-s3) clamp(28px, 3.6vw, 64px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cp-result__list li {
+  display: grid;
+  gap: 10px;
+  padding-top: var(--cx-s2);
+  border-top: 1px solid var(--cx-hair);
+  font-family: var(--font-sans);
+  font-size: clamp(1rem, 1.2vw, 1.1875rem);
+  line-height: 1.5;
+  color: var(--cx-text);
+}
+
+.cp-result__list li span {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+
+@media (max-width: 899.98px) {
+  .cp-hero {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'title'
+      'text'
+      'collage';
+  }
+
+  .cp-collage__detail {
+    left: 4%;
+    bottom: -14%;
+    width: 52%;
+  }
+
+  .cp-local,
+  .cp-assortment,
+  .cp-result__list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cp-assortment {
+    padding-right: 0;
+  }
+
+  .cp-assortment__text {
+    padding: 0 var(--cx-edge);
+  }
 }

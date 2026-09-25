@@ -40,9 +40,8 @@ const STAGE_SIZES = '(min-width: 1368px) 645px, (min-width: 960px) 47vw, calc(10
 /** PhoneGroup PHONE_SIZES (Jumpstart Finance's three prototype phones). */
 const PHONE_SIZES = '(min-width: 1368px) 240px, (min-width: 960px) 18vw, 37vw'
 
-/** Where a page shows a different crop on phones (StatesStage and ConversationStage PHONE). */
+/** Where a page shows a different crop on phones (ConversationStage PHONE). */
 const WIDE = '(min-width: 600px)'
-const PHONE = '(max-width: 599.98px)'
 
 /**
  * An image a case study shows first beside its heading, with the `sizes` its
@@ -153,11 +152,8 @@ export const PROJECTS: Project[] = [
     description: 'UK market research and a localized storefront prototype.',
     meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
     cover: 'obj-cafepress-uk',
-    // The opening state (the header with the logo and categories); phones show the headline crop instead.
-    hero: [
-      { image: 'cp-header-brand', sizes: STAGE_SIZES, media: WIDE },
-      { image: 'cp-phone-headline', sizes: STAGE_SIZES, media: PHONE },
-    ],
+    // The opening composition's storefront (brief v16).
+    hero: [{ image: 'cp-storefront', sizes: '(min-width: 1100px) 56vw, 100vw' }],
     accent: 'cafepress-uk',
     next: 'spreadsheet-agent',
     seo: {

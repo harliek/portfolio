@@ -35,12 +35,13 @@
 /* ----------------------------------------------------------------------- */
 
 /*
- * No bar with hard edges: two soft gradients behind the header. The light
- * one is always there; the deeper one appears once the page scrolls (or the
- * shelf or menu opens). It is opaque behind the name and navigation, so
- * text scrolled underneath never shows through them (no two lines of text
- * on top of each other), and runs on 40px past the header, so that text
- * fades out instead of meeting an edge.
+ * Harlie's original portfolio header (brief v14), on every professional page:
+ * a near-black bar (--header-height, 61px: 60px and a hairline divider under
+ * it) with HOME at the left and the navigation at the right, all in small
+ * capitals with wide tracking. The bar is its own layer (::before), so its
+ * backdrop blur never becomes the containing block of the fixed small-screen
+ * menu inside the header, and its blur and near-black keep text scrolled
+ * underneath from reading through.
  */
 .site-header {
   position: sticky;
@@ -49,172 +50,56 @@
   height: var(--header-height);
 }
 
-/* Behind the header's content (the header is its own stacking context). */
-.site-header::before,
-.site-header::after {
+/* The bar, behind the header's content (the header is its own stacking context). */
+.site-header::before {
   content: '';
   position: absolute;
   z-index: -1;
-  inset: 0 0 auto;
+  inset: 0;
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  background: rgb(2 2 4 / 0.8);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   pointer-events: none;
 }
 
-.site-header::before {
-  height: calc(100% + 24px);
-  background: linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.62), rgb(5 6 9 / 0.3) 60%, rgb(5 6 9 / 0));
-}
-
 /*
- * Desktop: a soft pool of shade behind the navigation (no edge; the header
- * gradient's own layer), centred on the words wherever the shell places them,
- * so the quieter nav keeps 4.5:1 when a lit pillar top passes behind it.
+ * Not positioned: the Work shelf (inside the Work item) spans the whole
+ * header. As wide as the original's (1800px at most), the words 32px from the
+ * window's edges (20px on the narrowest phones); each item's 12px padding
+ * keeps its 44px target without moving the words.
  */
-@media (min-width: 900px) {
-  .site-header::before {
-    --_nav-x: calc(100% - max(0px, (100% - var(--shell-max)) / 2) - var(--gutter) - 150px);
-    background:
-      radial-gradient(260px 52px at var(--_nav-x) 36px in oklch, rgb(5 6 9 / 0.46), rgb(5 6 9 / 0.26) 55%, rgb(5 6 9 / 0)),
-      linear-gradient(to bottom in oklch, rgb(5 6 9 / 0.62), rgb(5 6 9 / 0.3) 60%, rgb(5 6 9 / 0));
-  }
-}
-
-.site-header::after {
-  height: calc(100% + 40px);
-  background: linear-gradient(
-    to bottom in oklch,
-    rgb(6 7 11),
-    rgb(6 7 11) calc(100% - 40px),
-    rgb(6 7 11 / 0.72) calc(100% - 28px),
-    rgb(6 7 11 / 0.3) calc(100% - 14px),
-    rgb(6 7 11 / 0)
-  );
-  opacity: 0;
-  transition: opacity var(--dur-2) var(--ease-standard);
-}
-
-.site-header[data-scrolled='true']::after,
-.site-header[data-open]::after {
-  opacity: 1;
-}
-
-/* Not positioned: the Work shelf (inside the Work item) spans the whole header. */
 .site-header__inner {
-  height: 100%;
+  --header-pad: clamp(20px, 8.2vw, 32px);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
+  height: calc(100% - 1px);
+  max-width: 1800px;
+  margin-inline: auto;
+  padding-inline: calc(var(--header-pad) - 12px);
 }
 
-/*
- * Interior pages only (the homepage has its own identity block and no
- * brand here): "Harlie Katz" at 28px, the homepage title's crisp pale core
- * with a subtle lavender to ice blue tint and a soft lavender glow, over a
- * compact "Professional portfolio" descriptor. The glow is a drop-shadow of
- * the letters (they stay sharp) and strengthens slightly on hover.
- */
-.site-brand {
-  display: inline-grid;
-  align-content: center;
-  gap: 2px;
-  min-height: 44px;
-  margin-inline: -8px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  color: var(--brand-core);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background-color var(--dur-1) var(--ease-standard);
-  animation: brand-in var(--dur-2) var(--ease-standard) both;
-}
-
-/* Hover and focus: a faint tint in the page's one accent (lavender off the case studies). */
-.site-brand:hover,
-.site-brand:focus-visible {
-  background: rgb(var(--accent-rgb, var(--brand-glow-rgb)) / 0.08);
-}
-
-@keyframes brand-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.site-brand__name {
-  color: var(--brand-core);
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.08;
-  letter-spacing: -0.022em;
-  background: var(--brand-tint);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 1px rgb(236 228 255 / 0.45)) drop-shadow(0 0 6px rgb(var(--brand-glow-rgb) / 0.4)) drop-shadow(0 0 16px rgb(150 128 250 / 0.2));
-  transition: filter var(--dur-1) var(--ease-standard);
-}
-
-.site-brand__role {
-  color: #cdc8e6;
-  font-size: 0.8125rem;
-  font-weight: var(--weight-label);
-  line-height: 1.2;
-  letter-spacing: 0.01em;
-  transition: color var(--dur-1) var(--ease-standard);
-}
-
-.site-brand:hover .site-brand__name,
-.site-brand:focus-visible .site-brand__name {
-  filter: drop-shadow(0 0 1px rgb(236 228 255 / 0.55)) drop-shadow(0 0 8px rgb(var(--brand-glow-rgb) / 0.58)) drop-shadow(0 0 20px rgb(150 128 250 / 0.3));
-}
-
-.site-brand:hover .site-brand__role,
-.site-brand:focus-visible .site-brand__role {
-  color: var(--color-text);
-}
-
-@media (min-width: 900px) {
-  .site-brand__name {
-    font-size: 1.75rem;
-  }
-
-  .site-brand__role {
-    font-size: 0.84375rem;
-  }
-}
-
-/* With no brand (the homepage), the navigation keeps to the right. */
-.site-nav,
-.menu-button {
-  margin-left: auto;
-}
-
-/* Deliberate spacing: about 40px between the words (each item keeps its 44px target). */
+/* The original's 32px between the words (each item keeps its 44px target). */
 .site-nav__list {
   display: flex;
   align-items: center;
-  gap: clamp(10px, 1.1vw, 18px);
+  gap: 8px;
   list-style: none;
-  margin-right: -12px;
 }
 
 /*
- * Primary navigation (plan-v9 decision 9): quiet page chrome that never
- * competes with the work. 14px, a lighter weight and a lowered default
- * brightness; hover, keyboard focus, the current page and Work's open state
- * brighten the words. A thin line under the words is the cue that is not
- * colour: it slides open from the centre on hover and focus (--dur-2,
- * respond), and stays, in the page accent, under the current page and
- * under Work while its shelf is open. No pill, fill or edge. Colour changes
- * over --dur-1; the focus ring appears at once. The accent is the case
- * study's on its pages, else lavender.
+ * HOME and the navigation (and the small-screen Menu button): the original's
+ * small capitals, 14px Inter set as small caps with 0.1em tracking, in white.
+ * The current page's item is the red accent (no glow, no fill). Hover and
+ * keyboard focus draw a thin line under the words that slides open from the
+ * centre (--dur-2, respond; the only hover change: never a red text glow);
+ * Work keeps a red line while its shelf is open. The focus ring appears at
+ * once.
  */
-.site-nav__item {
-  --_acc: var(--accent-default);
-  --_acc-rgb: var(--accent-default-rgb);
+.site-nav__item,
+.menu-button {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -224,27 +109,30 @@
   border: 0;
   border-radius: var(--radius-button);
   background: transparent;
-  color: rgb(236 236 244 / 0.74);
+  color: #fff;
+  font-family: var(--font-sans);
   font-size: 0.875rem;
-  font-weight: 450;
-  letter-spacing: 0.012em;
+  font-weight: 400;
+  font-feature-settings: normal;
+  font-variant-caps: small-caps;
+  line-height: 20px;
+  letter-spacing: 0.1em;
   text-decoration: none;
+  text-transform: lowercase;
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    color var(--dur-1) var(--ease-standard),
-    text-shadow var(--dur-1) var(--ease-standard);
+  transition: color var(--dur-1) var(--ease-standard);
 }
 
-/* The indicator line under the words (Work's ends before its chevron). */
-.site-nav__item::after {
+/* The line under the words (ending before the tracking after the last letter, and before Work's chevron). */
+.site-nav__item::after,
+.menu-button::after {
   content: '';
   position: absolute;
   left: 12px;
-  right: var(--_line-end, 12px);
-  bottom: 9px;
+  right: var(--_line-end, calc(12px + 0.1em));
+  bottom: 10px;
   height: 1px;
-  border-radius: 1px;
   background: currentColor;
   opacity: 0;
   transform: scaleX(0.3);
@@ -255,39 +143,30 @@
 }
 
 .site-nav__work {
-  --_line-end: 30px;
-}
-
-.site-nav__item:hover,
-.site-nav__item:focus-visible {
-  color: var(--accent-default);
-  text-shadow: 0 0 12px rgb(var(--_acc-rgb) / 0.4);
+  --_line-end: 28px;
 }
 
 .site-nav__item:hover::after,
-.site-nav__item:focus-visible::after {
-  opacity: 0.5;
+.site-nav__item:focus-visible::after,
+.menu-button:hover::after,
+.menu-button:focus-visible::after {
+  opacity: 0.6;
   transform: none;
 }
 
-.site-nav__item:active {
-  color: rgb(236 236 244 / 0.86);
-}
-
-.site-nav__item:focus-visible {
-  outline: 2px solid var(--_acc);
+.site-nav__item:focus-visible,
+.menu-button:focus-visible {
+  outline: 2px solid var(--red);
   outline-offset: 2px;
 }
 
-/* The current page, and Work while its shelf is open: bright words over a crisp 1.5px red line (no glow). */
-.site-nav__item[data-active='true'],
-.site-nav__work[aria-expanded='true'] {
-  color: rgb(246 246 250 / 0.96);
+/* The current page (HOME on the homepage, Work on a case study, About on About): the red accent, as HOME was in the original. */
+.site-nav__item[data-active='true'] {
+  color: var(--red);
 }
 
-.site-nav__item[data-active='true']::after,
+/* Work while its shelf is open: a crisp red line under the word. */
 .site-nav__work[aria-expanded='true']::after {
-  height: 1.5px;
   background: var(--red);
   opacity: 1;
   transform: none;
@@ -302,8 +181,9 @@
 }
 
 .site-nav__chevron {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
+  margin-left: -2px;
   opacity: 0.8;
 }
 
@@ -311,21 +191,12 @@
   transform: rotate(180deg);
 }
 
-/*
- * "Creative Portfolio" leaves for another site (critique 19): a secondary
- * alternative, not the primary action. Dimmer and lighter than Work and
- * About, with a small arrow set a little high; it brightens like the others.
- */
-.site-nav__item--alt {
-  color: rgb(236 236 244 / 0.63);
-  font-weight: 400;
-}
-
+/* "Creative Portfolio" leaves for another site: a small arrow set a little high after the words. */
 .site-nav__item--alt .site-nav__mark {
   width: 7px;
   height: 7px;
-  margin-left: -1px;
-  opacity: 0.7;
+  margin-left: -3px;
+  opacity: 0.75;
   translate: 0 -3px;
 }
 
@@ -335,63 +206,33 @@ a:focus-visible > .site-nav__mark {
   transform: translate(1px, -1px);
 }
 
-/* Small screens: one quietly outlined Menu button (three bars turn into a cross); as quiet as the desktop nav. */
+/* Small screens: one Menu button in the same small capitals, with three short bars that turn into a cross. */
 .menu-button {
-  --_acc: var(--accent-default);
-  --_acc-rgb: var(--accent-default-rgb);
-  display: inline-flex;
-  align-items: center;
+  --_line-end: calc(12px + 0.1em);
   gap: 10px;
-  min-height: 44px;
-  margin-right: -4px;
-  padding: 0 14px 0 12px;
-  border: 1px solid rgb(255 255 255 / 0.3);
-  border-radius: var(--radius-control);
-  background: rgb(10 11 18 / 0.55);
-  color: rgb(240 240 247 / 0.9);
-  font-size: 0.9375rem;
-  font-weight: 500;
-  transition:
-    color var(--dur-1) var(--ease-standard),
-    background-color var(--dur-1) var(--ease-standard),
-    border-color var(--dur-1) var(--ease-standard),
-    box-shadow var(--dur-1) var(--ease-standard);
 }
 
-.menu-button:hover,
-.menu-button:focus-visible {
-  color: #fff;
-  border-color: var(--_acc);
-  background: color-mix(in oklch, var(--_acc) 12%, var(--btn-secondary-bg));
-  box-shadow: 0 0 18px -4px rgb(var(--_acc-rgb) / 0.55);
+.menu-button::after {
+  left: 36px;
 }
 
-.menu-button:focus-visible {
-  outline: 2px solid var(--_acc);
-  outline-offset: 2px;
-}
-
-.menu-button:active {
-  background: var(--btn-secondary-bg-active);
-}
-
-.menu-button[aria-expanded='true'] {
-  border-color: rgb(var(--_acc-rgb) / 0.7);
-  background: rgb(var(--_acc-rgb) / 0.14);
+.menu-button[aria-expanded='true']::after {
+  background: var(--red);
+  opacity: 1;
+  transform: none;
 }
 
 .menu-button__icon {
   position: relative;
   display: grid;
   align-content: space-between;
-  width: 16px;
-  height: 12px;
+  width: 14px;
+  height: 9px;
 }
 
 .menu-button__icon > span {
   display: block;
-  height: 1.75px;
-  border-radius: 1px;
+  height: 1px;
   background: currentColor;
   transition:
     transform var(--dur-2) var(--ease-respond),
@@ -399,7 +240,7 @@ a:focus-visible > .site-nav__mark {
 }
 
 .menu-button[aria-expanded='true'] .menu-button__icon > span:nth-child(1) {
-  transform: translateY(5.1px) rotate(45deg);
+  transform: translateY(4px) rotate(45deg);
 }
 
 .menu-button[aria-expanded='true'] .menu-button__icon > span:nth-child(2) {
@@ -407,7 +248,7 @@ a:focus-visible > .site-nav__mark {
 }
 
 .menu-button[aria-expanded='true'] .menu-button__icon > span:nth-child(3) {
-  transform: translateY(-5.1px) rotate(-45deg);
+  transform: translateY(-4px) rotate(-45deg);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -567,14 +408,19 @@ a:focus-visible > .site-nav__mark {
     visibility 0s linear calc(var(--shelf-dur) * 0.7);
 }
 
-/* The dimmed page below the shelf (a press there only closes the shelf; Header.tsx cancels its click). */
+/*
+ * The dimmed page below the shelf (a press there only closes the shelf;
+ * Header.tsx cancels its click), from the shelf's lower edge to the window's
+ * (the header is always at the top of the window), so neither the open nor
+ * the closed shelf ever adds scrolling below the page.
+ */
 .work-shelf::after {
   content: '';
   position: absolute;
   top: calc(100% + 1px);
   left: 0;
   right: 0;
-  height: 100vh;
+  height: max(0px, calc(100vh - var(--header-height) - 100% - 2px));
   background: rgb(3 4 7 / 0.5);
   pointer-events: none;
 }
@@ -765,11 +611,11 @@ html.is-menu-open {
 }
 
 /*
- * No rise while a carousel object travels into the new page (the shared-image
- * transition measures and fills the page's cover slot; it must not move).
+ * Not with reduced motion. (During a page transition the new page arrives
+ * through the change instead; transition.css switches the rise off with
+ * html[data-page-transition].)
  */
-html[data-motion='reduce'] .route-reveal,
-html[data-cover-transition] .route-reveal {
+html[data-motion='reduce'] .route-reveal {
   animation: none;
 }
 

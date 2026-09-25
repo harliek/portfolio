@@ -36,8 +36,10 @@
   /*
    * The one red (brief v13): a precise interaction accent, never an ambient
    * light. A warm rose red, softer than an alert or error red. Only for the
-   * hovered or focused carousel object's 1px contour, the active navigation
-   * underline, focus rings, small button and selection states, and (as
+   * hovered or focused carousel object's 1px contour, the current page's
+   * header item (its words, as HOME was in the original portfolio, brief v14)
+   * and the open Work shelf's line, focus rings, small button and selection
+   * states, and (as
    * --red-deep, the same hue deep enough for white text) text selection.
    * Never a glow, halo, spread or background wash, and never on objects at
    * rest. Every other red token below points here.
@@ -91,15 +93,6 @@
   --accent-default: var(--red);
   --accent-default-rgb: var(--red-rgb);
 
-  /*
-   * The name "Harlie Katz": a crisp pale core with a subtle lavender to ice
-   * blue tint and a soft lavender glow (no blur on the letters, no pulse).
-   * The header's home link uses it at 26 to 30px on interior pages.
-   */
-  --brand-core: #f7f5ff;
-  --brand-tint: linear-gradient(100deg, #fdfcff 0%, #f1ecff 38%, #e6efff 78%, #dcecff 100%);
-  --brand-glow-rgb: 201 184 255;
-
   /* Small red fills behind white text (selection, a pressed control): the deep red, never an alert red. */
   --brand-red: var(--red-deep);
   --font-editorial: 'Playfair Display', Georgia, serif;
@@ -147,7 +140,8 @@
   --shell-max: calc(var(--content-max) + 2 * var(--gutter));
   --prose-max: 660px;
   --gutter: 20px;
-  --header-height: 64px;
+  /* The original portfolio's header at every width: a 60px bar and its 1px hairline divider (layout.css). */
+  --header-height: 61px;
 
   /* Surfaces */
   --radius-inner: 12px;
@@ -312,7 +306,6 @@
 @media (min-width: 900px) {
   :root {
     --gutter: 40px;
-    --header-height: 72px;
     --leading-display: 1.04;
     --leading-section: 1.15;
     --leading-sub: 1.25;

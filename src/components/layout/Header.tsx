@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { accentVars } from '../../content/accents'
 import { projectForPath } from '../../content/projects'
-import { SITE } from '../../content/site'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { ExternalMark, MobileMenu, WorkShelf } from './WorkShelf'
 
@@ -50,36 +49,33 @@ function swallowPressClick() {
 }
 
 /**
- * Header. On the homepage there is no brand (the page's own identity block
- * is the introduction), only the navigation. On every other page a smaller
- * home link sits on the left: "Harlie Katz" (28px, the homepage title's pale
- * core and soft lavender glow at a smaller size) over "Professional
- * portfolio". Navigation on the right:
+ * Header, styled after Harlie's original portfolio (brief v14): a near-black
+ * bar with a hairline divider under it on every professional page, the same
+ * on each route. HOME at the left (a link to "/"); the navigation at the
+ * right. Every item is small capitals with wide tracking (layout.css); the
+ * current page's item is set in the red accent (no glow), and hover and
+ * keyboard focus draw a thin line under the words (the focus ring as well).
  *
  * - Work: a button that opens the Work shelf (WorkShelf.tsx). Click toggles;
  *   Escape, a click outside or focus leaving closes it (focus returns to
  *   Work); Arrow Down or keyboard activation moves focus to the first project.
+ *   It is the current item on a case study.
  * - About: the dedicated About page (`/about`).
  * - Creative Portfolio: a plain link to the restored original creative
- *   homepage (`/creative/`, a separate build, so a full page load), set a
- *   step quieter than Work and About with a smaller arrow (a secondary
- *   alternative, not the primary destination).
+ *   homepage (`/creative/`, a separate build, so a full page load), with a
+ *   small arrow for leaving the professional site.
  *
- * The three are quiet chrome (layout.css): 14px at lowered brightness,
- * brighter with a thin line under the words on hover, focus and the
- * current page.
+ * Below 900px the three become one "Menu" button (the same small capitals)
+ * with an accessible panel (six projects, About, Creative Portfolio): focus
+ * stays inside the header, Escape closes, the page behind does not scroll.
+ * HOME stays at the left at every width.
  *
- * Below 900px the three become one "Menu" button with an accessible panel
- * (six projects, About, Creative Portfolio): focus stays inside, Escape
- * closes, the page behind does not scroll.
- *
- * On a case study the header carries that project's accent (`--accent`), so
- * its hover and focus states match the page; elsewhere they are lavender.
+ * On a case study the header carries that project's accent (`--accent`) for
+ * the shelf's entries; the header's own states use the red accent.
  */
 export function Header() {
   const { pathname } = useLocation()
   const desktop = useMediaQuery(DESKTOP_QUERY)
-  const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   // Keyboard opening moves focus into the shelf; a mouse click does not.
   const [focusFirst, setFocusFirst] = useState(false)
@@ -88,13 +84,6 @@ export function Header() {
   const headerRef = useRef<HTMLElement>(null)
   const workRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 4)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   // Any navigation, or crossing the desktop breakpoint, closes the shelf or
   // menu (adjusting state while rendering, not in an effect).
@@ -109,7 +98,7 @@ export function Header() {
   // except when the click itself landed on something focusable (a link, a
   // button, a field), which keeps the focus. A click on the dimmed page only
   // closes the shelf (what is underneath is not activated); the header's own
-  // links (home, About, Creative Portfolio) work directly.
+  // links (HOME, About, Creative Portfolio) work directly.
   useEffect(() => {
     if (!open || !desktop) return
     const scope = workRef.current?.closest('li')
@@ -143,7 +132,7 @@ export function Header() {
   }, [open, desktop])
 
   // Mobile menu: the page behind is locked, Tab cycles within the header
-  // (home link, Menu, the panel's links), Escape closes and returns focus.
+  // (HOME, Menu, the panel's links), Escape closes and returns focus.
   useEffect(() => {
     if (!open || desktop) return
     const header = headerRef.current
@@ -177,7 +166,8 @@ export function Header() {
     }
   }, [open, desktop])
 
-  const onAbout = (e: MouseEvent<HTMLAnchorElement>) => {
+  // A plain click on HOME or About closes the shelf or menu (a modified click opens a new tab and leaves it).
+  const onPageLink = (e: MouseEvent<HTMLAnchorElement>) => {
     if (modified(e)) return
     setOpen(false)
   }
@@ -191,18 +181,13 @@ export function Header() {
     <header
       ref={headerRef}
       className="site-header"
-      data-home={home || undefined}
-      data-scrolled={scrolled}
       data-open={open ? (desktop ? 'shelf' : 'menu') : undefined}
       style={active ? accentVars(active.accent) : undefined}
     >
-      <div className="shell site-header__inner">
-        {!home && (
-          <Link to="/" className="site-brand">
-            <span className="site-brand__name">{SITE.name}</span>
-            <span className="site-brand__role">Professional portfolio</span>
-          </Link>
-        )}
+      <div className="site-header__inner">
+        <Link to="/" className="site-nav__item site-home" data-active={home} aria-current={home ? 'page' : undefined} onClick={onPageLink}>
+          Home
+        </Link>
 
         {desktop ? (
           <nav className="site-nav" aria-label="Primary">
@@ -255,7 +240,7 @@ export function Header() {
                   className="site-nav__item"
                   data-active={onAboutPage}
                   aria-current={onAboutPage ? 'page' : undefined}
-                  onClick={onAbout}
+                  onClick={onPageLink}
                 >
                   About
                 </Link>
@@ -295,7 +280,7 @@ export function Header() {
           aboutCurrent={onAboutPage}
           creativeHref={CREATIVE_HREF}
           onNavigate={() => setOpen(false)}
-          onAbout={onAbout}
+          onAbout={onPageLink}
         />
       )}
     </header>

@@ -4,8 +4,8 @@ import type { ObjectKind } from '../content/carousel'
  * The homepage project carousel (src/components/home/DepthGallery.tsx; the
  * geometry is in src/components/home/galleryModel.ts; the order, names and
  * subtitles are in src/content/carousel.ts). Plan v11, deliverables 4 to 10,
- * with plan v12 and brief v13 (automatic rotation, the pause control, the
- * hover contour).
+ * with plan v12, brief v13 (automatic rotation, the pause control, the
+ * hover contour) and brief v14 (the carousel just below the first view).
  *
  * Model. The seven objects (About Me and the six projects) stand on one
  * shallow, symmetrical curve, each one an object-label group: its
@@ -105,10 +105,9 @@ export const GALLERY = {
    * - `sideLabels`: whether the other objects show their labels (tablets
    *   and phones show the selected object's caption only; their neighbours
    *   are glimpses at the edges).
-   * - `u.floor`: the objects, labels and controls also fit the first view
-   *   below the introduction (brief v13: the objects low in the opening,
-   *   with room for their labels and the controls), but never smaller than
-   *   this; a short window keeps them at this size and scrolls instead.
+   * - `u`: the size factor's bounds; within them the objects, labels and
+   *   controls fit the window below the header (the carousel is scrolled
+   *   into view below the first view, brief v14).
    */
   layout: {
     desktop: {
@@ -119,7 +118,7 @@ export const GALLERY = {
       gapOuter: 0.72,
       edgeRoom: { at1280: 72, perPx: 0.35, min: 64, max: 240 },
       fit: 0,
-      u: { min: 0.66, max: 1.05, floor: 0.84 },
+      u: { min: 0.66, max: 1.05 },
       fade: [2.3, 2.85],
       sideLabels: true,
     },
@@ -131,7 +130,7 @@ export const GALLERY = {
       gapOuter: 0.8,
       edgeRoom: { at1280: 0, perPx: 0, min: 0, max: 0 },
       fit: 0.56,
-      u: { min: 0.6, max: 1.2, floor: 0.84 },
+      u: { min: 0.6, max: 1.2 },
       fade: [1.55, 2.1],
       sideLabels: false,
     },
@@ -143,7 +142,7 @@ export const GALLERY = {
       gapOuter: 1,
       edgeRoom: { at1280: 0, perPx: 0, min: 0, max: 0 },
       fit: 0.74,
-      u: { min: 0.6, max: 1.1, floor: 0.8 },
+      u: { min: 0.6, max: 1.1 },
       fade: [1.4, 1.95],
       sideLabels: false,
     },
@@ -223,9 +222,11 @@ export const GALLERY = {
    *   pause begins it comes to a stop over this long (a short glide, never a
    *   jolt).
    * - `inView`: it runs only while at least this share of the stage is in
-   *   the window.
+   *   the window above its lowest `belowFold` share (where the first view
+   *   shows only the objects' tops, brief v14), so the carousel starts
+   *   turning once the visitor has scrolled to it, not while it peeks in.
    */
-  auto: { revolutionS: 45, startMs: 1600, afterInputMs: 3000, afterHoverMs: 1200, easeInMs: 1800, easeOutMs: 380, inView: 0.4 },
+  auto: { revolutionS: 45, startMs: 1600, afterInputMs: 3000, afterHoverMs: 1200, easeInMs: 1800, easeOutMs: 380, inView: 0.4, belowFold: 0.12 },
   /** Reduced motion: steps cross-fade (ms out, ms in); a horizontal trackpad gesture moves one step after this much scrolling (px), one per gesture (`gapMs`). */
   reduced: { outMs: 120, inMs: 240, wheelPx: 40, gapMs: 220 },
   /**

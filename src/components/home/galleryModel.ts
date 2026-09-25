@@ -57,12 +57,6 @@ export interface SceneFrame {
   labelH?: number
   /** The controls beneath the carousel, with their gap above (px). */
   nav?: number
-  /**
-   * The height left for the carousel's section (stage and controls) in the
-   * first view, below the introduction (px); the objects shrink to fit it,
-   * down to the class's `u.floor`.
-   */
-  room?: number
 }
 
 export interface Scene {
@@ -376,13 +370,13 @@ const NAV_H = 44 + 14
  * room at the edges; tablet and phone: the widest selected object within
  * `fit` of the width) and the height: the objects, labels and controls
  * stand within the window below the header, with GALLERY.stage.margin to
- * spare above and below, and within the first view below the introduction
- * (`frame.room`) unless that would take them below `u.floor`.
+ * spare above and below (the carousel's section is scrolled into view below
+ * the first view, brief v14).
  */
 export function buildScene(W: number, H: number, frame: SceneFrame = {}): Scene {
   const cls = widthClass(W)
   const p = GALLERY.layout[cls]
-  const header = frame.header ?? (W >= 900 ? 72 : 64)
+  const header = frame.header ?? 61
   const labelH = frame.labelH ?? LABEL_H
   const nav = frame.nav ?? NAV_H
   const { top, bottom, margin } = GALLERY.stage
@@ -413,13 +407,11 @@ export function buildScene(W: number, H: number, frame: SceneFrame = {}): Scene 
   const tallest = Math.max(...scene.sh)
   const fixed = top + bottom + GALLERY.label.gap + labelH + nav
   const byHeight = (H - header - 2 * margin - fixed) / (tallest * hover.scale)
-  // The first view: the objects, labels and controls below the introduction, never below the floor.
-  const byOpening = frame.room === undefined ? Infinity : Math.max(p.u.floor, (frame.room - fixed) / (tallest * hover.scale))
   let byWidth: number
   const edgeRoom = clamp(p.edgeRoom.at1280 + p.edgeRoom.perPx * (W - 1280), p.edgeRoom.min, p.edgeRoom.max)
   if (cls === 'desktop') byWidth = (W - 2 * gap - 2 * edgeRoom) / widestTrio(scene)
   else byWidth = (p.fit * W) / Math.max(...scene.sw)
-  const u = clamp(Math.min(byWidth, byHeight, byOpening), p.u.min, p.u.max)
+  const u = clamp(Math.min(byWidth, byHeight), p.u.min, p.u.max)
   scene.u = u
   scene.persp = GALLERY.perspective * u
   sizeObjects(scene, p.area.w * u, p.area.h * u)

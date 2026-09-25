@@ -4,9 +4,11 @@ import { SITE } from '../content/site'
 import { usePageMeta } from '../hooks/usePageMeta'
 
 /**
- * The homepage: the editorial opening (Harlie Katz, PORTFOLIO, the two roles)
- * and, low in the first view, the slowly rotating project carousel, both over
- * the original background film (StageBackground).
+ * The homepage, after Harlie's original (brief v14): the first view is the
+ * original background film (StageBackground) and the title (Harlie Katz,
+ * PORTFOLIO, the two roles), with only the tops of the nearest project
+ * objects at its lower edge; the slowly rotating project carousel stands
+ * just below it, over the same film.
  */
 export function Home() {
   usePageMeta(undefined, SITE.description)

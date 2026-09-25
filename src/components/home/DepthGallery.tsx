@@ -71,19 +71,13 @@ function rimRgb(id: AccentId) {
   return `${mix(r, 244)} ${mix(g, 240)} ${mix(b, 255)}`
 }
 
-/** The projects among the carousel's objects (About Me is not one). */
-const PROJECT_ITEMS = GALLERY_ITEMS.filter((item) => item.project)
-
 /**
  * The quiet browse indicator beneath the controls (brief v13): "Project 2
- * of 6" for a project, the object's name for About Me. Words, not a
- * fraction, so it never reads as a timer or a loading state.
+ * of 7", counting all seven objects in their fixed order (About Me first),
+ * the same wording for every object. Words, not a fraction, so it never
+ * reads as a timer or a loading state.
  */
-function positionText(i: number) {
-  const item = GALLERY_ITEMS[i]
-  const k = PROJECT_ITEMS.indexOf(item)
-  return k < 0 ? item.name : `Project ${k + 1} of ${PROJECT_ITEMS.length}`
-}
+const positionText = (i: number) => `Project ${i + 1} of ${N}`
 
 /** The images' `sizes`: each object's largest rendered width at this window size (selected and hovered). */
 function sizesFor(scene: Scene) {
@@ -137,9 +131,12 @@ function initialScene() {
  * largest, slightly lower and fully lit, and the others step back
  * symmetrically.
  *
- * It sits in the page's normal flow below the introduction, low in the
- * first view with its labels and controls (the objects shrink to fit there,
- * down to a floor; galleryModel.ts): the page scrolls normally, and
+ * It sits in the page's normal flow just below the first view (brief v14):
+ * at the top of the page only the tops of the nearest objects show at the
+ * window's lower edge (the section is drawn up so the highest of them stands
+ * on the introduction's lower edge, `pull`), and scrolled to the end of the
+ * page the objects, labels and controls stand in the window below the header
+ * (sized to fit it; galleryModel.ts). The page scrolls normally, and
  * vertical wheel, trackpad and touch gestures always scroll the page.
  *
  * Automatic rotation (GALLERY.auto): the carousel turns slowly and steadily
@@ -148,7 +145,8 @@ function initialScene() {
  * focus is in the carousel (not on the pause control itself), while a drag,
  * swipe, trackpad gesture, arrow or key step or a press is under way, while
  * a project opens, while the pause control is set, and while the carousel
- * is mostly out of view or the tab is hidden. It eases back in from where it
+ * is mostly out of view (the first view's peek does not count) or the tab is
+ * hidden. It eases back in from where it
  * stands, about 3s after manual input or 1.2s after the pointer or focus
  * leaves, once nothing holds it. The pause control (between the arrows)
  * shows and announces its state; pausing brings the carousel to rest on the
@@ -298,20 +296,31 @@ export function DepthGallery() {
       const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) || undefined
       const nav = navRef.current
       const navH = nav ? nav.offsetHeight + (parseFloat(getComputedStyle(nav).marginTop) || 0) : undefined
-      // The first view below the introduction (the content before the carousel, with its bottom margin), less the section's own bottom padding.
-      const before = root.previousElementSibling
-      let room: number | undefined
-      if (before instanceof HTMLElement) {
-        const end = before.getBoundingClientRect().bottom + window.scrollY + (parseFloat(getComputedStyle(before).marginBottom) || 0)
-        // The layout viewport's height (the small viewport on phones: steady while their toolbars slide).
-        room = (document.documentElement.clientHeight || window.innerHeight) - end - (parseFloat(getComputedStyle(root).paddingBottom) || 0)
-      }
-      return { header, nav: navH, room }
+      return { header, nav: navH }
+    }
+
+    /**
+     * The first view (brief v14): only the tops of the nearest objects show at
+     * the window's lower edge. The section is drawn up (home.css
+     * --gallery-pull) by its room above the stage and the stage's room above
+     * the highest object shown at the resting position, so that object's top
+     * stands on the introduction's lower edge, --home-peek above the window's.
+     */
+    const rest = Array.from({ length: N }, newPlacement)
+    const pull = () => {
+      place(Math.round(pos), scene, rest)
+      let top = Infinity
+      rest.forEach((p, i) => {
+        const s = silhouette(scene, i, p)
+        if (p.op > 0.5 && s.r > 0 && s.l < scene.W) top = Math.min(top, s.t)
+      })
+      return stage.offsetTop + (Number.isFinite(top) ? top : 0)
     }
 
     const measure = () => {
       const W = stage.clientWidth
-      const H = window.innerHeight
+      // The layout viewport's height (the small viewport on phones: steady while their toolbars slide).
+      const H = document.documentElement.clientHeight || window.innerHeight
       const base = frameOf()
       // Label widths depend on the window: a first scene, then the labels at that width, then the scene that fits them.
       scene = buildScene(W, H, base)
@@ -321,16 +330,16 @@ export function DepthGallery() {
       root.style.setProperty('--u', scene.u.toFixed(4))
       root.dataset.cls = scene.cls
       stage.style.height = `${scene.stageH.toFixed(1)}px`
-      // The captions' soft shade (home.css): from just above the selected object's bottom edge to the section's
-      // bottom edge (the end of the page, so it never adds scrolling), past the controls and the position line.
+      // The captions' soft shade (home.css): from just above the selected object's bottom edge to a little below the
+      // controls and the position line.
       const bandTop = scene.yb0 - 36
       stage.style.setProperty('--caption-top', `${bandTop.toFixed(1)}px`)
-      const below = (base.nav ?? 58) + (parseFloat(getComputedStyle(root).paddingBottom) || 0)
-      stage.style.setProperty('--caption-h', `${(scene.stageH - bandTop + below).toFixed(1)}px`)
+      stage.style.setProperty('--caption-h', `${(scene.stageH - bandTop + (base.nav ?? 58) + 48).toFixed(1)}px`)
       for (let i = 0; i < N; i++) {
         items[i].style.setProperty('--w', `${scene.bw[i].toFixed(2)}px`)
         items[i].style.setProperty('--h', `${scene.bh[i].toFixed(2)}px`)
       }
+      root.style.setProperty('--gallery-pull', `${pull().toFixed(1)}px`)
       w.reset()
     }
 
@@ -1131,15 +1140,24 @@ export function DepthGallery() {
       } else scheduleAuto()
     }
     document.addEventListener('visibilitychange', onVisibility)
-    // The frame loop runs only while the stage is on screen; automatic rotation only while enough of it is in view.
-    const inView = new IntersectionObserver(
+    // The frame loop runs only while the stage is on screen (its peek included).
+    const onScreen = new IntersectionObserver(
       ([entry]) => {
         st.onScreen = entry.isIntersecting
-        hold.away = entry.intersectionRatio < AUTO.inView - 0.001
-        if (hold.away) autoK = 0
         if (st.onScreen) scheduleAuto()
       },
-      { threshold: [0, AUTO.inView] },
+      { threshold: 0 },
+    )
+    onScreen.observe(stage)
+    // Automatic rotation only while enough of the stage is in view above the window's lowest band (where the
+    // first view shows only the objects' tops), so the carousel turns once the visitor has scrolled to it.
+    const inView = new IntersectionObserver(
+      ([entry]) => {
+        hold.away = entry.intersectionRatio < AUTO.inView - 0.001
+        if (hold.away) autoK = 0
+        else scheduleAuto()
+      },
+      { threshold: [0, AUTO.inView], rootMargin: `0px 0px ${-AUTO.belowFold * 100}% 0px` },
     )
     inView.observe(stage)
     const onPageHide = () => save()
@@ -1260,6 +1278,7 @@ export function DepthGallery() {
       save()
       api.current = null
       ro.disconnect()
+      onScreen.disconnect()
       inView.disconnect()
       window.removeEventListener('resize', onResize)
       window.removeEventListener('pagehide', onPageHide)

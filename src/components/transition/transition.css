@@ -398,11 +398,13 @@ html[data-page-transition] .route-reveal {
 .tile-pulse__glow {
   position: absolute;
   border-radius: 50%;
+  /* Bright near-white at the centre, a wide soft blue-violet bloom around it (Harlie's request: bigger and brighter). */
   background: radial-gradient(
     closest-side,
-    rgb(238 240 255 / 0.62),
-    rgb(170 176 255 / 0.34) 34%,
-    rgb(120 128 255 / 0.12) 62%,
+    rgb(250 251 255 / 0.95),
+    rgb(214 218 255 / 0.62) 22%,
+    rgb(160 168 255 / 0.3) 48%,
+    rgb(120 128 255 / 0.1) 72%,
     rgb(120 128 255 / 0)
   );
   opacity: 0;

@@ -33,7 +33,7 @@ export const MERCHANDISING_PLATFORM_CROPS = {
     width: 2477,
     height: 1486,
     widths: [640, 960, 1280, 1600],
-    alt: 'Merchandising platform overview with synthetic data, reading “Product, vendor, inventory, pricing, promotion and sales data joined into one view.” Cards for net revenue, contribution, revenue at risk and inventory held, a daily revenue chart, a category mix, and a Needs a decision list that starts with Everyday Notebook is out of stock.',
+    alt: 'Merchandising dashboard overview with synthetic data, reading “Product, vendor, inventory, pricing, promotion and sales data joined into one view.” Cards for net revenue, contribution, revenue at risk and inventory held, a daily revenue chart, a category mix, and a Needs a decision list that starts with Everyday Notebook is out of stock.',
     caption: 'The overview joins product, vendor, inventory, pricing, promotion, and sales data in one view.',
     role: 'Merchandising Platform hero (warmed by the carousel transition)',
     timestamp: 0.3,

@@ -52,6 +52,8 @@ export type Stage =
       play?: boolean
       /** Plays by itself (Harlie's request): the whole recording on a loop, whatever the step, only pausing off screen. */
       free?: boolean
+      /** Its playing speed (1 when left out; Harlie's request: the Spreadsheet and Merchandising recordings faster). */
+      rate?: number
     }
   | { kind: 'layers'; aspect: number; layers: readonly StageLayer[]; show: readonly number[]; /** The colour of any sliver left around a picture whose proportions differ a little. */ screen?: string }
   | { kind: 'crops'; image: ImageId; regions: readonly (Region | null)[] }
@@ -498,8 +500,12 @@ function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>;
         video.removeEventListener('loadedmetadata', onMeta)
       }
     }
+    // Its own speed (stage.rate), and faster still while the page scrolls.
+    const base = stage.rate ?? 1
+    video.defaultPlaybackRate = base
+    video.playbackRate = base
     let frame = 0
-    let rate = 1
+    let rate = base
     let boost = 0
     let lastY = window.scrollY
     let lastT = performance.now()
@@ -507,10 +513,10 @@ function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>;
     const tick = () => {
       frame = 0
       if (performance.now() - scrolledAt > 140) boost = 0
-      rate += (1 + boost - rate) * 0.18
-      if (Math.abs(rate - 1 - boost) < 0.01) rate = 1 + boost
-      video.playbackRate = Math.max(1, Math.min(4, rate))
-      if (rate > 1.005 || boost) frame = requestAnimationFrame(tick)
+      rate += (base + boost - rate) * 0.18
+      if (Math.abs(rate - base - boost) < 0.01) rate = base + boost
+      video.playbackRate = Math.max(base, Math.min(4, rate))
+      if (rate > base + 0.005 || boost) frame = requestAnimationFrame(tick)
     }
     const onScroll = () => {
       const now = performance.now()
@@ -552,6 +558,8 @@ function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>;
       else video.addEventListener('loadedmetadata', still, { once: true })
       return () => video.removeEventListener('loadedmetadata', still)
     }
+    video.defaultPlaybackRate = stage.rate ?? 1
+    video.playbackRate = stage.rate ?? 1
     const io = new IntersectionObserver(([e]) => {
       if (e.isIntersecting && document.visibilityState === 'visible') void video.play().catch(() => {})
       else video.pause()

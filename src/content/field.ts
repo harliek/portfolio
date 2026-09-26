@@ -2,12 +2,12 @@ import type { ImageId } from './media'
 import { projectById, projectPath, type ProjectId } from './projects'
 
 /**
- * The homepage's project field, in Harlie's order (2026-09-26): About me (opens the About page), CafePress UK, AI
- * Leasing Agent, Spreadsheet Agent, Creative Production, Merchandising Platform, Jumpstart Finance, Creative
- * Portfolio (opens /creative/). The first sits at the far left when the tiles come into view. The films sit in the
- * rounded frame and play muted; the Jumpstart phones grow and shrink a little in turn, and the leasing conversation
- * arrives message by message. The field is one flat strip that loops endlessly and turns by itself. The case studies'
- * order (projects.ts: the Work menu, Previous and Next) is the same without About me and Creative Portfolio.
+ * The homepage's project field, in Harlie's order (2026-09-26): Creative Portfolio (opens /creative/), About me
+ * (opens the About page), Creative Production, CafePress UK, Spreadsheet Agent, Jumpstart Finance, Merchandising
+ * Dashboard, AI Leasing Agent. The first sits at the far left when the tiles come into view. The films sit in the rounded
+ * frame and play muted; the Jumpstart phones grow and shrink a little in turn, and the leasing conversation arrives
+ * message by message. The field is one flat strip that loops endlessly and turns by itself. The case studies' order
+ * (projects.ts: the Work menu, Previous and Next) is the same without About me and Creative Portfolio.
  *
  * `line` is one plain sentence per project, kept to what the case studies
  * support (prototypes stay prototypes; qualifiers such as simulated AI
@@ -54,6 +54,14 @@ export const FIELD_YEARS = '2024–2026'
 
 export const FIELD: readonly FieldProject[] = [
   {
+    id: 'creative',
+    title: 'Creative Portfolio',
+    line: 'Film and visual art',
+    // The paint video from the About page's Creative Portfolio card (art-portfolio-960.mp4), muted; it loops at its end.
+    media: { kind: 'video', src: '/media/video/art-portfolio-960.mp4', poster: '/media/img/art-portfolio-poster-960.jpg' },
+    alt: 'Wet pink, violet and orange paint in motion, from the art portfolio',
+  },
+  {
     id: 'about',
     title: 'About me',
     line: 'AI product management, strategy, and implementation',
@@ -62,14 +70,51 @@ export const FIELD: readonly FieldProject[] = [
     alt: 'Harlie Katz speaking to the camera in front of a bookshelf',
   },
   {
+    id: 'client-work',
+    title: 'Creative Production',
+    line: 'Client film production at Shift Content.',
+    // The whole film (1:40), muted at normal speed; it continues where it left off and loops only at its end.
+    media: { kind: 'video', src: '/media/video/nickleby-640.mp4', poster: '/media/img/nickleby-poster-1138.jpg', position: '40% 45%' },
+    alt: 'The Nickleby Capital interview film',
+  },
+  {
     id: 'cafepress-uk',
     title: 'CafePress UK',
     line: 'Market research, assortment planning, and early UK storefront prototyping.',
-    // Harlie's video for the tile (cafepress uk tile.mov, 2330x1234, 10.3s): 1.0 to 7.3s at its own speed, then the
-    // same in reverse, so the page scrolls down and back up in one seamless loop (12.5s; Harlie's requests). In the
+    // Harlie's video for the tile (cafepress uk tile.mov, 2330x1234, 10.3s): 1.0 to 5.3s at its own speed, then the
+    // same in reverse, so the page scrolls down and back up in one seamless loop (8.5s; Harlie's requests). In the
     // rounded frame like Creative Production, muted. Kept to the left so the CafePress logo stays in the frame.
     media: { kind: 'video', src: '/media/video/cafepress-tile-960.mp4', poster: '/media/img/cafepress-tile-poster-960.jpg', position: '25% 0%' },
     alt: 'A recording scrolling through the CafePress Business storefront: custom products, categories, featured brands and customer reviews',
+  },
+  {
+    id: 'spreadsheet-agent',
+    title: 'Spreadsheet Agent',
+    line: 'A rules-based prototype for generating editable spreadsheets from written requests.',
+    // Harlie's choice (Spreadsheet Agent/Spreadsheet Video.mov from 24s, the sheet built and scrolled, then All Sheets;
+    // ends at 36.6s, before the screen-capture toolbar appears), muted at normal speed; it loops at its end.
+    media: { kind: 'video', src: '/media/video/spreadsheet-tile-960.mp4', poster: '/media/img/spreadsheet-tile-poster-960.jpg', position: '50% 0%' },
+    alt: 'A recording of Spreadsheet Agent: a finished sheet of B2B products with vendor, cost, retail price and margin, then the list of saved sheets',
+  },
+  {
+    id: 'jumpstart-finance',
+    title: 'Jumpstart Finance',
+    line: 'Product development for a financial education app concept.',
+    media: {
+      kind: 'screens',
+      // Harlie's three phones (PNG Tiles/jumpstart tile 1 to 3), made free-standing.
+      screens: ['jf-tile-profile', 'jf-tile-home', 'jf-tile-third'],
+    },
+    alt: 'Three Jumpstart Finance phone screens: home, the learning journey, and the community',
+  },
+  {
+    id: 'merchandising-platform',
+    title: 'Merchandising Dashboard',
+    line: 'An independent prototype for product analysis and replenishment planning.',
+    // The merchandising dashboard recording (Harlie's request; PlanetArt/Merchandising Dashboard/Dashboard Video.mov
+    // through its site encode, merch-console-960.mp4, 56.3s): the whole walkthrough, muted at normal speed, looping.
+    media: { kind: 'video', src: '/media/video/merch-console-960.mp4', poster: '/media/img/merch-console-poster-960.jpg', position: '30% 50%' },
+    alt: 'A recording of the Merchandising Dashboard prototype: the overview, the product catalog, a product’s reorder calculation, the inventory and the vendors',
   },
   {
     id: 'ai-leasing-agent',
@@ -88,51 +133,6 @@ export const FIELD: readonly FieldProject[] = [
       ],
     },
     alt: 'An illustrative leasing conversation: a renter asks about a two-bedroom, a fee waiver and a unit hold, and the assistant answers the general questions and passes the requests to the leasing staff',
-  },
-  {
-    id: 'spreadsheet-agent',
-    title: 'Spreadsheet Agent',
-    line: 'A rules-based prototype for generating editable spreadsheets from written requests.',
-    // Harlie's choice (Spreadsheet Agent/Spreadsheet Video.mov from 24s, the sheet built and scrolled, then All Sheets;
-    // ends at 36.6s, before the screen-capture toolbar appears), muted at normal speed; it loops at its end.
-    media: { kind: 'video', src: '/media/video/spreadsheet-tile-960.mp4', poster: '/media/img/spreadsheet-tile-poster-960.jpg', position: '50% 0%' },
-    alt: 'A recording of Spreadsheet Agent: a finished sheet of B2B products with vendor, cost, retail price and margin, then the list of saved sheets',
-  },
-  {
-    id: 'client-work',
-    title: 'Creative Production',
-    line: 'Client film production at Shift Content.',
-    // The whole film (1:40), muted at normal speed; it continues where it left off and loops only at its end.
-    media: { kind: 'video', src: '/media/video/nickleby-640.mp4', poster: '/media/img/nickleby-poster-1138.jpg', position: '40% 45%' },
-    alt: 'The Nickleby Capital interview film',
-  },
-  {
-    id: 'merchandising-platform',
-    title: 'Merchandising Platform',
-    line: 'An independent prototype for product analysis and replenishment planning.',
-    // The merchandising dashboard recording (Harlie's request; PlanetArt/Merchandising Dashboard/Dashboard Video.mov
-    // through its site encode, merch-console-960.mp4, 56.3s): the whole walkthrough, muted at normal speed, looping.
-    media: { kind: 'video', src: '/media/video/merch-console-960.mp4', poster: '/media/img/merch-console-poster-960.jpg', position: '30% 50%' },
-    alt: 'A recording of the Merchandising Platform prototype: the overview, the product catalog, a product’s reorder calculation, the inventory and the vendors',
-  },
-  {
-    id: 'jumpstart-finance',
-    title: 'Jumpstart Finance',
-    line: 'Product development for a financial education app concept.',
-    media: {
-      kind: 'screens',
-      // Harlie's three phones (PNG Tiles/jumpstart tile 1 to 3), made free-standing.
-      screens: ['jf-tile-profile', 'jf-tile-home', 'jf-tile-third'],
-    },
-    alt: 'Three Jumpstart Finance phone screens: home, the learning journey, and the community',
-  },
-  {
-    id: 'creative',
-    title: 'Creative Portfolio',
-    line: 'Film and visual art',
-    // The paint video from the About page's Creative Portfolio card (art-portfolio-960.mp4), muted; it loops at its end.
-    media: { kind: 'video', src: '/media/video/art-portfolio-960.mp4', poster: '/media/img/art-portfolio-poster-960.jpg' },
-    alt: 'Wet pink, violet and orange paint in motion, from the art portfolio',
   },
 ]
 

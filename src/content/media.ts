@@ -598,7 +598,7 @@ export const IMAGES = {
   // Brief v19: the Inventory screen as the homepage tile (the clearest replenishment view), main content with its right edge whole.
   'merch-tile': img({
     id: 'merch-tile', file: 'merch-tile', width: 2437, height: 1523, widths: [800, 1200, 1600, 2437], fallback: 'jpg',
-    alt: 'The Inventory screen of the Merchandising Platform prototype: 51 SKUs at or below their reorder point, suggested units, order cost and margin at risk, and products ranked with their suggested order quantities.',
+    alt: 'The Inventory screen of the Merchandising Dashboard prototype: 51 SKUs at or below their reorder point, suggested units, order cost and margin at risk, and products ranked with their suggested order quantities.',
     caption: 'Inventory, with suggested order quantities ranked by margin at risk.',
     provenance: 'independent-prototype', synthetic: true,
     source: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', role: 'Merchandising homepage tile (x 466–2903 of the 21.6s frame, 37px of the page ground added above for 16:10)', timestamp: 21.6,
@@ -1160,7 +1160,7 @@ const v = (a: Omit<VideoAsset, 'type'>): VideoAsset => ({ type: 'video', ...a })
 
 export const VIDEOS = {
   'merch-console': v({
-    id: 'merch-console', title: 'Merchandising Platform walkthrough', width: 1600, height: 808, duration: 56.3,
+    id: 'merch-console', title: 'Merchandising Dashboard walkthrough', width: 1600, height: 808, duration: 56.3,
     variants: [
       { src: '/media/video/merch-console-960.mp4', width: 960, height: 486, maxViewport: 899, bytes: 1_894_643 },
       { src: '/media/video/merch-console-1600.mp4', width: 1600, height: 808, bytes: 4_806_528 },
@@ -1191,7 +1191,7 @@ export const VIDEOS = {
    * read. Neither implies how fast the product responds. No startAt: each begins on its strongest moment.
    */
   'merch-console-preview': v({
-    id: 'merch-console-preview', title: 'Merchandising Platform walkthrough', width: 1600, height: 808, duration: 10.33,
+    id: 'merch-console-preview', title: 'Merchandising Dashboard walkthrough', width: 1600, height: 808, duration: 10.33,
     variants: [
       { src: '/media/video/merch-console-preview-960.mp4', width: 960, height: 484, maxViewport: 899, bytes: 404_235 },
       { src: '/media/video/merch-console-preview-1600.mp4', width: 1600, height: 808, bytes: 855_664 },

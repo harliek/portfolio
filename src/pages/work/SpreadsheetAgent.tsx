@@ -24,6 +24,8 @@ export default function SpreadsheetAgent() {
           stills: C.stills,
           label: 'The Spreadsheet Agent prototype building a sheet from a written request',
           free: true,
+          // A little faster than recorded (Harlie's request).
+          rate: 1.5,
         }} />
     </CasePage>
   )

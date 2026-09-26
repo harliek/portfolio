@@ -1,20 +1,21 @@
 import { prefersReducedMotion } from '../../hooks/useReducedMotion'
 import { warmProject } from './projectTransition'
 
-/** The pulse's timing (ms): the homepage fades away while the light blooms, then the new page is revealed. */
-const OUT = 170
-const IN = 220
+/** The pulse's timing (ms): the homepage fades away while the light blooms, then the new page is revealed (quicker, Harlie's request; was 170 and 220). */
+const OUT = 120
+const IN = 150
 /** The longest the reveal waits for the new page to be drawn (a route still loading), before revealing anyway. */
 const WAIT = 450
 
 /**
- * Opening a page from a homepage tile (Harlie's request): one quick, soft light pulse from the clicked tile, about
- * 400ms in all, replacing the old shared-element flight (which could hang when the new page had no matching place).
+ * Opening a page from a homepage tile (Harlie's request): one quick light pulse from the clicked tile (bright at its
+ * centre, blooming well past the tile), about
+ * 300ms in all, replacing the old shared-element flight (which could hang when the new page had no matching place).
  *
- *   1. A soft glow blooms outward from the tile's centre while the homepage fades to the dark ground (170ms).
+ *   1. A soft glow blooms outward from the tile's centre while the homepage fades to the dark ground (120ms).
  *   2. The route changes under the dark ground; the new page renders in its finished layout (nothing is held back or
  *      moved into place, so nothing shifts afterwards).
- *   3. As soon as the new page is drawn, the ground fades away and the glow finishes fading, revealing it (220ms).
+ *   3. As soon as the new page is drawn, the ground fades away and the glow finishes fading, revealing it (150ms).
  *
  * One pulse, no copy of the tile, no frozen frame, no pause between the pages. A page outside the router (the
  * creative portfolio) loads in full after step 1. Reduced motion: a plain fade, no glow. Back (or a page restored
@@ -46,7 +47,8 @@ export function pulseOpen({
   let glow: HTMLDivElement | null = null
   if (!reduced && from) {
     const r = from.getBoundingClientRect()
-    const size = Math.max(r.width, r.height)
+    // Larger than the tile, so the bloom reaches well past it (Harlie's request: bigger and brighter).
+    const size = Math.max(r.width, r.height) * 1.35
     glow = document.createElement('div')
     glow.className = 'tile-pulse__glow'
     Object.assign(glow.style, { left: `${r.left + r.width / 2}px`, top: `${r.top + r.height / 2}px`, width: `${size}px`, height: `${size}px` })
@@ -70,13 +72,17 @@ export function pulseOpen({
 
   const ease = 'cubic-bezier(0.4, 0, 0.2, 1)'
   veil.animate([{ opacity: 0 }, { opacity: 1 }], { duration: reduced ? 140 : OUT, easing: ease, fill: 'forwards' })
+  // The light rises to full brightness as the homepage goes (about 95ms), stays bright while it spreads, then fades
+  // as the new page is revealed.
+  const bloom = 'cubic-bezier(0.2, 0.7, 0.2, 1)'
   glow?.animate(
     [
-      { opacity: 0, transform: 'translate(-50%, -50%) scale(0.55)' },
-      { opacity: 0.9, transform: 'translate(-50%, -50%) scale(1.6)', offset: 0.42 },
-      { opacity: 0, transform: 'translate(-50%, -50%) scale(3.4)' },
+      { opacity: 0, transform: 'translate(-50%, -50%) scale(0.6)', easing: bloom },
+      { opacity: 1, transform: 'translate(-50%, -50%) scale(2.2)', offset: 0.34, easing: 'linear' },
+      { opacity: 0.9, transform: 'translate(-50%, -50%) scale(3.2)', offset: 0.58, easing: 'ease-in' },
+      { opacity: 0, transform: 'translate(-50%, -50%) scale(4.8)' },
     ],
-    { duration: OUT + IN + 20, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)', fill: 'forwards' },
+    { duration: OUT + IN + 10, fill: 'forwards' },
   )
 
   window.setTimeout(

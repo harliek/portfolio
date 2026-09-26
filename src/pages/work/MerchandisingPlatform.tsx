@@ -6,7 +6,7 @@ import { projectById } from '../../content/projects'
 const project = projectById('merchandising-platform')
 
 /**
- * Merchandising Platform (brief v19): the introduction and three decisions
+ * Merchandising Dashboard (brief v19; route /work/merchandising-platform kept): the introduction and three decisions
  * on the left, the recording fixed on the right; scrolling through each
  * decision moves the recording through its segment (and back when scrolling
  * up), so the highlighted decision and the product state always agree.
@@ -28,8 +28,10 @@ export default function MerchandisingPlatform() {
           height: 646,
           segments: C.segments,
           stills: C.stills,
-          label: 'The Merchandising Platform prototype in use',
+          label: 'The Merchandising Dashboard prototype in use',
           play: true,
+          // A little faster than recorded (Harlie's request).
+          rate: 1.5,
         }}
       />
     </CasePage>

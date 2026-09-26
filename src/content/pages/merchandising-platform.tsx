@@ -1,6 +1,6 @@
 
 /**
- * Merchandising Platform (brief v19; copy from Harlie's editorial pass,
+ * Merchandising Dashboard, named Merchandising Platform until 2026-09-26 (brief v19; copy from Harlie's editorial pass,
  * v23): a compact page. The introduction and three sections on the left;
  * the recording fixed beside them, its time following the scroll through
  * each section's segment (the Overview and catalog, the Canyon Pouch panel
@@ -16,7 +16,7 @@
  * Not claimed: PlanetArt data or use, real orders, measured results.
  */
 export const MERCH = {
-  title: 'Merchandising Platform',
+  title: 'Merchandising Dashboard',
   meta: ['Product design and build', 'Independent project · 2026'],
   lede: (
     <p>

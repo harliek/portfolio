@@ -3,13 +3,13 @@ import type { ImageId } from './media'
 
 /**
  * The six work entries, in the homepage field's order (field.ts, Harlie's order of 2026-09-26; About me and Creative
- * Portfolio, tiles there, are not case studies): CafePress UK, AI Leasing Agent, Spreadsheet Agent, Creative
- * Production, Merchandising Platform, Jumpstart Finance. The Work menu and the next-project sequence follow it
- * (Jumpstart Finance loops back to CafePress UK).
+ * Portfolio, tiles there, are not case studies): Creative Production, CafePress UK, Spreadsheet Agent, Jumpstart
+ * Finance, Merchandising Dashboard, AI Leasing Agent. The Work menu and the next-project sequence follow it (AI
+ * Leasing Agent loops back to Creative Production).
  * Page copy lives in src/content/pages/<id>.ts(x).
  *
  * Verified facts only (résumé and project sources; see
- * docs/content-provenance.md). CafePress UK and Merchandising Platform are
+ * docs/content-provenance.md). CafePress UK and Merchandising Dashboard are
  * separate: the first is PlanetArt internship work, the second an
  * independent prototype with synthetic data.
  */
@@ -90,9 +90,36 @@ export interface Project {
 
 export const PROJECTS: Project[] = [
   {
+    id: 'client-work',
+    slug: 'creative-production',
+    order: 1,
+    name: 'Creative Production',
+    displayName: 'Creative Production',
+    displaySubtitle: 'Client film production at Shift Content',
+    label: 'Client film production at Shift Content',
+    category: 'Shift Content internship',
+    summary: 'Production support on client films and related agency work during an internship at Shift Content in London.',
+    year: '2026',
+    dateRange: 'Jan–May 2026',
+    role: 'Creative Strategy and Client Solutions Intern',
+    org: 'Shift Content, London',
+    status: 'Agency client work',
+    description: 'Production and campaign support at Shift Content.',
+    meta: { company: 'Shift Content, London', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', status: 'Three completed client films' },
+    cover: 'obj-creative-production',
+    // The opening is a moving frame (a video poster, not a registered image): nothing to warm.
+    hero: [],
+    accent: 'creative-production',
+    next: 'cafepress-uk',
+    seo: {
+      title: 'Creative Production',
+      description: 'Client film production at Shift Content in London.',
+    },
+  },
+  {
     id: 'cafepress-uk',
     slug: 'cafepress-uk',
-    order: 1,
+    order: 2,
     name: 'CafePress UK',
     displayName: 'CafePress UK',
     displaySubtitle: 'Market research, assortment planning, and early UK storefront prototyping',
@@ -110,37 +137,10 @@ export const PROJECTS: Project[] = [
     // The storefront prototype beside the introduction.
     hero: [{ image: 'cp-storefront', sizes: '(min-width: 1408px) 1240px, (min-width: 900px) 92vw, 200vw' }],
     accent: 'cafepress-uk',
-    next: 'ai-leasing-agent',
+    next: 'spreadsheet-agent',
     seo: {
       title: 'CafePress UK',
       description: 'Market research, assortment planning, and early UK storefront prototyping during a PlanetArt internship.',
-    },
-  },
-  {
-    id: 'ai-leasing-agent',
-    slug: 'valiance',
-    order: 2,
-    name: 'AI Leasing Agent',
-    displayName: 'AI Leasing Agent',
-    displaySubtitle: 'Requirements, workflow design, and testing for an AI leasing assistant',
-    label: 'Workflow requirements and testing at Valiance Capital',
-    category: 'Valiance Capital',
-    summary: 'Workflow requirements and testing for a third-party leasing assistant adopted across 18 properties.',
-    year: '2024–2025',
-    dateRange: 'Oct 2024–Jun 2025',
-    role: 'Leasing & Operations Associate',
-    org: 'Valiance Capital',
-    status: 'Adopted across 18 properties',
-    description: 'Requirements and testing for recurring leasing questions.',
-    meta: { company: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'October 2024 to June 2025', status: 'Adopted across 18 properties' },
-    cover: 'obj-ai-leasing-agent',
-    // The illustrative conversation beside the introduction.
-    hero: [{ image: 'valiance-messages', sizes: '(min-width: 1408px) 1240px, (min-width: 900px) 92vw, 200vw' }],
-    accent: 'ai-leasing-agent',
-    next: 'spreadsheet-agent',
-    seo: {
-      title: 'AI Leasing Agent',
-      description: 'Requirements, workflow design, and testing for an AI leasing assistant at Valiance Capital, deployed across 18 properties.',
     },
   },
   {
@@ -164,70 +164,16 @@ export const PROJECTS: Project[] = [
     // The first step's screenshot (the request), the whole interface.
     hero: [{ image: 'sa-ui-request', sizes: '(min-width: 1408px) 620px, (min-width: 900px) 46vw, calc(100vw - 48px)' }],
     accent: 'spreadsheet-agent',
-    next: 'client-work',
+    next: 'jumpstart-finance',
     seo: {
       title: 'Spreadsheet Agent',
       description: 'A rules-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
     },
   },
   {
-    id: 'client-work',
-    slug: 'creative-production',
-    order: 4,
-    name: 'Creative Production',
-    displayName: 'Creative Production',
-    displaySubtitle: 'Client film production at Shift Content',
-    label: 'Client film production at Shift Content',
-    category: 'Shift Content internship',
-    summary: 'Production support on client films and related agency work during an internship at Shift Content in London.',
-    year: '2026',
-    dateRange: 'Jan–May 2026',
-    role: 'Creative Strategy and Client Solutions Intern',
-    org: 'Shift Content, London',
-    status: 'Agency client work',
-    description: 'Production and campaign support at Shift Content.',
-    meta: { company: 'Shift Content, London', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', status: 'Three completed client films' },
-    cover: 'obj-creative-production',
-    // The opening is a moving frame (a video poster, not a registered image): nothing to warm.
-    hero: [],
-    accent: 'creative-production',
-    next: 'merchandising-platform',
-    seo: {
-      title: 'Creative Production',
-      description: 'Client film production at Shift Content in London.',
-    },
-  },
-  {
-    id: 'merchandising-platform',
-    slug: 'merchandising-platform',
-    order: 5,
-    name: 'Merchandising Platform',
-    displayName: 'Merchandising Platform',
-    displaySubtitle: 'An independent prototype for product analysis and replenishment planning',
-    label: 'Independent merchandising application prototype',
-    category: 'Independent prototype',
-    summary: 'An independent application prototype for reviewing product, pricing, inventory, and vendor information with synthetic data.',
-    year: '2026',
-    dateRange: '2026',
-    role: 'Independent project',
-    org: 'Independent',
-    status: 'Independent prototype',
-    description: 'Product, inventory, and replenishment information in one prototype.',
-    meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Working prototype' },
-    cover: 'obj-merchandising-platform',
-    // The walkthrough's poster is a plain video poster URL (not a registered image): nothing to warm.
-    hero: [],
-    accent: 'merchandising-platform',
-    next: 'jumpstart-finance',
-    seo: {
-      title: 'Merchandising Platform',
-      description: 'An independent prototype for product analysis and replenishment planning, using synthetic data.',
-    },
-  },
-  {
     id: 'jumpstart-finance',
     slug: 'jumpstart',
-    order: 6,
+    order: 4,
     name: 'Jumpstart Finance',
     displayName: 'Jumpstart Finance',
     displaySubtitle: 'Product development for a financial education app concept',
@@ -249,10 +195,64 @@ export const PROJECTS: Project[] = [
       { image: 'jf-screen-community', sizes: '(min-width: 1100px) 190px, 26vw' },
     ],
     accent: 'jumpstart-finance',
-    next: 'cafepress-uk',
+    next: 'merchandising-platform',
     seo: {
       title: 'Jumpstart Finance',
       description: 'Product development for a financial education app concept at the European Innovation Academy in Porto, 2024.',
+    },
+  },
+  {
+    id: 'merchandising-platform',
+    slug: 'merchandising-platform',
+    order: 5,
+    name: 'Merchandising Dashboard',
+    displayName: 'Merchandising Dashboard',
+    displaySubtitle: 'An independent prototype for product analysis and replenishment planning',
+    label: 'Independent merchandising application prototype',
+    category: 'Independent prototype',
+    summary: 'An independent application prototype for reviewing product, pricing, inventory, and vendor information with synthetic data.',
+    year: '2026',
+    dateRange: '2026',
+    role: 'Independent project',
+    org: 'Independent',
+    status: 'Independent prototype',
+    description: 'Product, inventory, and replenishment information in one prototype.',
+    meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Working prototype' },
+    cover: 'obj-merchandising-platform',
+    // The walkthrough's poster is a plain video poster URL (not a registered image): nothing to warm.
+    hero: [],
+    accent: 'merchandising-platform',
+    next: 'ai-leasing-agent',
+    seo: {
+      title: 'Merchandising Dashboard',
+      description: 'An independent prototype for product analysis and replenishment planning, using synthetic data.',
+    },
+  },
+  {
+    id: 'ai-leasing-agent',
+    slug: 'valiance',
+    order: 6,
+    name: 'AI Leasing Agent',
+    displayName: 'AI Leasing Agent',
+    displaySubtitle: 'Requirements, workflow design, and testing for an AI leasing assistant',
+    label: 'Workflow requirements and testing at Valiance Capital',
+    category: 'Valiance Capital',
+    summary: 'Workflow requirements and testing for a third-party leasing assistant adopted across 18 properties.',
+    year: '2024–2025',
+    dateRange: 'Oct 2024–Jun 2025',
+    role: 'Leasing & Operations Associate',
+    org: 'Valiance Capital',
+    status: 'Adopted across 18 properties',
+    description: 'Requirements and testing for recurring leasing questions.',
+    meta: { company: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'October 2024 to June 2025', status: 'Adopted across 18 properties' },
+    cover: 'obj-ai-leasing-agent',
+    // The illustrative conversation beside the introduction.
+    hero: [{ image: 'valiance-messages', sizes: '(min-width: 1408px) 1240px, (min-width: 900px) 92vw, 200vw' }],
+    accent: 'ai-leasing-agent',
+    next: 'client-work',
+    seo: {
+      title: 'AI Leasing Agent',
+      description: 'Requirements, workflow design, and testing for an AI leasing assistant at Valiance Capital, deployed across 18 properties.',
     },
   },
 ]

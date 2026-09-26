@@ -20,7 +20,16 @@ export default function CafePressUK() {
         meta={C.meta}
         lede={C.lede}
         steps={C.findings}
-        stage={{ kind: 'layers', aspect: 1672 / 941, layers: [{ image: 'cp-storefront' }, { image: 'cp-drinkware' }, { image: 'cp-assistant' }], show: [0, 1, 2] }}
+        stage={{
+          kind: 'layers',
+          // The pictures' own shape, on a white screen like the pages: each shows whole.
+          aspect: 1672 / 941,
+          screen: '#ffffff',
+          // Harlie's storefront prototype pictures, as the page had them before (PlanetArt/cafepress uk): the CafePress
+          // homepage first, then the drinkware page, then the page with the assistant panel. No captions (Harlie's request).
+          layers: [{ image: 'cp-storefront' }, { image: 'cp-drinkware' }, { image: 'cp-assistant' }],
+          show: [0, 1, 2],
+        }}
       />
     </CasePage>
   )

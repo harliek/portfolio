@@ -853,18 +853,76 @@ html.is-menu-open {
   outline-offset: 3px;
 }
 
-/* A case study's buttons: their own row above the links; Previous project at the left, About me and Next project at the right. */
-.site-end__pagers {
-  display: flex;
-  flex-basis: 100%;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
+/*
+ * A case study's ending: one row, well below the last section. Previous project at the left, the links and the
+ * copyright between, Next project at the right. Narrow windows: the two buttons on one line, the links under them.
+ */
+.site-end[data-pager] .site-end__inner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'previous contact next';
+  gap: 16px 32px;
+  padding-top: clamp(72px, 8vw, 120px);
+  padding-bottom: 28px;
 }
 
-.site-end__pagers .site-end__pager--about {
-  margin-left: auto;
+.site-end__pager--previous {
+  grid-area: previous;
+  justify-self: start;
+}
+
+.site-end__pager--next {
+  grid-area: next;
+  justify-self: end;
+}
+
+.site-end__contact {
+  grid-area: contact;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0 28px;
+  min-width: 0;
+}
+
+.site-end__contact .site-end__copy {
+  margin: 0;
+}
+
+@media (max-width: 899.98px) {
+  .site-end[data-pager] .site-end__inner {
+    grid-template-columns: auto auto;
+    grid-template-areas:
+      'previous next'
+      'contact contact';
+    padding-top: clamp(56px, 12vw, 80px);
+  }
+
+  .site-end__contact {
+    justify-content: flex-start;
+    gap: 0 24px;
+  }
+
+  .site-end__contact .site-end__copy {
+    width: 100%;
+    margin-top: 4px;
+  }
+}
+
+/* The narrowest phones: the two buttons one above the other, then the links. */
+@media (max-width: 419.98px) {
+  .site-end[data-pager] .site-end__inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'previous'
+      'next'
+      'contact';
+  }
+
+  .site-end__pager--next {
+    justify-self: start;
+  }
 }
 
 /* Not found / route error */

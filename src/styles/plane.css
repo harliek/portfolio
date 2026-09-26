@@ -177,8 +177,194 @@
   font-size: 2.5cqw;
 }
 
+/*
+ * Movement on the still tiles (Harlie's requests): the Merchandising widgets and the Jumpstart phones each grow a
+ * little and settle again, in turn (the middle phone first, then the left, then the right), slowly and continuously.
+ * `scale` composes with any transform a piece already has.
+ */
+@keyframes plane-breathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+
+  50% {
+    scale: var(--grow, 1.05);
+  }
+}
+
+.plane__widgets {
+  position: absolute;
+}
+
+/*
+ * The Merchandising widgets (Harlie's request): each shown a little smaller in its own place, so they stand apart,
+ * and one at a time grows gently and settles again before the next begins (row by row, left to right, about 1.8s
+ * each, 16s round). The growth stays within each widget's original footprint, so none ever touch.
+ */
+.plane__widget {
+  --rest: 0.9;
+  position: absolute;
+  display: block;
+  overflow: hidden;
+  filter: drop-shadow(0 12px 20px rgb(0 0 0 / 0.5));
+  scale: var(--rest);
+  animation: plane-widget-turn 16.2s ease-in-out infinite;
+  animation-delay: calc(var(--k, 0) * 1.8s);
+}
+
+/* One turn in every nine: up and back within 9% of the round, then still. */
+@keyframes plane-widget-turn {
+  0%,
+  9%,
+  100% {
+    scale: var(--rest);
+  }
+
+  4.5% {
+    scale: calc(var(--rest) * var(--grow, 1.06));
+  }
+}
+
+.plane__widget picture {
+  display: contents;
+}
+
+.plane__widget img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  height: auto;
+}
+
+.plane__screen {
+  --grow: 1.07;
+  animation: plane-breathe 6s ease-in-out infinite;
+}
+
+/* Middle, then left, then right. */
+.plane__screen:nth-child(2) {
+  animation-delay: 0s;
+}
+
+.plane__screen:nth-child(1) {
+  animation-delay: 2s;
+}
+
+.plane__screen:nth-child(3) {
+  animation-delay: 4s;
+}
+
+/*
+ * The conversation arriving as texts do (PlaneMedia's Conversation): each message keeps its place while hidden; the
+ * sender's typing dots show first, then the message rises into its bubble.
+ */
+.chat-msg {
+  transition:
+    opacity 300ms var(--ease-arrive),
+    translate 300ms var(--ease-arrive);
+}
+
+.chat-msg[data-state='out'] {
+  opacity: 0;
+  translate: 0 6px;
+}
+
+.chat-msg__body {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.chat-msg__bubble {
+  transition:
+    opacity 260ms var(--ease-arrive),
+    scale 260ms var(--ease-arrive);
+  transform-origin: left bottom;
+}
+
+.chat-msg[data-from='assistant'] .chat-msg__bubble {
+  transform-origin: right bottom;
+}
+
+.chat-msg[data-state='typing'] .chat-msg__bubble {
+  opacity: 0;
+  scale: 0.92;
+}
+
+.chat-msg__typing {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.9cqw;
+  padding: 1.7cqw 2.2cqw;
+  border-radius: 3cqw;
+  border-bottom-left-radius: 0.8cqw;
+  background: #f9dce6;
+  color: #1c1a24;
+  box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms linear;
+}
+
+.chat-msg[data-from='assistant'] .chat-msg__typing {
+  right: 0;
+  left: auto;
+  border-bottom-left-radius: 3cqw;
+  border-bottom-right-radius: 0.8cqw;
+  background: #cfe3fb;
+  color: #0e1d30;
+}
+
+.chat-msg[data-state='typing'] .chat-msg__typing {
+  opacity: 1;
+}
+
+.chat-msg__typing i {
+  display: block;
+  width: 1.1cqw;
+  height: 1.1cqw;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.35;
+  animation: chat-dot 1s ease-in-out infinite;
+}
+
+.chat-msg__typing i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.chat-msg__typing i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes chat-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    translate: 0 0;
+  }
+
+  30% {
+    opacity: 0.85;
+    translate: 0 -0.5cqw;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .plane__picture[data-pan] img {
+  .plane__picture[data-pan] img,
+  .plane__widget,
+  .plane__screen,
+  .chat-msg__typing i {
     animation: none;
+  }
+
+  .chat-msg,
+  .chat-msg__bubble {
+    transition: none;
   }
 }

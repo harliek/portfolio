@@ -1,5 +1,5 @@
 import { useState, type MouseEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { PROJECTS, projectById, projectForPath, projectPath, type Project } from '../../content/projects'
 import { SITE } from '../../content/site'
 import { isPlainClick, openProject, warmProject } from '../transition/projectTransition'
@@ -43,12 +43,11 @@ function PagerLink({ to, dir }: { to: Project; dir: 'previous' | 'next' }) {
 }
 
 /**
- * The end of every page (brief v18): one compact row, transparent and
- * without a line (Harlie's request). The email address, LinkedIn and the
- * résumé (checked: no phone number in it), and the copyright in the far
- * right corner; no name link (Harlie's request). On a case study a row of
- * buttons sits above it: "Previous project" at the left, and "About me"
- * beside "Next project" at the right, following the case studies' loop.
+ * The end of every page (brief v18): transparent and without a line (Harlie's request). The email address, LinkedIn
+ * and the résumé (checked: no phone number in it), and the copyright; no name link (Harlie's request). On a case
+ * study it is one row, well below the page's last section: "Previous project" at the left, the links and the
+ * copyright in the middle, "Next project" at the right, following the case studies' loop. Elsewhere, the links with
+ * the copyright in the far right corner. Narrow windows: the two buttons on one line, the links under them.
  */
 export function Footer() {
   const year = new Date().getFullYear()
@@ -56,34 +55,43 @@ export function Footer() {
   const current = pathname.startsWith('/work/') ? projectForPath(pathname) : undefined
   const next = current ? projectById(current.next) : undefined
   const previous = current ? PROJECTS.find((p) => p.next === current.id) : undefined
+  const links = (
+    <nav className="site-end__links" aria-label="Contact and elsewhere">
+      <a className="site-end__link" href={SITE.emailHref}>
+        {SITE.email}
+      </a>
+      <a className="site-end__link" href={SITE.linkedin} target="_blank" rel="noopener noreferrer">
+        LinkedIn<span className="visually-hidden"> (opens in a new tab)</span>
+      </a>
+      <a className="site-end__link" href={SITE.resume} target="_blank" rel="noopener noreferrer">
+        Résumé<span className="visually-hidden"> (PDF, opens in a new tab)</span>
+      </a>
+    </nav>
+  )
+  const copy = (
+    <p className="site-end__copy tabular">
+      © {year} {SITE.name}
+    </p>
+  )
   return (
     <footer className="site-end" data-pager={current ? '' : undefined}>
       <div className="site-end__inner">
-        {/* A case study's buttons, on their own row above the links (Harlie's request). */}
-        {current && (
-          <div className="site-end__pagers">
+        {current ? (
+          <>
             {previous && <PagerLink key={`p-${pathname}`} to={previous} dir="previous" />}
-            <Link className="site-end__pager site-end__pager--about stateful" to="/about">
-              About me
-            </Link>
+            <div className="site-end__contact">
+              {links}
+              {copy}
+            </div>
             {next && <PagerLink key={`n-${pathname}`} to={next} dir="next" />}
-          </div>
+          </>
+        ) : (
+          <>
+            {links}
+            {/* The copyright in the far right corner. */}
+            {copy}
+          </>
         )}
-        <nav className="site-end__links" aria-label="Contact and elsewhere">
-          <a className="site-end__link" href={SITE.emailHref}>
-            {SITE.email}
-          </a>
-          <a className="site-end__link" href={SITE.linkedin} target="_blank" rel="noopener noreferrer">
-            LinkedIn<span className="visually-hidden"> (opens in a new tab)</span>
-          </a>
-          <a className="site-end__link" href={SITE.resume} target="_blank" rel="noopener noreferrer">
-            Résumé<span className="visually-hidden"> (PDF, opens in a new tab)</span>
-          </a>
-        </nav>
-        {/* The copyright in the far right corner. */}
-        <p className="site-end__copy tabular">
-          © {year} {SITE.name}
-        </p>
       </div>
     </footer>
   )

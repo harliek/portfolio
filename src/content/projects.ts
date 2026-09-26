@@ -2,11 +2,10 @@ import type { AccentId } from './accents'
 import type { ImageId } from './media'
 
 /**
- * The six work entries, in the homepage carousel's order (brief v19, by
- * impact): AI Leasing Agent, Jumpstart Finance, Merchandising Platform,
- * Spreadsheet Agent, CafePress UK, Creative Production. The Work menu and the
- * next-project sequence follow it (Creative Production loops back to AI
- * Leasing Agent).
+ * The six work entries, in the homepage field's order (field.ts, Harlie's order of 2026-09-26; About me and Creative
+ * Portfolio, tiles there, are not case studies): CafePress UK, AI Leasing Agent, Spreadsheet Agent, Creative
+ * Production, Merchandising Platform, Jumpstart Finance. The Work menu and the next-project sequence follow it
+ * (Jumpstart Finance loops back to CafePress UK).
  * Page copy lives in src/content/pages/<id>.ts(x).
  *
  * Verified facts only (résumé and project sources; see
@@ -91,36 +90,36 @@ export interface Project {
 
 export const PROJECTS: Project[] = [
   {
-    id: 'spreadsheet-agent',
-    slug: 'spreadsheet-agent',
-    order: 4,
-    name: 'Spreadsheet Agent',
-    displayName: 'Spreadsheet Agent',
-    displaySubtitle: 'A rules-based prototype for generating editable spreadsheets from written requests',
-    label: 'Rules-based spreadsheet prototype',
-    category: 'Independent prototype',
-    summary: 'A rules-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
+    id: 'cafepress-uk',
+    slug: 'cafepress-uk',
+    order: 1,
+    name: 'CafePress UK',
+    displayName: 'CafePress UK',
+    displaySubtitle: 'Market research, assortment planning, and early UK storefront prototyping',
+    label: 'UK market research and storefront prototype',
+    category: 'PlanetArt internship',
+    summary: 'UK market research and a localized storefront prototype during a PlanetArt internship.',
     year: '2026',
-    dateRange: '2026',
-    role: 'Independent project',
-    org: 'Independent',
-    status: 'Independent prototype',
-    description: 'A request, a reviewable plan, and an editable spreadsheet.',
-    meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Rules-based prototype using synthetic data' },
-    cover: 'obj-spreadsheet-agent',
-    // The first step's screenshot (the request), the whole interface.
-    hero: [{ image: 'sa-ui-request', sizes: '(min-width: 1408px) 620px, (min-width: 900px) 46vw, calc(100vw - 48px)' }],
-    accent: 'spreadsheet-agent',
+    dateRange: 'Jun–Aug 2026',
+    role: 'Product Operations & Merchandising Intern',
+    org: 'PlanetArt',
+    status: 'Research and prototype',
+    description: 'UK market research and a localized storefront prototype.',
+    meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
+    cover: 'obj-cafepress-uk',
+    // The storefront prototype beside the introduction.
+    hero: [{ image: 'cp-storefront', sizes: '(min-width: 1408px) 1240px, (min-width: 900px) 92vw, 200vw' }],
+    accent: 'cafepress-uk',
     next: 'ai-leasing-agent',
     seo: {
-      title: 'Spreadsheet Agent',
-      description: 'A rules-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
+      title: 'CafePress UK',
+      description: 'Market research, assortment planning, and early UK storefront prototyping during a PlanetArt internship.',
     },
   },
   {
     id: 'ai-leasing-agent',
     slug: 'valiance',
-    order: 1,
+    order: 2,
     name: 'AI Leasing Agent',
     displayName: 'AI Leasing Agent',
     displaySubtitle: 'Requirements, workflow design, and testing for an AI leasing assistant',
@@ -138,16 +137,70 @@ export const PROJECTS: Project[] = [
     // The illustrative conversation beside the introduction.
     hero: [{ image: 'valiance-messages', sizes: '(min-width: 1408px) 1240px, (min-width: 900px) 92vw, 200vw' }],
     accent: 'ai-leasing-agent',
-    next: 'merchandising-platform',
+    next: 'spreadsheet-agent',
     seo: {
       title: 'AI Leasing Agent',
       description: 'Requirements, workflow design, and testing for an AI leasing assistant at Valiance Capital, deployed across 18 properties.',
     },
   },
   {
+    id: 'spreadsheet-agent',
+    slug: 'spreadsheet-agent',
+    order: 3,
+    name: 'Spreadsheet Agent',
+    displayName: 'Spreadsheet Agent',
+    displaySubtitle: 'A rules-based prototype for generating editable spreadsheets from written requests',
+    label: 'Rules-based spreadsheet prototype',
+    category: 'Independent prototype',
+    summary: 'A rules-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
+    year: '2026',
+    dateRange: '2026',
+    role: 'Independent project',
+    org: 'Independent',
+    status: 'Independent prototype',
+    description: 'A request, a reviewable plan, and an editable spreadsheet.',
+    meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Rules-based prototype using synthetic data' },
+    cover: 'obj-spreadsheet-agent',
+    // The first step's screenshot (the request), the whole interface.
+    hero: [{ image: 'sa-ui-request', sizes: '(min-width: 1408px) 620px, (min-width: 900px) 46vw, calc(100vw - 48px)' }],
+    accent: 'spreadsheet-agent',
+    next: 'client-work',
+    seo: {
+      title: 'Spreadsheet Agent',
+      description: 'A rules-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
+    },
+  },
+  {
+    id: 'client-work',
+    slug: 'creative-production',
+    order: 4,
+    name: 'Creative Production',
+    displayName: 'Creative Production',
+    displaySubtitle: 'Client film production at Shift Content',
+    label: 'Client film production at Shift Content',
+    category: 'Shift Content internship',
+    summary: 'Production support on client films and related agency work during an internship at Shift Content in London.',
+    year: '2026',
+    dateRange: 'Jan–May 2026',
+    role: 'Creative Strategy and Client Solutions Intern',
+    org: 'Shift Content, London',
+    status: 'Agency client work',
+    description: 'Production and campaign support at Shift Content.',
+    meta: { company: 'Shift Content, London', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', status: 'Three completed client films' },
+    cover: 'obj-creative-production',
+    // The opening is a moving frame (a video poster, not a registered image): nothing to warm.
+    hero: [],
+    accent: 'creative-production',
+    next: 'merchandising-platform',
+    seo: {
+      title: 'Creative Production',
+      description: 'Client film production at Shift Content in London.',
+    },
+  },
+  {
     id: 'merchandising-platform',
     slug: 'merchandising-platform',
-    order: 3,
+    order: 5,
     name: 'Merchandising Platform',
     displayName: 'Merchandising Platform',
     displaySubtitle: 'An independent prototype for product analysis and replenishment planning',
@@ -174,7 +227,7 @@ export const PROJECTS: Project[] = [
   {
     id: 'jumpstart-finance',
     slug: 'jumpstart',
-    order: 2,
+    order: 6,
     name: 'Jumpstart Finance',
     displayName: 'Jumpstart Finance',
     displaySubtitle: 'Product development for a financial education app concept',
@@ -200,60 +253,6 @@ export const PROJECTS: Project[] = [
     seo: {
       title: 'Jumpstart Finance',
       description: 'Product development for a financial education app concept at the European Innovation Academy in Porto, 2024.',
-    },
-  },
-  {
-    id: 'cafepress-uk',
-    slug: 'cafepress-uk',
-    order: 5,
-    name: 'CafePress UK',
-    displayName: 'CafePress UK',
-    displaySubtitle: 'Market research, assortment planning, and early UK storefront prototyping',
-    label: 'UK market research and storefront prototype',
-    category: 'PlanetArt internship',
-    summary: 'UK market research and a localized storefront prototype during a PlanetArt internship.',
-    year: '2026',
-    dateRange: 'Jun–Aug 2026',
-    role: 'Product Operations & Merchandising Intern',
-    org: 'PlanetArt',
-    status: 'Research and prototype',
-    description: 'UK market research and a localized storefront prototype.',
-    meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
-    cover: 'obj-cafepress-uk',
-    // The storefront prototype beside the introduction.
-    hero: [{ image: 'cp-storefront', sizes: '(min-width: 1408px) 1240px, (min-width: 900px) 92vw, 200vw' }],
-    accent: 'cafepress-uk',
-    next: 'client-work',
-    seo: {
-      title: 'CafePress UK',
-      description: 'Market research, assortment planning, and early UK storefront prototyping during a PlanetArt internship.',
-    },
-  },
-  {
-    id: 'client-work',
-    slug: 'creative-production',
-    order: 6,
-    name: 'Creative Production',
-    displayName: 'Creative Production',
-    displaySubtitle: 'Client film production at Shift Content',
-    label: 'Client film production at Shift Content',
-    category: 'Shift Content internship',
-    summary: 'Production support on client films and related agency work during an internship at Shift Content in London.',
-    year: '2026',
-    dateRange: 'Jan–May 2026',
-    role: 'Creative Strategy and Client Solutions Intern',
-    org: 'Shift Content, London',
-    status: 'Agency client work',
-    description: 'Production and campaign support at Shift Content.',
-    meta: { company: 'Shift Content, London', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', status: 'Three completed client films' },
-    cover: 'obj-creative-production',
-    // The opening is a moving frame (a video poster, not a registered image): nothing to warm.
-    hero: [],
-    accent: 'creative-production',
-    next: 'spreadsheet-agent',
-    seo: {
-      title: 'Creative Production',
-      description: 'Client film production at Shift Content in London.',
     },
   },
 ]

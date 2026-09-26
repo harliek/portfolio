@@ -1,7 +1,7 @@
 /**
  * Spreadsheet Agent (brief v19; copy from Harlie's editorial pass, v23): a
- * compact page. The introduction and four sections on the left (request
- * interpretation, plan review, sheet generation, data provenance); beside
+ * compact page. The introduction and two sections on the left (review
+ * before generation, data provenance; September 26 copy); beside
  * them, fixed, the recording of the same build (captured 2026-09-25 at
  * 1440 × 900 from spreadsheetagent.netlify.app with a request its plan
  * answers exactly), following the scroll; one scope note.
@@ -30,25 +30,22 @@ export const SHEET = {
    * 13.2s; the sheet is complete at 15.47s; Atlas Goods is selected at 19.77s and its detail opens at 21.23s. The
    * earlier recordings (request "Compare vendor prices across B2B products") are not used.
    */
+  // Review before generation: the request sent, the plan reviewed, the sheet built (8.5s to 19.3s); data provenance:
+  // the pointer moving to a cell, the cell selected and its source detail opened (19.3s to the end). Never the empty sheet.
   segments: [
-    [0, 13.2],
-    [13.2, 18.83],
-    [18.83, 24.73],
+    [8.5, 19.3],
+    [19.3, 24.73],
   ] as const,
-  stills: [11.5, 17.2, 23.5],
+  stills: [11.5, 23.5],
   /** Harlie's editorial pass (v23): the workflow's distinctions, the demonstrated request quoted on its own, one scope note. */
   steps: [
     {
-      title: 'Reviewing the plan',
-      text: 'Before generating a sheet, users can review the proposed data source, columns, filters, and sorting. The plan flags unsupported terms.',
+      title: 'Review before generation',
+      text: 'The prototype presents the proposed data source, columns, filters, and sort order for approval. It also identifies words from the request that were not used.',
     },
     {
-      title: 'Building the sheet',
-      text: 'Users approve the plan to generate a sheet they can edit.',
-    },
-    {
-      title: 'Tracing the data',
-      text: 'Cell details show the source record, field definition, and why the column was included.',
+      title: 'Data provenance',
+      text: 'Cell details identify the source dataset and record, define the field, and explain why the column was included.',
     },
   ],
 }

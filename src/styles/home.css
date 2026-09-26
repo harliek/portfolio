@@ -396,14 +396,6 @@
   outline-offset: 6px;
 }
 
-.plane__veil {
-  position: absolute;
-  inset: 0;
-  display: block;
-  background: #050507;
-  pointer-events: none;
-}
-
 /* Free-standing tiles (phones, cutouts, the conversation) float over the page: no ground, frame or shadowed card. */
 .plane[data-free] .plane__frame {
   overflow: visible;
@@ -412,14 +404,9 @@
   box-shadow: none;
 }
 
-.plane[data-free] .plane__veil {
-  display: none;
-}
-
-/* Receding like the other tiles, by dimming the objects themselves rather than laying a dark box over them. */
+/* Every tile at full brightness, wherever it is in the strip (Harlie's request). */
 .plane[data-free] .plane__media {
   overflow: visible;
-  filter: brightness(calc(1 - var(--veil, 0)));
 }
 
 /* The pause for the automatic turning, for keyboard users: it appears when focused, before the tiles. */
@@ -454,7 +441,6 @@
 .plane__caption {
   display: block;
   padding-top: 16px;
-  opacity: calc(1 - var(--depth, 0) * 0.3);
   transition: opacity 100ms linear;
 }
 
@@ -497,7 +483,8 @@
   }
 
   .plane:hover .plane__frame {
-    transform: scale(1.045);
+    /* Clearly larger on hover (Harlie's request, 2026-09-26; was 1.045). */
+    transform: scale(1.09);
     filter: brightness(1.12);
   }
 

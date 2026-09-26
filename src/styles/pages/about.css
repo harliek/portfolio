@@ -313,10 +313,10 @@
     transform 420ms var(--ease-arrive);
 }
 
-/* Hovering a card (the creative portfolio, the film, the art) enlarges it a little (Harlie's request). */
+/* Hovering a card (the creative portfolio, the film, the art) enlarges it clearly (Harlie's request; was 1.04). */
 @media (hover: hover) and (pointer: fine) {
   .about-content .about-work__frame:hover {
-    transform: scale(1.04);
+    transform: scale(1.08);
   }
 }
 

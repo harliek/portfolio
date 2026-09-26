@@ -1,9 +1,9 @@
 /**
- * CafePress UK (brief v19; copy from Harlie's editorial pass, v23): a
- * compact page. The introduction and three short sections, with the
- * storefront pictures fixed beside them, crossfading with each section (the
- * internship's storefront prototype, then two later images, each captioned
- * so the later ones are not presented as project work); one scope note.
+ * CafePress UK (brief v19; copy from Harlie's editorial pass, v23, and the
+ * September 26 copy): a compact page. The introduction, then three sections,
+ * each beside one of Harlie's storefront prototype pictures (PlanetArt/cafepress
+ * uk): the homepage first, then the drinkware page, then the page with the
+ * assistant panel. No captions (Harlie's request).
  *
  * Sources: the internship deck (PlanetArt/planetart presentation.pdf,
  * "CafePress UK B2B Launch", 08/20/2026) and the storefront prototype
@@ -23,22 +23,22 @@ export const CAFEPRESS = {
   meta: ['Product Operations and Merchandising Intern', 'PlanetArt · 2026'],
   lede: (
     <p>
-      At PlanetArt, I assessed whether CafePress’s US B2B model could be adapted for the UK through market research, operational review, and early storefront prototyping.
+      At PlanetArt, I assessed whether CafePress’s US B2B model could be adapted for the UK.
     </p>
   ),
-  /** Harlie's editorial pass (v23): descriptive headings, a short supporting list, one scope note. */
+  /** Harlie's wording (the September 26 copy, in its order). */
   findings: [
     {
-      title: 'Adapting the storefront',
-      text: 'I recommended UK product terminology and prices in pounds, and explored local contact and delivery information in the prototype.',
+      title: 'Suppliers and assortment',
+      text: 'I evaluated UK suppliers and identified potential launch products based on competitor assortments, recognizable brands, and eco-friendly options.',
     },
     {
-      title: 'Evaluating suppliers and products',
-      text: 'I evaluated UK suppliers and identified potential launch products based on competitor ranges, recognizable brands, and eco-friendly options.',
+      title: 'Storefront localization',
+      text: 'I recommended UK product terminology and prices in pounds, and explored local contact and delivery messaging in an early storefront prototype.',
     },
     {
-      title: 'Defining launch requirements',
-      text: 'My recommendations covered the product data, vendor coordination, and merchandising workflows needed to support a UK storefront.',
+      title: 'Operational recommendations',
+      text: 'I identified changes to product data, vendor coordination, and merchandising workflows needed to support the proposed storefront.',
     },
   ],
 }

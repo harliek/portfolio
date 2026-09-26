@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FIELD, isFree } from '../../content/field'
-import { projectById, projectPath } from '../../content/projects'
+import { FIELD, fieldPath, isExternalTile, isFree } from '../../content/field'
 import { prefersReducedMotion, useReducedMotion } from '../../hooks/useReducedMotion'
 import { gsap } from '../../lib/gsap'
-import { expandFrame } from '../transition/expandFrame'
+import { pulseOpen } from '../transition/pulseOpen'
 import { isPlainClick, warmProject } from '../transition/projectTransition'
 import { PlaneMedia } from './PlaneMedia'
 
@@ -20,46 +19,30 @@ const EASE_V = 0.45
 interface Layout {
   w: number
   h: number
-  /** Per depth step 0..2: scale, horizontal offset (px), veil opacity. */
-  scale: number[]
-  x: number[]
-  veil: number[]
+  /** From one tile's centre to the next (the tile's width plus the gap). */
+  step: number
 }
 
 /**
- * Composition per viewport (brief v19; a little smaller since v26): the centred tile at about 34% of the
- * window's width, never taller than the room left for its caption; its
- * neighbours at 82%, clearly visible and only lightly veiled.
+ * One continuous strip (Harlie's request, 2026-09-26): every tile the same size, evenly spaced, at full brightness;
+ * the tiles simply pass into and out of view. Each tile is about 30% of the window's width on wide screens, never
+ * taller than the room left for its caption.
  */
 function layoutFor(vw: number, vh: number): Layout {
   const room = vh - HEADER - 200
   const aspect = 1.6
-  let w: number, scale: number[], veil: number[], gap: number
+  let w: number, gap: number
   if (vw >= 1100) {
-    w = Math.min(vw * 0.34, room * aspect)
-    scale = [1, 0.82, 0.68]
-    veil = [0, 0.2, 0.45]
-    gap = vw * 0.03
+    w = Math.min(vw * 0.3, room * aspect)
+    gap = vw * 0.028
   } else if (vw >= 700) {
-    w = Math.min(vw * 0.47, room * aspect)
-    scale = [1, 0.82, 0.68]
-    veil = [0, 0.22, 0.45]
+    w = Math.min(vw * 0.42, room * aspect)
     gap = vw * 0.035
   } else {
-    w = Math.min(vw * 0.68, room * aspect)
-    scale = [1, 0.84, 0.7]
-    veil = [0, 0.25, 0.5]
+    w = Math.min(vw * 0.66, room * aspect)
     gap = vw * 0.045
   }
-  const x = [0]
-  for (let k = 1; k < 3; k++) x.push(x[k - 1] + (w * (scale[k - 1] + scale[k])) / 2 + gap)
-  return { w, h: w / aspect, scale, x, veil }
-}
-
-const lerpSteps = (steps: number[], a: number) => {
-  if (a >= steps.length - 1) return steps[steps.length - 1]
-  const k = Math.floor(a)
-  return steps[k] + (steps[k + 1] - steps[k]) * (a - k)
+  return { w, h: w / aspect, step: w + gap }
 }
 
 /** v wrapped into [0, n). */
@@ -67,12 +50,20 @@ const mod = (v: number, n: number) => ((v % n) + n) % n
 /** The shortest signed distance from b to a around the loop, in [-N/2, N/2). */
 const around = (a: number, b: number) => mod(a - b + N / 2, N) - N / 2
 
+/**
+ * Where the field starts (Harlie's request): the first tile (field.ts) at the far left of the view, its left edge one
+ * gap in from the window's edge (the tile before it just out of view). Coming Back from a page opened here,
+ * the tile that was opened, centred (remembered for that return only).
+ */
 function readStored() {
+  const L = layoutFor(window.innerWidth, window.innerHeight)
+  const start = Math.max(0, (window.innerWidth / 2 - (L.step - L.w) - L.w / 2) / L.step)
   try {
-    const v = Number(sessionStorage.getItem(STORAGE_KEY))
-    return Number.isInteger(v) && v >= 0 && v < N ? v : 0
+    const raw = sessionStorage.getItem(STORAGE_KEY)
+    const v = Number(raw)
+    return raw !== null && Number.isInteger(v) && v >= 0 && v < N ? v : start
   } catch {
-    return 0
+    return start
   }
 }
 
@@ -92,11 +83,12 @@ function readStored() {
  *
  * Hovering a tile (mouse or trackpad) enlarges it a little and lights it
  * slightly (home.css); the cursor stays the system's own. Clicking any tile
- * opens its case study (its picture travels into the page, expandFrame).
+ * opens its case study with one soft light pulse from the tile (pulseOpen).
  * There are no arrows, counter or visible label; a pause control appears for
  * keyboard users when focused (before the tiles in the tab order). Footage
- * plays muted at normal speed on the centred tile and its neighbours,
- * continuing where it left off. Reduced motion: no drift, moves without
+ * plays muted at normal speed on every tile that can be in view,
+ * continuing where it left off. The tiles form one flat strip: the same size
+ * and brightness everywhere, evenly spaced (layoutFor). Reduced motion: no drift, moves without
  * animation, posters instead of footage.
  */
 export function ProjectField() {
@@ -105,19 +97,20 @@ export function ProjectField() {
   const sectionRef = useRef<HTMLElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const planeRefs = useRef<(HTMLAnchorElement | null)[]>([])
-  const veilRefs = useRef<(HTMLSpanElement | null)[]>([])
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
   const pinRef = useRef<HTMLDivElement>(null)
   const [initial] = useState(readStored)
-  const [active, setActive] = useState(initial)
+  const [active, setActive] = useState(() => mod(Math.round(initial), N))
   const [running, setRunning] = useState(false)
+  /** Any of the tiles on screen (their films play then, even before the page is scrolled; Harlie's request). */
+  const [inView, setInView] = useState(false)
   const [userPaused, setUserPaused] = useState(false)
   const [turning, setTurning] = useState(false)
   const m = useRef({
     /** The displayed position and the position it follows (unwrapped; the loop is taken modulo N). */
     pos: initial,
     target: initial,
-    active: initial,
+    active: mod(Math.round(initial), N),
     layout: null as Layout | null,
     tween: null as gsap.core.Tween | null,
     frozen: false,
@@ -139,22 +132,14 @@ export function ProjectField() {
     const s = m.current
     const L = s.layout
     if (!L) return
+    const half = window.innerWidth / 2
     for (let i = 0; i < N; i++) {
       const el = planeRefs.current[i]
       if (!el) continue
-      const d = around(i, s.pos)
-      const a = Math.abs(d)
-      const side = Math.sign(d)
-      const sc = lerpSteps(L.scale, a)
-      const x = side * lerpSteps(L.x, a)
-      el.style.transform = `translate3d(${(x - L.w / 2).toFixed(2)}px, ${(-L.h / 2).toFixed(2)}px, 0) scale(${sc.toFixed(4)})`
-      el.style.zIndex = String(100 - Math.round(a * 10))
-      el.style.visibility = a > 2.2 ? 'hidden' : ''
-      el.style.setProperty('--depth', Math.min(1, a).toFixed(3))
-      const v = lerpSteps(L.veil, a).toFixed(3)
-      const veil = veilRefs.current[i]
-      if (veil) veil.style.opacity = v
-      el.style.setProperty('--veil', v)
+      const x = around(i, s.pos) * L.step
+      el.style.transform = `translate3d(${(x - L.w / 2).toFixed(2)}px, ${(-L.h / 2).toFixed(2)}px, 0)`
+      // Only a tile wholly outside the window is hidden (where the loop joins, it moves from one end to the other).
+      el.style.visibility = Math.abs(x) - L.w / 2 > half + 60 ? 'hidden' : ''
     }
     const centred = mod(Math.round(s.pos), N)
     if (centred !== s.active) {
@@ -193,28 +178,42 @@ export function ProjectField() {
     [glide, took],
   )
 
-  // Remember the project for Back.
+  // A remembered project is for one return only: the next visit starts with the first tile again.
   useEffect(() => {
     try {
-      sessionStorage.setItem(STORAGE_KEY, String(active))
+      sessionStorage.removeItem(STORAGE_KEY)
     } catch {
       /* private mode */
     }
-  }, [active])
+  }, [])
 
-  // Footage plays (muted, at normal speed) only on the centred tile and its neighbours while the field is on
+  // Back from the creative portfolio (a full page load) can restore this page from the browser's cache as it was left:
+  // bring the field back to life.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (!e.persisted) return
+      m.current.frozen = false
+      sectionRef.current?.closest('.home')?.removeAttribute('data-leaving')
+      document.querySelector('.home-film')?.removeAttribute('data-leaving')
+    }
+    window.addEventListener('pageshow', onShow)
+    return () => window.removeEventListener('pageshow', onShow)
+  }, [])
+
+  // Footage plays (muted, at normal speed) only on the tiles that can be in view while the field is on
   // screen; pausing keeps its place, so a film is never restarted by the turning and loops only at its end.
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return
-      const near = Math.abs(around(i, active)) <= 1
+      // Every tile that can be in view plays (the centred one and two either side).
+      const near = Math.abs(around(i, active)) <= 2
       if (near && !video.getAttribute('src') && video.dataset.src) video.setAttribute('src', video.dataset.src)
       video.defaultPlaybackRate = 1
       video.playbackRate = 1
-      if (near && running && !reduced) void video.play().catch(() => {})
+      if (near && inView && !reduced) void video.play().catch(() => {})
       else if (!video.paused) video.pause()
     })
-  }, [active, running, reduced])
+  }, [active, inView, reduced])
 
   // Layout follows the window.
   useEffect(() => {
@@ -248,12 +247,21 @@ export function ProjectField() {
     }
   }, [])
 
-  // Visibility: the frame loop and the turning run only while the field is near the viewport.
+  // Visibility: the frame loop and the turning run only while the tiles are well in view (at least 40% of them), so
+  // the field waits with the first tile at the far left while it only peeks under the opening, and starts moving from
+  // there once it is scrolled into view (Harlie's request).
   useEffect(() => {
     const section = sectionRef.current
-    if (!section) return
-    const io = new IntersectionObserver(([e]) => setRunning(e.isIntersecting), { rootMargin: '15% 0px' })
-    io.observe(section)
+    const stage = stageRef.current
+    if (!section || !stage) return
+    const io = new IntersectionObserver(
+      ([e]) => {
+        setRunning(e.isIntersecting && e.intersectionRatio >= 0.4)
+        setInView(e.isIntersecting)
+      },
+      { threshold: [0, 0.2, 0.4, 0.6, 0.8, 1] },
+    )
+    io.observe(stage)
     // Any part of the tiles on screen, even peeking under the title, counts for horizontal scrolling.
     const seen = new IntersectionObserver(([e]) => {
       m.current.visible = e.isIntersecting
@@ -309,10 +317,17 @@ export function ProjectField() {
   const open = (i: number) => {
     const item = FIELD[i]
     m.current.tween?.kill()
-    expandFrame({
-      media: planeRefs.current[i]?.querySelector<HTMLElement>('.plane__media') ?? null,
-      path: projectPath(projectById(item.id)),
+    // Remember the opened project for Back.
+    try {
+      sessionStorage.setItem(STORAGE_KEY, String(i))
+    } catch {
+      /* private mode */
+    }
+    pulseOpen({
+      from: planeRefs.current[i]?.querySelector<HTMLElement>('.plane__frame') ?? null,
+      path: fieldPath(item),
       navigate,
+      external: isExternalTile(item),
       onStart: () => {
         m.current.frozen = true
         sectionRef.current?.closest('.home')?.setAttribute('data-leaving', '')
@@ -360,7 +375,7 @@ export function ProjectField() {
     const stage = stageRef.current
     if (!stage) return
     const s = m.current
-    const slot = () => s.layout?.x[1] || 400
+    const slot = () => s.layout?.step || 400
     let drag: { id: number; x: number; y0: number; x0: number; moved: boolean } | null = null
     const down = (e: PointerEvent) => {
       if (e.button !== 0 || s.frozen || e.pointerType === 'touch') return
@@ -511,7 +526,7 @@ export function ProjectField() {
           }}
         >
           {FIELD.map((item, i) => {
-            const project = projectById(item.id)
+            const path = fieldPath(item)
             return (
               <a
                 key={item.id}
@@ -521,8 +536,8 @@ export function ProjectField() {
                 className="plane"
                 data-kind={item.media.kind}
                 data-free={isFree(item.media) || undefined}
-                href={projectPath(project)}
-                aria-label={`${item.title}. ${item.alt}. Open the case study`}
+                href={path}
+                aria-label={`${item.title}. ${item.alt}. ${item.id === 'about' ? 'Open the About page' : 'Open the case study'}`}
                 aria-current={i === active ? 'true' : undefined}
                 draggable={false}
                 onClick={(e) => onPlaneClick(e, i)}
@@ -533,7 +548,7 @@ export function ProjectField() {
                 onPointerEnter={(e) => {
                   if (e.pointerType !== 'mouse') return
                   m.current.hover = true
-                  warmProject(projectPath(project))
+                  warmProject(path)
                 }}
                 onPointerLeave={(e) => {
                   if (e.pointerType === 'mouse') m.current.hover = false
@@ -548,12 +563,6 @@ export function ProjectField() {
                       }}
                     />
                   </span>
-                  <span
-                    className="plane__veil"
-                    ref={(el) => {
-                      veilRefs.current[i] = el
-                    }}
-                  />
                 </span>
                 <span className="plane__caption" aria-hidden="true">
                   <span className="plane__title">{item.title}</span>

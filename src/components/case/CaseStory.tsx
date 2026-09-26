@@ -30,8 +30,8 @@ export type StageLayer = { image: ImageId; alt?: string } | { node: ReactNode; l
 
 /**
  * What the fixed stage shows. Each kind holds one state per step:
- * - video: a real recording; its time follows the scroll through each step's segment, or (`play`) it plays on
- *   its own and speeds up while the page scrolls;
+ * - video: a real recording; its time follows the scroll through each step's segment, or (`play`) it plays each
+ *   step's segment on a loop, speeding up while the page scrolls;
  * - layers: distinct artifacts, crossfading as the steps change (`show` picks the layer per step);
  * - crops: parts of one picture, crossfading as the steps change (null shows all of it), at most gently enlarged;
  * - phones: the app's screens; the step's own screen comes forward (`step` on each phone).
@@ -48,43 +48,32 @@ export type Stage =
       /** One still (seconds) per step, used under reduced motion. */
       stills: readonly number[]
       label: string
-      /** Plays on its own (looping) while on screen, and faster while the page scrolls, instead of following the scroll. */
+      /** Plays at its own pace, looping within the current step's segment, and faster while the page scrolls, instead of following the scroll. */
       play?: boolean
+      /** Plays by itself (Harlie's request): the whole recording on a loop, whatever the step, only pausing off screen. */
+      free?: boolean
     }
-  | { kind: 'layers'; aspect: number; layers: readonly StageLayer[]; show: readonly number[]; /** The laptop screen's colour around the pictures. */ screen?: string }
+  | { kind: 'layers'; aspect: number; layers: readonly StageLayer[]; show: readonly number[]; /** The colour of any sliver left around a picture whose proportions differ a little. */ screen?: string }
   | { kind: 'crops'; image: ImageId; regions: readonly (Region | null)[] }
   | { kind: 'phones'; phones: readonly { image: ImageId; name: string; step: number | readonly number[] }[]; /** One picture of all the phones, opened larger on a click. */ all?: ImageId }
 
 /** The reading line (a share of the window's height from the top): a step becomes current when its top reaches it. */
 const line = () => (window.matchMedia('(max-width: 899.98px)').matches ? 0.66 : 0.5)
 
-/** The screen stages' picture width: the laptop's screen is 74% of the laptop's width. */
-const STAGE_SIZES = '(min-width: 1296px) 560px, (min-width: 900px) 44vw, 72vw'
+/** The screen stages' picture width: the whole stage. */
+const STAGE_SIZES = '(min-width: 1296px) 760px, (min-width: 900px) 58vw, 100vw'
 
 /**
- * The laptop Harlie supplied (device-laptop, the third version, trimmed to
- * its glow at 1313x734) and the transparent screen in it (x 172 to 1141,
- * y 71 to 647), as shares of the whole. The screen box reaches half a pixel
- * under the bezel on each side, so no seam shows between the picture and
- * the frame.
+ * The picture itself, directly on the page (Harlie's request, 2026-09-26: no device or frame PNG): a box in the
+ * media's own proportions with rounded corners and a soft glow (case-v16.css), the recording or screenshot filling it
+ * whole (never cropped). `screen` colours any sliver left where a layer's proportions differ a little.
  */
-const LAPTOP = { w: 1313, h: 734, x: 171.5, y: 70.5, sw: 971, sh: 578 }
-
-/** A recording or screenshot sitting in the laptop's screen, behind the laptop picture. */
-function Laptop({ aspect, screen, onZoom, children }: { aspect: number; screen?: string; onZoom?: (trigger: HTMLElement) => void; children: ReactNode }) {
-  const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(4)}%`
+function MediaBox({ aspect, screen, onZoom, children }: { aspect: number; screen?: string; onZoom?: (trigger: HTMLElement) => void; children: ReactNode }) {
   return (
-    <div className="story__stage story__laptop" style={{ '--aspect': LAPTOP.w / LAPTOP.h } as CSSProperties}>
-      <div
-        className="story__screen"
-        data-hero-media=""
-        style={{ left: pct(LAPTOP.x, LAPTOP.w), top: pct(LAPTOP.y, LAPTOP.h), width: pct(LAPTOP.sw, LAPTOP.w), height: pct(LAPTOP.sh, LAPTOP.h), background: screen }}
-      >
-        <div className="story__fit" style={{ '--media-aspect': aspect } as CSSProperties}>
-          {children}
-        </div>
+    <div className="story__stage story__box" style={{ '--aspect': aspect } as CSSProperties}>
+      <div className="story__screen" data-hero-media="" style={{ background: screen }}>
+        {children}
       </div>
-      <ResponsiveImage image="device-laptop" sizes="(min-width: 1296px) 780px, (min-width: 900px) 62vw, 100vw" decorative priority className="story__laptop-frame" />
       {onZoom && <ZoomButton onZoom={onZoom} />}
     </div>
   )
@@ -94,8 +83,8 @@ function Laptop({ aspect, screen, onZoom, children }: { aspect: number; screen?:
  * A case study told in a few compact steps (brief v21). The introduction and
  * three or four short groups (a heading, one explanation, at most two
  * specific points) run down the left; the stage stays in place on the right
- * (recordings and screenshots sit in the screen of Harlie's laptop picture,
- * contained, behind the laptop; Jumpstart's phones stand free),
+ * (recordings and screenshots directly on the page with rounded corners and
+ * a soft glow, whole; Jumpstart's phones stand free),
  * below the header, centred in its column and never taller than about 58% of
  * the window, so the whole composition sits inside the window with a gutter
  * on each side. Its opening state is level with the introduction.
@@ -176,13 +165,16 @@ export function CaseStory({
       // footer follows close under both; on phones (the picture is not held beside the words) a short gap.
       const stage = list.closest('.cs')?.querySelector<HTMLElement>('.story__hold > .story__stage')
       const wide = !window.matchMedia('(max-width: 899.98px)').matches
-      // The picture's visible bottom: its lowest image (the laptop, or the largest phone), never below the stage's own
-      // box (a cropped picture inside the laptop's screen can reach past it), and not the phones' padded box.
+      // The picture's visible bottom: its lowest image (the screenshot, or the largest phone), never below the stage's own
+      // box (a cropped picture can reach past it), and not the phones' padded box.
       const box = stage?.getBoundingClientRect().bottom ?? 0
       const shown = stage ? [...stage.querySelectorAll('img')].map((el) => el.getBoundingClientRect().bottom).filter((b) => b > 0) : []
       const stageBottom = shown.length ? Math.min(box, Math.max(...shown)) : box
       const want = wide && stage ? Math.max(24, vh - footerH - stageBottom) : 56
-      const pad = Math.max(0, Math.round(m.pad + want - (footerTop - lastBottom)))
+      // The page has no minimum height of its own here (case.css), so on a short page the words can come down to the
+      // picture; the space still reaches far enough for the footer to meet the window's bottom.
+      const fill = m.pad + vh - footerH - footerTop
+      const pad = Math.max(0, Math.round(Math.max(m.pad + want - (footerTop - lastBottom), fill)))
       if (pad !== m.pad) {
         m.pad = pad
         body.style.paddingBottom = pad ? `${pad}px` : ''
@@ -313,9 +305,10 @@ function ZoomButton({ onZoom, label = 'View larger' }: { onZoom: (trigger: HTMLE
 
 /**
  * A recording opened larger: the site's larger view (the image dialog's look), the recording playing, looping and
- * muted, with the browser's own controls. Close, Escape or a click outside close it; focus returns to the picture.
+ * muted, with the browser's own controls, from the moment the stage was showing (so it opens on the current section).
+ * Close, Escape or a click outside close it; focus returns to the picture.
  */
-function VideoDialog({ src, poster, label, trigger, onClose }: { src: string; poster: string; label: string; trigger: HTMLElement | null; onClose: () => void }) {
+function VideoDialog({ src, poster, label, start, trigger, onClose }: { src: string; poster: string; label: string; start: number; trigger: HTMLElement | null; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null)
   useEffect(() => {
     const dialog = ref.current
@@ -355,7 +348,20 @@ function VideoDialog({ src, poster, label, trigger, onClose }: { src: string; po
           </div>
         </div>
         <div className="image-dialog__stage">
-          <video className="story__video-large" src={src} poster={poster} autoPlay muted loop playsInline controls disablePictureInPicture />
+          <video
+            className="story__video-large"
+            src={src}
+            poster={poster}
+            autoPlay
+            muted
+            loop
+            playsInline
+            controls
+            disablePictureInPicture
+            onLoadedMetadata={(e) => {
+              e.currentTarget.currentTime = start
+            }}
+          />
         </div>
       </div>
     </dialog>
@@ -401,7 +407,7 @@ function StageView({ stage, active, bind }: { stage: Stage; active: number; bind
   const layerIds = stage.layers.flatMap((l) => ('image' in l ? [l.image] : []))
   const shownLayer = stage.layers[shown]
   return (
-    <Laptop
+    <MediaBox
       aspect={stage.aspect}
       screen={stage.screen}
       onZoom={
@@ -415,22 +421,83 @@ function StageView({ stage, active, bind }: { stage: Stage; active: number; bind
           {'image' in layer ? <ResponsiveImage image={layer.image} sizes={STAGE_SIZES} priority={k === 0} alt={layer.alt} /> : layer.node}
         </div>
       ))}
-    </Laptop>
+    </MediaBox>
   )
 }
 
 /** The recording, its time eased toward the scroll's (and one still per step under reduced motion). */
 function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>; bind: (fn: ((k: number, local: number) => void) | null) => void }) {
   const ref = useRef<HTMLVideoElement>(null)
-  const [zoomFrom, setZoomFrom] = useState<HTMLElement | null>(null)
+  const [zoom, setZoom] = useState<{ from: HTMLElement; at: number } | null>(null)
 
-  // Play mode (Merchandising): the recording plays on its own while on screen, looping, and runs faster while the page
-  // is scrolled (up to four times, by the speed of the scroll), settling back to normal speed when scrolling stops.
+  // Play mode: the recording plays at its own pace while on screen, looping within the current step's segment so the
+  // picture always supports the step being read (the step changes, the recording moves to that step's part), and runs
+  // faster while the page is scrolled (up to four times, by the speed of the scroll), settling back when it stops.
+  // Reduced motion: the step's still, no playback.
   useEffect(() => {
     const video = ref.current
-    if (!video || !stage.play) return
-    bind(() => {})
-    if (prefersReducedMotion()) return () => bind(null)
+    if (!video || !stage.play || stage.free) return
+    const last = stage.segments.length - 1
+    let seg = 0
+    const range = () => stage.segments[Math.min(seg, last)]
+    const reducedNow = prefersReducedMotion()
+    const show = (i: number) => {
+      seg = Math.max(0, Math.min(i, last))
+      video.currentTime = reducedNow ? stage.stills[seg] : range()[0]
+    }
+    bind((k) => {
+      const i = Math.max(0, Math.min(k, last))
+      if (i !== seg) show(i)
+    })
+    // Keep playback inside the current segment: checked on every presented frame (timeupdate comes only every quarter
+    // second, late enough for the next section's frames, or the file's first, to flash), going back to the start two
+    // frames before the end, sooner while playback is sped up. The file itself never loops; its end goes back too.
+    const lead = (1 / 24) * 2
+    const keep = (t: number) => {
+      const [a, b] = range()
+      if (t + lead * video.playbackRate >= b || t < a - 0.3) video.currentTime = a
+    }
+    const onTime = () => {
+      if (!reducedNow) keep(video.currentTime)
+    }
+    const onEnded = () => {
+      if (reducedNow) return
+      video.currentTime = range()[0]
+      void video.play().catch(() => {})
+    }
+    video.addEventListener('timeupdate', onTime)
+    video.addEventListener('ended', onEnded)
+    let watch = 0
+    let watching = !reducedNow
+    const onFrame = (_now: number, meta: { mediaTime: number }) => {
+      if (!watching) return
+      if (!video.seeking) keep(meta.mediaTime)
+      watch = video.requestVideoFrameCallback(onFrame)
+    }
+    const onRaf = () => {
+      if (!watching) return
+      if (!video.seeking) keep(video.currentTime)
+      watch = requestAnimationFrame(onRaf)
+    }
+    const perFrame = 'requestVideoFrameCallback' in video
+    if (watching) watch = perFrame ? video.requestVideoFrameCallback(onFrame) : requestAnimationFrame(onRaf)
+    const stopWatch = () => {
+      watching = false
+      if (perFrame) video.cancelVideoFrameCallback(watch)
+      else cancelAnimationFrame(watch)
+    }
+    const onMeta = () => show(seg)
+    if (video.readyState >= 1) show(seg)
+    else video.addEventListener('loadedmetadata', onMeta, { once: true })
+    if (reducedNow) {
+      return () => {
+        bind(null)
+        stopWatch()
+        video.removeEventListener('timeupdate', onTime)
+        video.removeEventListener('ended', onEnded)
+        video.removeEventListener('loadedmetadata', onMeta)
+      }
+    }
     let frame = 0
     let rate = 1
     let boost = 0
@@ -464,13 +531,38 @@ function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>;
       bind(null)
       io.disconnect()
       window.removeEventListener('scroll', onScroll)
+      stopWatch()
+      video.removeEventListener('timeupdate', onTime)
+      video.removeEventListener('ended', onEnded)
+      video.removeEventListener('loadedmetadata', onMeta)
       cancelAnimationFrame(frame)
     }
   }, [stage, bind])
 
+  // Free: the whole recording plays by itself on a loop (Harlie's request), whatever the step, pausing off screen or
+  // in a hidden tab. Reduced motion: the first step's still.
   useEffect(() => {
     const video = ref.current
-    if (!video || stage.play) return
+    if (!video || !stage.free) return
+    if (prefersReducedMotion()) {
+      const still = () => {
+        video.currentTime = stage.stills[0]
+      }
+      if (video.readyState >= 1) still()
+      else video.addEventListener('loadedmetadata', still, { once: true })
+      return () => video.removeEventListener('loadedmetadata', still)
+    }
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && document.visibilityState === 'visible') void video.play().catch(() => {})
+      else video.pause()
+    })
+    io.observe(video)
+    return () => io.disconnect()
+  }, [stage])
+
+  useEffect(() => {
+    const video = ref.current
+    if (!video || stage.play || stage.free) return
     let target = stage.segments[0][0]
     let frame = 0
     const tick = () => {
@@ -502,8 +594,17 @@ function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>;
   }, [stage, bind])
 
   return (
-    <Laptop aspect={stage.width / stage.height} onZoom={(trigger) => setZoomFrom(trigger)}>
-      {zoomFrom && <VideoDialog src={stage.src} poster={stage.poster} label={`${stage.label}, larger`} trigger={zoomFrom} onClose={() => setZoomFrom(null)} />}
+    <MediaBox aspect={stage.width / stage.height} onZoom={(trigger) => setZoom({ from: trigger, at: ref.current?.currentTime ?? 0 })}>
+      {zoom && (
+        <VideoDialog
+          src={stage.src}
+          poster={stage.poster}
+          label={`${stage.label}, larger`}
+          start={zoom.at}
+          trigger={zoom.from}
+          onClose={() => setZoom(null)}
+        />
+      )}
       <video
         ref={ref}
         className="story__video"
@@ -512,14 +613,14 @@ function VideoStage({ stage, bind }: { stage: Extract<Stage, { kind: 'video' }>;
         width={stage.width}
         height={stage.height}
         muted
-        loop={stage.play || undefined}
+        loop={stage.free || undefined}
         playsInline
         preload="auto"
         disablePictureInPicture
         disableRemotePlayback
         aria-label={stage.label}
       />
-    </Laptop>
+    </MediaBox>
   )
 }
 
@@ -532,7 +633,7 @@ function CropStage({ stage, active }: { stage: Extract<Stage, { kind: 'crops' }>
   const shown = active >= 0 ? active + 1 : 0
   const dialog = useImageDialog()
   return (
-    <Laptop aspect={W / H} onZoom={(trigger) => dialog.open(stage.image, trigger, { gallery: [stage.image] })}>
+    <MediaBox aspect={W / H} onZoom={(trigger) => dialog.open(stage.image, trigger, { gallery: [stage.image] })}>
       {layers.map((r, k) => {
         let transform = 'none'
         if (r) {
@@ -552,6 +653,6 @@ function CropStage({ stage, active }: { stage: Extract<Stage, { kind: 'crops' }>
           </div>
         )
       })}
-    </Laptop>
+    </MediaBox>
   )
 }

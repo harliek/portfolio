@@ -71,10 +71,12 @@
  * every edge of it stays inside the window.
  */
 .cs {
-  --stage-h: 66svh;
+  /* Slightly smaller pictures and more room for the words (Harlie's request, 2026-09-26; was 66svh, 35/65). */
+  --stage-h: 60svh;
+  --text-inset: clamp(0px, 3.4vw, 56px);
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: minmax(0, 35fr) minmax(0, 65fr);
+  grid-template-columns: minmax(0, 40fr) minmax(0, 60fr);
   column-gap: var(--story-gap);
   align-items: start;
   width: 100%;
@@ -89,6 +91,8 @@
   display: grid;
   gap: 14px;
   min-width: 0;
+  /* The words sit further in from the page's left edge. */
+  padding-left: var(--text-inset);
 }
 
 .cs__intro .cx-meta,
@@ -103,6 +107,7 @@
   gap: 28px;
   min-width: 0;
   margin-top: 30px;
+  padding-left: var(--text-inset);
 }
 
 /*
@@ -132,6 +137,14 @@
 
 .story__hold > .story__stage {
   grid-row: 2;
+  /* A little narrower than its column, so the picture never overwhelms the words. */
+  width: min(92%, calc(var(--stage-h) * var(--aspect, 1.6)));
+}
+
+/* A told page sets its own length (CaseStory adds the space under the words, at least enough for the footer to meet
+   the window's bottom), so on a short page the words can end level with the picture. */
+.site-main:has(.story__hold) {
+  min-height: 0;
 }
 
 .story__hold > .story__below {
@@ -198,48 +211,30 @@
 }
 
 /*
- * The laptop (Harlie's picture): the recording or screenshot sits in its
- * transparent screen, behind the laptop, contained (never cropped), centred
- * on the screen's dark glass.
+ * The picture itself (Harlie's request, 2026-09-26: no device or frame PNG): a box in the media's own proportions,
+ * the recording or screenshot filling it whole, with rounded corners, a faint hairline and a soft, restrained glow
+ * that follows the rounded edge (not a neon border). The same on every told case study.
  */
-.story__laptop {
+.story__box {
   aspect-ratio: var(--aspect);
 }
 
 .story__screen {
   position: absolute;
+  inset: 0;
   overflow: hidden;
-  background: #060608;
+  border-radius: 14px;
+  background: #0b0b0e;
+  box-shadow:
+    0 0 0 1px rgb(236 238 255 / 0.1),
+    0 0 26px -6px rgb(118 132 255 / 0.3),
+    0 18px 60px -24px rgb(96 112 255 / 0.26);
   container-type: size;
 }
 
-.story__fit {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: min(100cqw, calc(100cqh * var(--media-aspect, 1.6)));
-  aspect-ratio: var(--media-aspect, 1.6);
-  transform: translate(-50%, -50%);
-}
-
-.story__fit > .story__video {
+.story__screen > .story__video {
   position: absolute;
   inset: 0;
-}
-
-.story__laptop-frame,
-.story__laptop-frame img {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.story__laptop-frame {
-  z-index: 1;
-  filter: drop-shadow(0 24px 34px rgb(0 0 0 / 0.55));
 }
 
 /* A part of one picture: placed once (no animated movement), shown by crossfading its layer. */
@@ -274,8 +269,8 @@
   /* Its width is set from its proportions (CaseStory), so it is centred in its column. */
   justify-self: center;
   transition:
-    transform 320ms var(--ease-arrive),
-    opacity 320ms var(--ease-arrive);
+    transform 900ms var(--ease-standard),
+    opacity 900ms var(--ease-standard);
 }
 
 .story__phone .picture,
@@ -290,21 +285,18 @@
 }
 
 /*
- * The homepage tile's arrangement throughout (Harlie's request): the outer two
- * phones the same size, the middle one larger. The current section's phone
- * is shown at full brightness and the others slightly dimmed (no change of size).
+ * One phone at a time (Harlie's request): the current section's phone grows a little and is at full brightness; the
+ * other two stay slightly smaller and dimmed. Each keeps its place and scales from its centre, so none collide.
  */
-.story__phone:nth-child(2) {
-  position: relative;
-  z-index: 1;
-  transform: scale(1.14);
-}
-
 .story__phones[data-focus] .story__phone {
-  opacity: 0.62;
+  position: relative;
+  transform: scale(0.94);
+  opacity: 0.6;
 }
 
 .story__phones[data-focus] .story__phone[data-on] {
+  z-index: 1;
+  transform: scale(1.12);
   opacity: 1;
 }
 
@@ -370,6 +362,20 @@
   font-size: 1rem;
   line-height: 1.6;
   color: var(--cx-text);
+  transition: color 240ms var(--ease-standard);
+}
+
+/* Hovering a section turns its heading and its words red together, only that section (Harlie's request). */
+.story__quote p,
+.story__points li {
+  transition: color 240ms var(--ease-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cs .story__step:hover :is(.story__title, .story__text, .story__quote p, .story__points li),
+  .cs .story__result:hover :is(.story__title, .story__text) {
+    color: var(--red);
+  }
 }
 
 .story__points {
@@ -411,6 +417,7 @@
 @media (max-width: 899.98px) {
   .cs {
     --stage-h: 30svh;
+    --text-inset: 0px;
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -456,6 +463,10 @@
 
   .story__steps {
     gap: 28px;
+  }
+
+  .story__hold > .story__stage {
+    width: min(100%, calc(var(--stage-h) * var(--aspect, 1.6)));
   }
 }
 
@@ -607,7 +618,7 @@
   transform: none;
 }
 
-/* While a project opens (expandFrame), the hero's text waits for the image to land. */
+/* Kept for the hero attributes (no longer set by the tile opening, pulseOpen.ts, which reveals the page whole). */
 [data-hero-waiting] [data-hero-reveal] {
   opacity: 0;
   transform: translateY(8px);
@@ -757,7 +768,7 @@
   color: #fff;
 }
 
-/* Hovering the held picture (the laptop, the phones) enlarges it a little (Harlie's request). */
+/* Hovering the held picture (the recording or screenshot, the phones) enlarges it a little (Harlie's request). */
 @media (hover: hover) and (pointer: fine) {
   .story__hold > .story__stage {
     transition: transform 420ms var(--ease-arrive);

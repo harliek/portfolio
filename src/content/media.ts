@@ -562,7 +562,7 @@ export const IMAGES = {
     id: 'cp-drinkware', file: 'cp-drinkware', width: 1672, height: 941, widths: [640, 960, 1280, 1672], fallback: 'jpg',
     alt: 'A CafePress Business UK drinkware page with a free UK delivery offer over £100, price and colour filters, and three drinkware products priced in pounds.',
     provenance: 'synthetic-example', synthetic: true,
-    source: 'PlanetArt/cafepress uk/drinkware web.png (added by Harlie, 2026-09-25)', role: 'CafePress UK stage (a later image, captioned as not part of the original project)',
+    source: 'PlanetArt/cafepress uk/drinkware web.png (added by Harlie, 2026-09-25)', role: 'CafePress UK, the second section\'s picture (restored by Harlie\'s request, without a caption)',
   }),
   'about-art': img({
     id: 'about-art', file: 'about-art', width: 1440, height: 1796, widths: [480, 960, 1440], fallback: 'jpg',
@@ -593,7 +593,7 @@ export const IMAGES = {
     id: 'cp-assistant', file: 'cp-assistant', width: 1672, height: 941, widths: [640, 960, 1280, 1672], fallback: 'jpg',
     alt: 'The CafePress Business UK storefront with an AI assistant panel open beside drinkware products priced in pounds.',
     provenance: 'synthetic-example', synthetic: true,
-    source: 'PlanetArt/cafepress uk/cafepress uk ai agent.png (added by Harlie, 2026-09-25)', role: 'CafePress UK stage (a later image, captioned as not part of the original project)',
+    source: 'PlanetArt/cafepress uk/cafepress uk ai agent.png (added by Harlie, 2026-09-25)', role: 'CafePress UK, the third section\'s picture (restored by Harlie\'s request, without a caption)',
   }),
   // Brief v19: the Inventory screen as the homepage tile (the clearest replenishment view), main content with its right edge whole.
   'merch-tile': img({

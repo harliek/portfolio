@@ -4,7 +4,7 @@
  * v23): a compact page. The introduction and three sections on the left;
  * the recording fixed beside them, its time following the scroll through
  * each section's segment (the Overview and catalog, the Canyon Pouch panel
- * and its working, Inventory with its order sheet); one scope note.
+ * and its working, Inventory with its order sheet).
  *
  * Facts (the recording, PlanetArt/Merchandising Dashboard/Dashboard
  * Video.mov; footer: "Portfolio project. Synthetic catalog, no backend,
@@ -24,25 +24,27 @@ export const MERCH = {
     </p>
   ),
   /** The recording's segment for each decision (seconds), and one still per step for reduced motion. */
+  // The catalog's product records to 11.42s, the calculation panel opening at 11.46s, the reorder page from 20.42s,
+  // Vendors from 25.54s. Each segment starts on its own first frame and ends before the next one's.
   segments: [
-    [0, 11.5],
-    [11.5, 20.4],
-    [20.4, 25.5],
+    [0, 11.45],
+    [11.46, 20.4],
+    [20.44, 25.5],
   ] as const,
   stills: [0.5, 15.2, 21.6],
   /** Harlie's editorial pass (v23): descriptive headings and one scope note. */
   decisions: [
     {
-      title: 'Consolidating product data',
-      text: 'I combined pricing, margin, inventory, sales, and vendor information in one product record. The overview prioritizes decisions by urgency and financial exposure.',
+      title: 'Product information',
+      text: 'I brought pricing, margin, inventory, sales, and vendor information together in each product record.',
     },
     {
-      title: 'Explaining recommendations',
-      text: 'Suggested order quantities show their underlying calculations, including sales patterns, supplier lead times, safety stock, and minimum order quantities.',
+      title: 'Reorder calculations',
+      text: 'Suggested quantities account for sales velocity, demand variability, supplier lead times, safety stock, and minimum order quantities. The prototype exposes the calculation for review.',
     },
     {
-      title: 'Preparing orders for review',
-      text: 'Products due for replenishment are ranked by margin at risk. Merchandisers can export an order sheet for review; the prototype does not place orders.',
+      title: 'Order preparation',
+      text: 'Products at or below their reorder point are ranked by margin at risk. Merchandisers can export an order sheet; the prototype does not place orders.',
     },
   ],
 }

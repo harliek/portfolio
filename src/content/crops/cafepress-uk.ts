@@ -19,8 +19,9 @@ import type { CropRegion } from '.'
  * - cp-products (896×444, the hero photograph): the branded notebook, mug, tote
  *   and bottle and the workwear, for the assortment (0.72×).
  * - cp-storefront, the complete storefront, at the end.
- * Every crop keeps whole words at its edges. No presentation slide is used on
- * this page (brief-v5 section 24); the deck's findings appear as written copy.
+ * Every crop keeps whole words at its edges. The page shows the whole
+ * storefront with the first section, then the drinkware page and the page
+ * with the assistant panel (media.ts), without captions (Harlie's request).
  *
  * Phones (round 4, R4-06): the stacked figures below 600px use narrower crops
  * (cp-phone-*) that read in place: the headline block, the header's right side
@@ -49,7 +50,7 @@ export const CAFEPRESS_UK_CROPS = {
     height: 941,
     widths: [640, 960, 1280, 1672],
     alt: 'The CafePress Business UK storefront prototype. Notices for fast UK delivery, volume discounts and no setup fees; the logo, search, a UK phone number, Sign in and Basket; a category row from Clothing & Workwear to Industries, including Eco-Friendly; the headline Branded Promotional Products for UK Businesses; service points including UK-based support; and Shop Popular Categories.',
-    role: 'CafePress UK stage (the complete storefront, at the end) and the larger view behind every crop',
+    role: 'CafePress UK, the first section\'s picture (the CafePress homepage) and the larger view behind every crop',
     crop: 'The whole 1672×941 screenshot',
   }),
   'cp-header-nav': crop({

@@ -1,10 +1,10 @@
 import type { ImageId } from '../media'
 
 /**
- * Jumpstart Finance (brief v19; copy from Harlie's editorial pass, v23): a
- * compact page. The introduction and a short section for each of the three
- * phone screens, the screens fixed beside them (the section's own screen
- * comes forward), and the qualified result.
+ * Jumpstart Finance (brief v19; copy from Harlie's editorial pass, v23, and
+ * the September 26 copy): a compact page. The introduction, then a section for
+ * each of the three phone screens, the screens together beside them; only the
+ * current section's screen is emphasised (PhoneSections).
  *
  * Facts: student venture at the European Innovation Academy, Porto, June to
  * July 2024; Harlie was Founder and Product Lead of a five-person team
@@ -19,33 +19,32 @@ export const JUMPSTART = {
   meta: ['Founder and Product Lead', 'Student venture, Portugal · 2024'],
   lede: (
     <p>
-      At the European Innovation Academy in Porto, I led a five&#8209;person team developing a financial education app concept. My work covered product direction, positioning, prototyping, and the business model.
+      At the European Innovation Academy in Porto, I led a five&#8209;person team developing a financial education app concept.
     </p>
   ),
   /**
-   * Harlie's three phones, left to right as on the homepage tile (Profile, Home, Community); `step` is the section (or
-   * sections) each one lights: the learning experience lights the learning path and the topics, the discussion lights
-   * the community, and the pitch lights the whole app.
+   * Harlie's three phones, left to right as on the homepage tile (Profile, Home, Community); `step` is the one section
+   * each belongs to, one phone at a time in Harlie's order: the middle first, then the left, then the right.
    */
   phones: [
-    { image: 'jf-tile-profile' as ImageId, name: 'Profile', step: [0, 2] },
-    { image: 'jf-tile-home' as ImageId, name: 'Home', step: [0, 2] },
-    { image: 'jf-tile-third' as ImageId, name: 'Community', step: [1, 2] },
+    { image: 'jf-tile-profile' as ImageId, name: 'Profile', step: 1 },
+    { image: 'jf-tile-home' as ImageId, name: 'Home', step: 0 },
+    { image: 'jf-tile-third' as ImageId, name: 'Community', step: 2 },
   ],
-  /** Harlie's editorial pass (v23): the product decisions only (no competitor claims, no pitch narration). */
+  /** Harlie's wording. */
   features: [
     {
-      title: 'Designing the learning experience',
-      text: 'We organized budgeting, banking, investing, and tax topics around users’ experience and goals. The prototype used a learning path with numbered levels to encourage continued learning.',
+      title: 'Learning structure',
+      text: 'We organized financial topics around users’ experience and goals. The prototype used a learning path with levels to encourage continued learning.',
     },
     {
-      title: 'Supporting discussion',
-      text: 'The proposed forum would let users ask questions and exchange perspectives alongside the lessons.',
+      title: 'Community discussion',
+      text: 'The proposed forum would let users ask questions and exchange perspectives on financial topics.',
     },
     {
-      // The sign-ups are the pitch deck's (p. 10); the investor presentation is Harlie's own statement.
-      title: 'Pitch and response',
-      text: 'I presented the concept to a board of investors. The pitch generated 150 sign‑ups within 24 hours.',
+      // A reported figure from the project's pitch deck (p. 10), not customers or active users.
+      title: 'Pitch and early interest',
+      text: 'I presented the concept to investors. The project’s pitch deck reported 150 sign‑ups in 24 hours.',
     },
   ],
 }

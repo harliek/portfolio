@@ -74,13 +74,14 @@ export function AboutContent() {
         <div className="about-education__grid">
           <div className="about-school">
             <p className="about-school__name">
-              {edu.school} <span className="about-school__dates tabular">· {edu.dates}</span>
+              {edu.school} <span className="about-school__dates tabular">{edu.dates}</span>
             </p>
             <ul className="about-school__credentials" role="list">
               {edu.lines.map((l) => (
                 <li key={l}>{l}</li>
               ))}
             </ul>
+            <p className="about-school__coursework">{edu.coursework}</p>
           </div>
           <div className="about-school__text">
             {edu.text.map((p) => (

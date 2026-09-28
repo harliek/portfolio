@@ -7,15 +7,15 @@ const project = projectById('merchandising-platform')
 
 /**
  * Merchandising Dashboard (brief v19; route /work/merchandising-platform kept): the introduction and three decisions
- * on the left, the recording fixed on the right; scrolling through each
- * decision moves the recording through its segment (and back when scrolling
- * up), so the highlighted decision and the product state always agree.
+ * on the left, the recording fixed on the right; while a decision is the
+ * current one, the recording plays that decision's segment on a loop (faster
+ * while the page scrolls), so the highlighted decision and the product state
+ * always agree.
  */
 export default function MerchandisingPlatform() {
   return (
     <CasePage project={project} className="page-merchandising-platform">
       <CaseStory
-        project={project}
         title={C.title}
         meta={C.meta}
         lede={C.lede}
@@ -32,6 +32,8 @@ export default function MerchandisingPlatform() {
           play: true,
           // A little faster than recorded (Harlie's request).
           rate: 1.5,
+          // Harlie's brief, 2026-09-28: polished enough to be taken for a PlanetArt system; it is Harlie's prototype.
+          status: 'Prototype',
         }}
       />
     </CasePage>

@@ -1,21 +1,12 @@
 /*
  * The settings behind every professional page: the persistent background
- * set (StageBackground, mounted once so the room's video never restarts), a
- * route-transition helper, and the pointer trail canvas.
+ * set (StageBackground, mounted once) and the pointer trail canvas.
  *
- * Two layers of the set:
- * - the ground (`.stage-bg` itself): a quiet near-black behind every page.
- *   Case studies, About and the not-found page show only this: no
- *   architectural walls, reflective floor or reflection line, and no video.
- *   A faint cool lift at the top and a soft darkening towards the edges keep
- *   it from reading as a dead flat black; nothing in it has an edge or a
- *   line, so text reads over it anywhere;
- * - the room (`.stage-scene`, the homepage, brief v15): a dark architectural
- *   corridor behind the title and the project objects, which stand on its
- *   floor, with a restrained shade (below). It lies over the ground and
- *   cross-fades with it when the route changes: one layer fading over a
- *   steady one, so there is never a black flash or a double exposure of two
- *   pictures.
+ * The ground (`.stage-bg` itself): a quiet near-black behind every page, with
+ * no architectural walls, reflective floor or reflection line, and no video.
+ * A faint cool lift at the top and a soft darkening towards the edges keep it
+ * from reading as a dead flat black; nothing in it has an edge or a line, so
+ * text reads over it anywhere.
  */
 
 /* ----------------------------------------------------------------------- */
@@ -34,134 +25,22 @@
   pointer-events: none;
 }
 
-/*
- * A project is opening from the carousel (StageBackground data-hurry): the
- * destination's ground replaces the room quickly, so the new page's text
- * never appears over the room.
- */
-.stage-bg[data-hurry] .stage-scene {
-  transition-duration: 200ms;
-}
-
-/* ----------------------------------------------------------------------- */
-/* The room (homepage)                                                      */
-/* ----------------------------------------------------------------------- */
-
-/*
- * Over the ground, shown on the homepage only (`data-shown`), cross-fading
- * with it on a route change (--scene-fade; quicker with data-hurry). Its
- * own dark base, so an unloaded poster reads as the room's darkness.
- * Object-fit cover about the centre, so the corridor's vanishing point
- * stays at the middle of the window and its floor fills the lower third,
- * at every size (portrait phones have their own centred crop of the same
- * frames, StageBackground).
- */
-.stage-scene {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: #030306;
-  opacity: 0;
-  transition: opacity var(--scene-fade, 700ms) var(--ease-standard);
-}
-
-.stage-scene[data-shown] {
-  opacity: 1;
-}
-
-/* Leaving the homepage: out quicker than in, so the next page is not seen over the room for long. */
-.stage-scene:not([data-shown]) {
-  transition-duration: var(--scene-fade-out, 260ms);
-}
-
-.stage-scene__poster,
-.stage-scene__poster img,
-.stage-scene__video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  object-fit: cover;
-  object-position: 50% 50%;
-}
-
-.stage-scene__video {
-  opacity: 0;
-  transition: opacity var(--bg-video-fade, var(--dur-4)) var(--ease-standard);
-}
-
-.stage-scene__video[data-playing] {
-  opacity: 1;
-}
-
-/*
- * The room's shade, restrained (its own indigo, violet, teal and the small
- * red uplights stay as they are; nothing is added): a shade under the
- * header; a soft darkening at the far left and right, where the nearest
- * pillars and their red uplights would pull the eye from the objects; and a
- * low shade along the bottom edge, under the carousel's controls. The
- * title and the captions carry their own local shades (home.css). Never a
- * solid band.
- */
-.stage-scene__shade,
-.stage-scene__shade::before,
-.stage-scene__shade::after {
-  position: absolute;
-  inset: 0;
-}
-
-.stage-scene__shade {
-  background: linear-gradient(to bottom in oklch, rgb(2 2 5 / 0.5), rgb(2 2 5 / 0.14) 12%, rgb(2 2 5 / 0) 24%);
-}
-
-.stage-scene__shade::before {
-  content: '';
-  background: linear-gradient(
-    to right in oklch,
-    rgb(2 2 5 / 0.42),
-    rgb(2 2 5 / 0.12) 16%,
-    rgb(2 2 5 / 0) 30%,
-    rgb(2 2 5 / 0) 70%,
-    rgb(2 2 5 / 0.12) 84%,
-    rgb(2 2 5 / 0.42)
-  );
-}
-
-.stage-scene__shade::after {
-  content: '';
-  background: linear-gradient(to top in oklch, rgb(2 2 5 / 0.46), rgb(2 2 5 / 0.12) 12%, rgb(2 2 5 / 0) 24%);
-}
-
-/* Phones: the window shows only the corridor's middle, so the side shade would darken the objects' own ground. */
-@media (max-width: 599.98px) {
-  .stage-scene__shade::before {
-    opacity: 0.5;
-  }
-}
-
-/* ----------------------------------------------------------------------- */
-/* Route transition helper                                                  */
-/* ----------------------------------------------------------------------- */
-
-/*
- * A page frame that waits for the shared-image transition
- * (components/transition/projectTransition.ts removes the attribute; the
- * page also removes it after a timeout). The moving image itself is styled
- * in components/transition/transition.css.
- */
-[data-case-hero][data-transition-pending] {
-  opacity: 0;
-}
-
 /* ----------------------------------------------------------------------- */
 /* Pointer trail (fine pointers only; never takes pointer events)           */
 /* ----------------------------------------------------------------------- */
 
+/*
+ * The trail is decoration, so it passes beneath the page (Harlie's brief, 2026-09-28: "Keep decorative lighting
+ * underneath functional UI"; it was z-index 80, over the words, the fields, the buttons and the header): z-index 0,
+ * after the ground, the Orb and the homepage film in the page's order, so it lights the black between things while
+ * copy, form fields, buttons, focus rings, the header and the footer (z-index 1 and up) are drawn over it. The ball
+ * of light itself stays above everything (CustomCursor, the top layer): it is the pointer. Page changes lift the
+ * trail over the moving pieces on their own (transition.css, tx-trail).
+ */
 .pointer-trail {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
@@ -170,25 +49,6 @@
 html:fullscreen .pointer-trail,
 html[data-motion='reduce'] .pointer-trail {
   display: none;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Empty diagram slots: visible ONLY with the debug flag (?debug=slots)     */
-/* ----------------------------------------------------------------------- */
-
-.slot-debug {
-  display: grid;
-  gap: var(--space-1);
-  padding: var(--space-4);
-  border: 1px solid rgb(239 141 116 / 0.7);
-  border-radius: var(--radius-inner);
-  color: var(--stage-coral);
-  font-size: 0.8125rem;
-  line-height: 1.4;
-}
-
-.slot-debug__id {
-  font-weight: var(--weight-label);
 }
 
 /*
@@ -234,14 +94,15 @@ html[data-motion='reduce'] .pointer-trail {
 }
 
 /*
- * The cursor's light (CursorLight): a soft blue violet circle (0.24 of the
+ * The cursor's light (CursorLight): a soft blue violet circle, a little brighter than at first (0.14 of the
  * window's shorter side, a smoothstep falloff, as the Orb shader's spotlight) laid
  * over what is behind it with screen blending, so it reads as light rather
- * than a tint: on black it glows blue violet, over the film it lifts the darks.
+ * than a tint: on black it glows blue violet (tokens.css --pointer-light-rgb), over the film it lifts the darks.
  * Moved by transform only; fades in and out.
  */
 .cursor-light {
-  --r: calc(min(100vw, 100svh) * 0.24);
+  /* Smaller than at first (Harlie's request, 2026-09-27; was 0.24 of the window's shorter side). */
+  --r: calc(min(100vw, 100svh) * 0.14);
   position: absolute;
   top: 0;
   left: 0;
@@ -251,17 +112,17 @@ html[data-motion='reduce'] .pointer-trail {
   border-radius: 50%;
   background: radial-gradient(
     closest-side,
-    rgb(118 104 255 / 0.22) 0%,
-    rgb(118 104 255 / 0.214) 10%,
-    rgb(118 104 255 / 0.197) 20%,
-    rgb(118 104 255 / 0.173) 30%,
-    rgb(118 104 255 / 0.142) 40%,
-    rgb(118 104 255 / 0.11) 50%,
-    rgb(118 104 255 / 0.078) 60%,
-    rgb(118 104 255 / 0.047) 70%,
-    rgb(118 104 255 / 0.023) 80%,
-    rgb(118 104 255 / 0.006) 90%,
-    rgb(118 104 255 / 0) 100%
+    rgb(var(--pointer-light-rgb) / 0.264) 0%,
+    rgb(var(--pointer-light-rgb) / 0.257) 10%,
+    rgb(var(--pointer-light-rgb) / 0.236) 20%,
+    rgb(var(--pointer-light-rgb) / 0.207) 30%,
+    rgb(var(--pointer-light-rgb) / 0.17) 40%,
+    rgb(var(--pointer-light-rgb) / 0.132) 50%,
+    rgb(var(--pointer-light-rgb) / 0.094) 60%,
+    rgb(var(--pointer-light-rgb) / 0.057) 70%,
+    rgb(var(--pointer-light-rgb) / 0.028) 80%,
+    rgb(var(--pointer-light-rgb) / 0.007) 90%,
+    rgb(var(--pointer-light-rgb) / 0.0) 100%
   );
   mix-blend-mode: screen;
   opacity: 0;
@@ -272,6 +133,78 @@ html[data-motion='reduce'] .pointer-trail {
 
 .cursor-light[data-on] {
   opacity: 1;
+}
+
+/*
+ * On the case studies and About, the soft light and the ground's flow step back beneath what the pointer is over
+ * (Harlie's brief, 2026-09-28: "Keep decorative lighting underneath functional UI ... text readable, input boundaries
+ * visible, button states clear ... brightest parts not directly over important copy. Prefer fixing layer hierarchy
+ * and local opacity rather than weakening the effect everywhere"). Both lie under the page already; the form's fields
+ * and the Send Message button are nearly clear, so without this the flow's brightest glint showed through them and
+ * ran along their edges. While the pointer is in a form or on a field (html[data-pointer-over], CustomCursor and
+ * pointerContext.ts) they fall to 0.3, on a link or button to 0.45, on copy to 0.65, and they are at full strength
+ * everywhere else. They step back quickly and come back slowly, so crossing the gap between two paragraphs or two
+ * fields never makes them pulse. The homepage's light over the film is left as it is.
+ */
+.case-ground {
+  --decor-level: 1;
+}
+
+html[data-pointer-over='text'] .case-ground {
+  --decor-level: 0.65;
+}
+
+html[data-pointer-over='control'] .case-ground {
+  --decor-level: 0.45;
+}
+
+html:is([data-pointer-over='field'], [data-pointer-over='form']) .case-ground {
+  --decor-level: 0.3;
+}
+
+/*
+ * About (CaseGround calm, Harlie's brief, 2026-09-28: the purple atmospheric animation "must stay atmospheric, not a
+ * third focal object" beside the name and the portrait; "reduce opacity/scale/brightness/movement/proximity if
+ * needed; don't remove the identity"). A page factor on top of the pointer-over levels above: the field and the soft
+ * light at 0.55 anywhere on the page, and at 0.35 while the pointer is within the opening (the name, its descriptor,
+ * the copy and the portrait), where it passed right beside the face (a pointer pass along the portrait left 11% of the
+ * 240px beside it violet). With the calmer stirring (CaseGround CALM) the flow stays near the pointer and fades
+ * soon, dark everywhere else as before. The case studies keep the factor of 1.
+ */
+.case-ground {
+  --decor-page: 1;
+}
+
+.case-ground[data-calm] {
+  --decor-page: 0.55;
+}
+
+html:has(.about-hero:hover) .case-ground[data-calm] {
+  --decor-page: 0.35;
+}
+
+/* The flow (CaseGround wraps the field in .case-ground__quiet; its own fade-in stays on .case-ground__field). */
+.case-ground__quiet {
+  position: absolute;
+  inset: 0;
+  opacity: calc(var(--decor-level) * var(--decor-page));
+  transition: opacity 700ms var(--ease-standard);
+}
+
+/* The soft light by brightness, so its own fade in and out (opacity) and its screen blending are untouched. */
+.case-ground .cursor-light {
+  filter: brightness(calc(var(--decor-level) * var(--decor-page)));
+  transition:
+    opacity 300ms var(--ease-arrive),
+    filter 700ms var(--ease-standard);
+}
+
+html[data-pointer-over] .case-ground__quiet {
+  transition-duration: 240ms;
+}
+
+html[data-pointer-over] .case-ground .cursor-light {
+  transition-duration: 300ms, 240ms;
 }
 
 @media (hover: none), (pointer: coarse) {
@@ -292,4 +225,25 @@ html[data-motion='reduce'] .pointer-trail {
   overflow: hidden;
   background: #000;
   pointer-events: none;
+}
+
+/* Kept mounted between visits (CaseGround), hidden on the other pages, where its field rests. */
+.case-ground[data-off] {
+  display: none;
+}
+
+/*
+ * The Nebula Drift field fades in over the black once it starts (CaseGround).
+ * It rests dark (only the pointer's path shows), so its trail is at full strength.
+ */
+.case-ground__field {
+  position: absolute;
+  inset: 0;
+  animation: case-field-in 1.4s var(--ease-standard) both;
+}
+
+@keyframes case-field-in {
+  from {
+    opacity: 0;
+  }
 }

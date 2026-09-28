@@ -1,7 +1,7 @@
 import type { SyntheticEvent } from 'react'
 import { prefersReducedMotion } from '../../hooks/useReducedMotion'
 
-/** The larger views' exit (ms): their content and scrim fade out together (case.css .image-dialog[data-closing]). */
+/** The larger views' exit (ms): their content and scrim fade out together (components.css, [data-closing]). */
 const EXIT_MS = 120
 
 /**

@@ -1,7 +1,7 @@
 /*
  * A project's picture inside its frame (PlaneMedia, brief v16): the homepage
- * field and each case study's next-project link. Footage and stills fill the
- * frame; Jumpstart shows the app's own three screens, standing still.
+ * field. Footage and stills fill the frame; Jumpstart shows the app's own
+ * three screens, standing still.
  */
 
 .plane__media {
@@ -11,35 +11,13 @@
   overflow: hidden;
 }
 
-.plane__video,
-.plane__picture,
-.plane__picture img {
+.plane__video {
   position: absolute;
   inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-/* Still images move very slowly inside their frame (a moving crop, not a zoom). */
-.plane__picture[data-pan] img {
-  animation: plane-pan 30s ease-in-out infinite alternate;
-  transform-origin: 50% 40%;
-}
-
-.plane__picture[data-pan='right'] img {
-  animation-direction: alternate-reverse;
-}
-
-@keyframes plane-pan {
-  from {
-    transform: scale(1.1) translateX(2.4%);
-  }
-
-  to {
-    transform: scale(1.1) translateX(-2.4%);
-  }
 }
 
 /*
@@ -56,7 +34,7 @@
   gap: 3.2%;
 }
 
-/* The outer two phones at the same height (their own widths from their proportions); the middle one larger (Harlie's request). */
+/* The outer two phones at the same height (widths from their proportions); the middle one larger (Harlie's request). */
 .plane__screen {
   display: block;
   height: 90%;
@@ -73,28 +51,6 @@
   width: auto;
   height: 100%;
   filter: drop-shadow(0 14px 18px rgb(0 0 0 / 0.45));
-}
-
-/*
- * Cutouts: real interface elements, each its own transparent image placed
- * in the 16:10 box (x, y and width in percent, field.ts), floating with a
- * soft shadow; the page shows around and between them.
- */
-.plane__cutouts {
-  position: absolute;
-  inset: 0;
-}
-
-.plane__cut {
-  position: absolute;
-  display: block;
-}
-
-.plane__cut img {
-  display: block;
-  width: 100%;
-  height: auto;
-  filter: drop-shadow(0 12px 20px rgb(0 0 0 / 0.5));
 }
 
 /*
@@ -172,15 +128,10 @@
   color: #0e1d30;
 }
 
-/* In the small next-project thumbnail the conversation keeps its proportions rather than a readable minimum. */
-.cx-next__frame .chat-msg__bubble {
-  font-size: 2.5cqw;
-}
-
 /*
- * Movement on the still tiles (Harlie's requests): the Merchandising widgets and the Jumpstart phones each grow a
- * little and settle again, in turn (the middle phone first, then the left, then the right), slowly and continuously.
- * `scale` composes with any transform a piece already has.
+ * Movement on the still tile (Harlie's requests): the Jumpstart phones each grow a little and settle again, in turn
+ * (the middle phone first, then the left, then the right), slowly and continuously. `scale` composes with any
+ * transform a piece already has.
  */
 @keyframes plane-breathe {
   0%,
@@ -191,50 +142,6 @@
   50% {
     scale: var(--grow, 1.05);
   }
-}
-
-.plane__widgets {
-  position: absolute;
-}
-
-/*
- * The Merchandising widgets (Harlie's request): each shown a little smaller in its own place, so they stand apart,
- * and one at a time grows gently and settles again before the next begins (row by row, left to right, about 1.8s
- * each, 16s round). The growth stays within each widget's original footprint, so none ever touch.
- */
-.plane__widget {
-  --rest: 0.9;
-  position: absolute;
-  display: block;
-  overflow: hidden;
-  filter: drop-shadow(0 12px 20px rgb(0 0 0 / 0.5));
-  scale: var(--rest);
-  animation: plane-widget-turn 16.2s ease-in-out infinite;
-  animation-delay: calc(var(--k, 0) * 1.8s);
-}
-
-/* One turn in every nine: up and back within 9% of the round, then still. */
-@keyframes plane-widget-turn {
-  0%,
-  9%,
-  100% {
-    scale: var(--rest);
-  }
-
-  4.5% {
-    scale: calc(var(--rest) * var(--grow, 1.06));
-  }
-}
-
-.plane__widget picture {
-  display: contents;
-}
-
-.plane__widget img {
-  position: absolute;
-  display: block;
-  max-width: none;
-  height: auto;
 }
 
 .plane__screen {
@@ -341,6 +248,11 @@
   animation-delay: 0.3s;
 }
 
+/* The dots rest while their indicator is hidden (every message but the one typing) and resume together when it types. */
+.chat-msg:not([data-state='typing']) .chat-msg__typing i {
+  animation-play-state: paused;
+}
+
 @keyframes chat-dot {
   0%,
   60%,
@@ -356,8 +268,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .plane__picture[data-pan] img,
-  .plane__widget,
   .plane__screen,
   .chat-msg__typing i {
     animation: none;

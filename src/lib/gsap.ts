@@ -8,12 +8,4 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
  */
 gsap.registerPlugin(ScrollTrigger)
 
-/** The motion language (brief v16): slow, cinematic, no overshoot. */
-export const EASE = {
-  /** Spatial moves: frames expanding, planes receding. */
-  move: 'power3.inOut',
-  /** Arrivals: things settling into place. */
-  arrive: 'power2.out',
-} as const
-
 export { gsap, ScrollTrigger }

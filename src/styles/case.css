@@ -1,941 +1,37 @@
 /*
- * Case studies (src/components/case/*, src/components/media/DemoVideo.tsx).
- * Page-specific styles go in src/styles/pages/<id>.css, scoped under the page
- * class.
- *
- * CaseScroll (desktop ≥960px, brief-v8 section 7): one centred grid at the
- * site's content width (1240px, the header's edges), 42% text / 6% gap / 52%
- * media. Title 38–46px; metadata 15px lines; body 18–19px / 1.55 at about 60
- * characters; section headings 22–26px. The media column holds ONE sticky
- * stage: the visible area below the navigation, with media shorter than it
- * centred (or placed at its top, StageConfig align 'start'), through the
- * outcome; it is released with the outcome's end, before the next-project
- * link. Below 960px: stacked in reading order, no sticky.
- *
- * The opening (brief-v13 and v15): title, metadata, summary and status on the
- * left, the concept cover beside them on the right with its caption under it,
- * standing on the same floor as the text (or, beside a short opening, level
- * with the title at a floor of its balanced size); the first media section
- * starts below the cover, level with the first section heading.
- *
- * No captions under media (section 8) beyond one discreet media label each,
- * in one style (.cs-media-label): under an image beside its expand glyph,
- * under a recording's player, under the concept cover. A recording's picture
- * stays clean: its compact controls sit below it inside the player's frame
- * (DemoControls).
- *
- * Reading typography (plan-v12 item 11): the homepage captions' pale
- * lavender-white on the near-black room (--case-ink, --case-text,
- * --case-muted).
- *
- * The accent (--accent / --accent-rgb, set by CaseLayout; --case-accent for
- * older page CSS) is the project's own colour (never the homepage's red). It
- * lights the cover artwork and marks interactive and active things: the
- * active section heading and its marker, heading hover, highlights, media
- * hover and focus edges, link hover, the focused or pressed player control,
- * and the next-project link (in the NEXT project's accent). Never on whole
- * paragraphs.
+ * The larger view of a film or a recording, the Creative Production films (src/components/pages/client-work/
+ * FilmDialog.tsx) and the told case studies' recordings (CaseStory's VideoDialog), and its compact control bar
+ * (src/components/media/DemoControls.tsx). Loaded with those two; the close fade every larger view shares is in
+ * components.css, the case studies are styled by case-v16.css, page-specific styles go in src/styles/pages/<id>.css.
  */
 
-.case {
-  --case-max: var(--content-max, 1240px);
-  --case-gap: 6%;
-  /* Reading typography: headings and bold phrases, body text, then metadata, captions and the status line. */
-  --case-ink: #f1eef9;
-  --case-text: #e3dfed;
-  --case-muted: #b5b1c6;
-  /* 17px on phones, 18 to 19px on desktop windows. */
-  --case-body: clamp(1.0625rem, 0.98rem + 0.2vw, 1.1875rem);
-  --case-accent: var(--accent, var(--stage-violet));
-  --case-accent-rgb: var(--accent-rgb, 165 140 240);
-  /* Desktop: the space between the story and the next-project link. */
-  --case-next-gap: 64px;
-  /* The cover's floor light may reach into the gutter; never past the viewport (clip, unlike hidden, keeps sticky media working). */
-  overflow-x: clip;
-}
-
-/*
- * The site's buttons on a case page (Play demo, Watch film, the Close of a recording's or film's larger view): hover and
- * focus take the project's accent instead of the homepage red, with a 1px edge in place of the shared glow, so no
- * control lights up beside the media. (components.css defines the buttons; this only resolves their accent here.)
- */
-.case .button {
-  --_acc: var(--case-accent);
-  --_acc-rgb: var(--case-accent-rgb);
-  --btn-glow: 0 0 0 1px rgb(var(--_acc-rgb) / 0.55);
-}
-
 /* ----------------------------------------------------------------------- */
-/* Shared prose                                                             */
-/* ----------------------------------------------------------------------- */
-
-.case-prose {
-  display: grid;
-  gap: 0.9em;
-}
-
-/* About 60 characters. A text-based measure (not the width of '0'), so the stacked layout on tablets keeps the same
-   line length as the narrower desktop column. */
-.case-prose p,
-.case-prose li {
-  max-width: 33rem;
-  color: var(--case-text);
-  font-size: var(--case-body);
-  line-height: 1.55;
-  /* No single word alone on a paragraph's last line. */
-  text-wrap: pretty;
-}
-
-.case-prose strong {
-  color: var(--case-ink);
-  font-weight: 620;
-  transition: color var(--dur-2) var(--ease-standard);
-}
-
-.case-prose ul {
-  display: grid;
-  gap: 0.4em;
-  padding-left: 1.1em;
-}
-
-/* Links in prose are underlined before hover; hover takes the project accent. */
-.case-prose a {
-  color: var(--case-text);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-decoration-color: color-mix(in oklch, currentColor 60%, transparent);
-  text-underline-offset: 3px;
-  transition:
-    color var(--dur-1) var(--ease-standard),
-    text-decoration-color var(--dur-1) var(--ease-standard);
-}
-
-.case-prose a:hover {
-  color: color-mix(in oklch, var(--case-accent) 80%, var(--case-ink));
-  text-decoration-color: currentColor;
-}
-
-/*
- * Noninteractive text with a mouse: headings and the bold phrase a recruiter should notice ease into the page's one
- * accent on hover, over --dur-2 on the standard curve (the same mix in OKLCH as base.css, so the colour travels
- * perceptually). A plain colour change: the text cursor, size and underline stay as they are. Nothing on touch.
- */
-@media (hover: hover) and (pointer: fine) {
-  .cs-title:hover,
-  .cs-heading:hover,
-  .case-prose strong:hover {
-    color: color-mix(in oklch, var(--case-accent) 80%, var(--case-ink));
-  }
-}
-
-/* ----------------------------------------------------------------------- */
-/* CaseScroll: grid                                                         */
-/* ----------------------------------------------------------------------- */
-
-.cs {
-  /* The sticky stage's top: the navigation and 16px. */
-  --cs-top: calc(var(--header-height) + var(--space-4));
-  /* The space kept under the stage at the viewport's bottom edge. */
-  --cs-bottom: var(--space-5);
-  /* The visible stage (CaseScroll): the viewport below the navigation, never below 360px. */
-  --cs-view: max(360px, calc(100svh - var(--cs-top) - var(--cs-bottom)));
-  /* The media's greatest height as a share of the visible stage (StageConfig fill, set inline). */
-  --cs-fill: 1;
-  /* The row under an image (label and expand glyph), the control bar inside a recording's player, and the caption row under a player. */
-  --cs-bar: 34px;
-  --cs-pbar: 40px;
-  --cs-caprow: 30px;
-  /* What follows the story at the page end on desktop: the gap, the next-project link and the compact footer. */
-  --cs-after: calc(var(--case-next-gap) + 100px + 85px);
-  /*
-   * The tallest a sticky figure may be: released with the outcome, its bottom level with the outcome's, it still fits
-   * below the navigation at the page end (a tall phone never slides under the header).
-   */
-  --cs-cap: max(300px, calc(100svh - var(--cs-top) - var(--cs-after)));
-  width: 100%;
-  max-width: calc(var(--case-max) + 2 * var(--gutter));
-  margin-inline: auto;
-  padding: clamp(var(--space-5), 3.4vw, var(--space-7)) var(--gutter) 0;
-}
-
-/* Touch: the expand controls are 44px. */
-@media (hover: none) {
-  .cs {
-    --cs-bar: 52px;
-    --cs-pbar: 48px;
-  }
-}
-
-@media (min-width: 960px) {
-  .cs[data-layout='sticky'] {
-    display: grid;
-    grid-template-columns: minmax(0, 42fr) minmax(0, 52fr);
-    column-gap: var(--case-gap);
-  }
-
-  /*
-   * CaseScroll (data-stage): the opening spans both columns (text left, cover right); below it the story and, under
-   * the cover, the media column. (The Creative Production page places its own pieces, client-work.css.)
-   */
-  .cs[data-stage][data-layout='sticky'] {
-    /*
-     * The opening's row is at least tall enough that the first section starts below the activation line (40% of the
-     * viewport) on arrival. The row, not the opening, carries that minimum: the opening keeps its own height (start
-     * aligned), so its cover is never stretched away from the title on a tall window.
-     */
-    grid-template-rows: minmax(calc(40vh - var(--header-height) - var(--space-5) - clamp(44px, 6.5svh, 72px)), auto) 1fr;
-    grid-template-areas:
-      'opening opening'
-      'body media';
-    row-gap: clamp(44px, 6.5svh, 72px);
-  }
-
-  .cs[data-layout='sticky'] > .cs-opening {
-    grid-area: opening;
-    align-self: start;
-  }
-
-  .cs[data-layout='sticky'] > .cs-media {
-    grid-area: media;
-  }
-
-  .cs[data-layout='sticky'] > .cs-body {
-    grid-area: body;
-  }
-}
-
-.cs-opening,
-.cs-body,
-.cs-media {
-  min-width: 0;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Opening: title, metadata, summary and status beside the concept cover    */
+/* Films (FilmDialog)                                                       */
 /* ----------------------------------------------------------------------- */
 
 /*
- * brief-v13 and v15: the concept artwork stands beside the introduction, as on the Creative Production page, on the
- * same floor as the text. Its base and its caption end level with the lede's last line (the status line where there
- * is one), so the two small annotations, the status on the left and "Concept cover" on the right, read as a pair. Its
- * box takes no height of its own (size containment): the text decides the opening's height and the artwork fits the
- * space beside it (at most its COVER_HEIGHT, CaseScroll.tsx), so neither the text nor the artwork is left in an
- * unexplained empty space. A short opening (no status line) keeps the artwork at a floor of its balanced size
- * instead (below): then the artwork's top is level with the title's and the extra height falls below the summary,
- * before the story. Centred in the media column, it shares its axis with the media below.
- *
- * From 700px: two columns (60/40 on tablets; the page's 42/52 grid from 960px). Phones: one column, title and
- * metadata, a smaller cover with its caption (in view on arrival, so the route transition's object lands there),
- * then the summary and the status line, which leads straight into the media.
+ * The viewer's own values (it sits outside any case page): the controls' glyphs in the dialog's text colour, at rest
+ * and on hover; the site's statement rose (as on the Close button beside them) for the focus ring, a pressed
+ * control and the dragged slider; and the control bar's height, its 32px controls (44px on touch screens) and the 1px
+ * rule above.
  */
-.cs-opening {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.cs-opening > * {
-  max-width: 100%;
-}
-
-@media (min-width: 700px) {
-  .cs-opening {
-    display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    /* The last row is flexible: a cover taller than the text (its floor, below) adds its extra height there. */
-    grid-template-rows: auto minmax(0, 1fr);
-    grid-template-areas:
-      'intro cover'
-      'lede cover';
-    align-content: start;
-    align-items: start;
-    column-gap: var(--space-6);
-  }
-
-  .cs-opening > .cs-intro {
-    grid-area: intro;
-  }
-
-  .cs-opening > .cs-lede {
-    grid-area: lede;
-  }
-
-  /* Stretched over both rows: a definite height for its size container (100cqh). */
-  .cs-opening > .cs-cover {
-    grid-area: cover;
-    align-self: stretch;
-  }
-}
-
-@media (min-width: 960px) {
-  .cs-opening {
-    grid-template-columns: minmax(0, 42fr) minmax(0, 52fr);
-    column-gap: var(--case-gap);
-  }
-}
-
-.cs-intro,
-.cs-lede {
-  width: 100%;
-}
-
-.cs-title {
-  color: var(--case-ink);
-  font-size: clamp(2.125rem, 1.6rem + 1.4vw, 2.875rem);
-  line-height: 1.06;
-  letter-spacing: -0.03em;
-  font-weight: var(--weight-heading);
-  text-wrap: balance;
-  transition: color var(--dur-2) var(--ease-standard);
-}
-
-.cs-title:focus {
-  outline: none;
-}
-
-.cs-meta {
-  display: grid;
-  gap: 2px;
-  margin-top: var(--space-4);
-  color: var(--case-muted);
-  font-size: 0.9375rem;
-  line-height: 1.5;
-}
-
-.cs-meta__line {
-  display: block;
-}
-
-/* One phrase of a metadata line (metaLine.ts): a narrow line breaks at a middle dot, never inside a phrase that fits. */
-.cs-meta__seg {
-  display: inline-block;
-}
-
-/* The role line reads first. */
-.cs-meta__line:first-child {
-  color: var(--case-text);
-}
-
-.cs-lede {
-  margin-top: var(--space-5);
-}
-
-/* An opening with the summary inside its intro block (the Creative Production page until it uses CaseOpening). */
-.cs-intro > .cs-summary {
-  margin-top: var(--space-5);
-}
-
-/* The one project-status line near the introduction (e.g. Working prototype with synthetic data): a small accent mark, no glow. */
-.cs-status {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  max-width: 33rem;
-  margin-top: var(--space-4);
-  color: var(--case-muted);
-  font-size: 0.9375rem;
-  line-height: 1.45;
-}
-
-.cs-status::before {
-  content: '';
-  flex: none;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--case-accent);
-  transform: translateY(-2px);
-}
-
-/*
- * The cover: the object, then its caption directly under it (centred under the object's own footprint, so the mug's
- * caption sits under its body rather than its handle). --slot-w is the object's drawn width: its COVER_HEIGHT width
- * (--cover-max, set by CaseCover), within the column, and (phones) within --cover-hmax or (beside the text) within the height beside it
- * less the caption row (--cover-cap).
- *
- * Light: the homepage's one light model (tokens.css --light-*, motion-plan P2) at case-page strength, always in the
- * project's own accent (never the homepage's red). The featured level at rest: an alpha-aware rim on the silhouette
- * (the accent mixed toward white) and a softer halo in the accent, both on the artwork itself (never a box), a soft
- * contact shadow where it stands, and the accent's light on the floor beneath it (halo and floor light restrained by
- * --light-case). The cover is not a link, so hover raises the light only: rim and halo to the active level and the
- * floor light rising from the base, over --dur-2 with the respond curve; no lift, and the shadow stays. The slot
- * carries the route transition's shared name, so the shadow and floor light land with the moving object.
- */
-.cs-cover {
-  --cover-hmax: min(150px, 22svh);
-  --cover-cap: 34px;
-  --slot-w: min(var(--cover-max, 260px), 100%, calc(var(--cover-hmax) * var(--cover-r, 10)));
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-3);
-  width: 100%;
-  margin-top: var(--space-6);
-}
-
-/*
- * Beside the text: the height of the title, metadata, summary and status decides the space (size containment), with
- * a floor. A short opening (two or three lines of summary and no status line) would otherwise shrink a narrow object
- * such as the phone or the tablet to about two thirds of its balanced size (COVER_HEIGHT, --cover-h), so the cover
- * keeps at least --cover-floor-k of it: 74% on tablets, 80% from 960px (never wider than its column, --cover-col,
- * the opening grid's cover column estimated from the viewport). When the floor is taller than the text, the text keeps
- * its own spacing, level with the cover's top, and the extra height falls below the lede (the opening's last row is
- * the flexible one), before the story.
- */
-@media (min-width: 700px) {
-  .cs-opening > .cs-cover {
-    /* The opening grid's cover column: 2 of 5 fractions after the 32px gap. */
-    --cover-col: calc((min(100vw - 2 * var(--gutter), var(--case-max)) - var(--space-6)) * 0.4);
-    --cover-floor-k: 0.74;
-    --slot-w: min(var(--cover-max, 260px), 100cqw, calc((100cqh - var(--cover-cap)) * var(--cover-r, 10)));
-    container-type: size;
-    min-height: max(180px, calc(min(var(--cover-h, 200px) * var(--cover-floor-k), var(--cover-col) / var(--cover-r, 1)) + var(--cover-cap)));
-    margin-top: 0;
-  }
-
-}
-
-@media (min-width: 960px) {
-  .cs-opening > .cs-cover {
-    /* The page grid's media column: 52% of the content width (the 6% gap is taken from the same width). */
-    --cover-col: calc(min(100vw - 2 * var(--gutter), var(--case-max)) * 0.52);
-    --cover-floor-k: 0.8;
-  }
-}
-
-.cs-cover .cover-slot {
-  --edge-a: var(--light-feat-edge-a);
-  --edge-r: var(--light-feat-edge-r);
-  --halo-a: var(--light-feat-halo-a);
-  --halo-r: var(--light-feat-halo-r);
-  --bright: 1;
-  --spill-o: var(--light-feat-spill);
-  --shadow-o: var(--light-feat-shadow);
-  --rim: color-mix(in oklch, var(--case-accent) var(--light-rim-mix), white);
-  flex: none;
-  width: var(--slot-w);
-  isolation: isolate;
-}
-
-@media (hover: hover) {
-  .cs-cover .cover-slot:hover {
-    --edge-a: var(--light-active-edge-a);
-    --edge-r: var(--light-active-edge-r);
-    --halo-a: var(--light-active-halo-a);
-    --halo-r: var(--light-active-halo-r);
-    --bright: 1.03;
-    --spill-o: var(--light-active-spill);
-  }
-
-  .cs-cover .cover-slot:hover::before {
-    scale: var(--light-spill-rise);
-  }
-}
-
-/*
- * The light model's layers on a case page's PNG objects (the cover here, the next-project thumbnail below). Each
- * sets its level (--edge-a/-r, --halo-a/-r, --bright, --spill-o, --shadow-o, as on the homepage objects), its rim
- * colour (--rim), its accent (--light-rgb), a size factor for the glow radii (--light-k), its footprint and glow
- * balance (--foot, --foot-x, --kg, by data-kind, the homepage's values) and, where the box is not the object's own
- * shape, the object's drawn size (--obj-w/-h).
- *   .picture   rim and halo on the silhouette (drop-shadow on the transparent artwork: alpha-aware, never a box)
- *   ::before   the accent's light on the floor beneath the object
- *   ::after    the soft contact shadow where the object stands
- * All three respond together, over --dur-2 on the respond curve; filters change only on hover or focus.
- */
-:is(.cs-cover, .next-project__thumb) {
-  --foot: 0.8;
-  --foot-x: 0;
-  --kg: 1;
-}
-
-/* The white screens and the mug take a little less added light, the dark camera more. */
-:is(.cs-cover, .next-project__thumb)[data-kind='monitor'] {
-  --foot: 0.5;
-  --kg: 0.85;
-}
-
-:is(.cs-cover, .next-project__thumb)[data-kind='laptop'] {
-  --foot: 0.98;
-  --kg: 0.85;
-}
-
-/* The handle is on the right: the mug's body, and its footprint, sit left of the box centre. */
-:is(.cs-cover, .next-project__thumb)[data-kind='mug'] {
-  --foot: 0.66;
-  --foot-x: -0.09;
-  --kg: 0.92;
-}
-
-:is(.cs-cover, .next-project__thumb)[data-kind='tablet'] {
-  --foot: 0.9;
-  --kg: 0.95;
-}
-
-/* The phone's artwork has its own saturated green frame: less added light, so it never reads as a neon tube. */
-:is(.cs-cover, .next-project__thumb)[data-kind='phone'] {
-  --foot: 0.84;
-  --kg: 0.72;
-}
-
-:is(.cs-cover, .next-project__thumb)[data-kind='camera'] {
-  --foot: 0.86;
-  --kg: 1.35;
-}
-
-.cs-cover .cover-slot {
-  --light-rgb: var(--case-accent-rgb);
-  --light-k: 0.7;
-}
-
-:is(.cs-cover .cover-slot, .next-project__thumb) .picture {
-  filter: brightness(var(--bright))
-    drop-shadow(0 0 var(--edge-r) color-mix(in oklch, var(--rim) calc(min(1, var(--edge-a) * var(--kg)) * 100%), transparent))
-    drop-shadow(0 0 calc(var(--halo-r) * var(--light-k)) rgb(var(--light-rgb) / calc(var(--halo-a) * var(--kg) * var(--light-case))));
-  transform-origin: 50% 100%;
-  transition:
-    filter var(--dur-2) var(--ease-respond),
-    transform var(--dur-2) var(--ease-respond);
-}
-
-/* The floor light: a broad, soft pool mostly behind the base, so it never reaches the text below. */
-:is(.cs-cover .cover-slot, .next-project__thumb)::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: 50%;
-  top: 100%;
-  width: calc(var(--obj-w, 100%) * 1.3);
-  height: calc(var(--obj-h, 100%) * 0.28);
-  translate: -50% -62%;
-  transform-origin: 50% 60%;
-  background: radial-gradient(closest-side, rgb(var(--light-rgb) / 0.36), rgb(var(--light-rgb) / 0.14) 46%, rgb(var(--light-rgb) / 0));
-  opacity: calc(var(--spill-o) * var(--kg) * var(--light-case));
-  pointer-events: none;
-  transition:
-    opacity var(--dur-2) var(--ease-respond),
-    scale var(--dur-2) var(--ease-respond);
-}
-
-/* The contact shadow: dark and tight under the base; it narrows and lightens when the object lifts. */
-:is(.cs-cover .cover-slot, .next-project__thumb)::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: calc(50% + var(--foot-x) * var(--obj-w, 100%));
-  top: 100%;
-  width: calc(var(--obj-w, 100%) * var(--foot));
-  height: max(6px, calc(var(--obj-h, 100%) * 0.07));
-  translate: -50% -56%;
-  background: radial-gradient(closest-side, rgb(1 1 5 / 0.96), rgb(1 1 5 / 0.62) 45%, rgb(1 1 5 / 0));
-  opacity: var(--shadow-o);
-  pointer-events: none;
-  transition:
-    opacity var(--dur-2) var(--ease-respond),
-    scale var(--dur-2) var(--ease-respond);
-}
-
-/* Reduced motion: the light still shows the state, at once. */
-html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb) :is(.picture),
-html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::before,
-html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::after {
-  transition: none !important;
-}
-
-/*
- * The caption ("Concept cover"): the media label style (.cs-media-label), centred under the object's footprint. Its
- * 20px line puts its baseline level with the status line's beside it (15px text on a 1.45 line).
- */
-.cs-cover__label {
-  flex: none;
-  max-width: 100%;
-  line-height: 20px;
-  text-align: center;
-  white-space: nowrap;
-  translate: calc(var(--foot-x) * var(--slot-w)) 0;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Story: sections and the outcome                                          */
-/* ----------------------------------------------------------------------- */
-
-.cs-body {
-  padding-top: clamp(40px, 4.4vw, 60px);
-}
-
-/* CaseScroll beside its media: the row gap separates the opening; the first heading's capitals are level with the media's top. */
-@media (min-width: 960px) {
-  .cs[data-stage][data-layout='sticky'] > .cs-body {
-    padding-top: 0;
-  }
-
-  .cs[data-stage][data-layout='sticky'] .cs-section:first-child > .cs-heading {
-    margin-top: -0.24em;
-  }
-}
-
-.cs-section + .cs-section {
-  margin-top: clamp(44px, 4.4vw, 60px);
-}
-
-.cs-section {
-  /* Added to the root's scroll-padding-top: headings land clear of the header. */
-  scroll-margin-top: var(--space-2);
-}
-
-.cs-heading {
-  position: relative;
-  margin-bottom: var(--space-3);
-  color: var(--case-ink);
-  font-size: clamp(1.375rem, 1.22rem + 0.45vw, 1.625rem);
-  line-height: 1.22;
-  letter-spacing: -0.02em;
-  font-weight: var(--weight-heading);
-  transition: color var(--dur-2) var(--ease-standard);
-}
-
-.cs-heading:focus {
-  outline: none;
-}
-
-/* The active section: its heading takes the accent, with a short marker beside it (no long progress line). */
-.cs[data-layout='sticky'] .cs-section > .cs-heading::before {
-  content: '';
-  position: absolute;
-  left: -20px;
-  top: 0.2em;
-  width: 3px;
-  height: 0.95em;
-  border-radius: 2px;
-  background: var(--case-accent);
-  opacity: 0;
-  transform: scaleY(0.4);
-  transform-origin: 50% 0;
-  transition:
-    opacity var(--dur-1) var(--ease-standard),
-    transform var(--dur-2) var(--ease-respond);
-}
-
-.cs[data-layout='sticky'] .cs-section[data-active] > .cs-heading {
-  color: color-mix(in oklch, var(--case-accent) 72%, var(--case-ink));
-}
-
-.cs[data-layout='sticky'] .cs-section[data-active] > .cs-heading::before {
-  opacity: 1;
-  transform: none;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Media column and the sticky stage                                        */
-/* ----------------------------------------------------------------------- */
-
-.cs-media {
-  /* Stacked media sizes from this column's width (100cqi). */
-  container-type: inline-size;
-}
-
-/* The height of what belongs under the media: the row under an image, a recording's control bar and caption, nothing for custom. */
-.cs[data-media='states'] {
-  --cs-barh: var(--cs-bar);
-}
-
-/* A recording: its control bar and, under the player, its caption. */
-.cs[data-media='video'] {
-  --cs-barh: calc(var(--cs-pbar) + var(--cs-caprow));
-}
-
-.cs[data-media='custom'] {
-  --cs-barh: 0px;
-}
-
-@media (min-width: 960px) {
-  .cs[data-layout='sticky'] .cs-sticky {
-    position: sticky;
-    top: var(--cs-top);
-  }
-
-  /*
-   * CaseScroll's stage (data-stage): the figure itself is sticky. Its media is as large as the column (100cqi, the
-   * media column) and the visible stage (the viewport below the navigation, times StageConfig fill, at most
-   * --cs-cap) allow, and its `top` centres it in that stage (align 'start': just below the navigation), from the
-   * first screen on. Its column ends with the outcome, so it is released with its bottom level with the outcome's
-   * and leaves beside it, before the next-project link.
-   */
-  .cs[data-layout='sticky'][data-stage] .cs-sticky {
-    --cs-mh: calc(min(var(--cs-view) * var(--cs-fill), var(--cs-cap)) - var(--cs-barh));
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    top: calc(var(--cs-top) + max(0px, (var(--cs-view) - var(--cs-mh) - var(--cs-barh)) / 2));
-  }
-
-  .cs[data-layout='sticky'][data-stage] .cs-sticky[data-fixed-ratio] {
-    --cs-mh: min(calc(100cqi / var(--stage-r)), calc(min(var(--cs-view) * var(--cs-fill), var(--cs-cap)) - var(--cs-barh)));
-  }
-
-  .cs[data-layout='sticky'][data-stage='start'] .cs-sticky {
-    top: var(--cs-top);
-  }
-}
-
-/*
- * A figure: the media, then its bar (a discreet label and, at the right end, the expand glyph; nothing over the
- * artwork). Beside the story it is as wide as the column allows while the media and its bar fit the visible stage
- * (StageConfig fill), centred in the stage; stacked, it takes the column's width.
- */
-.cs-figure {
-  --cs-expand: 24px;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-width: 0;
-  margin: 0;
+.cs-video-dialog {
+  --case-ink: var(--color-text);
+  --case-muted: var(--color-text);
+  --case-accent: var(--accent-default);
+  --cs-pbar: 33px;
 }
 
 @media (hover: none) {
-  .cs-figure {
-    --cs-expand: 44px;
+  .cs-video-dialog {
+    --cs-pbar: 45px;
   }
 }
 
-.cs-figure[data-variant='sticky'] {
-  width: min(100%, calc(var(--cs-mh) * var(--stage-r)));
-}
-
-.cs-stage {
-  position: relative;
-  width: 100%;
-}
-
-/* The row under an image: its label on the left, the expand glyph on the right. */
-.cs-figbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-height: calc(var(--cs-bar) - var(--space-2));
-  margin-top: var(--space-2);
-}
-
-/* A discreet media label, one style for every medium (Illustrative conversation, Original 2024 prototype, Edited preview · 1.5× speed, Concept cover). */
-.cs-media-label {
-  color: var(--case-muted);
-  font-size: 0.8125rem;
-  font-weight: var(--weight-label, 500);
-  line-height: 1.35;
-  letter-spacing: 0.01em;
-}
-
-/* States: ONE stable box for every state, at the page's frame ratio; each image is contained in it. */
-.cs-stage[data-kind='states'] {
-  aspect-ratio: var(--stage-r);
-  container-type: size;
-}
-
-/* Stacked figures: the image's own ratio, bounded by the viewport height (a portrait phone is centred). */
-.cs-stage[data-kind='inline'] {
-  width: min(100%, calc(72svh * var(--stage-r)));
-  aspect-ratio: var(--stage-r);
-  margin-inline: auto;
-  container-type: size;
-}
-
-.cs-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  display: grid;
-  place-items: center;
-  opacity: 0;
-  visibility: hidden;
-}
-
 /*
- * Layer states are set by StatesStage's sequencer. A change: the new layer is
- * 'shown' on top and fades in (Web Animation, 120ms) while the old one stays
- * 'under' at full opacity; the old one is hidden only afterwards.
- */
-.cs-layer[data-state='shown'] {
-  z-index: 2;
-  opacity: 1;
-  visibility: visible;
-}
-
-.cs-layer[data-state='under'] {
-  z-index: 1;
-  opacity: 1;
-  visibility: visible;
-}
-
-/* The image's own box, contained in the stage (highlights are placed in percent of it). */
-.cs-canvas {
-  position: relative;
-  width: min(100cqw, calc(100cqh * var(--r)));
-  aspect-ratio: var(--r);
-  transition:
-    transform 200ms var(--ease-out),
-    box-shadow 200ms var(--ease-out),
-    filter 200ms var(--ease-out);
-}
-
-.cs-canvas .picture,
-.cs-canvas img,
-.cs-canvas .image-fallback {
-  width: 100%;
-  height: 100%;
-}
-
-/* Opaque screenshots: a subtle radius and edge. Transparent artwork keeps its alpha: no panel, no edge. */
-.cs-layer:not([data-transparent]) .cs-canvas {
-  overflow: hidden;
-  border-radius: 10px;
-  background: var(--color-surface);
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.08),
-    0 28px 56px -30px rgb(0 0 0 / 0.9);
-}
-
-/* One meaningful region: a thin accent outline, a soft glow and a mild dim outside it (opaque screenshots only). */
-.cs-hl {
-  position: absolute;
-  z-index: 1;
-  border-radius: 8px;
-  box-shadow:
-    0 0 0 2px var(--case-accent),
-    0 0 18px 2px rgb(var(--case-accent-rgb) / 0.42);
-  opacity: 0;
-  pointer-events: none;
-}
-
-.cs-hl[data-dim] {
-  box-shadow:
-    0 0 0 2px var(--case-accent),
-    0 0 18px 2px rgb(var(--case-accent-rgb) / 0.42),
-    0 0 0 200vmax rgb(5 6 9 / 0.22);
-}
-
-/* Shown by the sequencer (fades are Web Animations: 60ms out, 150ms in); stacked figures show it at once. */
-.cs-hl[data-on] {
-  opacity: 1;
-}
-
-/* --- The image is its own zoom control ---------------------------------- */
-
-.cs-zoomlayer {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-}
-
-/* Exactly the shown image's box (same formula as .cs-canvas). */
-.cs-zoom {
-  position: relative;
-  width: min(100cqw, calc(100cqh * var(--r)));
-  aspect-ratio: var(--r);
-  padding: 0;
-  border: 0;
-  border-radius: 10px;
-  background: none;
-  cursor: zoom-in;
-  pointer-events: auto;
-  transition: transform 200ms var(--ease-out);
-}
-
-.cs-zoom:focus-visible {
-  outline: 2px solid var(--case-accent);
-  outline-offset: 4px;
-}
-
-/* Hover and focus: 1.5% larger with an accent edge (alpha-aware for transparent artwork). */
-.cs-zoom:is(:hover, :focus-visible) {
-  transform: scale(1.015);
-}
-
-.cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .cs-layer[data-state='shown'] .cs-canvas {
-  transform: scale(1.015);
-}
-
-.cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .cs-layer[data-state='shown']:not([data-transparent]) .cs-canvas {
-  box-shadow:
-    0 0 0 1.5px rgb(var(--case-accent-rgb) / 0.75),
-    0 0 26px -4px rgb(var(--case-accent-rgb) / 0.4),
-    0 28px 56px -30px rgb(0 0 0 / 0.9);
-}
-
-.cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .cs-layer[data-state='shown'][data-transparent] .cs-canvas {
-  filter: drop-shadow(0 0 1px rgb(var(--case-accent-rgb) / 0.85)) drop-shadow(0 0 12px rgb(var(--case-accent-rgb) / 0.35));
-}
-
-/*
- * The expand control at the right end of an image's media bar, never on the artwork, always visible (R4-01). With a
- * mouse it is a quiet glyph (a 40px pointer target), in the accent while the media is hovered or focused; on touch it
- * is an outlined 44px button. The picture itself is the enlargement control, so this one is a pointer and touch
- * shortcut. (A recording's or a film's Expand is the last control in its bar, .cs-ctl below.)
- */
-.cs-expand {
-  position: relative;
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: var(--cs-expand);
-  height: var(--cs-expand);
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--case-muted);
-  cursor: pointer;
-  transition:
-    color var(--dur-feedback) var(--ease-out),
-    box-shadow var(--dur-feedback) var(--ease-out);
-}
-
-/* A 40px pointer target around the small glyph. */
-.cs-expand::before {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-}
-
-.cs-expand:is(:hover, :focus-visible),
-.cs-figure:has(.cs-zoom:is(:hover, :focus-visible)) .cs-expand {
-  color: color-mix(in oklch, var(--case-accent) 80%, var(--case-ink));
-}
-
-.cs-expand:focus-visible {
-  outline: 2px solid var(--case-accent);
-  outline-offset: 2px;
-}
-
-@media (hover: none) {
-  .cs-expand {
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22);
-    color: var(--case-text);
-  }
-
-  .cs-expand::before {
-    content: none;
-  }
-}
-
-/* The separator between a larger view's title and its media label (DemoVideo). */
-.cs-label__sep {
-  color: var(--color-subtle);
-}
-
-/* ----------------------------------------------------------------------- */
-/* Recordings (DemoVideo)                                                   */
-/* ----------------------------------------------------------------------- */
-
-/*
- * The player: one rounded frame holding the recording and, below it, its compact controls (DemoControls, for the
- * product recordings and the Creative Production films alike). Hover brightens the frame's hairline a little (no
- * scale, no glow); the accent belongs to the focused or pressed control inside it.
+ * The player: one rounded frame holding the film and, below it, its compact controls (DemoControls). Hover leaves
+ * the frame as it is (Harlie's request, 2026-09-27: no light outline on hover except the cursor's, on the navigation
+ * and "Watch the film"); the accent belongs to the focused or pressed control inside it.
  */
 .cs-player {
   overflow: hidden;
@@ -944,28 +40,15 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
   box-shadow:
     0 0 0 1px rgb(255 255 255 / 0.08),
     0 28px 56px -30px rgb(0 0 0 / 0.9);
-  transition: box-shadow var(--dur-2) var(--ease-standard);
 }
 
-.cs-player:hover {
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.16),
-    0 28px 56px -30px rgb(0 0 0 / 0.9);
-}
-
-/* The recording's own ratio. */
-.cs-stage[data-kind='video'] {
-  aspect-ratio: var(--stage-r);
-  overflow: hidden;
-  background: var(--color-surface);
-}
 
 /*
  * The compact controls below a recording or a film (DemoControls): play or pause, the seek slider, sound, expand, in
- * one row inside the frame (a film's preview: play or pause, Watch with sound, expand). Quiet at rest (muted glyphs, a
- * thin pale track); a control takes the project's accent only when it is focused from the keyboard or pressed, and
- * the slider while it is dragged. Buttons are 32px with a 40px target; on touch screens every control, the slider
- * included, is 44px tall in the 48px bar.
+ * one row inside the frame. Quiet at rest (pale glyphs, a
+ * thin pale track); a control takes the accent only when it is focused from the keyboard or pressed, and the slider
+ * while it is dragged. Buttons are 32px with a 40px target; on touch screens every control, the slider included, is
+ * 44px tall in the 45px bar.
  */
 .cs-controls {
   --ctl: 32px;
@@ -1006,12 +89,6 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
     background-color var(--dur-1) var(--ease-standard);
 }
 
-/* A bar without the seek slider: the space that keeps expand at the right end. */
-.cs-controls__gap {
-  flex: 1;
-  min-width: 0;
-}
-
 /* The pointer target around the glyph. */
 .cs-ctl::before {
   content: '';
@@ -1043,7 +120,8 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
   cursor: default;
 }
 
-/* The seek slider: a 3px pale track filled to the position (--p, set by DemoControls), a small pale thumb. */
+/* The seek slider: a 3px pale track filled to the position (--p, set by DemoControls), a small thumb drawn only by
+   its thin dark ring (filled with the accent while dragged). */
 .cs-seek {
   flex: 1;
   min-width: 48px;
@@ -1075,7 +153,7 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
   margin-top: -4px;
   border: 0;
   border-radius: 50%;
-  background: var(--case-ink);
+  background: transparent;
   box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35);
   -webkit-appearance: none;
   appearance: none;
@@ -1089,7 +167,7 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
   height: 11px;
   border: 0;
   border-radius: 50%;
-  background: var(--case-ink);
+  background: transparent;
   box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35);
   transition:
     transform var(--dur-1) var(--ease-standard),
@@ -1108,7 +186,9 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
 
 .cs-seek:focus-visible {
   outline: 2px solid var(--case-accent);
-  outline-offset: 2px;
+  /* Inside the slider's box: the bar clips anything outside it. */
+  outline-offset: -2px;
+  border-radius: 8px;
 }
 
 /* Dragged: the filled part and the thumb in the accent. */
@@ -1124,67 +204,8 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
   background: var(--case-accent);
 }
 
-/* The player's caption (Edited preview · 1.5× speed), directly under its frame. */
-.cs-demo__caption {
-  margin-top: var(--space-2);
-}
-
-/* A click on the picture plays or pauses it. */
-.cs-demo__video:not([controls]) {
-  cursor: pointer;
-}
-
-.cs-demo__poster,
-.cs-demo__video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.cs-demo__poster img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-/* While "Play demo" is offered, the poster covers whatever frame the player holds. */
-.cs-demo__poster--over {
-  z-index: 1;
-}
-
-.cs-demo__video {
-  display: block;
-  background: transparent;
-  object-fit: contain;
-  transition: opacity 120ms linear;
-}
-
-/* Transparent over the poster until the recording has put a frame on screen (DemoVideo, media/videoFrame.ts), then a
-   short fade: never the black box of a playing video without a frame, and poster to recording is a dissolve. */
-.cs-demo__video:not([data-frame]) {
-  opacity: 0;
-}
-
-
-/* Autoplay refused, or reduced motion: one clear, quiet play action over the poster (a secondary button, not the red one). */
-.cs-demo__playwrap {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  background: radial-gradient(closest-side, rgb(5 6 9 / 0.45), rgb(5 6 9 / 0));
-  pointer-events: none;
-}
-
-.cs-demo__play {
-  pointer-events: auto;
-}
-
-/* The larger view (a native dialog styled like the image dialog, components.css .image-dialog). It opens on the
-   inline frame (a canvas of the recording's size, so it takes the same box), and its own copy fades in over it once
-   that copy has a frame at the start time (DemoVideo VideoDialog, client-work FilmDialog). */
+/* The larger view (a native dialog styled like the image dialog, components.css .image-dialog); the film fades in over
+   the black screen once its first frame is on screen (client-work FilmDialog). */
 .cs-video-dialog__stage {
   display: grid;
   place-items: center;
@@ -1195,7 +216,7 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
   grid-area: 1 / 1;
 }
 
-.cs-video-dialog__under,
+/* The film or recording fades in over the black once its first frame is on screen (videoFrame.ts). */
 .cs-video-dialog__video {
   width: auto;
   height: auto;
@@ -1204,11 +225,13 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
   border-radius: var(--radius-inner);
   background: #000;
   box-shadow: 0 0 0 1px var(--color-media-edge);
+  opacity: 0;
+  transition: opacity 120ms linear;
 }
 
 /*
- * A recording's larger view (DemoVideo): the recording and its control bar in one player frame, as wide as the view
- * allows at the recording's ratio (--r) with the bar below it.
+ * A film's larger view (FilmDialog): the film and its control bar in one player frame, as wide as the view allows at
+ * the film's ratio (--r) with the bar below it, and never wider than the film itself.
  */
 .cs-video-dialog__stage--player {
   container-type: size;
@@ -1216,6 +239,7 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
 
 .cs-video-dialog__player {
   width: min(100cqw, calc((100cqh - var(--cs-pbar)) * var(--r)));
+  max-width: max-content;
 }
 
 .cs-video-dialog__screen {
@@ -1228,7 +252,7 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
   grid-area: 1 / 1;
 }
 
-.cs-video-dialog__screen > :is(.cs-video-dialog__under, .cs-video-dialog__video) {
+.cs-video-dialog__screen > .cs-video-dialog__video {
   width: 100%;
   height: 100%;
   max-width: none;
@@ -1241,31 +265,9 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
   cursor: pointer;
 }
 
-.cs-video-dialog__video {
-  opacity: 0;
-  transition: opacity 120ms linear;
-}
-
 .cs-video-dialog__video[data-ready],
 .cs-video-dialog__video:fullscreen {
   opacity: 1;
-}
-
-/* Every larger view (images, recordings, films) leaves as it came: the view and its scrim fade out together before
-   the dialog closes and focus returns (media/dialogExit.ts; no fade under reduced motion). */
-.image-dialog[open][data-closing],
-.image-dialog[open][data-closing]::backdrop {
-  animation: dialog-out 120ms cubic-bezier(0.4, 0, 1, 1) both;
-}
-
-.image-dialog[open][data-closing] {
-  pointer-events: none;
-}
-
-@keyframes dialog-out {
-  to {
-    opacity: 0;
-  }
 }
 
 .cs-video-dialog__video:focus-visible {
@@ -1274,59 +276,11 @@ html[data-motion='reduce'] :is(.cs-cover .cover-slot, .next-project__thumb)::aft
 }
 
 /* ----------------------------------------------------------------------- */
-/* Custom stage content (CaseMedia kind 'custom')                           */
-/* ----------------------------------------------------------------------- */
-
-.cs-custom {
-  position: relative;
-  width: 100%;
-  min-width: 0;
-}
-
-/* Beside the story: the whole visible stage (StageConfig fill), or a box of the given ratio centred in it. */
-.cs-custom[data-variant='sticky'] {
-  height: var(--cs-mh);
-}
-
-.cs-custom[data-variant='sticky'][data-ratio] {
-  width: min(100%, calc(var(--cs-mh) * var(--stage-r)));
-  height: auto;
-  aspect-ratio: var(--stage-r);
-}
-
-.cs-custom[data-variant='stacked'][data-ratio] {
-  aspect-ratio: var(--stage-r);
-}
-
-/* ----------------------------------------------------------------------- */
-/* Stacked (below 960px)                                                    */
-/* ----------------------------------------------------------------------- */
-
-.cs[data-layout='stacked'] > .cs-media {
-  margin-top: var(--space-7);
-}
-
-.cs[data-layout='stacked'] > .cs-body {
-  padding-top: var(--space-7);
-}
-
-.cs[data-layout='stacked'] .cs-section + .cs-section {
-  margin-top: 44px;
-}
-
-.cs-section > .cs-figure {
-  margin-top: var(--space-5);
-}
-
-/* ----------------------------------------------------------------------- */
 /* Reduced motion                                                           */
 /* ----------------------------------------------------------------------- */
 
-/* Every change is instant (the sequencer skips its fades and waits too); the global 1ms reduced-motion
-   transition (base.css) would blend two layers for a frame, so it is switched off here. Hover keeps
-   its accent edge without the scale. */
-html[data-motion='reduce']
-  :is(.cs-layer, .cs-hl, .cs-title, .cs-heading, .cs-heading::before, .cs-canvas, .cs-zoom, .cs-expand, .cs-demo__video, .cs-video-dialog__video, .cover-slot, .cs-player, .cs-ctl) {
+/* Every change is instant: the global 1ms reduced-motion transition (base.css) is switched off here. */
+html[data-motion='reduce'] :is(.cs-video-dialog__video, .cs-ctl) {
   transition: none !important;
 }
 
@@ -1336,153 +290,4 @@ html[data-motion='reduce'] .cs-seek::-webkit-slider-thumb {
 
 html[data-motion='reduce'] .cs-seek::-moz-range-thumb {
   transition: none;
-}
-
-html[data-motion='reduce'] .cs-zoom:is(:hover, :focus-visible),
-html[data-motion='reduce'] .cs-stage:has(.cs-zoom:is(:hover, :focus-visible)) .cs-layer[data-state='shown'] .cs-canvas {
-  transform: none;
-}
-
-/* ----------------------------------------------------------------------- */
-/* Next project                                                             */
-/* ----------------------------------------------------------------------- */
-
-.next-project {
-  width: 100%;
-  max-width: calc(var(--case-max) + 2 * var(--gutter));
-  margin: clamp(64px, 7vw, 96px) auto 0;
-  padding-inline: var(--gutter);
-}
-
-/* Desktop: the stage has left with the outcome; a compact end follows. The footer follows the link directly on a
-   case page; its own padding and rule separate them. */
-@media (min-width: 960px) {
-  .next-project {
-    margin-top: var(--case-next-gap);
-  }
-
-  .site-main:has(.case) + .site-footer {
-    margin-top: 0;
-  }
-}
-
-/* One link: the small PNG, "Next project" and the display title with an arrow. */
-.next-project__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 18px;
-  min-height: 64px;
-  margin-left: -8px;
-  padding: 8px 20px 8px 8px;
-  border-radius: 16px;
-  color: var(--case-text);
-  text-decoration: none;
-}
-
-/* A block box (not a grid: a percentage height inside an auto grid row does not resolve, so tall objects such as the
-   phone overflowed it); the image fills it, contained and standing on the box's floor (base down, centred across),
-   so its contact shadow meets its base. Lit by the light model (above) in the next project's accent: the neighbour
-   level at rest, the active level with a small lift on hover and focus. */
-.next-project__thumb {
-  --edge-a: var(--light-near-edge-a);
-  --edge-r: 1px;
-  --halo-a: var(--light-near-halo-a);
-  --halo-r: var(--light-near-halo-r);
-  --bright: 0.97;
-  --spill-o: var(--light-near-spill);
-  --shadow-o: var(--light-near-shadow);
-  --rim: color-mix(in oklch, var(--next-accent, #c9b8ff) var(--light-rim-mix), white);
-  --light-rgb: var(--next-accent-rgb, 201 184 255);
-  --light-k: 0.34;
-  position: relative;
-  isolation: isolate;
-  flex: none;
-  display: block;
-  width: var(--thumb-w, 104px);
-  height: var(--thumb-h, 84px);
-}
-
-.next-project__thumb .picture,
-.next-project__thumb .picture img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: 50% 100%;
-}
-
-.next-project__text {
-  display: grid;
-  gap: 2px;
-}
-
-.next-project__label {
-  color: var(--case-muted);
-  font-size: 0.875rem;
-  font-weight: var(--weight-label);
-  line-height: 1.4;
-}
-
-/* Plain text flow: a long name wraps and the arrow stays after its last word (NextProject.tsx keeps them together). */
-.next-project__name {
-  color: var(--case-ink);
-  font-size: clamp(1.25rem, 1.15rem + 0.35vw, 1.5rem);
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: -0.015em;
-  transition: color var(--dur-2) var(--ease-standard);
-}
-
-.next-project__tail {
-  white-space: nowrap;
-}
-
-.next-project__arrow {
-  display: inline-block;
-  margin-left: 8px;
-  vertical-align: -0.08em;
-  transition: transform var(--dur-2) var(--ease-respond);
-}
-
-/* Hover and focus: the object rises a little (a 4% lift) and brightens; its shadow tightens and lightens, its floor light rises. */
-.next-project__link:is(:hover, :focus-visible) .next-project__thumb {
-  --edge-a: var(--light-active-edge-a);
-  --edge-r: 1.5px;
-  --halo-a: var(--light-active-halo-a);
-  --halo-r: var(--light-active-halo-r);
-  --bright: 1.04;
-  --spill-o: var(--light-active-spill);
-}
-
-.next-project__link:is(:hover, :focus-visible) .next-project__thumb .picture {
-  transform: translateY(calc(var(--light-lift) * -0.4)) scale(var(--light-lift-scale));
-}
-
-.next-project__link:is(:hover, :focus-visible) .next-project__thumb::after {
-  scale: var(--light-lift-shadow-scale);
-  opacity: calc(var(--shadow-o) * var(--light-lift-shadow-o));
-}
-
-.next-project__link:is(:hover, :focus-visible) .next-project__thumb::before {
-  scale: var(--light-spill-rise);
-}
-
-.next-project__link:is(:hover, :focus-visible) .next-project__name {
-  color: var(--next-accent, var(--case-ink));
-}
-
-.next-project__link:is(:hover, :focus-visible) .next-project__arrow {
-  transform: translateX(3px);
-}
-
-.next-project__link:focus-visible {
-  outline: 2px solid var(--next-accent, var(--color-focus));
-  outline-offset: 2px;
-}
-
-html[data-motion='reduce'] :is(.next-project__thumb, .next-project__name, .next-project__arrow) {
-  transition: none;
-}
-
-html[data-motion='reduce'] .next-project__link:is(:hover, :focus-visible) :is(.next-project__thumb .picture, .next-project__arrow) {
-  transform: none;
 }

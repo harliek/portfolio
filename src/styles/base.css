@@ -15,7 +15,16 @@ html {
   text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  scroll-padding-top: calc(var(--header-height) + var(--space-4));
+}
+
+/*
+ * What a scroll brings into view (an anchor, the skip link's target, a focused field) stops below the navigation, by
+ * its own margin rather than the root's scroll padding (Harlie's brief, 2026-09-28): the header's items sit inside
+ * that padding band, so focusing one from the keyboard scrolled the page (to the top in Chrome, 69px at a time in
+ * WebKit, and the locked page behind the phone menu too). Zero specificity, so a page's own scroll margin wins.
+ */
+:where(.site-main, .site-main *, .site-end *) {
+  scroll-margin-top: var(--header-safe);
 }
 
 body {
@@ -113,37 +122,15 @@ a {
     text-decoration-color var(--dur-1) var(--ease-standard);
 }
 
+/* A link in running text brightens under the pointer, its underline with it (no red: Harlie's request, 2026-09-27: no red on hover). */
 :where(.site-main :is(p, li, dd, blockquote, figcaption) a[href]):hover {
-  color: var(--accent-default);
+  color: #fff;
   text-decoration-color: currentColor;
 }
 
-/*
- * Expressive text hover (brief v8 section 5, motion-plan 2.4): headings (h1
- * to h3) and bold phrases in reading text ease into the page's one accent
- * under the pointer (a case study's project accent, lavender elsewhere),
- * over --dur-2 on the standard curve. The accent is mixed with the heading
- * ivory in OKLCH, so the colour travels perceptually (never through grey)
- * and stays as light as the text it replaces. Colour only: the normal text
- * cursor, no underline, glow, movement or scale, so ordinary text never
- * looks clickable. Not inside links and buttons (their own hover and focus
- * states apply: colour plus an underline or edge), not on the homepage
- * (home.css styles its own text), and nothing on touch screens.
- */
-:where(.site-main) :where(h1, h2, h3, strong, b) {
-  transition: color var(--dur-2) var(--ease-standard);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .site-main :is(h1, h2, h3):not(:is(a, button, summary, label, [role='button'], [role='link'], .home) *):hover,
-  .site-main :is(p, li, dd, blockquote, figcaption) :is(strong, b):not(:is(a, button, summary, label, [role='button'], [role='link']) *):hover {
-    color: color-mix(in oklch, var(--accent-default) 80%, var(--stage-ivory));
-  }
-}
-
-/* Text selection: the deep red (tokens.css --red-deep), white text. */
+/* Text selection: the deep statement blue violet (tokens.css --statement-deep), white text. */
 ::selection {
-  background: var(--red-deep);
+  background: var(--statement-deep);
   color: #fff;
 }
 
@@ -152,10 +139,10 @@ a {
 }
 
 /*
- * The ring follows each element's own radius (never reshapes it on focus).
- * It takes the page's accent where one is set (a case study), else lavender.
- * It appears at once: outlines are never part of a transition (components
- * list the properties they ease, never `all`).
+ * The ring follows each element's own radius (never reshapes it on focus), in the statement blue violet
+ * (--color-focus); controls with an offset of 3px or more add the near-white inner line (tokens.css
+ * --focus-inner-line). It appears at once: outlines are never part of a transition (components list the properties
+ * they ease, never `all`).
  */
 :focus-visible {
   outline: 2px solid var(--color-focus);
@@ -207,14 +194,17 @@ a {
 
 /*
  * Reduced motion follows the operating system setting, mirrored on
- * <html data-motion> (src/hooks/useMotionPreference.ts).
+ * <html data-motion> (src/hooks/useMotionPreference.ts). Transitions take no time at all (they took 1ms until
+ * 2026-09-28: with transition-property's default of `all`, every element then eased every change over 1ms, so code
+ * that sets a style and measures in the same frame read the old value; the told case studies' length flipped on each
+ * measure). Nothing listens for transitionend; animations keep 1ms, since the dock title waits for animationend.
  */
 html[data-motion='reduce'],
 html[data-motion='reduce'] *,
 html[data-motion='reduce'] *::before,
 html[data-motion='reduce'] *::after {
   scroll-behavior: auto !important;
-  transition-duration: 1ms !important;
+  transition-duration: 0s !important;
   transition-delay: 0s !important;
   animation-duration: 1ms !important;
   animation-iteration-count: 1 !important;

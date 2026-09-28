@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import '../styles/home.css'
+import { headerHeight } from '../components/home/headerHeight'
 import { HomeFilm } from '../components/home/HomeFilm'
 import { TypeLine } from '../components/ui/TypeLine'
 import { useFilmSlot } from '../components/layout/filmSlot'
@@ -10,57 +11,75 @@ import { SITE } from '../content/site'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { ScrollTrigger } from '../lib/gsap'
 
+/** The page's end, where the collection fills the window with the footer below it. */
+const landAtEnd = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'auto' })
+
 /**
  * The homepage (brief v19; v23): Harlie's original film, clearly visible,
  * with the identity group (name, PORTFOLIO, one line) about 39% down the
  * opening; the selected work already shows beneath it, and the page ends
- * with it (the footer just below), where scrolling moves the projects on. As the opening scrolls out, the title eases up
- * and fades a little (`--enter`), and the film dims only slightly behind
+ * with it (the footer just below), where scrolling moves the projects on.
+ * As the opening scrolls out, the title eases up and fades a little
+ * (`--enter`), and the film dims only slightly behind
  * the work (`--settle`). Both are written by ScrollTrigger straight to the
- * root's style; nothing re-renders on scroll.
+ * style of the elements that read them (`--enter` on the opening and the
+ * film's slot, `--settle` on the slot), so a scroll frame restyles only
+ * those; nothing re-renders on scroll.
  */
 export function Home() {
   usePageMeta(undefined, SITE.description)
-  const rootRef = useRef<HTMLDivElement>(null)
   const heroRef = useRef<HTMLElement>(null)
   // The film goes to PageShell's fixed slot (outside the route wrapper, whose animation would capture position: fixed).
   const filmSlot = useFilmSlot()
   const location = useLocation()
   const toWork = Boolean((location.state as { toWork?: boolean } | null)?.toWork)
 
-  // Back from a case study opened directly (Header.tsx): the page's end, where the collection fills the window,
-  // with the project last looked at; again after fonts, so it lands exactly.
+  /*
+   * Back from a case study opened directly (Header.tsx): the page's end, where the collection fills the window, with
+   * the project last looked at centred (ProjectField); again after fonts, so it lands exactly. It lands before the
+   * first paint (the collection has measured by then) and again once the router's own scroll reset for a new entry
+   * has run (ScrollRestoration's, a later layout effect), before the page change pictures the new page, so the case
+   * study folds into that project's tile (Harlie's brief, 2026-09-28: it slid in with the page still at its top).
+   */
+  useLayoutEffect(() => {
+    if (toWork) landAtEnd()
+  }, [toWork])
   useEffect(() => {
     if (!toWork) return
-    const land = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'auto' })
-    const frame = requestAnimationFrame(() => requestAnimationFrame(land))
-    void document.fonts?.ready.then(land)
-    return () => cancelAnimationFrame(frame)
+    landAtEnd()
+    let live = true
+    void document.fonts?.ready.then(() => live && landAtEnd())
+    return () => {
+      live = false
+    }
   }, [toWork])
 
   useLayoutEffect(() => {
-    const root = rootRef.current
     const hero = heroRef.current
-    if (!root || !hero) return
+    if (!hero) return
     const slot = filmSlot
-    const set = (name: string, v: number) => {
-      root.style.setProperty(name, v.toFixed(4))
-      slot?.style.setProperty(name, v.toFixed(4))
+    // --enter: the title (inside the opening) and the film's dim; --settle: the film's dim only.
+    const setEnter = (v: number) => {
+      hero.style.setProperty('--enter', v.toFixed(4))
+      slot?.style.setProperty('--enter', v.toFixed(4))
     }
+    const setSettle = (v: number) => slot?.style.setProperty('--settle', v.toFixed(4))
+    // Under the header (its one height, tokens.css).
+    const under = `top+=${headerHeight()}`
     const opening = ScrollTrigger.create({
       trigger: hero,
-      start: 'top top+=61',
+      start: `top ${under}`,
       // No hold: the title eases away as the opening scrolls out.
-      end: 'bottom top+=61',
-      onUpdate: (self) => set('--enter', self.progress),
-      onRefresh: (self) => set('--enter', self.progress),
+      end: `bottom ${under}`,
+      onUpdate: (self) => setEnter(self.progress),
+      onRefresh: (self) => setEnter(self.progress),
     })
     const field = ScrollTrigger.create({
       trigger: '.field',
       start: 'top bottom',
-      end: 'top top+=61',
-      onUpdate: (self) => set('--settle', self.progress),
-      onRefresh: (self) => set('--settle', self.progress),
+      end: `top ${under}`,
+      onUpdate: (self) => setSettle(self.progress),
+      onRefresh: (self) => setSettle(self.progress),
     })
     // Media and fonts change heights after the first layout.
     const refresh = () => ScrollTrigger.refresh()
@@ -76,7 +95,7 @@ export function Home() {
   }, [filmSlot])
 
   return (
-    <div ref={rootRef} className="home">
+    <div className="home">
       {filmSlot && createPortal(<HomeFilm />, filmSlot)}
       <section ref={heroRef} className="hero" aria-labelledby="home-title">
         <div className="hero__stage">
@@ -91,7 +110,7 @@ export function Home() {
               </span>
             </h1>
             <p className="hero__line">
-              <TypeLine text="AI product management, strategy, and implementation" delay={1.0} duration={0.8} />
+              <TypeLine text="AI product, implementation, and product operations" delay={1.0} duration={0.8} />
             </p>
           </div>
         </div>

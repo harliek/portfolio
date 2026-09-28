@@ -13,11 +13,13 @@ const VIDEO = getVideo('art-portfolio')
  *
  * Its silent loop plays all the time while the card is on screen (Harlie's
  * request: not only on hover), over its poster, and pauses (keeping its
- * place) when the card is scrolled away or the tab is hidden. The video
- * element is added once the card nears the viewport. Reduced motion (the OS
- * setting): the poster only, and no video request at all. The 16:9 art is
- * drawn with `cover` in the poster-shaped frame, so it loses about 2% at each
- * side (abstract paint, nothing essential).
+ * place and its frame) when the card is scrolled away or the tab is hidden.
+ * The video element is added once the card nears the viewport, where its
+ * first frame fades in over the poster before the card is on screen, so the
+ * loop starts from that frame as the card comes into view. Reduced motion
+ * (the OS setting): the poster only, and no video request at all. The 16:9
+ * art is drawn with `cover` in the poster-shaped frame, so it loses about 2%
+ * at each side (abstract paint, nothing essential).
  *
  * Decorative (the link's label carries the meaning), so it is hidden from
  * assistive technology. `data-ambient` keeps it out of the site's
@@ -30,24 +32,28 @@ export function ArtPreview() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [near, setNear] = useState(false)
   const [inView, setInView] = useState(false)
-  const [playing, setPlaying] = useState(false)
+  /** The video has a frame to show (set once, never cleared: paused, it keeps showing its frame). */
+  const [framed, setFramed] = useState(false)
   const active = !reduced && inView
   const mounted = !reduced && near
 
-  // Add the video once the card is within 200px of the viewport; play it while any of it is on screen.
+  // Add the video once the card is within 200px of the viewport; play it only while any of it is on screen.
   useEffect(() => {
     const frame = frameRef.current
     if (reduced || !frame) return
-    const io = new IntersectionObserver(
+    const nearing = new IntersectionObserver(
       (entries) => {
-        const e = entries[entries.length - 1]
-        if (e.isIntersecting) setNear(true)
-        setInView(e.isIntersecting)
+        if (entries[entries.length - 1].isIntersecting) setNear(true)
       },
       { rootMargin: '200px 0px' },
     )
-    io.observe(frame)
-    return () => io.disconnect()
+    const seen = new IntersectionObserver((entries) => setInView(entries[entries.length - 1].isIntersecting))
+    nearing.observe(frame)
+    seen.observe(frame)
+    return () => {
+      nearing.disconnect()
+      seen.disconnect()
+    }
   }, [reduced])
 
   // Play while on screen and the page is visible; pause (keeping its place) otherwise.
@@ -62,7 +68,7 @@ export function ArtPreview() {
       if (document.visibilityState === 'visible') {
         video.muted = true
         video.play().catch(() => {
-          /* Refused or interrupted: the poster stays. */
+          /* Refused or interrupted: the poster (or the paused frame) stays. */
         })
       } else video.pause()
     }
@@ -72,7 +78,7 @@ export function ArtPreview() {
   }, [active, mounted])
 
   return (
-    <div ref={frameRef} className="about-work__media" aria-hidden="true" data-playing={(playing && active) || undefined}>
+    <div ref={frameRef} className="about-work__media" aria-hidden="true" data-playing={(framed && mounted) || undefined}>
       <ResponsiveImage image={VIDEO.poster} sizes={CREATIVE_SIZES} decorative fit="cover" className="about-work__image" />
       {mounted && (
         <video
@@ -89,8 +95,13 @@ export function ArtPreview() {
           disableRemotePlayback
           tabIndex={-1}
           data-ambient=""
-          onPlaying={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
+          onLoadedData={(e) => {
+            // Rest on the poster's own frame, so nothing changes when the loop fades in over the poster.
+            const video = e.currentTarget
+            if (video.currentTime < VIDEO.posterTimestamp) video.currentTime = VIDEO.posterTimestamp
+            else setFramed(true)
+          }}
+          onSeeked={() => setFramed(true)}
         />
       )}
     </div>

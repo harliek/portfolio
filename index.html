@@ -8,14 +8,14 @@
     <title>Harlie Katz · Portfolio</title>
     <meta
       name="description"
-      content="Harlie Katz, AI product management, strategy, and implementation. Case studies and creative work."
+      content="Harlie Katz works in AI product, implementation, and product operations. Case studies and creative work."
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Harlie Katz" />
     <meta property="og:title" content="Harlie Katz · Portfolio" />
     <meta
       property="og:description"
-      content="Harlie Katz, AI product management, strategy, and implementation. Case studies and creative work."
+      content="Harlie Katz works in AI product, implementation, and product operations. Case studies and creative work."
     />
     <!-- Relative until a final site URL is chosen; see README “Deploying”. -->
     <meta property="og:image" content="/social-preview.jpg" />
@@ -23,15 +23,53 @@
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
+    <!--
+      The two web fonts, declared here and asked for at once, before the page's own code and styles arrive: the display
+      face too, so PORTFOLIO never begins typing in Georgia and swaps to Playfair mid-word on a slow connection
+      (2026-09-28). Each is fetched once by the @font-face rule itself in every browser: a <link rel="preload"> with
+      crossorigin matched Chrome's request but not WebKit's (same-origin fonts without CORS there), so Safari fetched
+      both files twice (Harlie's QA pass, 2026-09-28). The metric-matched fallback stays in tokens.css.
+    -->
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        src: url('/fonts/InterVariable.woff2') format('woff2');
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Playfair Display';
+        src: url('/fonts/PlayfairDisplay-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+    </style>
+    <script>
+      if (document.fonts) {
+        document.fonts.load('400 1em Inter').catch(function () {})
+        document.fonts.load('400 1em "Playfair Display"').catch(function () {})
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <!-- The About page's contact form (ContactForm.tsx), declared here too so Netlify Forms finds it at deploy. -->
+    <form name="contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="contact" />
+      <input name="bot-field" />
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <textarea name="message"></textarea>
+    </form>
+    <!-- Its links in the site's one blue violet (tokens.css --statement, rgb(118 132 255)); 2026-09-28, was lavender. -->
     <noscript>
       <p style="padding: 24px; font-family: system-ui, sans-serif; color: #f4f5fa; background: #090a0f">
         This portfolio needs JavaScript to display its pages. You can reach Harlie Katz at
-        <a style="color: #c9b8ff" href="mailto:harliekatz@berkeley.edu">harliekatz@berkeley.edu</a>
-        or on <a style="color: #c9b8ff" href="https://www.linkedin.com/in/harliekatz/">LinkedIn</a>.
+        <a style="color: #7684ff" href="mailto:harliekatz@berkeley.edu">harliekatz@berkeley.edu</a>
+        or on <a style="color: #7684ff" href="https://www.linkedin.com/in/harliekatz/">LinkedIn</a>.
       </p>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>

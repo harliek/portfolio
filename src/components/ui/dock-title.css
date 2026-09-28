@@ -1,0 +1,62 @@
+/*
+ * Dock-style magnification on title letters (dockLetters.ts; Harlie's request,
+ * after Aceternity's Floating Dock). Nothing here applies at rest except the
+ * last rule: a title only changes while it is hovered (data-dock-active).
+ */
+
+/* The text of a plain-text title (DockTitle): an ordinary inline run, so it lays out exactly as bare text. */
+.dock-title__text {
+  display: inline;
+}
+
+/* While hovered, the plain title is drawn by copies of its text laid exactly over it; its own text stays underneath, invisible but selectable. */
+[data-dock-active] {
+  position: relative;
+}
+
+[data-dock-active] > .dock-title__text {
+  opacity: 0;
+}
+
+/*
+ * Each copy takes the title's padding box and padding, so it wraps its text exactly as the title does. The layer
+ * around them reaches past the title on every side, room for the swell (and to the right only as far as the
+ * viewport's edge, --dock-out-right from dockLetters.ts), and clips there: a copy is the whole title scaled, and
+ * without the clip its unseen rest would make the page wider while a title is hovered.
+ */
+.dock-title__layer {
+  position: absolute;
+  inset: -2em calc(-1 * var(--dock-out-right, 0px)) -1em -2em;
+  overflow: clip;
+  padding: inherit;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dock-title__copy {
+  position: absolute;
+  inset: 2em var(--dock-out-right, 0px) 1em 2em;
+  margin: 0;
+  padding: inherit;
+  transition: none;
+}
+
+/* Finds the letters' baseline (an empty box sits on it). */
+.dock-title__probe {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: baseline;
+}
+
+/* A title's own letters (PORTFOLIO) follow the spring frame by frame, never a transition. */
+[data-dock-active] [data-dock-letter] {
+  transition: none;
+}
+
+/* The dock replaces PORTFOLIO's single-letter rise (home.css) wherever it runs: a mouse or trackpad, with motion allowed. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  [data-dock-title] [data-dock-letter]:hover {
+    transform: none;
+  }
+}

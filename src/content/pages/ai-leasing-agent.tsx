@@ -10,6 +10,15 @@
  * availability, pricing, tours, application status and leasing policies;
  * introduced in lower-risk scenarios, then expanded; adopted across 18
  * properties; the production assistant ran on a third-party platform.
+ *
+ * Harlie's QA pass, 2026-09-28 (for Harlie to confirm): the lede names what the assistant was for, "for recurring
+ * renter questions" (projects.ts's description, "recurring leasing questions"; docs/content-provenance.md).
+ *
+ * Harlie's brief of 2026-09-28 (this page is the benchmark): the lede stays as it was; the three sections keep their
+ * headings and read as scope, safeguards and rollout, each with the reason behind it (an old price quoted as current;
+ * which questions a person must see; lower-risk scenarios first). No sentence says Harlie built or deployed the
+ * production assistant, and its platform is not named. "With the conversation attached" rests on the earlier site
+ * only; the tested topics and the lower-risk rollout on Harlie's earlier briefs (flagged for Harlie).
  */
 export const LEASING = {
   title: 'AI Leasing Agent',
@@ -17,22 +26,22 @@ export const LEASING = {
   meta: ['Leasing and Operations Associate', 'Valiance Capital · 2024–2025'],
   lede: (
     <p>
-      At Valiance Capital, I proposed an AI leasing assistant and defined its requirements for operations serving more than 1,000 tenants.
+      At Valiance Capital, I proposed an AI leasing assistant for recurring renter questions and defined its requirements for operations serving more than 1,000 tenants.
     </p>
   ),
-  /** Harlie's wording; the sections follow the pictures' order (the listing first, then the inbox, then the dashboard). */
+  /** The sections follow the pictures' order (the listing first, then the inbox, then the dashboard). */
   sections: [
     {
       title: 'Current property information',
-      text: 'I specified when responses required live pricing and availability from the property API.',
+      text: 'To avoid quoting an old price as current, I specified which answers needed live pricing and availability.',
     },
     {
       title: 'Scope and escalation',
-      text: 'I defined which questions the assistant should handle, which required staff review, and how to transfer those requests to the leasing team.',
+      text: 'I separated routine questions from those needing staff review, which went to the leasing team with the conversation attached.',
     },
     {
       title: 'Testing and rollout',
-      text: 'I tested responses about availability, pricing, tours, application status, and leasing policies. The assistant was introduced in lower-risk scenarios before deployment expanded to 18 properties.',
+      text: 'I tested answers on availability, pricing, tours, application status, and leasing policies. The assistant then moved from lower-risk scenarios to 18 properties.',
     },
   ],
 }

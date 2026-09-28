@@ -14,8 +14,8 @@ const watchUrl = (id: string) => `https://www.youtube.com/watch?v=${id}`
 const POSTER_OUT_MS = 260
 
 /**
- * An Artistic End, the right-hand card of About's Creative work pair (the
- * same frame, badge and title as the Creative Portfolio card beside it).
+ * An Artistic End, the middle of About's three Creative work cards (the
+ * same frame, badge and title as the Creative Portfolio and Art cards).
  *
  * The authentic poster, whole and untinted (no overlay, filter or coloured
  * glow, so its pinks read as made; the frame has the poster's own aspect
@@ -58,7 +58,7 @@ export function FeaturedFilm() {
             onClick={() => setPlaying(true)}
           >
             <ResponsiveImage image={FILM.poster} sizes={CREATIVE_SIZES} decorative fit="cover" className="about-work__image" />
-            {/* Red stateful badge: the loader while the player loads, then the check. */}
+            {/* The stateful badge: the loader while the player loads, then the check. */}
             <span className="about-work__badge stateful" aria-hidden="true" data-state={loaded ? 'done' : playing ? 'loading' : 'idle'}>
               <StatefulIcons />
               {!playing && (

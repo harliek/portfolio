@@ -1,56 +1,51 @@
 // The viewer's frame and bar styles (.cs-video-dialog, .cs-player) live with the case styles.
 import '../../../styles/case.css'
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import type { VideoAsset } from '../../../content/media'
 import { DemoControls } from '../../media/DemoControls'
 import { closeOnCancel, closeWithFade } from '../../media/dialogExit'
+import { CloseIcon } from '../../media/ExpandIcon'
 import { enterFullscreen } from '../../media/fullscreen'
-import { drawUnderlay, onFramePresented, type Underlay } from '../../media/videoFrame'
-
-/** Where the expanded view starts, and how it ends (the inline player takes over from there). */
-export interface FilmState {
-  time: number
-  play: boolean
-  muted: boolean
-  volume: number
-  /** Opening only: what the inline player shows (its frame, or the poster), drawn here until this copy has a frame. */
-  from?: Underlay | null
-}
+import { onFramePresented } from '../../media/videoFrame'
 
 interface FilmDialogProps {
   asset: VideoAsset
   title: string
   posterSrc: string
-  start: FilmState
-  onClose: (result: FilmState) => void
+  onClose: () => void
 }
+
+/**
+ * The file for this window: the first variant meant for a viewport this narrow (VideoVariant.maxViewport), else the
+ * largest (Harlie's brief, 2026-09-28: a phone loaded the 20MB Aristocracy file although a 9.8MB one is listed for it).
+ */
+const fileFor = (asset: VideoAsset) =>
+  (asset.variants.find((v) => v.maxViewport !== undefined && window.innerWidth <= v.maxViewport) ?? asset.variants[asset.variants.length - 1]).src
 
 /**
  * The larger view of a film: a native modal <dialog> (focus contained,
  * Escape and a click on the backdrop close it, page scrolling locked) with
- * the largest variant. It opens on the inline player's frame (or poster),
- * drawn underneath, and its own copy fades in over it once that copy has a
- * frame at the inline time (never a black stage, nor the first frame). No
- * caption (brief-v8 section 8): the film's name in the bar only. Below the
- * film, the same compact bar as inline (DemoControls: play or pause, seek,
+ * the variant for the window's width (fileFor). It opens at the start of the film, playing with
+ * sound, and the film fades in over the black screen once its first frame is
+ * on screen. No caption (brief-v8 section 8): the film's name in the bar
+ * only. Below the film, a compact bar (DemoControls: play or pause, seek,
  * sound), ending with Full screen; the browser's own controls appear only in
  * full screen, and leaving it returns focus to that control. It leaves with a
  * short fade (dialogExit.ts). Mounted only while open. Every close path
- * (Close, Escape, backdrop) reports the time, playing and sound state back to
- * the inline player.
+ * (Close, Escape, backdrop) calls `onClose`.
  */
-export function FilmDialog({ asset, title, posterSrc, start, onClose }: FilmDialogProps) {
+export function FilmDialog({ asset, title, posterSrc, onClose }: FilmDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
-  const underRef = useRef<HTMLCanvasElement>(null)
   const stopRef = useRef<() => void>(undefined)
   const fullscreenRef = useRef<HTMLButtonElement>(null)
   const [ready, setReady] = useState(false)
   /** This copy is in the browser's full screen (from the bar's Full screen control). */
   const [fullscreen, setFullscreen] = useState(false)
   const titleId = useId()
-  const src = asset.variants[asset.variants.length - 1].src
+  // Chosen once, as the viewer opens (turning a phone while it plays keeps the file).
+  const [src] = useState(() => fileFor(asset))
 
   // Full screen from the bar: the browser's own controls while it lasts; leaving it returns focus to the control.
   useEffect(() => {
@@ -78,10 +73,6 @@ export function FilmDialog({ asset, title, posterSrc, start, onClose }: FilmDial
     else v.pause()
   }
 
-  // Before the first paint: the inline frame, in place of the larger copy until it has one.
-  useLayoutEffect(() => {
-    if (underRef.current) drawUnderlay(underRef.current, start.from)
-  }, [start.from])
   useEffect(() => () => stopRef.current?.(), [])
 
   useEffect(() => {
@@ -95,30 +86,12 @@ export function FilmDialog({ asset, title, posterSrc, start, onClose }: FilmDial
     return () => document.documentElement.classList.remove('is-dialog-open')
   }, [])
 
-  // Shown once its frame at the inline time is on screen: after the seek (then it plays, if the inline copy was
-  // playing), or after play() when there is nothing to seek. Paused at the start: its own poster, at once.
+  // Shown once its first frame is on screen after play(); if the browser will not play it, its own poster, at once.
   const onLoadedMetadata = () => {
     const v = videoRef.current
     if (!v) return
-    v.muted = start.muted
-    v.volume = start.volume
-    if (start.time > 0.05 && Math.abs(v.currentTime - start.time) > 0.05) {
-      stopRef.current = onFramePresented(v, () => {
-        setReady(true)
-        if (start.play) v.play().catch(() => {})
-      })
-      v.currentTime = start.time
-    } else if (start.play) {
-      stopRef.current = onFramePresented(v, () => setReady(true))
-      v.play().catch(() => setReady(true))
-    } else setReady(true)
-  }
-
-  const handleClose = () => {
-    const v = videoRef.current
-    // Closed before the larger copy reached its start time: the inline player continues as it was.
-    if (!v || !ready) onClose({ time: start.time, play: start.play, muted: start.muted, volume: start.volume })
-    else onClose({ time: v.currentTime, play: !v.paused && !v.ended, muted: v.muted, volume: v.volume })
+    stopRef.current = onFramePresented(v, () => setReady(true))
+    v.play().catch(() => setReady(true))
   }
 
   return (
@@ -126,7 +99,7 @@ export function FilmDialog({ asset, title, posterSrc, start, onClose }: FilmDial
       ref={dialogRef}
       className="image-dialog cs-video-dialog"
       aria-labelledby={titleId}
-      onClose={handleClose}
+      onClose={onClose}
       onCancel={closeOnCancel}
       onClick={(e) => {
         if (e.target === dialogRef.current) closeWithFade(dialogRef.current)
@@ -139,9 +112,7 @@ export function FilmDialog({ asset, title, posterSrc, start, onClose }: FilmDial
           </p>
           <div className="image-dialog__controls">
             <button ref={closeRef} type="button" className="button button--secondary button--small" onClick={() => closeWithFade(dialogRef.current)}>
-              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-                <path d="m3.5 3.5 9 9m0-9-9 9" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              </svg>
+              <CloseIcon />
               Close
             </button>
           </div>
@@ -150,13 +121,12 @@ export function FilmDialog({ asset, title, posterSrc, start, onClose }: FilmDial
         <div className="cs-video-dialog__stage cs-video-dialog__stage--player" style={{ '--r': asset.width / asset.height } as CSSProperties}>
           <div className="cs-player cs-video-dialog__player">
             <div className="cs-video-dialog__screen">
-              <canvas ref={underRef} className="cs-video-dialog__under" width={asset.width} height={asset.height} aria-hidden="true" />
               <video
                 ref={videoRef}
                 className="cs-video-dialog__video"
                 data-ready={ready || undefined}
                 src={src}
-                poster={start.time > 0.05 ? undefined : posterSrc}
+                poster={posterSrc}
                 width={asset.width}
                 height={asset.height}
                 // The browser's own controls only in full screen; here the bar below is the player's.

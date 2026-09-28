@@ -1,13 +1,15 @@
 /*
  * The /about page (src/components/about/AboutContent.tsx), brief v21: the
  * old creative portfolio's About format on the professional site's ground.
- *   Opening     the "About" label, the name, a descriptor, three short
+ *   Opening     the "About" label, the name, a descriptor, two short
  *               paragraphs (left)          the colour portrait, 4:5 (right)
- *   01          Education: the school block beside Harlie's two paragraphs
- *   02          Creative work: two compact cards
- * Email, LinkedIn and the résumé are in the site's ending (Footer.tsx).
- * Narrow screens stack each block in reading order. Every selector is
- * scoped under .about-content (or .page-about).
+ *   01          Education: the school block beside Harlie's paragraph
+ *   02          Creative work: three compact cards
+ *   03          Get in touch: the email address, LinkedIn and the résumé,
+ *               then a compact form (a name, an email address, a message)
+ * On About the site's ending (Footer.tsx) keeps only the copyright, on the
+ * About column's edges (below). Narrow screens stack each block in reading
+ * order. Every selector is scoped under .about-content (or .page-about).
  */
 
 .page-about {
@@ -16,15 +18,23 @@
 }
 
 .about-content {
-  --about-accent: var(--accent, #c9b8ff);
-  --about-accent-rgb: var(--accent-rgb, 201 184 255);
-  --about-rule: rgb(236 232 250 / 0.12);
+  /* The statement rose (tokens.css; 2026-09-28: it was About's lavender, #c9b8ff, from the page's --accent). */
+  --about-accent: var(--statement);
+  --about-accent-rgb: var(--statement-rgb);
   --about-ink-strong: #f3f0fb;
   --about-ink: #e4e0ef;
   --about-ink-muted: #b6b1c6;
-  --about-measure: 34em;
+  /*
+   * The reading measure: 31em of the 16px copy, about 500px, 55 to 68 characters a line (Harlie's brief, 2026-09-28:
+   * "line length ~50-70 characters on desktop"; it was 34em of 17px copy, 578px, up to 72).
+   */
+  --about-measure: 31em;
   --about-secondary: 0.9375rem;
-  --about-block-gap: clamp(48px, 5vw, 72px);
+  /*
+   * The space between the page's sections: 56px on a wide window, 40px on a phone (Harlie's brief, 2026-09-28: the
+   * gap between Education and Creative work was excessive; it was 48 to 72px, 126px from the courses to the cards).
+   */
+  --about-block-gap: clamp(40px, 4vw, 56px);
   box-sizing: border-box;
   display: grid;
   gap: var(--about-block-gap);
@@ -33,12 +43,45 @@
   max-width: calc(1000px + 2 * var(--gutter));
   margin-inline: auto;
   padding-inline: var(--gutter);
+  /* The space that lets the page's end rest on a section, measured by AboutContent.tsx (useRestingEnd, 2026-09-28). */
+  padding-bottom: var(--about-rest, 0px);
   color: var(--about-ink);
+}
+
+/*
+ * The site's ending on About (Footer.tsx: the copyright only) takes the About column's edges, so the copyright ends
+ * under "Send message" rather than 80 to 140px to its right, on the footer's wider 1280px shell (2026-09-28). The
+ * footer's inner box is content-box, so the same 1000px and gutters give the same edges as .about-content.
+ */
+.site-main:has(.page-about) + .site-end .site-end__inner {
+  max-width: 1000px;
+  padding-inline: var(--gutter);
 }
 
 .about-content strong {
   color: var(--about-ink-strong);
   font-weight: 600;
+}
+
+/*
+ * The Nebula ground behind About (CaseGround.tsx, stage.css) at about half its case-study strength, and the pointer's
+ * soft light a little dimmer: atmosphere, not a third focal point beside the name and the portrait (Harlie's brief,
+ * 2026-09-28: "reduce opacity/scale/brightness/movement/proximity if needed; don't remove the identity"; a pass of the
+ * pointer along the portrait at 1280 × 720 lit the ground around the name a deep navy). It multiplies the pointer's own
+ * steps (--decor-level, stage.css: quieter over copy, links and the form), so those still apply, and stage.css's
+ * opacity transition eases it as the page comes and goes. Case studies keep the full strength.
+ */
+:root:has(.page-about) .case-ground {
+  --about-field: 0.5;
+  --about-light: 0.75;
+}
+
+:root:has(.page-about) .case-ground__quiet {
+  opacity: calc(var(--decor-level) * var(--about-field));
+}
+
+:root:has(.page-about) .case-ground .cursor-light {
+  filter: brightness(calc(var(--decor-level) * var(--about-light)));
 }
 
 /* Opening ------------------------------------------------------------------------------------ */
@@ -49,12 +92,27 @@
   align-items: center;
 }
 
-@media (min-width: 820px) {
-  /* The words' column is as wide as they are, and the portrait follows close beside them (Harlie's request). */
+/*
+ * Tablets (2026-09-28): the portrait beside the words from 720px, a little smaller, instead of stacked under them at
+ * its full 344px with 360px of empty ground beside it (768 × 1024). At 768 it is about 246px wide beside a 426px column.
+ */
+@media (min-width: 720px) {
   .about-content .about-hero {
-    grid-template-columns: minmax(0, max-content) clamp(300px, 26vw, 344px);
+    grid-template-columns: minmax(0, 1fr) clamp(240px, 32vw, 344px);
+    column-gap: 32px;
+  }
+}
+
+/*
+ * The portrait on the content column's right edge, level with the Education paragraph, the cards and the form below
+ * (2026-09-28). It used to follow close beside a words column as wide as the words (Harlie's request), which was then
+ * 578px, the old measure, so the portrait nearly met that edge anyway; at the new measure (above) it sat 104px in from
+ * it, the one edge on the page out of line. The words keep their measure at the column's left.
+ */
+@media (min-width: 820px) {
+  .about-content .about-hero {
+    grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 344px);
     column-gap: clamp(32px, 4vw, 56px);
-    justify-content: start;
   }
 }
 
@@ -75,8 +133,11 @@
 .about-content .about-label::before {
   content: '';
   width: 40px;
-  height: 1px;
-  background: var(--red);
+  height: 2px;
+  border-radius: 1px;
+  /* A glowing line, as the pointer glows (Harlie's request, 2026-09-28; tokens.css). */
+  background: var(--statement-line);
+  box-shadow: var(--statement-line-glow);
 }
 
 .about-content .about-name {
@@ -102,15 +163,26 @@
   letter-spacing: 0.18em;
   line-height: 1.6;
   text-transform: uppercase;
-  color: var(--red);
+  /* The statement colour, no glow, as on the deployed site (Harlie's request, 2026-09-28: "not the glowing text"). */
+  color: var(--statement);
 }
 
+/* Each part of the descriptor wraps as one where the line allows ("AI product ·", "Implementation ·"). */
+.about-content .about-descriptor__part {
+  display: inline-block;
+}
+
+/*
+ * The short thesis under the descriptor: third in the order of attention after the name and the positioning line
+ * (Harlie's brief, 2026-09-28: "reduce body visual weight; no dense rectangle"), so 16px rather than 17px, on the
+ * reading measure (above).
+ */
 .about-content .about-hero__copy {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   max-width: var(--about-measure);
-  margin-top: 24px;
-  font-size: 1.0625rem;
+  margin-top: 22px;
+  font-size: 1rem;
   line-height: 1.65;
   color: var(--about-ink);
   text-wrap: pretty;
@@ -132,20 +204,46 @@
   background: #121216;
 }
 
-/* Hovering the photograph enlarges it a little (Harlie's request). */
+/* Phones: the stacked portrait takes the text column's full width, so its right edge meets the words' (2026-09-28). */
+@media (max-width: 559.98px) {
+  .about-content .about-portrait {
+    width: 100%;
+  }
+}
+
+/*
+ * Hovering the photograph (Harlie's requests): it comes forward a little and tilts towards the pointer in 3D, up to
+ * 15 degrees each way (mediaTilt.ts, after 21st.dev's "3D Tilt Card"), following the pointer over 200ms. Its shadow moves
+ * with the tilt as in the original; on this black ground the shadow carries a faint blue violet glow, or it would not show.
+ * It eases back flat when the pointer leaves.
+ */
 @media (hover: hover) and (pointer: fine) {
   .about-content .about-portrait {
-    transition: transform 420ms var(--ease-arrive);
+    transition:
+      transform 420ms var(--ease-arrive),
+      box-shadow 420ms var(--ease-arrive);
   }
 
   .about-content .about-portrait:hover {
     transform: scale(1.05);
   }
+
+  .about-content .about-portrait[data-tilt] {
+    transform: perspective(var(--tilt-p, 1000px)) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) scale3d(1.05, 1.05, 1.05);
+    box-shadow:
+      var(--tilt-sx, 0px) var(--tilt-sy, 0px) var(--tilt-blur, 40px) rgb(0 0 0 / 0.5),
+      var(--tilt-sx, 0px) var(--tilt-sy, 0px) calc(var(--tilt-blur, 40px) + 16px) rgb(var(--pointer-rgb) / 0.22);
+    transition:
+      transform 200ms ease-out,
+      box-shadow 200ms ease-out;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .about-content .about-portrait:hover {
+  .about-content .about-portrait:hover,
+  .about-content .about-portrait[data-tilt] {
     transform: none;
+    box-shadow: none;
   }
 }
 
@@ -166,7 +264,8 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  margin: 0 0 28px;
+  /* 24px to its content (2026-09-28, with the closer sections; it was 28px). */
+  margin: 0 0 24px;
   /* No line above the section (Harlie's request). */
   padding-top: 8px;
   font-family: var(--font-sans);
@@ -175,10 +274,12 @@
   letter-spacing: 0.32em;
   text-transform: uppercase;
   color: var(--about-ink-muted);
+  /* A scroll to a section stops with its label clear of the navigation; the page's end rests there too (useRestingEnd). */
+  scroll-margin-top: var(--header-safe);
 }
 
 .about-content .about-section-label__num {
-  color: var(--red);
+  color: var(--statement);
   letter-spacing: 0.12em;
 }
 
@@ -189,8 +290,12 @@
   gap: 24px;
 }
 
-@media (min-width: 820px) {
-  /* The school's details take their own width and the paragraphs follow close beside them (Harlie's request). */
+/*
+ * From 1000px (2026-09-28; it was 820px, where the school's unwrapped lines, about 462px, squeezed the paragraph
+ * beside them into eight short lines at 834px): narrower, the paragraph follows under the school block.
+ */
+@media (min-width: 1000px) {
+  /* The school's details take their own width and the paragraph follows close beside them (Harlie's request). */
   .about-content .about-education__grid {
     grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
     column-gap: clamp(32px, 4vw, 56px);
@@ -212,11 +317,17 @@
   line-height: 1.35;
 }
 
+/*
+ * The degree and the certificate are the section's primary lines (Harlie's brief, 2026-09-28: "degree info primary,
+ * thesis secondary"): 16px in the strong ink, a step up from the 15px reading ink they had, when the paragraph beside
+ * them was the heavier text.
+ */
 .about-content .about-school__credentials {
   display: grid;
   gap: 2px;
   margin-top: 2px;
-  color: var(--about-ink);
+  color: var(--about-ink-strong);
+  font-size: 1rem;
   list-style: none;
 }
 
@@ -229,28 +340,51 @@
   color: var(--about-ink-muted);
 }
 
-/* The coursework line wraps within the column the three lines set (it never widens it). */
+/* Each side of a credential's en dash wraps as one where the line allows ("Data Science minor" stays together). */
+.about-content .about-school__part {
+  display: inline-block;
+}
+
+/*
+ * The courses, a small muted line under the degree (supporting detail, 14px). Stacked, it keeps the page's reading
+ * measure (2026-09-28: it ran the full 704px at 768).
+ */
 .about-content .about-school__coursework {
-  width: 0;
-  min-width: 100%;
-  margin-top: 10px;
+  max-width: var(--about-measure);
+  margin-top: 8px;
   color: var(--about-ink-muted);
+  font-size: 0.875rem;
   text-wrap: pretty;
 }
 
-/* Three lines on wide windows: no line wraps. */
-@media (min-width: 820px) {
+/* Beside the paragraph: three lines that never wrap, and the coursework wrapping within the column they set. */
+@media (min-width: 1000px) {
   .about-content .about-school__name,
   .about-content .about-school__credentials li {
     white-space: nowrap;
   }
+
+  /* The paragraph starts level with the degree, under the school's name line (its 24px and the 6px after it). */
+  .about-content .about-school__text {
+    padding-top: calc(1.125rem * 1.35 + 6px);
+  }
+
+  .about-content .about-school__coursework {
+    width: 0;
+    min-width: 100%;
+    max-width: none;
+  }
 }
 
+/*
+ * Harlie's paragraph, secondary to the degree (Harlie's brief, 2026-09-28): 15px in the reading ink, where it was 16px
+ * and heavier than the degree lines. Beside the school from 1000px, its first line level with the degree's.
+ */
 .about-content .about-school__text {
   display: grid;
   gap: 12px;
   color: var(--about-ink);
-  font-size: 1rem;
+  font-size: var(--about-secondary);
   line-height: 1.65;
   text-wrap: pretty;
 }
@@ -260,7 +394,7 @@
   margin: 0;
 }
 
-/* Creative work: two compact cards ------------------------------------------------------------ */
+/* Creative work: three compact cards ---------------------------------------------------------- */
 
 .about-content .about-creative__grid {
   display: grid;
@@ -275,21 +409,34 @@
   }
 }
 
+/*
+ * Two columns (560 to 900px): the Art card spans the second row as a wide strip of its three drawings, twice a card's
+ * width at about a card's height, instead of one card alone with an empty half row beside it (2026-09-28).
+ */
+@media (min-width: 560px) and (max-width: 899.98px) {
+  .about-content .about-work--art {
+    --about-hover-scale: 1.04;
+    grid-column: 1 / -1;
+  }
+
+  .about-content .about-work--art .about-work__frame {
+    aspect-ratio: 3072 / 895;
+  }
+}
+
 @media (min-width: 900px) {
   .about-content .about-creative__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-/* The charcoal portrait is upright: the landscape frame shows the face. */
-
 /*
  * A card: the frame (the whole frame is the one control: a link to the
- * creative portfolio, or the film's play button), then its title. Both
- * frames have the film poster's own aspect ratio (1536 × 895), so the
- * poster is whole; the 16:9 art tile beside it loses about 2% at each side.
+ * creative portfolio or its Art page, or the film's play button), then its
+ * title. The frames have the film poster's own aspect ratio (1536 × 895), so
+ * the poster is whole; the 16:9 art tile loses about 2% at each side.
  * A deep, soft dark surround keeps the room's greys away from the pinks.
- * No overlay, filter or coloured tint on either image.
+ * No overlay, filter or coloured tint on any image.
  */
 .about-content .about-work {
   display: grid;
@@ -308,35 +455,34 @@
     0 0 0 1px rgb(255 255 255 / 0.07),
     0 0 40px 12px rgb(4 4 6 / 0.55),
     0 36px 80px -30px rgb(0 0 0 / 0.95);
-  transition:
-    box-shadow 220ms var(--ease-out),
-    transform 420ms var(--ease-arrive);
+  /* Only the hover scale moves; the focus mark (below) appears at once, as every focus ring does (tokens.css). */
+  transition: transform 420ms var(--ease-arrive);
 }
 
-/* Hovering a card (the creative portfolio, the film, the art) enlarges it clearly (Harlie's request; was 1.04). */
+/*
+ * Hovering a card (the creative portfolio, the film, the art) enlarges it clearly (Harlie's request; was 1.04). The
+ * wide Art strip (560 to 900px, below) takes half the scale, so it grows by as many pixels as the cards above it and
+ * stays clear of the window's edges (2026-09-28).
+ */
 @media (hover: hover) and (pointer: fine) {
   .about-content .about-work__frame:hover {
-    transform: scale(1.08);
+    transform: scale(var(--about-hover-scale, 1.08));
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .about-content .about-work__frame:hover {
-    transform: none;
-  }
-}
-
-.about-content .about-work__frame:has(.about-work__hit:hover),
-.about-content .about-work__frame:has(.about-work__hit:focus-visible) {
-  box-shadow:
-    0 0 0 1px rgb(var(--about-accent-rgb) / 0.7),
-    0 0 40px 12px rgb(4 4 6 / 0.55),
-    0 36px 80px -30px rgb(0 0 0 / 0.95);
-}
-
+/*
+ * Keyboard focus only; hover draws no light outline (Harlie's request, 2026-09-27: no light outline on hover except the
+ * cursor's, on the navigation and "Watch the film"). The site's one focus mark (2026-09-28): the near-white inner line
+ * at the frame's edge (--focus-inner-line, in place of the old 1px accent edge) inside the 2px rose ring, as on
+ * the header, the footer and the contact links. The frame carries it, so the link inside (and its badge) draws none.
+ */
 .about-content .about-work__frame:has(.about-work__hit:focus-visible) {
   outline: var(--focus-ring);
-  outline-offset: 4px;
+  outline-offset: var(--focus-offset);
+  box-shadow:
+    var(--focus-inner-line),
+    0 0 40px 12px rgb(4 4 6 / 0.55),
+    0 36px 80px -30px rgb(0 0 0 / 0.95);
 }
 
 .about-content .about-work__hit {
@@ -376,7 +522,8 @@
     opacity 400ms var(--ease-out);
 }
 
-/* The creative portfolio's silent loop fades in over its poster once it plays (always, while on screen; ArtPreview.tsx). */
+/* The creative portfolio's silent loop fades in over its poster once it rests on the poster's own frame (as the card
+   nears the view), and stays while paused; it plays only while on screen (ArtPreview.tsx). */
 .about-content .about-work__video {
   opacity: 0;
 }
@@ -430,16 +577,6 @@
   transform: scale(1.03);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .about-content .about-art-strip__image img {
-    transition: none;
-  }
-
-  .about-content .about-work__hit:hover .about-art-strip__image img {
-    transform: none;
-  }
-}
-
 /* The action, in the frame's lower left corner: a small dark badge (the whole frame is the control). */
 .about-content .about-work__badge {
   position: absolute;
@@ -451,8 +588,12 @@
   padding: 0 17px 0 15px;
   border: 1px solid rgb(255 255 255 / 0.34);
   border-radius: 999px;
-  /* The transparent stateful pill (components.css .stateful): a faint blurred glass that turns translucent red on hover. */
-  background: rgb(8 8 10 / 0.22);
+  /*
+   * The stateful pill (components.css .stateful), blurred glass with no highlight of its own on hover, on a darker
+   * ground than the page's pills (2026-09-28: at 0.22 its white words fell to about 3:1 over the bright paint and the
+   * poster's pinks; 0.5 keeps them near 4.5:1 or better while the artwork still shows through).
+   */
+  background: rgb(8 8 10 / 0.5);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   color: #fff;
@@ -477,13 +618,6 @@
   transition: transform var(--dur-feedback) var(--ease-out);
 }
 
-.about-content .about-work__hit:hover .about-work__badge,
-.about-content .about-work__hit:focus-visible .about-work__badge {
-  border-color: rgb(229 36 36 / 0.8);
-  background: rgb(214 28 28 / 0.34);
-  box-shadow: none;
-}
-
 .about-content .about-work__hit:hover .about-work__arrow,
 .about-content .about-work__hit:focus-visible .about-work__arrow {
   transform: translate(1px, -1px);
@@ -500,18 +634,20 @@
   gap: 4px var(--space-5);
 }
 
+/* 18px, as the school's name above (2026-09-28; it was 20px): the pictures lead the section (Harlie's brief). */
 .about-content .about-work__title {
   color: var(--about-ink-strong);
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: var(--weight-heading);
   line-height: 1.3;
   letter-spacing: -0.01em;
 }
 
 /* The film's runtime on its play badge, after the action (as Watch the film shows its length on Creative Production). */
-.about-work__time {
+.about-content .about-work__time {
   margin-left: 10px;
-  color: rgb(255 255 255 / 0.8);
+  /* A step below the action's white, and still readable over the poster (2026-09-28: 0.8 read about 3.2:1). */
+  color: rgb(255 255 255 / 0.92);
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
 }
@@ -545,10 +681,12 @@
   text-decoration-color: currentColor;
 }
 
+/* The site's one focus mark: the 2px ring with the near-white inner line (2026-09-28; the inner line was missing). */
 .about-content .about-work__aside:focus-visible {
   outline: var(--focus-ring);
-  outline-offset: 2px;
+  outline-offset: var(--focus-offset);
   border-radius: 4px;
+  box-shadow: var(--focus-inner-line);
 }
 
 /* The film's player, mounted over the poster on Play (FeaturedFilm.tsx); it fades in once loaded. */
@@ -573,27 +711,367 @@
   margin-right: 8px;
 }
 
+/*
+ * Phones: a smaller badge. Its children space themselves (the play mark's and the arrow's margins); a flex gap here
+ * also fell either side of the two zero-width stateful icons and pushed the words 14px off centre (2026-09-28).
+ */
 @media (max-width: 479.98px) {
   .about-content .about-work__badge {
-    gap: 7px;
     padding: 0 14px 0 12px;
     font-size: 0.875rem;
   }
 }
 
-/* Reduced motion: hover and focus still change colour and edges, without scaling or sliding. */
+/*
+ * Reduced motion (the OS setting, which html[data-motion] mirrors): hover and focus still change colour and edges,
+ * without scaling or sliding. One block for every card (2026-09-28; there were three, and a fourth copy under
+ * html[data-motion]).
+ */
 @media (prefers-reduced-motion: reduce) {
-  .about-content .about-work__hit:hover :is(.about-work__image img, .about-work__video),
-.about-content .about-work__hit:focus-visible :is(.about-work__image img, .about-work__video),
-.about-content .about-work__hit:hover .about-work__arrow,
-.about-content .about-work__hit:focus-visible .about-work__arrow {
+  .about-content .about-art-strip__image img {
+    transition: none;
+  }
+
+  .about-content .about-work__frame:hover,
+  .about-content .about-work__hit:is(:hover, :focus-visible) :is(.about-work__image img, .about-work__video, .about-art-strip__image img, .about-work__arrow) {
     transform: none;
   }
 }
 
-html[data-motion='reduce'] .about-content .about-work__hit:hover :is(.about-work__image img, .about-work__video),
-html[data-motion='reduce'] .about-content .about-work__hit:focus-visible :is(.about-work__image img, .about-work__video),
-html[data-motion='reduce'] .about-content .about-work__hit:hover .about-work__arrow,
-html[data-motion='reduce'] .about-content .about-work__hit:focus-visible .about-work__arrow {
-  transform: none;
+/* Get in touch: the direct links, then a name, an email address and a message (ContactForm.tsx) --------- */
+
+/*
+ * "Get in touch" is where the page's end rests (AboutContent.tsx, useRestingEnd; 2026-09-28): the space above its
+ * label is always deep enough for the label to rest at the navigation's safe line (--header-safe) with the Creative
+ * work just out of view above, never under the navigation. The section gap, this margin and the label's own 8px top
+ * padding come to at least --header-safe: about 21px more than the other sections' gap on a phone, none from 1380px.
+ */
+.about-content .about-contact {
+  margin-top: max(0px, calc(var(--header-safe) - var(--about-block-gap) - 8px));
+}
+
+/*
+ * The direct links first, then the form (Harlie's brief, 2026-09-28: email, LinkedIn and the résumé "equally or more
+ * accessible than the form, without clutter", and the form less dominant). From 900px, three columns on the Creative
+ * work cards' grid: the links stacked in the first, level with the fields, and the form across the other two (656px at
+ * 1440, where it ran the full 1000px). Narrower, the links in a row above the form, which takes the column.
+ */
+.about-content .about-contact__body {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 900px) {
+  .about-content .about-contact__body {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: clamp(20px, 2.4vw, 32px);
+    align-items: start;
+  }
+
+  .about-content .about-contact__body .about-contact__form {
+    grid-column: 2 / -1;
+  }
+
+  /* Stacked, the first link's words level with the fields' labels (its 44px line box centres them 16px down). */
+  .about-content .about-contact__body .about-contact__links {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: -14px;
+  }
+}
+
+.about-content .about-contact__form {
+  display: grid;
+  gap: 16px;
+}
+
+.about-content .about-contact__row {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 560px) {
+  .about-content .about-contact__row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.about-content .about-contact__field {
+  display: grid;
+  gap: 8px;
+}
+
+.about-content .about-contact__label {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--about-ink-muted);
+}
+
+/*
+ * A quiet dark field with a hairline. The resting hairline is a little stronger than it was (Harlie's request,
+ * 2026-09-28: "form-field borders are very faint before focus ... increase resting contrast slightly", minimal and
+ * integrated): 0.16 white read as barely there on the black ground and vanished under the pointer's light; 0.34, the
+ * same hairline as the Send Message pill beside it (about 3:1 on the ground), marks each field's edge without a
+ * box-like frame. A pointer over a field lifts it a step further, so the field under the pointer reads as one.
+ *
+ * Focus is the site's one focus mark (tokens.css --focus-inner, layout.css): a near-white edge inside a crisp 2px rose
+ * ring (--color-focus), as on the header and footer. It replaced a blue violet edge with a soft glow, which read like
+ * the decorative light (Harlie's brief, 2026-09-28, item 6: focus distinguishable from the decorative trail).
+ */
+.about-content .about-contact__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 14px;
+  border: 1px solid rgb(255 255 255 / 0.34);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.035);
+  color: var(--about-ink-strong);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  transition:
+    border-color 200ms var(--ease-standard),
+    background-color 200ms var(--ease-standard),
+    box-shadow 200ms var(--ease-standard);
+}
+
+/*
+ * Touch screens and narrower windows: 16px text in the fields (2026-09-28), so iOS Safari does not zoom the page when a
+ * field is tapped (it does for anything smaller). A fine pointer on a desktop keeps the compact 15px.
+ */
+@media (pointer: coarse), (max-width: 899.98px) {
+  .about-content .about-contact__input {
+    font-size: 1rem;
+  }
+}
+
+/* Three lines (ContactForm's rows), at least 80px (Harlie's brief, 2026-09-28; it was four lines, at least 104px). */
+.about-content .about-contact__message {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/*
+ * Short phones (360 × 640, 375 × 667): a three-line message field (it can still be dragged taller), a closer label and
+ * a shorter page end, so the whole of "Get in touch", from its label to the copyright, fits in the window and the
+ * page's end can rest on it (2026-09-28). The field's rows (3) set its height, so it takes a height, not a minimum.
+ */
+@media (max-width: 559.98px) and (max-height: 720px) {
+  .page-about {
+    padding-bottom: 16px;
+  }
+
+  .about-content .about-contact .about-section-label {
+    margin-bottom: 20px;
+  }
+
+  .about-content .about-contact__message {
+    height: 88px;
+    min-height: 88px;
+  }
+}
+
+/*
+ * Phones on their side (at most 500px tall): the same, a little closer still (a two-line message field that can be
+ * dragged taller), so the page's natural end holds the whole form below the navigation (Harlie's QA pass,
+ * 2026-09-28: at 844 × 390 the end sliced the Name and Email labels at the window's top and the pill sat over the
+ * fields, since "Get in touch" is taller than such a window less the header and the footer).
+ */
+@media (orientation: landscape) and (max-height: 500px) {
+  .page-about {
+    padding-bottom: 16px;
+  }
+
+  .about-content .about-contact .about-section-label {
+    margin-bottom: 12px;
+  }
+
+  .about-content .about-contact__message {
+    height: 64px;
+    min-height: 64px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .about-content .about-contact__input:hover {
+    border-color: rgb(255 255 255 / 0.46);
+  }
+}
+
+.about-content .about-contact__input:focus {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  border-color: var(--focus-inner);
+  background: rgb(255 255 255 / 0.05);
+  box-shadow: none;
+}
+
+/* The browser's autofill keeps the dark field (not its pale fill). */
+.about-content .about-contact__input:-webkit-autofill {
+  -webkit-text-fill-color: var(--about-ink-strong);
+  box-shadow: 0 0 0 1000px #0c0c11 inset;
+  caret-color: var(--about-ink-strong);
+}
+
+/*
+ * The button at the right (Harlie's request). The line saying the message was sent (or could not be) takes a row of its
+ * own under it, so the button does not move when it appears (2026-09-28).
+ */
+.about-content .about-contact__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px 20px;
+}
+
+/* The email address, LinkedIn and the résumé (ContactLinks), in a row above the form until 900px (above). */
+.about-content .about-contact__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 24px;
+  min-width: 0;
+}
+
+/*
+ * Phones: two deliberate rows, the email address on the first and LinkedIn and the résumé side by side on the second
+ * (2026-09-28: the three wrapped to leave "Résumé" alone on a second row at 390 and 375), above the form. A grid, so
+ * each link's box (and focus ring) stays as wide as its words.
+ */
+@media (max-width: 479.98px) {
+  .about-content .about-contact__links {
+    display: grid;
+    grid-template-columns: max-content max-content;
+  }
+
+  .about-content .about-contact__link:first-child {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+/*
+ * Plain words in the page's reading ink (not the footer's small grey), each with a quiet underline that says link. An
+ * inline block 44px tall (the touch target), so its arrow, an inline block too, takes no underline of its own.
+ */
+.about-content .about-contact__link {
+  display: inline-block;
+  /* A little room either side for the focus ring's inner line, without moving the words (as the footer's links). */
+  margin-inline: -6px;
+  padding-inline: 6px;
+  color: var(--about-ink);
+  font-family: var(--font-sans);
+  font-size: var(--about-secondary);
+  line-height: 44px;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgb(228 224 239 / 0.32);
+  text-underline-offset: 5px;
+  transition:
+    color var(--dur-feedback) var(--ease-out),
+    text-decoration-color var(--dur-feedback) var(--ease-out);
+}
+
+.about-content .about-contact__link:hover,
+.about-content .about-contact__link:focus-visible {
+  color: var(--about-ink-strong);
+  text-decoration-color: currentColor;
+}
+
+/* The site's one focus mark: the 2px ring with the near-white inner line (2026-09-28; the inner line was missing). */
+.about-content .about-contact__link:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-radius: 4px;
+  box-shadow: var(--focus-inner-line);
+}
+
+/* A new tab (LinkedIn, the résumé's PDF): the small arrow the creative cards use, in the muted ink. */
+.about-content .about-contact__arrow {
+  display: inline-block;
+  margin-left: 5px;
+  color: var(--about-ink-muted);
+  font-size: 0.8125rem;
+  transition: transform var(--dur-feedback) var(--ease-out);
+}
+
+.about-content .about-contact__link:hover .about-contact__arrow,
+.about-content .about-contact__link:focus-visible .about-contact__arrow {
+  transform: translate(1px, -1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-content .about-contact__link:hover .about-contact__arrow,
+  .about-content .about-contact__link:focus-visible .about-contact__arrow {
+    transform: none;
+  }
+}
+
+/*
+ * The transparent stateful pill (components.css .stateful), set like Creative Production's "Watch the film". Its label
+ * sits centred (2026-09-28): the 16/20px padding was Watch the film's, which leads with a play mark; measured, the
+ * words sat 18.5px from the left edge and 23.5px from the right (the capitals' tracking trails the last letter). 19/18px
+ * gives 21.5px each side at the same width.
+ */
+.about-content .about-contact__send {
+  min-height: 44px;
+  padding: 0 18px 0 19px;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.about-content .about-contact__send[aria-disabled='true'] {
+  cursor: progress;
+}
+
+/* Its own row under the links and the button, ending under the button (2026-09-28; it was ordered in among them). */
+.about-content .about-contact__status {
+  order: 1;
+  flex-basis: 100%;
+  margin: 0;
+  font-size: var(--about-secondary);
+  line-height: 1.5;
+  text-align: right;
+  color: var(--about-ink);
+}
+
+.about-content .about-contact__status:empty {
+  display: none;
+}
+
+/* The address when the message could not be sent: a link like the ones beside the button. */
+.about-content .about-contact__status-link {
+  color: var(--about-ink-strong);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgb(228 224 239 / 0.5);
+  text-underline-offset: 4px;
+  border-radius: 2px;
+}
+
+.about-content .about-contact__status-link:hover {
+  text-decoration-color: currentColor;
+}
+
+.about-content .about-contact__status-link:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  box-shadow: var(--focus-inner-line);
+}
+
+/* Phones: the line reads from the left, across the column, rather than as a ragged block under the button. */
+@media (max-width: 559.98px) {
+  .about-content .about-contact__status {
+    text-align: left;
+  }
 }

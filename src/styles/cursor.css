@@ -1,0 +1,254 @@
+/*
+ * The pointer as a small glowing ball of light, bright blue violet (Harlie's requests,
+ * 2026-09-27; src/components/layout/CustomCursor.tsx), with a bright outline
+ * that grows out of it, a pill, around the header's navigation items, "Watch
+ * the film", the Next and Previous project buttons and Send Message only. A mouse or trackpad only: touch screens keep their own behaviour. The
+ * system cursor never shows once the ball has appeared (html[data-cursor]),
+ * over links, text fields and the dragged strip alike ("i dont want the mouse
+ * to show i want a glowing light to replace it"); full screen video is the one
+ * exception. Every colour is a token of the pointer's light (tokens.css).
+ */
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-cursor='custom'],
+  html[data-cursor='custom'] *,
+  html[data-cursor='custom'] *::before,
+  html[data-cursor='custom'] *::after,
+  html[data-cursor='custom'] ::backdrop {
+    cursor: none !important;
+  }
+
+  /* The trail steps back while an outline is shown: the outline is the one light then. */
+  .pointer-trail {
+    transition: opacity 160ms var(--ease-standard);
+  }
+
+  html[data-cursor-outline] .pointer-trail {
+    opacity: 0;
+  }
+}
+
+/*
+ * The layer: a manual popover, so it sits in the top layer (over modal
+ * dialogs); an empty box at the window's top left corner that its two parts
+ * are placed from. It never takes pointer events. Popover defaults (centred,
+ * bordered, padded, opaque) are undone.
+ */
+.custom-cursor {
+  position: fixed;
+  inset: 0 auto auto 0;
+  z-index: 9999;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: none;
+  color: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms var(--ease-standard);
+}
+
+.custom-cursor::backdrop {
+  display: none;
+}
+
+.custom-cursor[data-visible] {
+  opacity: 1;
+}
+
+.custom-cursor[data-off] {
+  display: none;
+}
+
+.custom-cursor__ring,
+.custom-cursor__ball {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/*
+ * The ball of light (Harlie's requests: "more like a ball of light not a perfectly round circle", then red, and
+ * then "that bright blue, purple color again"): no drawn edge anywhere, only light. A crisp near-white core fades through violet-white
+ * into a soft blue violet halo that thins to nothing. The box is placed on the pointer per frame (its centre is the
+ * pointer); the halo breathes and flickers faintly, a little unevenly, so it reads as alive rather than as a
+ * circle. The halo also keeps it legible over the white interface screenshots in the case studies.
+ */
+/* A little wider than at first (Harlie's requests, 2026-09-27: brighter, then "less bright"). */
+.custom-cursor__ball {
+  width: 50px;
+  height: 50px;
+  margin: -25px 0 0 -25px;
+}
+
+.custom-cursor__light,
+.custom-cursor__core,
+.custom-cursor__light::before,
+.custom-cursor__core::before {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* The halo (.custom-cursor__light) and the core (.custom-cursor__core), each able to draw in on its own. */
+.custom-cursor__light,
+.custom-cursor__core {
+  transition:
+    transform 240ms var(--ease-respond),
+    filter 240ms var(--ease-standard),
+    opacity 240ms var(--ease-standard);
+}
+
+.custom-cursor__light {
+  inset: 0;
+}
+
+.custom-cursor__core {
+  inset: 15px;
+}
+
+/* Brightens very slightly over links and buttons, as a hint; no outline there (Harlie's request). */
+.custom-cursor[data-hint] .custom-cursor__light {
+  transform: scale(1.1);
+  filter: brightness(1.18);
+}
+
+/*
+ * The brightest part stays off what it points at (Harlie's brief, 2026-09-28: "brightest parts not directly over
+ * important copy", "button states clear"; CustomCursor sets html[data-pointer-over], pointerContext.ts). Over a link
+ * or button the glow still brightens (above) while the core draws in to a point, so the label under it reads and the
+ * control's own hover state leads; over the Next and Previous project buttons, the navigation and "Watch the film"
+ * the outline is the light. Over copy, and in a form (its labels and fields), the whole light draws in, smaller and
+ * softer, and the letters under it stay legible. It is still the pointer everywhere: a small glowing ball, never hidden.
+ */
+html[data-pointer-over='control'] .custom-cursor__core {
+  transform: scale(0.55);
+  opacity: 0.8;
+}
+
+html:is([data-pointer-over='text'], [data-pointer-over='field'], [data-pointer-over='form']) .custom-cursor__light {
+  transform: scale(0.78);
+  opacity: 0.7;
+}
+
+html:is([data-pointer-over='text'], [data-pointer-over='field'], [data-pointer-over='form']) .custom-cursor__core {
+  transform: scale(0.6);
+  opacity: 0.72;
+}
+
+/* The halo: the blue violet light around the core, thinning to nothing. */
+.custom-cursor__light::before {
+  content: '';
+  inset: 0;
+  background: radial-gradient(
+    closest-side,
+    rgb(var(--pointer-rgb) / 0.6) 0%,
+    rgb(var(--pointer-rgb) / 0.36) 27%,
+    rgb(var(--pointer-rgb) / 0.15) 54%,
+    rgb(var(--pointer-rgb) / 0.05) 78%,
+    rgb(var(--pointer-rgb) / 0) 100%
+  );
+  animation: cursor-breathe 3.6s ease-in-out infinite alternate;
+}
+
+/* The core: near-white fading through violet-white into the halo, with no rim. */
+.custom-cursor__core::before {
+  content: '';
+  inset: 0;
+  background: radial-gradient(
+    closest-side,
+    var(--trail-core) 0%,
+    var(--trail-core) 22%,
+    var(--trail-glow) 48%,
+    rgb(var(--pointer-rgb) / 0.55) 74%,
+    rgb(var(--pointer-rgb) / 0) 100%
+  );
+  animation: cursor-flicker 2.3s ease-in-out infinite;
+}
+
+/* Breathing: the halo swells and settles, a touch wider than tall at the top of each breath. */
+@keyframes cursor-breathe {
+  0% {
+    opacity: 0.78;
+    transform: scale(0.9, 0.93);
+  }
+  55% {
+    opacity: 0.95;
+    transform: scale(1.03, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.08, 1.04);
+  }
+}
+
+/* A faint uneven flicker of the core, like a small flame rather than a lamp. */
+@keyframes cursor-flicker {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 0.86;
+    transform: scale(0.95, 0.97);
+  }
+  46% {
+    opacity: 0.97;
+    transform: scale(1.02, 1);
+  }
+  72% {
+    opacity: 0.9;
+    transform: scale(0.98, 1.01);
+  }
+}
+
+/* Reduced motion: a steady light, no breathing. */
+.custom-cursor[data-reduced] .custom-cursor__light,
+.custom-cursor[data-reduced] .custom-cursor__core,
+.custom-cursor[data-reduced] .custom-cursor__light::before,
+.custom-cursor[data-reduced] .custom-cursor__core::before {
+  animation: none;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .custom-cursor__light,
+  .custom-cursor__core,
+  .custom-cursor__light::before,
+  .custom-cursor__core::before {
+    animation: none;
+    transition: none;
+  }
+}
+
+/*
+ * The outline (a pill around the navigation's items, "Watch the film", Next/Previous project and Send Message; nowhere
+ * else): a near-white line inside a thin blue violet one, in a blue violet glow on both sides (Harlie's request:
+ * "brighter like before"), so it reads over the black ground and over white screenshots alike. Its box, corners and
+ * opacity are set per frame (CustomCursor.tsx); it fades where it is on leaving.
+ */
+.custom-cursor__ring {
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid color-mix(in srgb, var(--trail-core) 92%, transparent);
+  border-radius: 4px;
+  opacity: 0;
+  box-shadow:
+    0 0 0 1px rgb(var(--pointer-rgb) / 0.55),
+    0 0 14px 1px rgb(var(--pointer-rgb) / 0.5),
+    0 0 36px 4px rgb(var(--pointer-rgb) / 0.2),
+    inset 0 0 0 1px rgb(var(--pointer-rgb) / 0.35),
+    inset 0 0 14px rgb(var(--pointer-rgb) / 0.2);
+}
+
+/* Full screen (the film viewer): the system cursor and the player's own controls. */
+html:fullscreen .custom-cursor {
+  display: none;
+}

@@ -1,57 +1,12 @@
 /* ----------------------------------------------------------------------- */
-/* Project route transition (projectTransition.ts, CoverSlot.tsx)           */
+/* The page change (pageChange.ts)                                         */
 /* ----------------------------------------------------------------------- */
 
 /*
- * The copy of the clicked PNG object that stands in for it in the browser's
- * picture of the page being left (it carries view-transition-name: hk-cover;
- * the destination slot takes the name in the new state). It exists for one
- * frame before the view transition starts and sits exactly over the object:
- * the same file, glow and 3D turn. Its box always has the artwork's own
- * proportions. Never interactive.
- */
-.cover-clone {
-  position: fixed;
-  z-index: 60;
-  top: 0;
-  left: 0;
-  margin: 0;
-  padding: 0;
-  pointer-events: none;
-  user-select: none;
-  transform-origin: 0 0;
-}
-
-.cover-clone img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  object-fit: contain;
-}
-
-/*
- * The headshot is a bust cut straight across: in the gallery and in the
- * About page's slot its lower edge fades into the room, so the copy fades
- * the same way (on the image, inside the copy's glow filter, so the glow
- * follows the faded edge and is never clipped).
- */
-.cover-clone[data-fade='bottom'] img {
-  -webkit-mask-image: linear-gradient(to bottom, #000 83%, rgb(0 0 0 / 0.5) 91.5%, transparent);
-  mask-image: linear-gradient(to bottom, #000 83%, rgb(0 0 0 / 0.5) 91.5%, transparent);
-}
-
-/* The clicked object while its copy stands in for it (opacity, so its link keeps keyboard focus). */
-[data-cover-source][data-cover-moving] {
-  opacity: 0 !important;
-}
-
-/*
- * A slow wait (projectTransition.ts, TRANSITION.progressDelayMs): a thin
- * line in the destination's accent runs across the top of the viewport
- * while the old page stays, so the click is visibly under way. It fades in,
- * never covers content (2px, above the header's edge), and leaves with the
- * old page.
+ * A slow wait (TRANSITION.progressDelayMs): a thin line in the statement blue violet runs across the top of the
+ * viewport while the old page stays, so the click is visibly under way. It never covers content (2px, above the
+ * header's edge) and goes as the change starts. (It took the destination's accent until 2026-09-28: rose, lime or
+ * amber; Harlie's rule is blue violet only.)
  */
 .pt-progress {
   position: fixed;
@@ -72,8 +27,8 @@
   bottom: 0;
   left: 0;
   width: 40%;
-  background: linear-gradient(90deg, rgb(var(--pt-accent-rgb, 201 184 255) / 0), rgb(var(--pt-accent-rgb, 201 184 255) / 0.95) 70%, rgb(var(--pt-accent-rgb, 201 184 255) / 0));
-  box-shadow: 0 0 10px rgb(var(--pt-accent-rgb, 201 184 255) / 0.55);
+  background: linear-gradient(90deg, rgb(var(--statement-rgb) / 0), rgb(var(--statement-rgb) / 0.95) 70%, rgb(var(--statement-rgb) / 0));
+  box-shadow: 0 0 10px rgb(var(--statement-rgb) / 0.55);
   content: '';
   animation: pt-progress-run 1.2s cubic-bezier(0.45, 0, 0.3, 1) infinite;
 }
@@ -107,307 +62,143 @@
   }
 }
 
-/* The new page arrives through the change (hk-page below), not with its own short rise. */
-html[data-page-transition] .route-reveal {
-  animation: none;
-}
-
 /*
- * The change (projectTransition.ts, TRANSITION in src/config/transition.ts)
- * runs in two parts that never overlap, so the page being left and the new
- * page are never seen at partial opacity over each other:
- *   out  --pt-out-ms (170ms): the page being left clears (its content, the
- *        other objects and its picture of the room);
- *   in   --pt-in-ms (the remaining 250ms), starting as out ends: the new
- *        page's content fades in, rising --pt-in-rise (6px).
- * The chosen object moves into its slot across both (--pt-cover-ms, 420ms),
- * the header (the same on both pages) stays whole, and the two parts meet
- * with at most a frame between them, so no frame is ever empty.
- *
- * The root pictures hold the room (the background set) and anything not
- * pictured on its own. The old one fades out over the live new one, blended
- * normally: the new room (the same set, already showing the destination's
- * treatment) is whole beneath it from the first frame, so the room never
- * dims towards black and nothing of the old page stays once the new one
- * starts.
+ * The change moves the pictures of the pieces (pageChange.ts drives every one of them); none of the browser's own
+ * cross-fades and morphs run, and the pictures are laid over each other plainly (no additive blending, which would
+ * brighten where the old and new backgrounds overlap), except the header's below.
  */
-:root[data-page-transition]::view-transition-group(root) {
-  animation-duration: var(--pt-page-ms, 420ms);
-  animation-timing-function: var(--pt-page-ease, cubic-bezier(0.215, 0.61, 0.355, 1));
+:root[data-shuffle='move']::view-transition-group(*),
+:root[data-shuffle='move']::view-transition-old(*),
+:root[data-shuffle='move']::view-transition-new(*) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
-:root[data-page-transition]::view-transition-image-pair(root) {
+:root[data-shuffle='move']::view-transition-image-pair(*) {
   isolation: auto;
 }
 
-:root[data-page-transition]::view-transition-old(root) {
-  mix-blend-mode: normal;
-  animation: hk-fade-out var(--pt-out-ms, 170ms) var(--pt-out-ease, ease-out) both;
+/*
+ * The pointer's trail and the pointer stay live through the change (the trail under the moving pieces, the pointer
+ * above them): only their live picture shows, and without an animation the browser keeps it exactly where the live
+ * element is, frame by frame. The pointer's own layer is an empty box at the window's corner (its ball is placed from
+ * there), and a picture of an empty box shows nothing, so for the change it covers the window, as the trail's does.
+ */
+:root[data-shuffle='move']::view-transition-old(.tx-live) {
+  opacity: 0;
 }
 
-:root[data-page-transition]::view-transition-new(root) {
-  mix-blend-mode: normal;
-  animation: none;
+:root[data-shuffle='move'] .custom-cursor {
+  width: 100vw;
+  height: 100vh;
 }
 
 /*
- * Rarely, the new page could not be pictured on its own (it rendered too
- * late), so it is part of the new root picture: the old room then stays
- * whole and the new root arrives over it in the in part, after the old
- * content has gone.
+ * The header crossfades from the old page's picture to the new page's (pageChange.ts times it). Their light is added
+ * together, as the browser's own crossfade does, so whatever both pages' headers share (HOME, ABOUT) stays steady
+ * and only what differs changes.
  */
-:root[data-page-transition][data-pt-unnamed]::view-transition-old(root) {
-  animation: none;
+
+:root[data-shuffle='move']::view-transition-image-pair(tx-header) {
+  isolation: isolate;
 }
 
-:root[data-page-transition][data-pt-unnamed]::view-transition-new(root) {
-  animation: hk-fade-in var(--pt-in-ms, 250ms) var(--pt-in-ease, ease-out) var(--pt-out-ms, 170ms) both;
+:root[data-shuffle='move']::view-transition-old(tx-header),
+:root[data-shuffle='move']::view-transition-new(tx-header) {
+  mix-blend-mode: plus-lighter;
 }
 
 /*
- * The chosen PNG advances: the group moves and scales from the copy's box to
- * the slot's box (both in the artwork's proportions, so the scale is
- * uniform) on the arrive curve (front-loaded: it visibly leaves in the first
- * frame; no overshoot) while a 3D turn straightens. Inside it the two
- * pictures of the same object hand over without blending (the new, sharper
- * one on top), so its brightness never dips or doubles.
+ * A page chosen from the phone menu: the menu is still fading closed when the page is pictured, and it would be
+ * pictured with the header (so the list lingered over the moving pieces). A change finishes its closing at once.
  */
-:root[data-page-transition]::view-transition-group(hk-cover) {
-  animation-duration: var(--pt-cover-ms, 420ms);
-  animation-timing-function: var(--pt-cover-ease, cubic-bezier(0.215, 0.61, 0.355, 1));
-}
-
-:root[data-page-transition]::view-transition-image-pair(hk-cover) {
-  isolation: auto;
-}
-
-:root[data-page-transition]::view-transition-old(hk-cover) {
-  mix-blend-mode: normal;
-  animation: hk-cover-old var(--pt-cover-ms, 420ms) linear both;
-}
-
-:root[data-page-transition]::view-transition-new(hk-cover) {
-  mix-blend-mode: normal;
-  animation: hk-cover-new var(--pt-cover-ms, 420ms) linear both;
-}
-
-/* No slot on screen (a missing or off-screen destination): the copy leaves with the old page. */
-:root[data-page-transition]::view-transition-old(hk-cover):only-child {
-  animation: hk-fade-out var(--pt-out-ms, 170ms) var(--pt-out-ease, ease-out) both;
+:root[data-shuffle] .site-menu:not([data-open]) {
+  visibility: hidden;
+  opacity: 0;
+  transition: none;
 }
 
 /*
- * Out: the page being left (hk-scene: its content without the room, the
- * header and the objects named below) eases back a little about the chosen
- * object as it clears.
+ * The header gathering into its floating pill, or opening back into the bar (layout.css, 560ms), is settled at once
+ * during a change: the new page's header is pictured live, so its morph ran on under the change and after it, Back
+ * sliding 490px along and still creeping after the new header had faded in (Harlie's brief, 2026-09-28).
  */
-:root[data-page-transition]::view-transition-old(hk-scene) {
-  transform-origin: var(--pt-scene-origin, 50% 50%);
-  animation: hk-scene-out var(--pt-out-ms, 170ms) var(--pt-out-ease, ease-out) both;
+:root[data-shuffle] .site-header::before,
+:root[data-shuffle] .site-header__inner,
+:root[data-shuffle] .site-header__inner::before {
+  transition: none;
 }
 
-/* In: the new page's content (hk-page, named once the route has changed) arrives once the old page has gone. */
-:root[data-page-transition]::view-transition-new(hk-page) {
-  animation: hk-page-in var(--pt-in-ms, 250ms) var(--pt-in-ease, ease-out) var(--pt-out-ms, 170ms) both;
-}
-
-/*
- * The header, pictured on its own so the content layers never paint over it.
- * It is the same on both pages, so its complementary cross-fade (blended
- * additively, the browser's default for a pair) keeps what they share whole;
- * what differs (the brand, the current link, a Work shelf closing after a
- * click) changes in the out part, so nothing of the old page's header is left
- * when the new page arrives.
- */
-:root[data-page-transition]::view-transition-group(hk-header),
-:root[data-page-transition]::view-transition-old(hk-header),
-:root[data-page-transition]::view-transition-new(hk-header) {
-  animation-duration: var(--pt-out-ms, 170ms);
-  animation-timing-function: var(--pt-out-ease, ease-in);
-}
-
-/*
- * The layers, back to front: the room (root), the page being left (its
- * content and each receding object), the new page, the header, and the
- * advancing object. Without an explicit order the browser would stack them
- * as the page being left painted them.
- */
-:root[data-page-transition]::view-transition-group(hk-scene),
-:root[data-page-transition]::view-transition-group(hk-back-0),
-:root[data-page-transition]::view-transition-group(hk-back-1),
-:root[data-page-transition]::view-transition-group(hk-back-2),
-:root[data-page-transition]::view-transition-group(hk-back-3),
-:root[data-page-transition]::view-transition-group(hk-back-4),
-:root[data-page-transition]::view-transition-group(hk-back-5),
-:root[data-page-transition]::view-transition-group(hk-back-6),
-:root[data-page-transition]::view-transition-group(hk-back-7),
-:root[data-page-transition]::view-transition-group(hk-back-8),
-:root[data-page-transition]::view-transition-group(hk-back-9) {
+/* Back to front: the backgrounds (root), the pointer's trail, the leaving pieces, a phone's held band (black, over
+ * the steps scrolled under it, pageChange.ts), the arriving pieces, the carried picture and title (the old under the
+ * new) with the picture's status label, the header and the pointer. The trail stays under the pieces, as it stays
+ * under the page's words and controls (stage.css; Harlie's brief, 2026-09-28, item 6: decorative light under
+ * functional UI). */
+:root[data-shuffle='move']::view-transition-group(.tx-out) {
   z-index: 1;
 }
 
-:root[data-page-transition]::view-transition-group(hk-page) {
+:root[data-shuffle='move']::view-transition-group(.tx-band) {
   z-index: 2;
 }
 
-:root[data-page-transition]::view-transition-group(hk-header) {
+:root[data-shuffle='move']::view-transition-group(.tx-in) {
   z-index: 3;
 }
 
-:root[data-page-transition]::view-transition-group(hk-cover) {
+:root[data-shuffle='move']::view-transition-group(.tx-carry-out) {
   z-index: 4;
 }
 
-/*
- * Out: each other PNG object (hk-back-<n>, at most TRANSITION.stepBack.max =
- * 10) recedes the way the gallery shows distance, smaller about its floor
- * point and a little higher, towards the horizon, while it fades. It never
- * grows, turns or overshoots, and it is gone when the new page starts.
- */
-:root[data-page-transition]::view-transition-old(hk-back-0),
-:root[data-page-transition]::view-transition-old(hk-back-1),
-:root[data-page-transition]::view-transition-old(hk-back-2),
-:root[data-page-transition]::view-transition-old(hk-back-3),
-:root[data-page-transition]::view-transition-old(hk-back-4),
-:root[data-page-transition]::view-transition-old(hk-back-5),
-:root[data-page-transition]::view-transition-old(hk-back-6),
-:root[data-page-transition]::view-transition-old(hk-back-7),
-:root[data-page-transition]::view-transition-old(hk-back-8),
-:root[data-page-transition]::view-transition-old(hk-back-9) {
-  --pt-dx: 0px;
-  transform-origin: 50% 100%;
-  animation:
-    hk-back-move var(--pt-out-ms, 170ms) var(--pt-back-move-ease, ease-out) both,
-    hk-fade-out var(--pt-out-ms, 170ms) var(--pt-out-ease, ease-out) both;
+:root[data-shuffle='move']::view-transition-group(.tx-carry-in) {
+  z-index: 5;
 }
 
-/* Each object's own convergence towards the chosen one (projectTransition.ts sets --pt-back-dx-<n>). */
-:root[data-page-transition]::view-transition-old(hk-back-0) {
-  --pt-dx: var(--pt-back-dx-0, 0px);
+:root[data-shuffle='move']::view-transition-group(tx-header) {
+  z-index: 10;
 }
 
-:root[data-page-transition]::view-transition-old(hk-back-1) {
-  --pt-dx: var(--pt-back-dx-1, 0px);
+:root[data-shuffle='move']::view-transition-group(tx-trail) {
+  z-index: 0;
 }
 
-:root[data-page-transition]::view-transition-old(hk-back-2) {
-  --pt-dx: var(--pt-back-dx-2, 0px);
-}
-
-:root[data-page-transition]::view-transition-old(hk-back-3) {
-  --pt-dx: var(--pt-back-dx-3, 0px);
-}
-
-:root[data-page-transition]::view-transition-old(hk-back-4) {
-  --pt-dx: var(--pt-back-dx-4, 0px);
-}
-
-:root[data-page-transition]::view-transition-old(hk-back-5) {
-  --pt-dx: var(--pt-back-dx-5, 0px);
-}
-
-:root[data-page-transition]::view-transition-old(hk-back-6) {
-  --pt-dx: var(--pt-back-dx-6, 0px);
-}
-
-:root[data-page-transition]::view-transition-old(hk-back-7) {
-  --pt-dx: var(--pt-back-dx-7, 0px);
-}
-
-:root[data-page-transition]::view-transition-old(hk-back-8) {
-  --pt-dx: var(--pt-back-dx-8, 0px);
-}
-
-:root[data-page-transition]::view-transition-old(hk-back-9) {
-  --pt-dx: var(--pt-back-dx-9, 0px);
-}
-
-@keyframes hk-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes hk-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes hk-scene-out {
-  to {
-    opacity: 0;
-    transform: scale(var(--pt-scene-scale, 0.985));
-  }
-}
-
-@keyframes hk-page-in {
-  from {
-    opacity: 0;
-    transform: translateY(var(--pt-in-rise, 6px));
-  }
-}
-
-@keyframes hk-back-move {
-  to {
-    transform: translate(var(--pt-dx, 0px), calc(var(--pt-back-rise, 0.07) * -100%)) scale(var(--pt-back-scale, 0.76));
-  }
-}
-
-@keyframes hk-cover-old {
-  0%,
-  40% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes hk-cover-new {
-  0% {
-    opacity: 0;
-  }
-
-  40%,
-  100% {
-    opacity: 1;
-  }
+:root[data-shuffle='move']::view-transition-group(tx-cursor) {
+  z-index: 12;
 }
 
 /*
- * Opening a page from a homepage tile (pulseOpen.ts): the dark ground the homepage fades into, and one soft glow
- * blooming from the clicked tile. Above everything, never interactive; gone within about 400ms.
+ * Reduced motion: the pages simply fade, quickly, one after the other: the old page is gone before the new one comes
+ * in, so the two pages' words (and the header, a floating pill on one and the bar on the other) are never on screen
+ * together (Harlie's brief, 2026-09-28, item 13: no unreadable intermediate frames). The browser's own crossfade laid
+ * them over each other for about 100ms. The new page starts as the old one ends (it started 10ms sooner, and for a
+ * frame both titles showed faintly over each other; Harlie's QA pass, 2026-09-28): the window passes through its own
+ * black ground for a frame, a plain fade rather than a doubled page.
  */
-.tile-pulse {
-  position: fixed;
-  z-index: 1000;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
+:root[data-shuffle='fade']::view-transition-group(root) {
+  animation-duration: 230ms;
 }
 
-.tile-pulse__veil {
-  position: absolute;
-  inset: 0;
-  background: #000;
-  opacity: 0;
+:root[data-shuffle='fade']::view-transition-old(root),
+:root[data-shuffle='fade']::view-transition-new(root) {
+  mix-blend-mode: normal;
 }
 
-.tile-pulse__glow {
-  position: absolute;
-  border-radius: 50%;
-  /* Bright near-white at the centre, a wide soft blue-violet bloom around it (Harlie's request: bigger and brighter). */
-  background: radial-gradient(
-    closest-side,
-    rgb(250 251 255 / 0.95),
-    rgb(214 218 255 / 0.62) 22%,
-    rgb(160 168 255 / 0.3) 48%,
-    rgb(120 128 255 / 0.1) 72%,
-    rgb(120 128 255 / 0)
-  );
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.55);
-  will-change: transform, opacity;
+:root[data-shuffle='fade']::view-transition-old(root) {
+  animation: pt-fade-out 90ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+:root[data-shuffle='fade']::view-transition-new(root) {
+  animation: pt-fade-in 140ms cubic-bezier(0, 0, 0.2, 1) 90ms both;
+}
+
+@keyframes pt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes pt-fade-in {
+  from {
+    opacity: 0;
+  }
 }

@@ -1,31 +1,24 @@
-/* Shared components: buttons and in-page navigation (with the site-wide interaction states), pictures, the image dialog, transcripts, cover slots. */
+/* Shared components: buttons (with the site-wide interaction states), pictures, the image dialog. */
 
 /*
  * Controls. One coherent set, legible on the moving video before any hover:
  *
- *   .button                 primary action: solid near-white surface, dark text
+ *   .button                 primary action: the statement's deep blue violet (--statement-deep), white text
  *   .button--secondary      visible dark fill + clear light outline
  *   .button--quiet          alias of --secondary (older markup)
  *   .button--small          40px, for frame controls
- *   .nav-chip               in-page jump navigation; [aria-current] = selected
  *
- * Interaction states (section 31 of the brief), the same everywhere:
- * hover and keyboard focus give a slight colour change and a restrained
- * glow in the accent (plus a 1px lift on buttons); pressed settles back and
- * darkens; keyboard focus adds a 2px ring. Nothing changes size in the
- * layout, so nothing shifts. None relies on glow or colour alone.
+ * Interaction states (section 31 of the brief), the same everywhere: hover lifts a button by 1px and gives a
+ * secondary one a slightly lighter ground, with no light outline (Harlie's request, 2026-09-27: the cursor's outline
+ * is the only one); keyboard focus adds the accent's glow and a 2px ring; pressed settles back and darkens. Nothing
+ * changes size in the layout, so nothing shifts. None relies on glow or colour alone.
  *
- * The accent is the page's --accent (a case study sets its project accent
- * on the article; src/content/accents.ts), else lavender. Each rule resolves
- * it on the element itself (--_acc, --_acc-rgb), so it follows the page.
+ * The accent is the statement blue violet on every page (the per-project accents are gone; Harlie's QA pass,
+ * 2026-09-28). Each rule resolves it on the element itself (--_acc, --_acc-rgb).
  */
-.button,
-.nav-chip {
+.button {
   --_acc: var(--accent-default);
   --_acc-rgb: var(--accent-default-rgb);
-}
-
-.button {
   --btn-bg: var(--btn-primary-bg);
   --btn-fg: var(--btn-primary-fg);
   --btn-border: var(--btn-primary-bg);
@@ -65,7 +58,8 @@
   outline-offset: var(--focus-offset);
 }
 
-.button:is(:hover, :focus-visible):not(:disabled, [aria-disabled='true']) {
+/* Keyboard focus brightens the ground and adds the glow; hover only lifts it (below). */
+.button:focus-visible:not(:disabled, [aria-disabled='true']) {
   --btn-bg: var(--btn-primary-bg-hover);
   --btn-border: var(--btn-primary-bg-hover);
   box-shadow: var(--shadow-control-hover), var(--btn-glow);
@@ -89,28 +83,13 @@
   box-shadow: none;
 }
 
-.button > svg,
-.button__icon {
+.button > svg {
   flex: none;
   width: 16px;
   height: 16px;
 }
 
-/* A trailing "↗" (or "↓") beside the label; hidden from screen readers in markup. */
-.button__arrow,
-.link-arrow {
-  display: inline-block;
-  font-weight: 500;
-  line-height: 1;
-  transition: transform var(--dur-1) var(--ease-standard);
-}
-
-.button:hover .button__arrow,
-a:hover > .link-arrow {
-  transform: translate(1px, -1px);
-}
-
-/* Secondary: a visible dark surface with a clear light outline; the outline takes the accent on hover and focus. */
+/* Secondary: a visible dark surface with a clear light outline; the outline takes the accent on keyboard focus. */
 .button--secondary,
 .button--quiet {
   --btn-bg: var(--btn-secondary-bg);
@@ -118,8 +97,14 @@ a:hover > .link-arrow {
   --btn-border: var(--btn-secondary-border);
 }
 
-.button--secondary:is(:hover, :focus-visible):not(:disabled, [aria-disabled='true']),
-.button--quiet:is(:hover, :focus-visible):not(:disabled, [aria-disabled='true']) {
+/* Hover: a slightly lighter ground, with no tint; keyboard focus tints it and its edge with the accent. */
+.button--secondary:hover:not(:disabled, [aria-disabled='true']),
+.button--quiet:hover:not(:disabled, [aria-disabled='true']) {
+  --btn-bg: var(--btn-secondary-bg-hover);
+}
+
+.button--secondary:focus-visible:not(:disabled, [aria-disabled='true']),
+.button--quiet:focus-visible:not(:disabled, [aria-disabled='true']) {
   --btn-bg: color-mix(in oklch, var(--_acc) 12%, var(--btn-secondary-bg-hover));
   --btn-border: var(--_acc);
 }
@@ -145,72 +130,9 @@ a:hover > .link-arrow {
   font-size: 0.875rem;
 }
 
-.button--small > svg,
-.button--small .button__icon {
+.button--small > svg {
   width: 14px;
   height: 14px;
-}
-
-.button--block {
-  display: flex;
-  width: 100%;
-}
-
-/* In-page jump navigation (e.g. the Creative Production project row). */
-.nav-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 42px;
-  padding: 0 16px;
-  border: 1.5px solid var(--btn-secondary-border);
-  border-radius: 999px;
-  background: var(--btn-secondary-bg);
-  color: var(--btn-secondary-fg);
-  font-size: 0.875rem;
-  font-weight: var(--control-weight);
-  line-height: 1.2;
-  text-decoration: none;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    background-color var(--dur-1) var(--ease-standard),
-    border-color var(--dur-1) var(--ease-standard),
-    color var(--dur-1) var(--ease-standard),
-    box-shadow var(--dur-1) var(--ease-standard),
-    transform var(--dur-1) var(--ease-standard);
-}
-
-.nav-chip:is(:hover, :focus-visible) {
-  background: color-mix(in oklch, var(--_acc) 12%, var(--btn-secondary-bg-hover));
-  border-color: var(--_acc);
-  box-shadow: 0 0 18px -4px rgb(var(--_acc-rgb) / 0.6);
-}
-
-.nav-chip:hover {
-  transform: translateY(-1px);
-}
-
-.nav-chip:active {
-  background: var(--btn-secondary-bg-active);
-  transform: none;
-}
-
-.nav-chip:focus-visible {
-  outline: 2px solid var(--_acc);
-  outline-offset: var(--focus-offset);
-}
-
-/* Selected: the solid primary surface (not colour alone: fill + text contrast flip). */
-.nav-chip:is([aria-current='true'], [aria-current='location'], [aria-current='page'], [aria-current='step']) {
-  background: var(--btn-primary-bg);
-  border-color: var(--btn-primary-bg);
-  color: var(--btn-primary-fg);
-}
-
-.nav-chip:is([aria-current='true'], [aria-current='location'], [aria-current='page'], [aria-current='step']):is(:hover, :focus-visible) {
-  box-shadow: 0 0 0 1px rgb(var(--_acc-rgb) / 0.55), 0 0 18px -4px rgb(var(--_acc-rgb) / 0.6);
 }
 
 /* Pictures (ResponsiveImage.tsx) */
@@ -240,17 +162,6 @@ a:hover > .link-arrow {
   background: var(--color-surface);
   color: var(--color-muted);
   font-size: var(--text-small);
-}
-
-.provenance {
-  display: inline;
-  color: var(--color-text);
-  font-weight: var(--weight-label);
-}
-
-.provenance-sep {
-  margin-right: var(--space-2);
-  color: var(--color-subtle);
 }
 
 /* Image dialog */
@@ -283,6 +194,23 @@ a:hover > .link-arrow {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Every larger view (images, recordings, films) leaves as it came: the view and its scrim fade out together before
+   the dialog closes and focus returns (media/dialogExit.ts; no fade under reduced motion). */
+.image-dialog[open][data-closing],
+.image-dialog[open][data-closing]::backdrop {
+  animation: dialog-out 120ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.image-dialog[open][data-closing] {
+  pointer-events: none;
+}
+
+@keyframes dialog-out {
+  to {
+    opacity: 0;
   }
 }
 
@@ -321,7 +249,17 @@ a:hover > .link-arrow {
   gap: var(--space-2);
 }
 
-/* Opaque inside the dialog (nothing behind them but the dark scrim). */
+/*
+ * The larger views' buttons (images, recordings, films): the site's thin pills, a 1px light edge round a full
+ * radius, like "Watch the film" and the Next project button (Harlie's brief, 2026-09-28: they were heavy 10px boxes
+ * with 1.5px borders), on an opaque ground (nothing behind them but the dark scrim).
+ */
+.image-dialog__controls .button {
+  --btn-border: rgb(255 255 255 / 0.34);
+  border-width: 1px;
+  border-radius: 999px;
+}
+
 .image-dialog__controls .button--quiet,
 .image-dialog__controls .button--secondary {
   --btn-secondary-bg: var(--color-bg);
@@ -363,44 +301,72 @@ a:hover > .link-arrow {
   box-shadow: none;
 }
 
-.image-dialog__stage[data-detail='true'] {
-  display: block;
-  overflow: auto;
-  pointer-events: auto;
-  border-radius: var(--radius-inner);
-  box-shadow: inset 0 0 0 1px var(--color-line);
-}
-
-.image-dialog__stage[data-detail='true'] picture {
-  display: block;
-  width: max-content;
-  height: auto;
-  margin: auto;
-}
-
-.image-dialog__stage[data-detail='true'] img {
-  max-width: none;
-  max-height: none;
-  width: auto;
-  border-radius: 0;
-}
-
-.image-dialog__caption {
-  max-width: 72ch;
-  color: var(--color-muted);
-}
-
 html.is-dialog-open {
   overflow: hidden;
 }
 
-@media (max-width: 599px) {
+/*
+ * Phones: one row, the count (and status) at the left, Previous and Next as 44px arrows (their names stay for screen
+ * readers) and Close at the right (Harlie's brief, 2026-09-28: "Close" wrapped alone onto a second row).
+ */
+@media (max-width: 599.98px) {
+  .image-dialog__bar {
+    flex-wrap: nowrap;
+  }
+
+  .image-dialog__count {
+    min-width: 0;
+  }
+
   .image-dialog__controls {
-    justify-content: flex-start;
+    flex: none;
+    flex-wrap: nowrap;
   }
 
   .image-dialog__controls .button {
-    padding-inline: var(--space-3);
+    min-height: 44px;
+    padding-inline: var(--space-4);
+  }
+
+  .image-dialog__controls .image-dialog__step {
+    width: 44px;
+    padding: 0;
+  }
+
+  .image-dialog__step-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/*
+ * Touch phones: a wide screenshot opens at the view's full height and pans sideways (and pinches), from its left
+ * edge; fitted to the width it was hardly larger than on the page (Harlie's brief, 2026-09-28: 350 by 197 against the
+ * page's 342 by 173). Portrait pictures (the phones) still fit whole.
+ */
+@media (pointer: coarse) and (max-width: 599.98px) {
+  .image-dialog__stage[data-wide] {
+    overflow: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-x pan-y pinch-zoom;
+    pointer-events: auto;
+  }
+
+  /* Centred while it fits, from its left edge once it is wider (auto margins, which never push it off the start). */
+  .image-dialog__stage[data-wide] picture {
+    justify-content: flex-start;
+  }
+
+  .image-dialog__stage[data-wide] img {
+    flex: none;
+    width: auto;
+    height: 100%;
+    max-width: none;
+    margin-inline: auto;
   }
 }
 
@@ -410,74 +376,17 @@ html.is-dialog-open {
   }
 }
 
-/* Transcript disclosure */
-.transcript {
-  max-width: var(--prose-max);
-  border-top: 1px solid var(--color-line);
-  font-size: var(--text-small);
-}
-
-.transcript summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  color: var(--color-text);
-  font-weight: var(--weight-label);
-  cursor: pointer;
-  list-style: none;
-}
-
-.transcript summary::-webkit-details-marker {
-  display: none;
-}
-
-.transcript summary::before {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: rotate(-45deg);
-  transition: transform var(--dur-1) var(--ease-standard);
-}
-
-.transcript[open] summary::before {
-  transform: rotate(45deg);
-}
-
-.transcript__body {
-  display: grid;
-  gap: var(--space-3);
-  padding-bottom: var(--space-4);
-  color: var(--color-muted);
-}
-
-/* The reserved place of a carousel PNG object on its destination page (CoverSlot.tsx). */
-.cover-slot {
-  position: relative;
-  width: min(var(--cover-w, 260px), 100%);
-  max-width: 100%;
-}
-
-.cover-slot .picture,
-.cover-slot img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-
 /* ----------------------------------------------------------------------- */
-/* Stateful buttons (Stateful.tsx; after Aceternity's stateful button, red)  */
+/* Stateful buttons (Stateful.tsx; after Aceternity's stateful button)      */
 /* ----------------------------------------------------------------------- */
 
 /*
  * A transparent pill (a faint blurred glass and a light outline, Harlie's
- * request) that turns a translucent true red on hover and focus. When pressed, a
- * spinning loader grows in before the label while the action runs, then a
- * check replaces it for two seconds.
+ * request): Send Message, "Watch the film", the Next and Previous project
+ * buttons and About's creative-card badges. No highlight of its own on hover
+ * (Harlie's request, 2026-09-27; the cursor's outline marks it); keyboard focus
+ * draws the site's shared ring. When pressed, a spinning loader grows in before
+ * the label while the action runs, then a check replaces it for two seconds.
  */
 .stateful {
   display: inline-flex;
@@ -496,19 +405,15 @@ html.is-dialog-open {
     background-color 200ms var(--ease-standard);
 }
 
-.stateful:hover,
-.stateful:focus-visible,
-:is(a, button):hover > .stateful,
-:is(a, button):focus-visible > .stateful {
-  /* A true red, see-through (not the coral accent, which reads pink). */
-  border-color: rgb(229 36 36 / 0.8);
-  background: rgb(214 28 28 / 0.34);
-}
-
-.stateful:focus-visible,
-:is(a, button):focus-visible > .stateful {
-  outline: 1px solid var(--color-focus);
-  outline-offset: 3px;
+/*
+ * The shared focus ring (tokens.css: 2px blue violet, 3px out, the near-white inner line at the pill's edge), as on
+ * every other control (Harlie's brief, 2026-09-28: visible, consistent focus; these pills had a 1px ring with no
+ * inner line). A badge inside a focused card (About) draws none: the card's own ring marks it, once.
+ */
+.stateful:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  box-shadow: var(--focus-inner-line);
 }
 
 .stateful__loader,
@@ -547,4 +452,16 @@ html.is-dialog-open {
   .stateful[data-state='loading'] .stateful__loader {
     animation: none;
   }
+}
+
+/* ----------------------------------------------------------------------- */
+/* Metadata lines (MetaLine.tsx)                                            */
+/* ----------------------------------------------------------------------- */
+
+/*
+ * One part of a "kind · context" line, kept whole, so the line wraps only at its dot (Harlie's brief, 2026-09-28: the
+ * homepage tiles' and the phone menu's metadata).
+ */
+.meta-part {
+  white-space: nowrap;
 }

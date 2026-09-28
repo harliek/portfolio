@@ -3,27 +3,37 @@
  * darkness and space; a short hold as scrolling begins; then the selected
  * work as a field of media planes over the faint film.
  *
- * Scroll writes two variables on .home and on the film (Home.tsx,
- * ScrollTrigger; the film lives in PageShell's fixed #stage-film slot):
- *   --enter   0 to 1 through the opening's hold (the title rises and scales
- *             down, the roles fade, the film darkens);
- *   --settle  0 to 1 as the field rises into place (the film darkens a
- *             little further and stays faintly present behind the work).
+ * Scroll writes two variables where they are read (Home.tsx, ScrollTrigger;
+ * the film lives in PageShell's fixed #stage-film slot); .home holds their
+ * resting values:
+ *   --enter   on the opening (.hero) and the film's slot: 0 to 1 through the
+ *             opening's hold (the title rises and scales down, the roles
+ *             fade, the film darkens);
+ *   --settle  on the film's slot: 0 to 1 as the field rises into place (the
+ *             film darkens a little further and stays faintly present
+ *             behind the work).
  */
+
+/* The opening's side margin, shared with the homepage's footer (below), which lines up with it. */
+.home,
+.site-main:has(.home) + .site-end {
+  --edge: clamp(24px, 4.45vw, 64px);
+}
 
 .home {
   --enter: 0;
   --settle: 0;
-  --edge: clamp(24px, 4.45vw, 64px);
   /*
    * Where the centred tile sits in the held view (its centre, as a share of
-   * the room under the header), and its height at this width (the same
-   * sizes as ProjectField's layoutFor). Brief v21: the tiles sit as low as
-   * the old creative portfolio's art tiles, peeking about 66px above the
-   * bottom edge on arrival and centred a little below the middle once held.
+   * the room under the header). Brief v21: the tiles sit as low as the old
+   * creative portfolio's art tiles, peeking about 66px above the bottom edge
+   * on arrival and centred a little below the middle once held. The tiles'
+   * size, --plane-w and --plane-h, is written here by ProjectField (layoutFor),
+   * before the first paint; the stylesheet keeps no copy of it (Harlie's brief,
+   * 2026-09-28: the copies had drifted from layoutFor, so the tiles peeked
+   * 42 to 54px, not 66px).
    */
   --horizon: 51%;
-  --tile-h: min(21.25vw, 100svh - 261px);
 
   position: relative;
   isolation: isolate;
@@ -56,7 +66,10 @@
   }
 }
 
-/* Only enough local contrast for the title (a soft left fade, a little at the top), then a light scroll-driven dim behind the work. */
+/*
+ * Only enough local contrast for the title (a soft left fade, a little at the top), then a light scroll-driven dim
+ * behind the work.
+ */
 .home-film__shade {
   position: absolute;
   inset: 0;
@@ -74,15 +87,6 @@
   transition: opacity 700ms var(--ease-arrive);
 }
 
-.home-film[data-leaving] .home-film__shade::after {
-  opacity: 0.94;
-}
-
-/* The cursor's light (CursorLight, stage.css) goes out as the page leaves for a case study. */
-.home-film[data-leaving] .home-film__light {
-  opacity: 0;
-}
-
 /* The opening ---------------------------------------------------------------- */
 
 .hero {
@@ -90,9 +94,10 @@
   /*
    * Sized so the centred tile's top edge arrives about 66px above the bottom
    * of the window (as the old creative portfolio's art tiles do), whatever
-   * the window: tile top = hero + header + horizon x (window - header) - tile / 2.
+   * the window: tile top = hero + header + horizon x (window - header - footer) - tile / 2. (The fallback is only for
+   * a render before ProjectField has measured.)
    */
-  height: calc((100svh - var(--header-height)) * 0.49 - 66px + var(--tile-h) / 2 + var(--footer-h, 0px) * 0.51);
+  height: calc((100svh - var(--header-height)) * 0.49 - 66px + var(--plane-h, 18.75vw) / 2 + var(--footer-h, 0px) * 0.51);
 }
 
 /* The identity group sits about 38 to 40% down the opening, about 64px from the left. */
@@ -112,12 +117,46 @@
   will-change: transform;
 }
 
+/*
+ * Where the film's left fade no longer reaches the end of the identity group's lines (phones and tablets, where the
+ * group spans the window, and laptops, where the tagline crosses the figure): a soft band of shade lies behind the
+ * group alone, and moves and fades with it (Harlie's brief, 2026-09-28, homepage contrast: HARLIE KATZ fell to about
+ * 2.3:1 and the line to about 2.9:1 over the film's lit frames). Edge to edge on phones and tablets; on laptops it
+ * fades out past the tagline's end, so the figure on the right stays in full light. The film stays clearly visible
+ * above and below it.
+ */
+@media (max-width: 1439.98px) {
+  .hero__group::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: -56px;
+    bottom: -56px;
+    /* Out to both edges of the window: the group sits max(--edge, 8%) from the left and --edge from the right. */
+    left: calc(-1 * max(var(--edge), 8vw));
+    right: calc(-1 * var(--edge));
+    background: linear-gradient(to bottom, rgb(3 3 5 / 0), rgb(3 3 5 / 0.42) 56px, rgb(3 3 5 / 0.42) calc(100% - 56px), rgb(3 3 5 / 0));
+    pointer-events: none;
+  }
+}
+
+@media (min-width: 1100px) and (max-width: 1439.98px) {
+  .hero__group::before {
+    mask-image: linear-gradient(90deg, #000 48%, transparent 72%);
+  }
+}
+
+/* PORTFOLIO: the old portfolio's Playfair Display in white capitals, at --word-size. */
 .hero__title {
+  --word-size: clamp(64px, 8.8vw, 126px);
   margin: 0;
   font-weight: 400;
 }
 
-/* The name exactly as on the old portfolio (/creative/): a 56px rule, a 20px gap, 12px capitals tracked 0.5em, 24px above PORTFOLIO. */
+/*
+ * The name exactly as on the old portfolio (/creative/): a 56px rule, a 20px gap, 12px capitals tracked 0.5em, 24px
+ * above PORTFOLIO.
+ */
 .hero__name {
   display: flex;
   align-items: center;
@@ -131,20 +170,23 @@
   letter-spacing: 0.5em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: rgb(255 255 255 / 0.85);
+  /*
+   * Brighter, with a soft dark shadow (Harlie's brief, 2026-09-28, homepage contrast): at 85% white and 12px it fell
+   * to about 2.3:1 over the lit parts of the film on phones.
+   */
+  color: rgb(255 255 255 / 0.95);
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
 }
 
 .hero__name::before {
   content: '';
   flex: none;
   width: 56px;
-  height: 1px;
-  background: rgb(255 255 255 / 0.7);
-}
-
-/* PORTFOLIO: the old portfolio's Playfair Display in white capitals. */
-.hero__title {
-  --word-size: clamp(64px, 8.8vw, 126px);
+  height: 2px;
+  border-radius: 1px;
+  /* A glowing line, as the pointer glows (Harlie's request, 2026-09-28: more of the glowing statement colour). */
+  background: var(--statement-line);
+  box-shadow: var(--statement-line-glow);
 }
 
 .hero__word {
@@ -152,13 +194,16 @@
   font-family: var(--font-editorial);
   font-size: var(--word-size);
   font-weight: 400;
-  /* The old portfolio's medium weight (Playfair Display 500): the self-hosted regular face, thickened by a fine outline. */
+  /* The old portfolio's medium weight (Playfair Display 500): the self-hosted regular face, thickened by an outline. */
   line-height: 1.2;
   letter-spacing: -0.02em;
   text-transform: uppercase;
   white-space: nowrap;
   color: #fff;
   -webkit-text-stroke: 0.022em currentColor;
+  transition:
+    color 240ms var(--ease-standard),
+    text-shadow 240ms var(--ease-standard);
 }
 
 /*
@@ -217,6 +262,11 @@
   animation: type-blink 0.8s ease-in-out infinite alternate;
 }
 
+/* A bar that leaves stops blinking after two beats (1.6s, after its hideAt in Home.tsx): no hidden bar keeps going. */
+.type-line:not([data-stays]) .type-line__cursor::before {
+  animation-iteration-count: 2;
+}
+
 @keyframes type-cursor {
   from {
     left: 0;
@@ -264,11 +314,23 @@
   user-select: none;
 }
 
+/*
+ * Reduced motion: the text at once and no bar (TypeLine). The leaving bars' own rule above is more specific, so it is
+ * named here too; without it a still bar stood after PORTFOLIO for good and HARLIE KATZ's flashed (Harlie's brief,
+ * 2026-09-28, reduced motion).
+ */
 @media (prefers-reduced-motion: reduce) {
   .type-line__text,
   .type-line__cursor,
-  .type-line__cursor::before {
+  .type-line__cursor::before,
+  .type-line:not([data-stays]) .type-line__cursor,
+  .type-line:not([data-stays]) .type-line__cursor::before {
     animation: none;
+  }
+
+  .type-line__cursor,
+  .type-line:not([data-stays]) .type-line__cursor {
+    display: none;
   }
 
   .type-line__letter {
@@ -282,7 +344,12 @@
   font-family: var(--font-sans);
   font-size: 1.0625rem;
   line-height: 1.45;
+  /*
+   * A warm white, as on the deployed site (Harlie's request, 2026-09-28: the writing "back to the one thats deployed so
+   * not the glowing text"), over a soft dark shadow that keeps it readable over the film's lit parts.
+   */
   color: rgb(243 238 231 / 0.9);
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
   opacity: calc(1 - var(--enter) * 1.6);
 }
 
@@ -303,46 +370,27 @@
   min-height: 360px;
 }
 
+/*
+ * A low shade under the captions (Harlie's brief, 2026-09-28, homepage contrast): from just above the captions it
+ * deepens and holds on down through the footer, the page's own bottom vignette, so the tiles' words and the footer's
+ * links read over any frame of the film (they fell to about 2:1 over its lit parts). Under the tiles; the film stays
+ * clearly visible above it and through it.
+ */
+.field::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--horizon) + var(--plane-h, 35vw) / 2 - 64px);
+  right: 0;
+  bottom: calc(-1 * var(--footer-h, 0px));
+  left: 0;
+  background: linear-gradient(to bottom, rgb(3 3 5 / 0), rgb(3 3 5 / 0.5) 72px);
+  pointer-events: none;
+}
+
 .field__pin {
   position: relative;
   height: 100%;
   overflow: hidden;
-}
-
-.field__label {
-  position: absolute;
-  /* Just above the centred tile (its top edge is at --horizon less half its height). */
-  top: max(16px, calc(var(--horizon) - var(--tile-h) / 2 - 68px));
-  left: var(--edge);
-  z-index: 300;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: rgb(255 255 255 / 0.78);
-}
-
-.field__label::before {
-  content: '';
-  flex: none;
-  width: 40px;
-  height: 1px;
-  background: rgb(255 255 255 / 0.6);
-}
-
-.field__years {
-  color: rgb(255 255 255 / 0.5);
-}
-
-.field__years::before {
-  content: '/ ';
 }
 
 .field__stage {
@@ -353,11 +401,6 @@
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
-  cursor: grab;
-}
-
-.field__stage[data-dragging] {
-  cursor: grabbing;
 }
 
 .plane {
@@ -380,7 +423,8 @@
   display: block;
   height: var(--plane-h, 35vw);
   overflow: hidden;
-  border: 1px solid rgb(243 238 231 / 0.14);
+  /* The site's cool media edge (tokens.css), not the old warm hairline. */
+  border: 1px solid var(--color-media-edge);
   /* Rounded corners (Harlie's request, the Nickleby film tile). */
   border-radius: 16px;
   background: #0a0a0d;
@@ -391,12 +435,16 @@
   outline: none;
 }
 
-.plane:focus-visible .plane__frame {
-  outline: 1px solid var(--color-focus);
-  outline-offset: 6px;
+/*
+ * A tile wholly outside the window (ProjectField.tsx): clipped to nothing and out of the pointer's reach, but still in
+ * the accessibility tree and the tab order, where visibility: hidden took it out (Harlie's QA pass, 2026-09-28).
+ */
+.plane[data-away] {
+  clip-path: inset(50%);
+  pointer-events: none;
 }
 
-/* Free-standing tiles (phones, cutouts, the conversation) float over the page: no ground, frame or shadowed card. */
+/* Free-standing tiles (phones, the conversation) float over the page: no ground, frame or shadowed card. */
 .plane[data-free] .plane__frame {
   overflow: visible;
   border-color: transparent;
@@ -404,12 +452,34 @@
   box-shadow: none;
 }
 
+/*
+ * Keyboard focus: the site's shared ring (tokens.css, 2px rose with the near-white inner line; Harlie's brief,
+ * 2026-09-28: it was a 1px ring here), 6px out from the cover, which keeps its own shadow. A free-standing tile has
+ * no shadow, only the inner line.
+ */
+.plane:focus-visible .plane__frame {
+  outline: var(--focus-ring);
+  outline-offset: 6px;
+  box-shadow:
+    var(--focus-inner-line),
+    0 40px 80px -40px rgb(0 0 0 / 0.9);
+}
+
+.plane[data-free]:focus-visible .plane__frame {
+  box-shadow: var(--focus-inner-line);
+}
+
 /* Every tile at full brightness, wherever it is in the strip (Harlie's request). */
 .plane[data-free] .plane__media {
   overflow: visible;
 }
 
-/* The pause for the automatic turning, for keyboard users: it appears when focused, before the tiles. */
+/*
+ * The pause for the drift, for keyboard users: it appears only when focused, before the tiles. It shows just above
+ * the strip's right end, 16px clear of the tiles (Harlie's brief, 2026-09-28: it was at the top of the collection,
+ * over the film about 220px above the strip), with the shared focus ring; above the tiles in the collection's own
+ * stacking, nothing higher.
+ */
 .field__motion:not(:focus-visible) {
   position: absolute;
   width: 1px;
@@ -421,9 +491,9 @@
 
 .field__motion:focus-visible {
   position: absolute;
-  top: clamp(8px, 2.4svh, 24px);
+  top: max(8px, calc(var(--horizon) - var(--plane-h, 35vw) / 2 - 60px));
   right: var(--edge);
-  z-index: 300;
+  z-index: 3;
   min-height: 44px;
   padding: 0 18px;
   border: 1px solid rgb(255 255 255 / 0.4);
@@ -433,14 +503,23 @@
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   color: #fff;
-  outline: 1px solid var(--color-focus);
-  outline-offset: 3px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  box-shadow: var(--focus-inner-line);
 }
 
 /* Each card's own caption: the title 20px below the cover, the line 8px below it, the same height for every card. */
 .plane__caption {
   display: block;
   padding-top: 16px;
+  /*
+   * The site's cool text tones and a soft dark shadow (Harlie's brief, 2026-09-28, homepage contrast): the captions
+   * were warm greys (#f3eee7, #b4aea6) straight on the film. With the shade under them (.field::before) they read at
+   * 4.5:1 or better over any frame.
+   */
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.8),
+    0 0 14px rgb(0 0 0 / 0.6);
   transition: opacity 100ms linear;
 }
 
@@ -450,28 +529,42 @@
   font-size: clamp(1.375rem, 1.1rem + 0.45vw, 1.625rem);
   font-weight: 400;
   line-height: 1.15;
-  color: #f3eee7;
+  color: var(--stage-ivory);
+  transition:
+    color 240ms var(--ease-standard),
+    text-shadow 240ms var(--ease-standard);
 }
 
+/*
+ * The tile's metadata: what kind of work it is, then its context ("Market entry · PlanetArt"; field.ts), set as the
+ * case studies' own meta lines are (case-v16.css .cx-meta: 12px capitals, 0.08em tracking), so the strip reads as a
+ * range of kinds of work at a glance, not a row of paragraphs (Harlie's brief, 2026-09-28: "no paragraphs; concise
+ * metadata"). One line on every desktop tile, so the reserve is one line (it was two, for sentences); on a phone a
+ * long one wraps at its dot (MetaLine), never inside a part. A little brighter than the case pages' meta (about
+ * #d5d8e1, 12.9:1 on black), as it lies over the film's shade.
+ */
 .plane__line {
   display: block;
-  text-wrap: pretty;
-  min-height: calc(2 * 1.5em);
+  text-wrap: balance;
+  min-height: 1.5em;
   max-width: 56ch;
   margin-top: 8px;
   font-family: var(--font-sans);
-  font-size: clamp(0.875rem, 0.82rem + 0.15vw, 0.9375rem);
+  font-size: 0.75rem;
+  font-weight: 500;
   line-height: 1.5;
-  color: #b4aea6;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text) 55%, var(--color-muted));
+  transition: color 240ms var(--ease-standard);
 }
 
 /*
  * Hovering a tile (mouse or trackpad): the tile grows a little and lights
- * up slightly, a soft lift in brightness with a faint blue violet glow (a
- * glow around the frame for framed tiles; around the objects themselves for
- * the free-standing phones, cutouts and conversation). The system cursor
- * stays as it is. The frame scales inside the tile's own placement, so the
- * carousel's positioning is untouched.
+ * up slightly, a soft lift in brightness, with no lit edge or glow around it
+ * (Harlie's request, 2026-09-27: no light outline on hover except the
+ * cursor's, on the navigation and "Watch the film"). The frame scales inside
+ * the tile's own placement, so the strip's positioning is untouched.
  */
 @media (hover: hover) and (pointer: fine) {
   .plane__frame {
@@ -483,28 +576,25 @@
   }
 
   .plane:hover .plane__frame {
-    /* Clearly larger on hover (Harlie's request, 2026-09-26; was 1.045). */
-    transform: scale(1.09);
+    /*
+     * Clearly larger on hover (Harlie's requests: 1.09 on 2026-09-26, was 1.045; "bigger" on 2026-09-27). It grows
+     * mostly upwards and outwards, so it stays clear of its caption; at this size it still stays clear of its
+     * neighbours on the strip.
+     */
+    transform: scale(1.15);
+    transform-origin: 50% 85%;
     filter: brightness(1.12);
   }
 
-  .plane:not([data-free]):hover .plane__frame {
-    border-color: rgb(243 238 231 / 0.3);
-    box-shadow:
-      0 40px 80px -40px rgb(0 0 0 / 0.9),
-      0 0 56px -12px rgb(160 150 235 / 0.42);
-  }
 
-  .plane[data-free]:hover .plane__frame {
-    filter: brightness(1.12) drop-shadow(0 0 22px rgb(160 150 235 / 0.34));
-  }
-
+  /* Hovering a tile lights its title to white (Harlie's request, 2026-09-27: no red on hover). */
   .plane:hover .plane__title {
     color: #fff;
   }
 
-  .home[data-leaving] .plane__frame {
-    transition: none;
+  /* The caption's second line lights up with its title (Harlie's request: all the text, not just the title). */
+  .plane:hover .plane__line {
+    color: var(--color-text);
   }
 }
 
@@ -514,30 +604,8 @@
   }
 }
 
-/* Leaving for a case study: everything but the chosen frame recedes. */
-.home[data-leaving] .plane:not([aria-current]),
-.home[data-leaving] .field__label {
-  opacity: 0;
-  transition: opacity 300ms var(--ease-arrive);
-}
-
-/* The captions leave first (within 100ms), so no title rides on the moving cover. */
-.home[data-leaving] .plane__caption {
-  opacity: 0;
-}
-
-/* Phones: one tile and glimpses of its neighbours, captions directly beneath. */
-@media (min-width: 700px) and (max-width: 1099.98px) {
-  .home {
-    --tile-h: min(29.375vw, 100svh - 261px);
-  }
-}
-
+/* Phones: one tile and glimpses of its neighbours, captions directly beneath (ProjectField's layoutFor). */
 @media (max-width: 699.98px) {
-  .home {
-    --tile-h: min(42.5vw, 100svh - 261px);
-  }
-
   /* The tagline wraps on phones; the typing bar would stand beside both lines, so it is left out there. */
   .hero__line .type-line__cursor {
     display: none;
@@ -550,15 +618,46 @@
   .hero__line {
     font-size: 1rem;
   }
+}
 
-  .field__label {
-    gap: 10px;
-    letter-spacing: 0.2em;
+/*
+ * Short windows (phones held sideways; ProjectField's SHORT is the same query), Harlie's brief, 2026-09-28: the
+ * collection's 360px least height ran it under the navigation and cut the longer captions at its foot. Here the
+ * collection is exactly the room between the header and the footer, the tile's top 12px below its top (the tile's
+ * size is measured so its caption fits whole beneath it), the opening sized so the tile still peeks 66px on arrival.
+ * To leave the tile a useful size, the footer's row is closer to the page's end (its links keep their 44px) and the
+ * titles are a size smaller (they keep to one line; the metadata lines are already 12px).
+ */
+@media (max-height: 520px) {
+  .home {
+    --horizon: calc(12px + var(--plane-h, 35vw) / 2);
   }
 
-  .field__label::before {
-    width: 24px;
+  .hero {
+    height: calc(100svh - var(--header-height) - 66px - 12px);
   }
+
+  .field {
+    min-height: 0;
+  }
+
+  .plane__title {
+    font-size: 1.125rem;
+  }
+
+  .site-main:has(.home) + .site-end .site-end__inner {
+    padding-block: 4px;
+  }
+}
+
+/*
+ * The footer on the homepage (Harlie's brief, 2026-09-28): the homepage has no 1280px column, so its footer starts on
+ * PORTFOLIO's edge (the opening's max(--edge, 8%)) and ends the same distance from the right; it had lined up with
+ * neither the header nor the hero. Layout.css keeps the footer everywhere else.
+ */
+.site-main:has(.home) + .site-end .site-end__inner {
+  max-width: none;
+  padding-inline: max(var(--edge), 8%);
 }
 
 /* Reduced motion: the title stays put; tiles move without easing (ProjectField); the still poster (HomeFilm). */

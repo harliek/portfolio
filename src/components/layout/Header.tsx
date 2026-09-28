@@ -1,19 +1,30 @@
-import { useEffect, useRef, useState, type MouseEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { accentVars } from '../../content/accents'
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react'
+import { flushSync } from 'react-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { projectForPath } from '../../content/projects'
 import { stageRouteFor } from '../../config/stage'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
-import { ExternalMark, MobileMenu, WorkShelf } from './WorkShelf'
+import { PageLink } from '../transition/PageLink'
+import { changePage, leaveSite, type Direction } from '../transition/pageChange'
+import { isPlainClick } from '../transition/warm'
+import { ExternalMark, MobileMenu } from './WorkShelf'
 
 /** Scroll (px) past which the bar gathers into the floating pill: early, so nothing passes under the transparent bar. */
 const FLOAT_AT = 12
 
-const SHELF_ID = 'work-shelf'
+/**
+ * The space between the pill's two groups (px), besides each item's own 12px padding: 16, so HOME and About are 40px
+ * apart, a little more than the 32px between the words of a group. It was 40 (64px apart), which made the pill 437px
+ * wide at desktop sizes, 30% of a 1440px window, centred over the titles that pass beneath it (Harlie's brief,
+ * 2026-09-28: the floating navigation "less dominant" where it competes with page titles). Now 413px.
+ */
+const PILL_GAP = 16
+
 const MENU_ID = 'site-menu'
 const DESKTOP_QUERY = '(min-width: 900px)'
-const INTERACTIVE = 'a[href], button, input, select, textarea, summary, video, [contenteditable], [tabindex]:not([tabindex="-1"])'
 const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+/** Everything on the page outside the header: out of reach while the small-screen menu covers it. */
+const BEHIND_MENU = '.skip-link, #main, .site-end'
 
 /** The restored original creative homepage: an isolated static build, opened with a full page load. */
 const CREATIVE_HREF = '/creative/'
@@ -21,68 +32,37 @@ const CREATIVE_HREF = '/creative/'
 const modified = (e: MouseEvent) => e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey
 
 /**
- * Cancels the click that completes the current press, so a press on the
- * dimmed page below the open shelf only closes the shelf and never also
- * opens or follows what is underneath. The guard lasts one press: it goes
- * with that click, shortly after a release that produced none (a drag), on a
- * cancelled pointer, or at the next key press, so no later click or keyboard
- * activation is ever lost.
- */
-function swallowPressClick() {
-  let timer = 0
-  const done = () => {
-    window.clearTimeout(timer)
-    window.removeEventListener('click', stop, true)
-    window.removeEventListener('pointerup', released, true)
-    window.removeEventListener('pointercancel', done, true)
-    window.removeEventListener('keydown', done, true)
-  }
-  const stop = (e: Event) => {
-    e.preventDefault()
-    e.stopPropagation()
-    done()
-  }
-  const released = () => {
-    window.clearTimeout(timer)
-    timer = window.setTimeout(done, 400)
-  }
-  window.addEventListener('click', stop, true)
-  window.addEventListener('pointerup', released, true)
-  window.addEventListener('pointercancel', done, true)
-  window.addEventListener('keydown', done, true)
-}
-
-/**
- * Header, styled after Harlie's original portfolio (brief v14): a near-black
- * bar with a hairline divider under it on every professional page, the same
- * on each route. Past 100px of scroll it becomes a resizable navbar (after
- * Aceternity's): the bar's contents gather into a narrower floating pill with
- * a blurred, translucent ground and a soft shadow, and back again near the
- * top; the header keeps its height throughout. A pill glides behind the
- * navigation item under the pointer. At the left, "← Back" on case studies and About (brief v21:
- * it returns to the previous view in the site; opened from outside, it goes
- * to the homepage's project collection, whose selected project is
- * remembered), then HOME (a link to "/"); the navigation at the right. Every item is small capitals with wide tracking (layout.css); the
- * current page's item is set in the red accent (no glow), and hover and
- * keyboard focus draw a thin line under the words (the focus ring as well).
+ * Header, styled after Harlie's original portfolio (brief v14): a transparent bar on every professional page, the
+ * same on each route. As soon as the page scrolls (past FLOAT_AT, 12px) it becomes a resizable navbar (after
+ * Aceternity's): the bar's contents gather into a narrower floating pill with a blurred, translucent ground, and
+ * back again at the top; the header keeps its height throughout. After a page change it takes the new
+ * page's state at once, so it never morphs after the page has arrived (Harlie's brief, 2026-09-28). Hovering an item
+ * draws nothing on it: the cursor's outline is the header's only hover (Harlie's requests, 2026-09-27 and 2026-09-28).
+ * At the left, "← Back" on case studies and About (brief v21: it returns to the previous view in the site; opened
+ * from outside, it goes to the homepage's project collection, centred on the project just left), then HOME (a link to
+ * "/"); the navigation at the right. Every item is small capitals with wide tracking (layout.css); the current page's
+ * item is set in the statement rose with no glow, and keyboard focus draws a thin line under the words inside the
+ * focus ring.
  *
- * - Projects: a button that opens the Projects menu (WorkShelf.tsx). Click
- *   toggles; Escape, a click outside or focus leaving closes it (focus
- *   returns to Projects); Arrow Down or keyboard activation moves focus to the
- *   first project.
- *   It is the current item on a case study.
  * - About: the dedicated About page (`/about`).
  * - Creative Portfolio: a plain link to the restored original creative
  *   homepage (`/creative/`, a separate build, so a full page load), with a
  *   small arrow for leaving the professional site.
  *
- * Below 900px the three become one "Menu" button (the same small capitals)
- * with an accessible panel (six projects, About, Creative Portfolio): focus
- * stays inside the header, Escape closes, the page behind does not scroll.
- * HOME stays at the left at every width.
+ * Below 900px they become one "Menu" button (the same small capitals) with an accessible panel (six projects, About,
+ * Creative Portfolio): the page behind is inert and does not scroll, Tab and Shift+Tab go round the header and the
+ * panel in every browser, and Escape closes. A page chosen from it changes with the menu still open, so the menu
+ * leaves with the page being left (Harlie's brief, 2026-09-28). HOME stays at the left at every width.
  *
- * On a case study the header carries that project's accent (`--accent`) for
- * the shelf's entries; the header's own states use the red accent.
+ * Every state uses the statement colour, the deployed site's rose (tokens.css --statement; the per-project accents
+ * were read by no rule and are gone). Keyboard focus is a near-white line inside a rose ring, so it never reads as the
+ * pointer's blue violet light (Harlie's brief, 2026-09-28; layout.css). The header is --header-height tall as a bar
+ * and as the floating pill alike, and --header-safe (tokens.css) is the navigation's safe area for anything that
+ * settles below it.
+ *
+ * Supporting, never the focal point (Harlie's brief, 2026-09-28): the pill hugs its words more closely (PILL_GAP) and
+ * casts no shadow (layout.css), so where a page's title passes beneath it the title still leads; the words keep their
+ * size, colour and 4.5:1 over the brightest film frames, and every item keeps its 44px target.
  */
 export function Header() {
   const { pathname } = useLocation()
@@ -91,13 +71,7 @@ export function Header() {
   const [open, setOpen] = useState(false)
   // Resizable navbar (after Aceternity's): as soon as the page scrolls (the bar is transparent), it becomes a floating pill.
   const [floating, setFloating] = useState(() => typeof window !== 'undefined' && window.scrollY > FLOAT_AT)
-  const pillRef = useRef<HTMLSpanElement>(null)
-  // Keyboard opening moves focus into the shelf; a mouse click does not.
-  const [focusFirst, setFocusFirst] = useState(false)
-  // Shelf thumbnails load only once the visitor shows interest in Work (hover, focus or open).
-  const [warm, setWarm] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
-  const workRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLButtonElement>(null)
 
   // Any navigation, or crossing the desktop breakpoint, closes the shelf or
@@ -108,45 +82,7 @@ export function Header() {
     setOpen(false)
   }
 
-  // Desktop shelf: Escape, a click outside Work and its shelf, or focus
-  // leaving them (e.g. Tab on to About) closes it. Focus returns to Work,
-  // except when the click itself landed on something focusable (a link, a
-  // button, a field), which keeps the focus. A click on the dimmed page only
-  // closes the shelf (what is underneath is not activated); the header's own
-  // links (HOME, About, Creative Portfolio) work directly.
-  useEffect(() => {
-    if (!open || !desktop) return
-    const scope = workRef.current?.closest('li')
-    const focusWork = () => workRef.current?.focus({ preventScroll: true })
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      e.preventDefault()
-      setOpen(false)
-      focusWork()
-    }
-    const onPointer = (e: PointerEvent) => {
-      if (scope?.contains(e.target as Node)) return
-      const hadFocus = scope?.contains(document.activeElement)
-      setOpen(false)
-      if (!headerRef.current?.contains(e.target as Node)) swallowPressClick()
-      const interactive = e.target instanceof Element && e.target.closest(INTERACTIVE)
-      // After the browser's own mousedown focus handling (which would otherwise focus <main>).
-      if (hadFocus && !interactive) window.setTimeout(focusWork, 0)
-    }
-    const onFocus = (e: FocusEvent) => {
-      if (e.target instanceof Node && !scope?.contains(e.target)) setOpen(false)
-    }
-    document.addEventListener('keydown', onKey)
-    document.addEventListener('pointerdown', onPointer)
-    document.addEventListener('focusin', onFocus)
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.removeEventListener('pointerdown', onPointer)
-      document.removeEventListener('focusin', onFocus)
-    }
-  }, [open, desktop])
-
-  // The floating pill hugs its contents (Harlie's request: no big gap): the left group, a 40px gap, the navigation.
+  // The floating pill hugs its contents (Harlie's request): the left group, PILL_GAP, the navigation.
   useEffect(() => {
     const header = headerRef.current
     if (!header) return
@@ -154,13 +90,29 @@ export function Header() {
       const start = header.querySelector<HTMLElement>('.site-header__start')
       const end = header.querySelector<HTMLElement>('.site-nav, .menu-button')
       if (!start || !end) return
-      header.style.setProperty('--pill-w', `${Math.ceil(start.scrollWidth + end.scrollWidth + 40 + 16)}px`)
+      header.style.setProperty('--pill-w', `${Math.ceil(start.scrollWidth + end.scrollWidth + PILL_GAP + 16)}px`)
     }
     measure()
     const ro = new ResizeObserver(measure)
     header.querySelectorAll('.site-header__start, .site-nav, .menu-button').forEach((el) => ro.observe(el))
     return () => ro.disconnect()
   }, [desktop, pathname])
+
+  // A page change: the header takes the new page's state at once, as the new page is pictured (Harlie's brief,
+  // 2026-09-28: it caught up only at the next scroll event, so the pill unfolded into the bar 520 to 640ms after the
+  // page had arrived, "← BACK" sliding along). Read once every layout effect of the change has run, the router's
+  // scroll restoration included (it comes after the header in PageShell).
+  useLayoutEffect(() => {
+    let live = true
+    queueMicrotask(() => {
+      const next = window.scrollY > FLOAT_AT
+      if (!live || next === headerRef.current?.hasAttribute('data-floating')) return
+      flushSync(() => setFloating(next))
+    })
+    return () => {
+      live = false
+    }
+  }, [pathname])
 
   useEffect(() => {
     let frame = 0
@@ -178,30 +130,23 @@ export function Header() {
     }
   }, [])
 
-  /** The hover pill glides to the item under the pointer (after Aceternity's NavItems) and fades when the pointer leaves. */
-  const hoverItem = (e: MouseEvent<HTMLElement>) => {
-    const pill = pillRef.current
-    const item = (e.target as HTMLElement).closest<HTMLElement>('.site-nav__item')
-    const list = e.currentTarget
-    if (!pill || !item || !list.contains(item)) return
-    const a = item.getBoundingClientRect()
-    const b = list.getBoundingClientRect()
-    pill.style.transform = `translateX(${(a.left - b.left).toFixed(1)}px)`
-    pill.style.width = `${a.width.toFixed(1)}px`
-    pill.dataset.on = ''
-  }
-  const leaveItems = () => {
-    const pill = pillRef.current
-    if (pill) delete pill.dataset.on
-  }
-
-  // Mobile menu: the page behind is locked, Tab cycles within the header
-  // (HOME, Menu, the panel's links), Escape closes and returns focus.
+  // Small-screen menu: the page behind is locked and inert, Tab and Shift+Tab go round the header's items and the
+  // panel's links, and Escape closes and returns focus to Menu. Tab is moved here rather than left to the browser, so
+  // it stays in the menu in Safari too, whose default Tab skips links (Harlie's brief, 2026-09-28: Tab went from Back
+  // to the contact form's Name field behind the menu, and the locked page scrolled to it); a focus that lands outside
+  // the header anyway is brought back.
   useEffect(() => {
     if (!open || desktop) return
     const header = headerRef.current
     const root = document.documentElement
     root.classList.add('is-menu-open')
+    // Only what this menu made inert is released again.
+    const behind = [...document.querySelectorAll<HTMLElement>(BEHIND_MENU)].filter((el) => !el.inert)
+    behind.forEach((el) => {
+      el.inert = true
+    })
+    const shown = (el: HTMLElement) => !el.closest('[inert]') && el.getClientRects().length > 0
+    const items = () => (header ? [...header.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(shown) : [])
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
@@ -209,31 +154,48 @@ export function Header() {
         menuRef.current?.focus({ preventScroll: true })
         return
       }
-      if (e.key !== 'Tab' || !header) return
-      const items = [...header.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => !el.closest('[inert]') && el.getClientRects().length > 0)
-      if (items.length === 0) return
-      const first = items[0]
-      const last = items[items.length - 1]
-      const active = document.activeElement
-      if (e.shiftKey && (active === first || !header.contains(active))) {
-        e.preventDefault()
-        last.focus()
-      } else if (!e.shiftKey && (active === last || !header.contains(active))) {
-        e.preventDefault()
-        first.focus()
-      }
+      if (e.key !== 'Tab' || e.altKey || e.ctrlKey || e.metaKey) return
+      const list = items()
+      if (list.length === 0) return
+      e.preventDefault()
+      const at = list.indexOf(document.activeElement as HTMLElement)
+      const step = e.shiftKey ? -1 : 1
+      const next = at < 0 ? (e.shiftKey ? list.length - 1 : 0) : (at + step + list.length) % list.length
+      list[next].focus()
+    }
+    const onFocusIn = (e: FocusEvent) => {
+      if (!header || !(e.target instanceof Node) || header.contains(e.target)) return
+      items()[0]?.focus({ preventScroll: true })
     }
     document.addEventListener('keydown', onKey)
+    document.addEventListener('focusin', onFocusIn)
     return () => {
       document.removeEventListener('keydown', onKey)
+      document.removeEventListener('focusin', onFocusIn)
+      behind.forEach((el) => {
+        el.inert = false
+      })
       root.classList.remove('is-menu-open')
+      header?.querySelectorAll('[data-pressed]').forEach((el) => el.removeAttribute('data-pressed'))
     }
   }, [open, desktop])
 
-  // A plain click on HOME or About closes the shelf or menu (a modified click opens a new tab and leaves it).
-  const onPageLink = (e: MouseEvent<HTMLAnchorElement>) => {
-    if (modified(e)) return
-    setOpen(false)
+  /**
+   * A plain click on HOME or a page in the menu. With the menu open, the page changes with the menu still showing, so
+   * it leaves with the page being left (Harlie's brief, 2026-09-28: the menu snapped shut, the old page came back
+   * for 200ms and only then came apart); the new route closes it (above) as the new page is drawn. It closes at once
+   * when there is no change to carry it (the same page, a change already under way, or an ordinary navigation). A
+   * modified click opens a new tab and leaves it open.
+   */
+  const toPage = (to: string, direction?: Direction) => (e: MouseEvent<HTMLAnchorElement>) => {
+    if (!isPlainClick(e)) return
+    if (!open) return
+    // PageLink leaves a click it sees handled alone (isPlainClick): the change is started here, to see how it went.
+    e.preventDefault()
+    const link = e.currentTarget
+    if (changePage({ to, navigate, direction }) !== 'started') setOpen(false)
+    // The chosen entry stays pressed while the menu leaves with the page (layout.css), so the tap reads at once.
+    else link.dataset.pressed = ''
   }
 
   const home = pathname === '/'
@@ -242,22 +204,36 @@ export function Header() {
   const onAboutPage = pathname === '/about'
   const canGoBack = inWork || onAboutPage
 
-  /** The previous view in the site when there is one (react-router numbers its entries); otherwise the project collection. */
+  /**
+   * The previous view in the site when there is one (react-router numbers its entries); otherwise the project
+   * collection. Either way with the page change every in-site link has (pageChange.ts), its pieces sweeping to the
+   * right.
+   */
   const goBack = () => {
-    setOpen(false)
     const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0
-    if (idx > 0) navigate(-1)
-    else navigate('/', { state: { toWork: true } })
+    // Opened from outside: the collection, centred on the project just left (ProjectField reads `from`).
+    const started =
+      idx > 0
+        ? changePage({ to: -1, navigate, direction: 'back' })
+        : changePage({ to: '/', state: { toWork: true, from: active?.id }, navigate, direction: 'back' })
+    // As for the pages above: an open menu leaves with the page, unless there is no change to carry it.
+    if (started !== 'started') setOpen(false)
+  }
+
+  /** The creative portfolio is a separate site: its own full page load, after this page's outgoing half. */
+  const toCreative = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (modified(e)) return
+    e.preventDefault()
+    leaveSite(CREATIVE_HREF)
   }
 
   return (
     <header
       ref={headerRef}
       className="site-header"
-      data-open={open ? (desktop ? 'shelf' : 'menu') : undefined}
+      data-open={open ? 'menu' : undefined}
       data-floating={floating || undefined}
       data-route={stageRouteFor(pathname)}
-      style={active ? accentVars(active.accent) : undefined}
     >
       <div className="site-header__inner">
         <div className="site-header__start">
@@ -269,70 +245,26 @@ export function Header() {
               Back
             </button>
           )}
-          <Link to="/" className="site-nav__item site-home" data-active={home} aria-current={home ? 'page' : undefined} onClick={onPageLink}>
+          <PageLink to="/" direction="back" className="site-nav__item site-home" data-active={home} aria-current={home ? 'page' : undefined} onClick={toPage('/', 'back')}>
             Home
-          </Link>
+          </PageLink>
         </div>
 
         {desktop ? (
-          <nav className="site-nav" aria-label="Primary" onMouseOver={hoverItem} onMouseLeave={leaveItems}>
-            <span ref={pillRef} className="site-nav__pill" aria-hidden="true" />
+          <nav className="site-nav" aria-label="Primary">
             <ul className="site-nav__list" role="list">
               <li>
-                <button
-                  ref={workRef}
-                  type="button"
-                  className="site-nav__item site-nav__work"
-                  aria-expanded={open}
-                  aria-controls={SHELF_ID}
-                  data-active={inWork}
-                  onClick={(e) => {
-                    setWarm(true)
-                    // detail === 0: activated from the keyboard (Enter or Space).
-                    setFocusFirst(!open && e.detail === 0)
-                    setOpen(!open)
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key !== 'ArrowDown') return
-                    e.preventDefault()
-                    setWarm(true)
-                    setFocusFirst(true)
-                    setOpen(true)
-                  }}
-                  onPointerEnter={() => setWarm(true)}
-                  onFocus={() => setWarm(true)}
-                >
-                  Projects
-                  <svg className="site-nav__chevron" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false">
-                    <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-                <WorkShelf
-                  id={SHELF_ID}
-                  open={open}
-                  focusFirst={focusFirst}
-                  thumbs={warm || open}
-                  activeId={active?.id}
-                  onNavigate={() => setOpen(false)}
-                  onClose={() => {
-                    setOpen(false)
-                    workRef.current?.focus({ preventScroll: true })
-                  }}
-                />
-              </li>
-              <li>
-                <Link
+                <PageLink
                   to="/about"
                   className="site-nav__item"
                   data-active={onAboutPage}
                   aria-current={onAboutPage ? 'page' : undefined}
-                  onClick={onPageLink}
                 >
                   About
-                </Link>
+                </PageLink>
               </li>
               <li>
-                <a href={CREATIVE_HREF} className="site-nav__item site-nav__item--alt">
+                <a href={CREATIVE_HREF} className="site-nav__item site-nav__item--alt" onClick={toCreative}>
                   Creative Portfolio
                   <ExternalMark />
                 </a>
@@ -365,8 +297,7 @@ export function Header() {
           activeId={active?.id}
           aboutCurrent={onAboutPage}
           creativeHref={CREATIVE_HREF}
-          onNavigate={() => setOpen(false)}
-          onAbout={onPageLink}
+          onNavigate={toPage}
         />
       )}
     </header>

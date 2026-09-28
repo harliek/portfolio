@@ -4,13 +4,7 @@
  * Hex fallbacks come first; OKLCH values replace them where supported.
  */
 
-@font-face {
-  font-family: 'Inter';
-  src: url('/fonts/InterVariable.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
+/* Inter and Playfair Display are declared in index.html, where they are asked for as the page starts (2026-09-28). */
 
 /* Metric-adjusted local fallback to limit layout shift while Inter loads. */
 @font-face {
@@ -22,97 +16,95 @@
   size-adjust: 107.1%;
 }
 
-@font-face {
-  font-family: 'Playfair Display';
-  src: url('/fonts/PlayfairDisplay-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
 :root {
+  /*
+   * The glow around a case study's pictures and films, in the pointer's bright blue violet (Harlie's requests,
+   * 2026-09-27: red for a while, then "the light around the images" blue violet again, with the cursor): a faint
+   * hairline, a soft light close to the edge and a wider haze beyond it. --glow-media-drop is the same light for
+   * cutouts (phones), following their shape.
+   */
+  --glow-media:
+    0 0 0 1px rgb(236 238 255 / 0.14),
+    0 0 22px 2px rgb(var(--pointer-rgb) / 0.34),
+    0 0 72px 10px rgb(var(--pointer-rgb) / 0.18);
+  --glow-media-drop: drop-shadow(0 0 10px rgb(var(--pointer-rgb) / 0.42)) drop-shadow(0 0 34px rgb(var(--pointer-rgb) / 0.22));
+
   color-scheme: dark;
 
   /*
-   * The one red (brief v13): a precise interaction accent, never an ambient
-   * light. A warm rose red, softer than an alert or error red. Only for the
-   * hovered or focused carousel object's 1px contour, the current page's
-   * header item (its words, as HOME was in the original portfolio, brief v14)
-   * and the open Work shelf's line, focus rings, small button and selection
-   * states, and (as
-   * --red-deep, the same hue deep enough for white text) text selection.
-   * Never a glow, halo, spread or background wash, and never on objects at
-   * rest. Every other red token below points here.
+   * The statement colour: the deployed site's light rose red, #e66d71 (Harlie's request, 2026-09-28: "bring back the
+   * statement color of lightish red", after trying a deep crimson and then the pointer's blue violet). About 6.4:1 on
+   * the black ground. The words it marks (About's descriptor and section numbers, the current page's header item) take
+   * the colour itself, with no glow (Harlie: the writing "back to the one thats deployed so not the glowing text"). The
+   * lines it marks (About's label rule, the homepage's name rule, the current step's rule in a case study, the Menu
+   * button's open line) glow in it (Harlie asked for glowing lines): a pale rose core (--statement-line) in a rose haze
+   * (--statement-line-glow). Focus rings and, as --statement-deep (deep enough for white text), text selection and the
+   * primary buttons. The pointer's light stays blue violet (--pointer-rgb below).
    */
-  --red: #e66d71;
-  --red-rgb: 230 109 113;
-  --red-deep: #bd4045;
+  --statement: #e66d71;
+  --statement-rgb: 230 109 113;
+  --statement-deep: #bd4045;
+  --statement-line: rgb(255 214 215);
+  --statement-line-glow:
+    0 0 2px rgb(255 236 236 / 0.9),
+    0 0 6px rgb(var(--statement-rgb) / 0.9),
+    0 0 12px rgb(var(--statement-rgb) / 0.8),
+    0 0 26px rgb(var(--statement-rgb) / 0.45);
 
   /* Color */
   --color-bg: #090a0f;
   --color-surface: #11131b;
-  --color-raised: #191c28;
   --color-text: #f4f5fa;
   --color-muted: #b0b4c3;
-  --color-subtle: #858c9f;
-  --color-accent: var(--red);
-  /* Warm red connects focus and interactions to the original portfolio. */
-  --color-focus: var(--red);
+  /* The statement rose marks focus and interactions. */
+  --color-focus: var(--statement);
   --color-line: #303545;
-  /* Nearly opaque: text scrolling under the header is not readable through it. */
-  --color-header: rgb(9 10 15 / 0.985);
   --color-media-edge: rgb(255 255 255 / 0.08);
   /* Opaque: nothing from the page shows around an enlarged image. */
   --color-scrim: rgb(5 6 10);
+  /* The small-screen menu's ground, and the header's row while it is open (layout.css). */
+  --surface-menu: #0b0c12;
 
   /* The setting: the film on the homepage, a quiet near-black ground
-     (--stage-room) behind every other page (stage.css). Each project has its
-     own accent (src/content/accents.ts), used for its artwork's glow and
-     interactive states only, never for whole paragraphs. */
+     (--stage-room) behind every other page (stage.css). */
   --stage-violet: #a58cf0;
-  --stage-green: #5cc98a;
-  --stage-coral: #ef8d74;
-  --stage-amber: #e9b067;
   /* Headings and bold text: a cool near-white in the body text's hue (size and weight carry the hierarchy). */
   --stage-ivory: #eaebf1;
   --stage-room: #050609;
-  --stage-edge: rgb(255 255 255 / 0.1);
-  /* Pointer trail: crisp near-white core, violet-white inner glow, soft violet halo. */
+  /*
+   * The pointer's light, a bright blue violet (Harlie's requests, 2026-09-27: red with the accent for a while, then
+   * "that bright blue, purple color again"): the light that replaces the mouse and its
+   * outline (CustomCursor), its trail (PointerTrail), the large soft light around it (CursorLight) and the glow around
+   * the pictures (--glow-media). A crisp near-white core, a violet-white inner glow and a soft blue violet halo; the
+   * trail's halo is the ball's own colour (Harlie's request: "the trail the same color as the mouse"). The statement
+   * colour is the rose above, not this (Harlie's brief, 2026-09-28).
+   */
   --trail-core: rgb(250 248 255);
   --trail-glow: rgb(214 202 255);
-  --trail-halo: rgb(160 132 255);
-  --glow-soft: 0 0 24px rgb(165 140 240 / 0.28);
+  --trail-halo: rgb(118 132 255);
+  --pointer-rgb: 118 132 255;
+  --pointer-light-rgb: 118 104 255;
 
   /*
-   * Interactive accent. Case studies set --accent / --accent-rgb (their
-   * project accent, src/content/accents.ts) on the article, header and
-   * footer; shared controls use the red brand accent:
-   * var(--accent, var(--accent-default)). Rules resolve these on the element
-   * itself (never through another :root token), so they follow the page.
+   * Interactive accent: the statement rose on every page (Harlie's QA pass, 2026-09-28: the per-project
+   * accents, src/content/accents.ts, were read by no rule and are gone). Rules resolve it on the element itself
+   * (--_acc, --case-accent), never through another :root token.
    */
-  --accent-default: var(--red);
-  --accent-default-rgb: var(--red-rgb);
+  --accent-default: var(--statement);
+  --accent-default-rgb: var(--statement-rgb);
 
-  /* Small red fills behind white text (selection, a pressed control): the deep red, never an alert red. */
-  --brand-red: var(--red-deep);
   --font-editorial: 'Playfair Display', Georgia, serif;
 
   /* Typography */
   --font-sans: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', sans-serif;
   /* Fluid between 360px and 1200px viewports. */
   --text-display: clamp(2.5rem, 1.857rem + 2.857vw, 4rem);
-  --text-section: clamp(1.75rem, 1.536rem + 0.952vw, 2.25rem);
-  --text-sub: clamp(1.375rem, 1.321rem + 0.238vw, 1.5rem);
   --text-body: clamp(1rem, 0.946rem + 0.238vw, 1.125rem);
   --text-small: 0.875rem;
   --leading-display: 1.08;
-  --leading-section: 1.18;
-  --leading-sub: 1.28;
   --leading-body: 1.55;
   --leading-small: 1.5;
   --tracking-display: -0.045em;
-  --tracking-section: -0.025em;
-  --tracking-sub: -0.015em;
   --tracking-label: 0.06em;
   --weight-body: 400;
   --weight-label: 500;
@@ -127,28 +119,31 @@
   --space-6: 32px;
   --space-7: 48px;
   --space-8: 64px;
-  --space-9: 96px;
-  --space-10: 128px;
 
   /* Layout */
   /*
-   * One content width for the header, footer, case-study grid (case.css
-   * --case-max) and About: at wide screens every page starts and ends on the
-   * same two edges. --shell-max adds the gutters (.shell pads by them).
+   * One content width for the header, footer and About: at wide screens
+   * every page starts and ends on the same two edges. --shell-max adds the
+   * gutters (.shell pads by them).
    */
   --content-max: 1240px;
   --shell-max: calc(var(--content-max) + 2 * var(--gutter));
-  --prose-max: 660px;
   --gutter: 20px;
   /* The original portfolio's header at every width: a 60px bar and its 1px hairline divider (layout.css). */
   --header-height: 61px;
+  /*
+   * The navigation's safe area (Harlie's brief, 2026-09-28: headings "fully visible at settled states", never under
+   * the floating navigation): the header's height and a 16px breath. The header keeps --header-height whether it is
+   * the full bar or the floating pill (48px tall, 6px from the top, inside it), so whatever settles at --header-safe
+   * or below is clear of it at every width. It is also the scroll margin of everything in the page and the footer
+   * (base.css), so an anchor or a focused element scrolled into view stops below the navigation.
+   */
+  --header-safe: calc(var(--header-height) + var(--space-4));
 
   /* Surfaces */
   --radius-inner: 12px;
   --pad-frame: 8px;
-  --radius-outer: calc(var(--radius-inner) + var(--pad-frame));
   --radius-button: 8px;
-  --shadow-media: 0 0 0 1px var(--color-media-edge), 0 18px 40px -24px rgb(0 0 0 / 0.7);
 
   /*
    * Motion system (spec/motion-plan.md section 2; the same numbers are
@@ -157,7 +152,7 @@
    *                   controls, press scale, the reduced-motion fade-out
    *   --dur-2  240ms  respond: hover and focus on objects (lift, glow, spill
    *                   and contact shadow together), text easing into the
-   *                   accent, the nav indicator, the Work shelf
+   *                   accent, the nav's focus line, the small-screen menu
    *   --dur-3  420ms  move: spatial changes (cover move, page change, phone
    *                   emphasis, depth-tier light steps)
    *   --dur-4  800ms  settle: returns to rest (wheel boost, hover slow-down)
@@ -179,73 +174,18 @@
   /* Older names, kept so every existing rule lands on the scale. */
   --ease-out: var(--ease-standard);
   --dur-feedback: var(--dur-1);
-  --dur-text-hover: var(--dur-2);
-  --dur-crossfade: var(--dur-2);
-  --dur-highlight: var(--dur-2);
-  --dur-route: var(--dur-2);
-  --dur-route-reveal: var(--dur-3);
-  --press-scale: 0.98;
-
-  /*
-   * One light model for every transparent PNG object (motion-plan section
-   * 2.5, P2): homepage objects (home.css), case covers and next-project
-   * thumbnails (case.css) and the Jumpstart phones. The room lights from
-   * above (cool lavender); each object carries its own accent light:
-   *   edge   a narrow rim on the silhouette, the accent mixed toward white
-   *          (--light-rim-mix), alpha-aware (drop-shadow, never a box)
-   *   halo   a wider, softer glow in the accent
-   *   bright the artwork's brightness
-   *   spill  the accent light on the floor beneath (an opacity factor)
-   *   shadow the dark contact shadow where it meets the floor (opacity)
-   * Four levels (plan-v9 decision 7): feat (the featured or leading
-   * object: the strongest rim and floor light), near (a neighbour: about
-   * 40% of it), far (close to neutral) and active (hover, keyboard focus,
-   * press: stronger again). Contact shadows soften with depth. When an
-   * object lifts, its contact shadow narrows and lightens (Mintform's ratio
-   * scaled to an 8px lift) and its spill rises from the base. Everything
-   * responds over --dur-2 with --ease-respond. Case pages use the same model
-   * at a restrained strength: halo and spill are multiplied by --light-case.
-   */
-  --light-rim-mix: 55%;
-  --light-far-edge-a: 0.14;
-  --light-far-edge-r: 1.25px;
-  --light-far-halo-a: 0.06;
-  --light-far-halo-r: 18px;
-  --light-far-bright: 0.9;
-  --light-far-spill: 0.12;
-  --light-far-shadow: 0.7;
-  --light-near-edge-a: 0.36;
-  --light-near-edge-r: 1.5px;
-  --light-near-halo-a: 0.22;
-  --light-near-halo-r: 24px;
-  --light-near-bright: 0.96;
-  --light-near-spill: 0.45;
-  --light-near-shadow: 0.85;
-  --light-feat-edge-a: 0.85;
-  --light-feat-edge-r: 1.75px;
-  --light-feat-halo-a: 0.56;
-  --light-feat-halo-r: 34px;
-  --light-feat-bright: 1.02;
-  --light-feat-spill: 1.1;
-  --light-feat-shadow: 1;
-  --light-active-edge-a: 1;
-  --light-active-edge-r: 2px;
-  --light-active-halo-a: 0.78;
-  --light-active-halo-r: 46px;
-  --light-active-bright: 1.06;
-  --light-active-spill: 1.4;
-  /* The lift and what it does to the floor (the object rises; its shadow tightens and lightens; its light rises). */
-  --light-lift: 8px;
-  --light-lift-scale: 1.04;
-  --light-lift-shadow-scale: 0.87 1;
-  --light-lift-shadow-o: 0.67;
-  --light-spill-rise: 1.06 1.22;
-  /* Case pages: the same light, restrained (halo and spill). */
-  --light-case: 0.62;
 
   /* Focus */
   --focus-ring: 2px solid var(--color-focus);
   --focus-offset: 3px;
+  /*
+   * A crisp near-white line inside the rose ring (--color-focus), at the control's own edge (Harlie's brief,
+   * 2026-09-28: "focus/hover distinguishable from the decorative trail"): the pointer's light is a soft blue violet
+   * glow with no edge, so a white line in a rose ring never reads as it. A box-shadow, added by the rules that draw the
+   * ring with an offset of 3px or more (layout.css: the header's items, the footer's links and project buttons).
+   */
+  --focus-inner: rgb(250 248 255);
+  --focus-inner-line: 0 0 0 1.5px var(--focus-inner);
 
   /*
    * Controls (src/styles/components.css). Primary = a solid, near-white
@@ -260,15 +200,15 @@
   --radius-control: 10px;
   --control-font: 0.9375rem;
   --control-weight: 600;
-  --btn-primary-bg: #c62828;
-  --btn-primary-bg-hover: #d32f2f;
-  --btn-primary-bg-active: #ad2020;
+  /* The statement's deep rose (Harlie, 2026-09-28): white text on it is at least 4.5:1, hover included. */
+  --btn-primary-bg: var(--statement-deep);
+  --btn-primary-bg-hover: #cc4a50;
+  --btn-primary-bg-active: #a8363b;
   --btn-primary-fg: #ffffff;
   --btn-secondary-bg: rgb(10 11 18 / 0.8);
   --btn-secondary-bg-hover: rgb(38 40 56 / 0.88);
   --btn-secondary-bg-active: rgb(22 23 33 / 0.94);
   --btn-secondary-border: rgb(255 255 255 / 0.6);
-  --btn-secondary-border-hover: rgb(255 255 255 / 0.92);
   --btn-secondary-fg: #ffffff;
   --shadow-control: 0 10px 24px -14px rgb(0 0 0 / 0.85);
   --shadow-control-hover: 0 14px 30px -14px rgb(0 0 0 / 0.9);
@@ -280,20 +220,12 @@
   :root {
     --color-bg: oklch(0.1461 0.011 275.82);
     --color-surface: oklch(0.1885 0.0166 273.77);
-    --color-raised: oklch(0.2291 0.0238 273.52);
     --color-text: oklch(0.9708 0.0067 277.16);
     --color-muted: oklch(0.7714 0.0218 273.95);
-    --color-subtle: oklch(0.6408 0.0296 269.49);
-    --red: oklch(0.68 0.15 20);
-    --red-deep: oklch(0.55 0.16 22);
     --color-line: oklch(0.3311 0.0292 271.22);
     --stage-violet: oklch(0.72 0.16 295);
-    --stage-green: oklch(0.72 0.16 150);
-    --stage-coral: oklch(0.72 0.14 35);
-    --stage-amber: oklch(0.8 0.115 70);
     --stage-ivory: oklch(0.94 0.008 277);
     --stage-room: oklch(0.1016 0.0078 271.2);
-    --glow-soft: 0 0 24px color-mix(in oklch, var(--stage-violet) 28%, transparent);
   }
 }
 
@@ -307,8 +239,6 @@
   :root {
     --gutter: 40px;
     --leading-display: 1.04;
-    --leading-section: 1.15;
-    --leading-sub: 1.25;
   }
 }
 

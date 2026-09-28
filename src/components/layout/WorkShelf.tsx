@@ -1,10 +1,10 @@
-import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type MouseEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { MOTION } from '../../config/motion'
-import { accentVars } from '../../content/accents'
+import { useState, type MouseEvent } from 'react'
 import { PROJECTS, projectPath, type Project, type ProjectId } from '../../content/projects'
 import { ResponsiveImage } from '../media/ResponsiveImage'
-import { isPlainClick, openProject, warmProject } from '../transition/projectTransition'
+import { PageLink } from '../transition/PageLink'
+import { leaveSite } from '../transition/pageChange'
+import { isPlainClick } from '../transition/warm'
+import { MetaLine } from './MetaLine'
 
 /** Rendered size of a shelf thumbnail (CSS px): the project's PNG object, contained in a 48px square. */
 const THUMB_SIZES = '48px'
@@ -21,22 +21,19 @@ export function ExternalMark() {
 /**
  * One project entry: one ordinary link with a small thumbnail of the
  * project's PNG object (whole, never cropped), the project's display title
- * (`displayName`, the title on its cover PNG and the homepage label, e.g.
- * "Film and Campaign Work" for the Creative Production case study) and its
- * one-line context (employer or independent work), the same in the shelf
- * and the small-screen menu. Hover and focus use the project's own accent
- * and prepare the destination (code, cover, opening image). A plain click
- * opens the page with the transition module's short plain reveal (no image
- * travels from a 48px thumbnail); modified clicks stay native (new tab, new
- * window).
+ * (`displayName`, the same name the homepage tile uses) and its
+ * metadata line, kind of work then context (projects.ts `category`, the homepage tiles' captions; MetaLine wraps it
+ * at its dot where the column is narrow, Harlie's brief, 2026-09-28), the same in the shelf and the small-screen
+ * menu. Hover and focus use the statement rose and prepare the destination (its code and opening image). A plain
+ * click changes the page like every other link in the site (PageLink: the page comes apart and the next builds
+ * itself); modified clicks stay native (new tab, new window).
  *
  * The project on screen is not a link: the same entry, highlighted and
  * saying "Current page", as plain text marked `aria-current="page"`
  * (following it would only reload this page and add a Back step). The
  * shelf's arrow keys and Tab pass over it.
  */
-function ProjectLink({ project, current, thumbs, className, onNavigate }: { project: Project; current: boolean; thumbs: boolean; className: string; onNavigate: () => void }) {
-  const navigate = useNavigate()
+function ProjectLink({ project, current, thumbs, className, onNavigate }: { project: Project; current: boolean; thumbs: boolean; className: string; onNavigate: OnNavigate }) {
   const path = projectPath(project)
   const content = (
     <>
@@ -45,132 +42,26 @@ function ProjectLink({ project, current, thumbs, className, onNavigate }: { proj
       </span>
       <span className="shelf-item__text">
         <span className="shelf-item__name">{project.displayName}</span>
-        <span className="shelf-item__meta">{current ? 'Current page' : project.category}</span>
+        <span className="shelf-item__meta">{current ? 'Current page' : <MetaLine text={project.category} />}</span>
       </span>
     </>
   )
   if (current) {
     return (
-      <span className={className} style={accentVars(project.accent)} aria-current="page">
+      <span className={className} aria-current="page">
         {content}
       </span>
     )
   }
   return (
-    <Link
-      to={path}
-      className={className}
-      style={accentVars(project.accent)}
-      onClick={(e) => {
-        onNavigate()
-        if (!isPlainClick(e)) return
-        e.preventDefault()
-        openProject({ path, source: null, navigate })
-      }}
-      onPointerEnter={() => warmProject(path)}
-      onFocus={() => warmProject(path)}
-    >
+    <PageLink to={path} className={className} onClick={onNavigate(path)}>
       {content}
-    </Link>
+    </PageLink>
   )
 }
 
-interface WorkShelfProps {
-  id: string
-  open: boolean
-  /** Move focus to the first project once open (the shelf was opened from the keyboard). */
-  focusFirst: boolean
-  /** Render the thumbnails (false until the visitor shows interest in Work, so a closed shelf downloads nothing). */
-  thumbs: boolean
-  /** The project whose case study is on screen (marked as current). */
-  activeId?: ProjectId
-  /** Close without moving focus (a link was followed). */
-  onNavigate: () => void
-  /** Close and return focus to the Work control. */
-  onClose: () => void
-}
-
-/**
- * The Projects menu (desktop, 900px and wider): the six projects on one solid
- * dark panel under the navigation, in project order, one per row with each
- * name on one line. The page behind is dimmed so the menu reads as separate
- * from it. Not a carousel: nothing moves.
- *
- * Opening and closing live in Header.tsx (click toggles; Escape, a click
- * outside or focus leaving closes; following a link closes). Here: Arrow
- * Left/Right and Arrow Up/Down move between the links (Home/End jump to
- * the ends), Arrow Up from the first row closes the menu and returns to Work, Tab works as usual, and
- * opening from the keyboard focuses the first link. The current project
- * (text, not a link) is passed over.
- */
-export function WorkShelf({ id, open, focusFirst, thumbs, activeId, onNavigate, onClose }: WorkShelfProps) {
-  const listRef = useRef<HTMLUListElement>(null)
-
-  useEffect(() => {
-    if (!open || !focusFirst) return
-    listRef.current?.querySelector<HTMLAnchorElement>('a')?.focus({ preventScroll: true })
-  }, [open, focusFirst])
-
-  const onKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
-    const list = listRef.current
-    if (!list) return
-    // Every entry keeps its place in the grid; only the links take focus (the current project is text).
-    const entries = [...list.querySelectorAll<HTMLElement>('.shelf-item')]
-    const i = entries.indexOf(document.activeElement as HTMLElement)
-    if (i < 0) return
-    const n = entries.length
-    const isLink = (k: number) => entries[k]?.tagName === 'A'
-    const columns = getComputedStyle(list).gridTemplateColumns.split(' ').filter(Boolean).length || n
-    /** The next link from k in direction dir, around the ends. */
-    const walk = (k: number, dir: 1 | -1) => {
-      for (let s = 1; s < n; s++) {
-        const t = (((k + dir * s) % n) + n) % n
-        if (isLink(t)) return t
-      }
-      return i
-    }
-    /** The entry t in another row, or the link beside it in that row. */
-    const inRow = (t: number) => {
-      const start = t - (t % columns)
-      return [t, t + 1, t - 1].find((k) => k >= start && k < Math.min(n, start + columns) && isLink(k)) ?? i
-    }
-    let next = -1
-    if (e.key === 'ArrowRight') next = walk(i, 1)
-    else if (e.key === 'ArrowLeft') next = walk(i, -1)
-    else if (e.key === 'Home') next = isLink(0) ? 0 : walk(0, 1)
-    else if (e.key === 'End') next = isLink(n - 1) ? n - 1 : walk(n - 1, -1)
-    else if (e.key === 'ArrowDown') next = i + columns < n ? inRow(i + columns) : i
-    else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      if (i - columns >= 0) entries[inRow(i - columns)].focus()
-      else onClose()
-      return
-    }
-    if (next < 0) return
-    e.preventDefault()
-    entries[next].focus()
-  }
-
-  const style = {
-    '--shelf-dur': `${MOTION.shelf.durationMs}ms`,
-    '--shelf-offset': `${MOTION.shelf.itemOffsetPx}px`,
-    '--shelf-stagger': `${MOTION.shelf.itemStaggerMs}ms`,
-  } as CSSProperties
-
-  return (
-    <div id={id} className="work-shelf" data-open={open || undefined} inert={!open} style={style}>
-      <div className="shell work-shelf__inner">
-        <ul ref={listRef} className="work-shelf__list" role="list" aria-label="Projects" onKeyDown={onKeyDown}>
-          {PROJECTS.map((p, i) => (
-            <li key={p.id} className="work-shelf__entry" style={{ '--i': i } as CSSProperties}>
-              <ProjectLink project={p} current={p.id === activeId} thumbs={thumbs} className="shelf-item" onNavigate={onNavigate} />
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  )
-}
+/** A click handler for a link to `to` in the menu (Header.tsx: the page changes with the menu still open). */
+type OnNavigate = (to: string) => (e: MouseEvent<HTMLAnchorElement>) => void
 
 interface MobileMenuProps {
   id: string
@@ -179,16 +70,22 @@ interface MobileMenuProps {
   aboutCurrent: boolean
   /** The restored creative homepage (a plain link, full page load). */
   creativeHref: string
-  onNavigate: () => void
-  onAbout: (e: MouseEvent<HTMLAnchorElement>) => void
+  onNavigate: OnNavigate
 }
 
 /**
  * The small-screen menu (below 900px) on a solid surface: the six projects
  * (one column on phones, two from 600px), then About and Creative Portfolio.
  * Focus containment, Escape and the scroll lock live in Header.tsx.
+ *
+ * The thumbnails load with the first opening and then stay (Harlie's brief, 2026-09-28): unmounted on closing, they
+ * went blank for a frame as a page chosen from the menu was pictured, and decoded again on every opening. Leaving for
+ * the creative portfolio keeps the menu open: the whole page, menu and all, fades out as it goes (leaveSite).
  */
-export function MobileMenu({ id, open, activeId, aboutCurrent, creativeHref, onNavigate, onAbout }: MobileMenuProps) {
+export function MobileMenu({ id, open, activeId, aboutCurrent, creativeHref, onNavigate }: MobileMenuProps) {
+  const [opened, setOpened] = useState(open)
+  // The first opening mounts the thumbnails (adjusting state while rendering, not in an effect).
+  if (open && !opened) setOpened(true)
   return (
     <div id={id} className="site-menu" data-open={open || undefined} inert={!open}>
       <nav className="shell site-menu__inner" aria-label="Primary">
@@ -198,18 +95,26 @@ export function MobileMenu({ id, open, activeId, aboutCurrent, creativeHref, onN
         <ul className="site-menu__work" role="list" aria-labelledby={`${id}-work`}>
           {PROJECTS.map((p) => (
             <li key={p.id}>
-              <ProjectLink project={p} current={p.id === activeId} thumbs={open} className="shelf-item shelf-item--menu" onNavigate={onNavigate} />
+              <ProjectLink project={p} current={p.id === activeId} thumbs={opened} className="shelf-item shelf-item--menu" onNavigate={onNavigate} />
             </li>
           ))}
         </ul>
         <ul className="site-menu__pages" role="list">
           <li>
-            <Link to="/about" className="site-menu__link" aria-current={aboutCurrent ? 'page' : undefined} onClick={onAbout}>
+            <PageLink to="/about" className="site-menu__link" aria-current={aboutCurrent ? 'page' : undefined} onClick={onNavigate('/about')}>
               About
-            </Link>
+            </PageLink>
           </li>
           <li>
-            <a href={creativeHref} className="site-menu__link">
+            <a
+              href={creativeHref}
+              className="site-menu__link"
+              onClick={(e) => {
+                if (!isPlainClick(e)) return
+                e.preventDefault()
+                leaveSite(creativeHref)
+              }}
+            >
               Creative Portfolio
               <ExternalMark />
             </a>

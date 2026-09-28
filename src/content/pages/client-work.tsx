@@ -3,22 +3,23 @@ import type { VideoId } from '../media'
 
 /**
  * Creative Production (route /work/creative-production; the files keep the
- * older client-work name). Copy from Harlie's editorial pass (v23); the
- * Nickleby line keeps the conservative wording (lighting and equipment, no
- * audio), as the sources support. Three stacked project sections, each pairing its
- * own description with its own film (brief-v8 section 13; FilmScroll lays it
- * out). Copy is brief-v5 section 22, edited for the copy rules: each section
- * states Harlie's part first ("I ...") and then, separately, what the Shift
- * Content team delivered, so her work is never read as the whole production.
+ * older client-work name). Three stacked project sections, each pairing its
+ * own description with its own film (brief-v8 section 13).
+ *
+ * Copy (Harlie's brief of 2026-09-28): one short sentence per film, with no subject, each naming Harlie's part with
+ * the most precise verb the journal supports ("helped set up", "filmed", "worked on", "documented"). "Supported" is
+ * gone, and with it "supported end-to-end", which contradicted itself. The Shift Content team's production is never
+ * read as Harlie's alone. The non-breaking hyphens keep the compound words (B-roll, on-set, two-day,
+ * Gymshark-powered) whole at a line end.
  *
  * Evidence (docs/content-provenance.md, Shift Content)
  * - Harlie's weekly journals and Data 197 report (Shift Content/Shift
  *   journals.pdf, text checked with pdftotext): the agency is "led by the
- *   founder", Liam Wilson, whom she "assisted in various content productions";
+ *   founder", Liam Wilson, whom Harlie "assisted in various content productions";
  *   "helping with camera setup, lighting, and being on set"; "putting together
  *   behind-the-scenes content to represent the brand"; "editing footage in
  *   Adobe Premiere Pro, taking b-roll and turning it into sequences"; on "a
- *   shoot filming interviews for an investment firm" she helped "with all the
+ *   shoot filming interviews for an investment firm" they helped "with all the
  *   equipment and lighting" and "filmed b-roll during the interviews"; for
  *   Aristocracy "the setup, lighting, coordinating and behind-the-scenes
  *   documentation of camera and creative work during a two-day production"
@@ -47,8 +48,9 @@ import type { VideoId } from '../media'
  *
  * Exactly three client films, Nickleby first. nickleby-640.mp4 is a remux of
  * "Nickleby Capital Video 1.mp4"; "Video 1" and "Video 2" never appear in
- * visitor copy. No captions under the films (brief-v8 section 8): the one
- * status line under the summary says the films are the agency's productions.
+ * visitor copy. No captions under the films (brief-v8 section 8); the
+ * page's meta names the agency, and each film's sentence states Harlie's
+ * part in the agency's production.
  */
 
 export interface ClientFilm {
@@ -57,27 +59,30 @@ export interface ClientFilm {
   /** Section heading and anchor link label. */
   name: string
   video: VideoId
-  /** Harlie's part, first person. */
+  /** Harlie's part, in one short sentence (Harlie's brief, 2026-09-28). */
   work: ReactNode
-  /** The moving frame on the page (a short muted excerpt; the full film opens with sound on request). `fill` crops it to fill the 16:9 frame. */
+  /**
+   * The moving frame on the page (a short muted excerpt; the full film opens with sound on request). `fill` crops it to
+   * fill the 16:9 frame.
+   */
   clip: { src: string; poster: string; width: number; height: number; fill?: boolean }
 }
 
 export const CLIENT_WORK = {
   title: 'Creative Production',
   meta: ['Creative Strategy and Client Solutions Intern', 'Shift Content · 2026'],
-  summary: (
-    <p>At Shift Content, I supported client film production and editing.</p>
-  ),
   films: [
     {
       id: 'nickleby',
       name: 'Nickleby Capital',
       video: 'nickleby',
+      // The loop starts on the wide shot (Harlie's brief, 2026-09-28): it was cut 7 frames (0.23s) early and opened on
+      // a flash of a close-up with another line's subtitle, on arrival and every 6s. Re-cut from the wide shot
+      // (5.77s); its poster is the loop's first frame.
       clip: { src: '/media/video/nickleby-loop-trim-1138.mp4', poster: '/media/img/nickleby-loop-poster.jpg', width: 1138, height: 640 },
       work: (
         <p>
-          I helped set up lighting and equipment and filmed B&#8209;roll during interviews. Team members answered questions drawn from cards without a script, creating testimonials and FAQ responses.
+          Helped set up lighting and equipment, and filmed B&#8209;roll during the interviews.
         </p>
       ),
     },
@@ -89,7 +94,7 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/aristocracy-loop-854.mp4', poster: '/media/img/aristocracy-loop-poster.jpg', width: 854, height: 640, fill: true },
       work: (
         <p>
-          I helped with lighting and on&#8209;set coordination for the spring/summer campaign and filmed behind&#8209;the&#8209;scenes content for the agency’s marketing.
+          Worked on lighting and on&#8209;set coordination, and documented the two&#8209;day shoot behind the scenes.
         </p>
       ),
     },
@@ -101,7 +106,7 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/heck-loop-1138.mp4', poster: '/media/img/heck-loop-poster.jpg', width: 1138, height: 640 },
       work: (
         <p>
-          I filmed participants and supported production at the running event powered by Gymshark.
+          Filmed participants at a Gymshark&#8209;powered night run.
         </p>
       ),
     },

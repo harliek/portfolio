@@ -1,11 +1,10 @@
-import type { AccentId } from './accents'
 import type { ImageId } from './media'
 
 /**
- * The six work entries, in the homepage field's order (field.ts, Harlie's order of 2026-09-26; About me and Creative
- * Portfolio, tiles there, are not case studies): Creative Production, CafePress UK, Spreadsheet Agent, Jumpstart
- * Finance, Merchandising Dashboard, AI Leasing Agent. The Work menu and the next-project sequence follow it (AI
- * Leasing Agent loops back to Creative Production).
+ * The six work entries, in the homepage field's order (field.ts, Harlie's order of 2026-09-28; About me and Creative
+ * Portfolio, tiles there, are not case studies): Creative Production, Spreadsheet Agent, Merchandising Dashboard,
+ * Jumpstart Finance, AI Leasing Agent, CafePress UK. The Work menu and the next-project sequence follow it (CafePress
+ * UK loops back to Creative Production).
  * Page copy lives in src/content/pages/<id>.ts(x).
  *
  * Verified facts only (résumé and project sources; see
@@ -21,9 +20,6 @@ export type ProjectId =
   | 'ai-leasing-agent'
   | 'jumpstart-finance'
   | 'client-work'
-
-/** Each project's accent (src/content/accents.ts). */
-export type ProjectAccent = AccentId
 
 /**
  * An image a case study shows first beside its heading, with the `sizes` its
@@ -50,11 +46,14 @@ export interface Project {
    * the role; CafePress UK; Creative Production).
    */
   displayName: string
-  /** Display subtitle matching the cover PNG's embedded subtitle (homepage foremost label only). */
+  /** Display subtitle matching the cover PNG's embedded subtitle (read nowhere since the homepage carousel was removed). */
   displaySubtitle: string
   /** Supporting label (carousel caption, case subtitle when none is given). */
   label: string
-  /** Very short context for the Work shelf and menu, as on the case page (employer or internship, or independent work). */
+  /**
+   * The Work shelf's and the menu's line under the name: the homepage tile's own caption, "type · context" (field.ts;
+   * Harlie's brief, 2026-09-28), so the metadata reads the same across the site.
+   */
   category: string
   /** One short factual sentence for the Selected work index. */
   summary: string
@@ -68,25 +67,34 @@ export interface Project {
   description: string
   /** Compact case metadata ("Company:", "Role:", "Dates:", "Project status:"). */
   meta: { company: string; role: string; dates: string; status: string }
-  /** Transparent PNG cover object from `final png tiles/` (carousel, case opening, Work shelf and next-project thumbnails). */
+  /** Transparent PNG object from `final png tiles/`: the project's thumbnail in the Work shelf and the small-screen menu. */
   cover: ImageId
   /**
    * What the case study shows first in its media stage, beside the heading
-   * (the video's poster, the opening state, the conversation, the first
-   * film's poster, the three prototype phones), with the `sizes` its
-   * component passes. The route transition fetches and decodes these with
-   * the cover object while the page being left stays (on hover or focus of a
-   * project link, at the latest on the click), so the heading and its media
-   * arrive together (src/components/transition/projectTransition.ts). Keep in
-   * step with the page's media and its `sizes`: a mismatch costs a short,
-   * capped wait inside the change, and the development transition log
-   * (window.__pageTransitionLog) records "opening not warmed".
+   * (the storefront, the three prototype phones, the listing), with the
+   * `sizes` its component passes; empty when that is a video poster (a plain
+   * URL, not a registered image). The route transition fetches and decodes
+   * these while the page being left stays (on hover or focus of a project
+   * link, at the latest on the click), so the heading and its media arrive
+   * together (src/components/transition/warm.ts). Keep in step
+   * with the page's media and its `sizes`: a mismatch costs a short wait
+   * before the change starts (capped by TRANSITION.mediaWaitMs), and the
+   * page's picture may still be decoding as it arrives.
    */
   hero: readonly OpeningImage[]
-  accent: ProjectAccent
   next: ProjectId
   seo: { title: string; description: string }
 }
+
+/**
+ * The `sizes` a told case study's pictures use (CaseStory reads them from here), and so the `sizes` the route
+ * transition warms them with: one definition for both, so the files fetched ahead are the files the page picks
+ * (Harlie's QA pass, 2026-09-28: the phones were warmed at 290px and 50vw, and a phone waited for, then did not use,
+ * the 901px files). Screens: the whole stage, about 810px at its widest, 58% of the window beside the words (on wide
+ * screens and landscape phones), the full width in the phones' band. Phones: a third of the stage each.
+ */
+export const STAGE_SIZES = '(min-width: 1296px) 810px, (min-width: 900px) 58vw, (orientation: landscape) and (max-height: 540px) 58vw, 100vw'
+export const PHONE_SIZES = '(min-width: 1100px) 250px, (min-width: 900px) 20vw, (orientation: landscape) and (max-height: 540px) 20vw, 30vw'
 
 export const PROJECTS: Project[] = [
   {
@@ -97,7 +105,7 @@ export const PROJECTS: Project[] = [
     displayName: 'Creative Production',
     displaySubtitle: 'Client film production at Shift Content',
     label: 'Client film production at Shift Content',
-    category: 'Shift Content internship',
+    category: 'Client films · Shift Content',
     summary: 'Production support on client films and related agency work during an internship at Shift Content in London.',
     year: '2026',
     dateRange: 'Jan–May 2026',
@@ -109,49 +117,21 @@ export const PROJECTS: Project[] = [
     cover: 'obj-creative-production',
     // The opening is a moving frame (a video poster, not a registered image): nothing to warm.
     hero: [],
-    accent: 'creative-production',
-    next: 'cafepress-uk',
+    next: 'spreadsheet-agent',
     seo: {
       title: 'Creative Production',
       description: 'Client film production at Shift Content in London.',
     },
   },
   {
-    id: 'cafepress-uk',
-    slug: 'cafepress-uk',
-    order: 2,
-    name: 'CafePress UK',
-    displayName: 'CafePress UK',
-    displaySubtitle: 'Market research, assortment planning, and early UK storefront prototyping',
-    label: 'UK market research and storefront prototype',
-    category: 'PlanetArt internship',
-    summary: 'UK market research and a localized storefront prototype during a PlanetArt internship.',
-    year: '2026',
-    dateRange: 'Jun–Aug 2026',
-    role: 'Product Operations & Merchandising Intern',
-    org: 'PlanetArt',
-    status: 'Research and prototype',
-    description: 'UK market research and a localized storefront prototype.',
-    meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
-    cover: 'obj-cafepress-uk',
-    // The storefront prototype beside the introduction.
-    hero: [{ image: 'cp-storefront', sizes: '(min-width: 1408px) 1240px, (min-width: 900px) 92vw, 200vw' }],
-    accent: 'cafepress-uk',
-    next: 'spreadsheet-agent',
-    seo: {
-      title: 'CafePress UK',
-      description: 'Market research, assortment planning, and early UK storefront prototyping during a PlanetArt internship.',
-    },
-  },
-  {
     id: 'spreadsheet-agent',
     slug: 'spreadsheet-agent',
-    order: 3,
+    order: 2,
     name: 'Spreadsheet Agent',
     displayName: 'Spreadsheet Agent',
     displaySubtitle: 'A rules-based prototype for generating editable spreadsheets from written requests',
     label: 'Rules-based spreadsheet prototype',
-    category: 'Independent prototype',
+    category: 'Data tool · Rules-based prototype',
     summary: 'A rules-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
     year: '2026',
     dateRange: '2026',
@@ -161,55 +141,23 @@ export const PROJECTS: Project[] = [
     description: 'A request, a reviewable plan, and an editable spreadsheet.',
     meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Rules-based prototype using synthetic data' },
     cover: 'obj-spreadsheet-agent',
-    // The first step's screenshot (the request), the whole interface.
-    hero: [{ image: 'sa-ui-request', sizes: '(min-width: 1408px) 620px, (min-width: 900px) 46vw, calc(100vw - 48px)' }],
-    accent: 'spreadsheet-agent',
-    next: 'jumpstart-finance',
+    // The opening is the recording's poster (a plain URL, not a registered image): nothing to warm.
+    hero: [],
+    next: 'merchandising-platform',
     seo: {
       title: 'Spreadsheet Agent',
       description: 'A rules-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
     },
   },
   {
-    id: 'jumpstart-finance',
-    slug: 'jumpstart',
-    order: 4,
-    name: 'Jumpstart Finance',
-    displayName: 'Jumpstart Finance',
-    displaySubtitle: 'Product development for a financial education app concept',
-    label: 'Financial education startup developed during a student venture program',
-    category: 'Student venture',
-    summary: 'A financial education concept and mobile prototype developed at the European Innovation Academy in Porto.',
-    year: '2024',
-    dateRange: 'Jun–Jul 2024',
-    role: 'Founder & Product Lead',
-    org: 'European Innovation Academy, Porto',
-    status: 'Venture concept and prototype',
-    description: 'A student venture exploring mobile financial education.',
-    meta: { company: 'Jumpstart Finance (student venture)', role: 'Founder & Product Lead', dates: 'June to July 2024', status: 'Program concept and prototype' },
-    cover: 'obj-jumpstart-finance',
-    // The three original prototype screens beside the introduction.
-    hero: [
-      { image: 'jf-screen-progress', sizes: '(min-width: 1100px) 190px, 26vw' },
-      { image: 'jf-screen-lessons', sizes: '(min-width: 1100px) 190px, 26vw' },
-      { image: 'jf-screen-community', sizes: '(min-width: 1100px) 190px, 26vw' },
-    ],
-    accent: 'jumpstart-finance',
-    next: 'merchandising-platform',
-    seo: {
-      title: 'Jumpstart Finance',
-      description: 'Product development for a financial education app concept at the European Innovation Academy in Porto, 2024.',
-    },
-  },
-  {
     id: 'merchandising-platform',
     slug: 'merchandising-platform',
-    order: 5,
+    order: 3,
     name: 'Merchandising Dashboard',
     displayName: 'Merchandising Dashboard',
     displaySubtitle: 'An independent prototype for product analysis and replenishment planning',
     label: 'Independent merchandising application prototype',
-    category: 'Independent prototype',
+    category: 'Product operations · Independent prototype',
     summary: 'An independent application prototype for reviewing product, pricing, inventory, and vendor information with synthetic data.',
     year: '2026',
     dateRange: '2026',
@@ -221,22 +169,51 @@ export const PROJECTS: Project[] = [
     cover: 'obj-merchandising-platform',
     // The walkthrough's poster is a plain video poster URL (not a registered image): nothing to warm.
     hero: [],
-    accent: 'merchandising-platform',
-    next: 'ai-leasing-agent',
+    next: 'jumpstart-finance',
     seo: {
       title: 'Merchandising Dashboard',
       description: 'An independent prototype for product analysis and replenishment planning, using synthetic data.',
     },
   },
   {
+    id: 'jumpstart-finance',
+    slug: 'jumpstart',
+    order: 4,
+    name: 'Jumpstart Finance',
+    displayName: 'Jumpstart Finance',
+    displaySubtitle: 'Product development for a financial education app concept',
+    label: 'Financial education startup developed during a student venture program',
+    category: 'App concept · Student venture',
+    summary: 'A financial education concept and mobile prototype developed at the European Innovation Academy in Porto.',
+    year: '2024',
+    dateRange: 'Jun–Jul 2024',
+    role: 'Founder & Product Lead',
+    org: 'European Innovation Academy, Porto',
+    status: 'Venture concept and prototype',
+    description: 'A student venture exploring mobile financial education.',
+    meta: { company: 'Jumpstart Finance (student venture)', role: 'Founder & Product Lead', dates: 'June to July 2024', status: 'Program concept and prototype' },
+    cover: 'obj-jumpstart-finance',
+    // The three original prototype screens beside the introduction (Profile, Home, Community).
+    hero: [
+      { image: 'jf-tile-profile', sizes: PHONE_SIZES },
+      { image: 'jf-tile-home', sizes: PHONE_SIZES },
+      { image: 'jf-tile-third', sizes: PHONE_SIZES },
+    ],
+    next: 'ai-leasing-agent',
+    seo: {
+      title: 'Jumpstart Finance',
+      description: 'Product development for a financial education app concept at the European Innovation Academy in Porto, 2024.',
+    },
+  },
+  {
     id: 'ai-leasing-agent',
     slug: 'valiance',
-    order: 6,
+    order: 5,
     name: 'AI Leasing Agent',
     displayName: 'AI Leasing Agent',
     displaySubtitle: 'Requirements, workflow design, and testing for an AI leasing assistant',
     label: 'Workflow requirements and testing at Valiance Capital',
-    category: 'Valiance Capital',
+    category: 'AI implementation · Valiance Capital',
     summary: 'Workflow requirements and testing for a third-party leasing assistant adopted across 18 properties.',
     year: '2024–2025',
     dateRange: 'Oct 2024–Jun 2025',
@@ -246,15 +223,41 @@ export const PROJECTS: Project[] = [
     description: 'Requirements and testing for recurring leasing questions.',
     meta: { company: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'October 2024 to June 2025', status: 'Adopted across 18 properties' },
     cover: 'obj-ai-leasing-agent',
-    // The illustrative conversation beside the introduction.
-    hero: [{ image: 'valiance-messages', sizes: '(min-width: 1408px) 1240px, (min-width: 900px) 92vw, 200vw' }],
-    accent: 'ai-leasing-agent',
-    next: 'client-work',
+    // The listing with its assistant, the first of the three pictures beside the introduction.
+    hero: [{ image: 'valiance-listing', sizes: STAGE_SIZES }],
+    next: 'cafepress-uk',
     seo: {
       title: 'AI Leasing Agent',
       description: 'Requirements, workflow design, and testing for an AI leasing assistant at Valiance Capital, deployed across 18 properties.',
     },
+  },  {
+    id: 'cafepress-uk',
+    slug: 'cafepress-uk',
+    order: 6,
+    name: 'CafePress UK',
+    displayName: 'CafePress UK',
+    displaySubtitle: 'Market research, assortment planning, and early UK storefront prototyping',
+    label: 'UK market research and storefront prototype',
+    category: 'Market entry · PlanetArt',
+    summary: 'UK market research and a localized storefront prototype during a PlanetArt internship.',
+    year: '2026',
+    dateRange: 'Jun–Aug 2026',
+    role: 'Product Operations & Merchandising Intern',
+    org: 'PlanetArt',
+    status: 'Research and prototype',
+    description: 'UK market research and a localized storefront prototype.',
+    meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
+    cover: 'obj-cafepress-uk',
+    // The storefront prototype beside the introduction.
+    hero: [{ image: 'cp-storefront', sizes: STAGE_SIZES }],
+    next: 'client-work',
+    seo: {
+      title: 'CafePress UK',
+      // The case study's question (Harlie's brief, 2026-09-28), in place of a list of activities.
+      description: 'Whether CafePress’s US B2B model could be adapted for the UK, assessed during a PlanetArt internship.',
+    },
   },
+
 ]
 
 export const projectById = (id: ProjectId): Project => {

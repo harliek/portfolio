@@ -1,4 +1,8 @@
-import type { CSSProperties } from 'react'
+import { useRef, type CSSProperties } from 'react'
+import { useDockTitle } from './dockLetters'
+
+/** A line without separate letters has no dock. */
+const NO_DOCK = { current: null }
 
 /**
  * A line that types itself (after Aceternity's TypewriterEffectSmooth,
@@ -8,18 +12,22 @@ import type { CSSProperties } from 'react'
  * leaves at `hideAt` seconds (when the next line starts); without it, it
  * stays and keeps blinking, as in the demo. With `letters`, each letter is
  * its own element (for the hover in home.css); screen readers and copying
- * still get the word once. Reduced motion: the text at once, no bar.
+ * still get the word once, and the letters magnify under the pointer like
+ * Aceternity's Floating Dock (Harlie's request; dockLetters.ts). Reduced
+ * motion: the text at once, no bar.
  */
 export function TypeLine({ text, delay, duration, hideAt, letters }: { text: string; delay: number; duration: number; hideAt?: number; letters?: boolean }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useDockTitle(letters ? ref : NO_DOCK)
   const style = { '--type-delay': `${delay}s`, '--type-dur': `${duration}s`, '--type-hide': hideAt === undefined ? undefined : `${hideAt}s` } as CSSProperties
   return (
-    <span className="type-line" style={style} data-stays={hideAt === undefined || undefined}>
+    <span ref={ref} className="type-line" style={style} data-stays={hideAt === undefined || undefined}>
       {letters ? (
         <>
           <span className="visually-hidden">{text}</span>
           <span className="type-line__text" aria-hidden="true">
             {[...text].map((ch, i) => (
-              <span key={i} className="type-line__letter">
+              <span key={i} className="type-line__letter" data-dock-letter="">
                 {ch}
               </span>
             ))}

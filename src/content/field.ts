@@ -2,46 +2,40 @@ import type { ImageId } from './media'
 import { projectById, projectPath, type ProjectId } from './projects'
 
 /**
- * The homepage's project field, in Harlie's order (2026-09-26): Creative Portfolio (opens /creative/), About me
- * (opens the About page), Creative Production, CafePress UK, Spreadsheet Agent, Jumpstart Finance, Merchandising
- * Dashboard, AI Leasing Agent. The first sits at the far left when the tiles come into view. The films sit in the rounded
+ * The homepage's project field, in Harlie's order: About me (opens the About page; first, at the far left when the
+ * page opens, Harlie's request, 2026-09-27), Creative Production, Spreadsheet Agent, Merchandising Dashboard,
+ * Jumpstart Finance, AI Leasing Agent, CafePress UK (moved to the end, right before Creative Portfolio, 2026-09-28),
+ * then Creative Portfolio (opens /creative/; it was first until then, and
+ * the loop keeps it just before About me). The films sit in the rounded
  * frame and play muted; the Jumpstart phones grow and shrink a little in turn, and the leasing conversation arrives
  * message by message. The field is one flat strip that loops endlessly and turns by itself. The case studies' order
  * (projects.ts: the Work menu, Previous and Next) is the same without About me and Creative Portfolio.
  *
- * `line` is one plain sentence per project, kept to what the case studies
- * support (prototypes stay prototypes; qualifiers such as simulated AI
- * responses and synthetic data are stated in the case studies).
+ * `line` is short metadata, not a sentence (Harlie's brief, 2026-09-28): the kind of work, then its context, "type ·
+ * context", such as "Market entry · PlanetArt", so the range of the work reads in a glance along the strip. Kept to
+ * what the case studies support (prototypes stay prototypes; synthetic data and the rules behind the builds are
+ * stated in the case studies). projects.ts `category` repeats each one for the Work shelf and the menu.
  */
-/** One transparent cutout of a real interface element, placed in the 16:10 tile box (percent of its width and height). */
-export interface CutoutPiece {
-  image: ImageId
-  x: number
-  y: number
-  w: number
-  z?: number
-}
-
 /** One turn of the leasing conversation: the renter (initials) or the assistant (an icon). */
 export interface ChatLine {
   from: 'renter' | 'assistant'
   text: string
 }
 
+/**
+ * A tile's picture: footage in the rounded frame, the Jumpstart phones, or the leasing conversation. (Stills, cutouts
+ * and widget compositions were retired with the tiles that used them; Harlie's brief, 2026-09-28, code cleanup.)
+ */
 export type PlaneMedia =
   | { kind: 'video'; src: string; poster: string; position?: string }
-  | { kind: 'image'; image: ImageId; position?: string }
   | { kind: 'screens'; screens: readonly ImageId[] }
-  | { kind: 'cutouts'; pieces: readonly CutoutPiece[] }
-  /** One transparent picture placed like a cutout, shown as its separate widgets (boxes in source pixels, each with how much it grows). */
-  | { kind: 'widgets'; image: ImageId; x: number; y: number; w: number; boxes: readonly (readonly [number, number, number, number, number])[] }
   | { kind: 'chat'; initials: string; lines: readonly ChatLine[] }
 
 /** Kinds shown as free-standing objects over the page (no card, frame or ground behind them). */
-export const isFree = (m: PlaneMedia) => m.kind === 'screens' || m.kind === 'cutouts' || m.kind === 'widgets' || m.kind === 'chat'
+export const isFree = (m: PlaneMedia) => m.kind === 'screens' || m.kind === 'chat'
 
 export interface FieldProject {
-  /** A case study, 'about' for the About me tile (the /about page) or 'creative' for the creative portfolio (/creative/). */
+  /** A case study, 'about' for the About me tile (the /about page), or 'creative' for the creative portfolio. */
   id: ProjectId | 'about' | 'creative'
   title: string
   line: string
@@ -50,21 +44,11 @@ export interface FieldProject {
   alt: string
 }
 
-export const FIELD_YEARS = '2024–2026'
-
 export const FIELD: readonly FieldProject[] = [
-  {
-    id: 'creative',
-    title: 'Creative Portfolio',
-    line: 'Film and visual art',
-    // The paint video from the About page's Creative Portfolio card (art-portfolio-960.mp4), muted; it loops at its end.
-    media: { kind: 'video', src: '/media/video/art-portfolio-960.mp4', poster: '/media/img/art-portfolio-poster-960.jpg' },
-    alt: 'Wet pink, violet and orange paint in motion, from the art portfolio',
-  },
   {
     id: 'about',
     title: 'About me',
-    line: 'AI product management, strategy, and implementation',
+    line: 'Cognitive Science · UC Berkeley',
     // Harlie's video for the tile (about tile.m4v, 1280x720, 18.2s), muted at normal speed; it loops at its end.
     media: { kind: 'video', src: '/media/video/about-tile-960.mp4', poster: '/media/img/about-tile-poster-960.jpg', position: '50% 40%' },
     alt: 'Harlie Katz speaking to the camera in front of a bookshelf',
@@ -72,56 +56,49 @@ export const FIELD: readonly FieldProject[] = [
   {
     id: 'client-work',
     title: 'Creative Production',
-    line: 'Client film production at Shift Content.',
+    line: 'Client films · Shift Content',
     // The whole film (1:40), muted at normal speed; it continues where it left off and loops only at its end.
-    media: { kind: 'video', src: '/media/video/nickleby-640.mp4', poster: '/media/img/nickleby-poster-1138.jpg', position: '40% 45%' },
+    // nickleby-tile-640.mp4 is nickleby-640.mp4's video stream alone (a stream copy without the audio, which the muted
+    // tile never plays); the film dialog on the Creative Production page keeps nickleby-640.mp4 with its sound.
+    media: { kind: 'video', src: '/media/video/nickleby-tile-640.mp4', poster: '/media/img/nickleby-poster-1138.jpg', position: '40% 45%' },
     alt: 'The Nickleby Capital interview film',
-  },
-  {
-    id: 'cafepress-uk',
-    title: 'CafePress UK',
-    line: 'Market research, assortment planning, and early UK storefront prototyping.',
-    // Harlie's video for the tile (cafepress uk tile.mov, 2330x1234, 10.3s): 1.0 to 5.3s at its own speed, then the
-    // same in reverse, so the page scrolls down and back up in one seamless loop (8.5s; Harlie's requests). In the
-    // rounded frame like Creative Production, muted. Kept to the left so the CafePress logo stays in the frame.
-    media: { kind: 'video', src: '/media/video/cafepress-tile-960.mp4', poster: '/media/img/cafepress-tile-poster-960.jpg', position: '25% 0%' },
-    alt: 'A recording scrolling through the CafePress Business storefront: custom products, categories, featured brands and customer reviews',
   },
   {
     id: 'spreadsheet-agent',
     title: 'Spreadsheet Agent',
-    line: 'A rules-based prototype for generating editable spreadsheets from written requests.',
+    line: 'Data tool · Rules-based prototype',
     // Harlie's choice (Spreadsheet Agent/Spreadsheet Video.mov from 24s, the sheet built and scrolled, then All Sheets;
     // ends at 36.6s, before the screen-capture toolbar appears), muted at normal speed; it loops at its end.
     media: { kind: 'video', src: '/media/video/spreadsheet-tile-960.mp4', poster: '/media/img/spreadsheet-tile-poster-960.jpg', position: '50% 0%' },
     alt: 'A recording of Spreadsheet Agent: a finished sheet of B2B products with vendor, cost, retail price and margin, then the list of saved sheets',
   },
   {
-    id: 'jumpstart-finance',
-    title: 'Jumpstart Finance',
-    line: 'Product development for a financial education app concept.',
-    media: {
-      kind: 'screens',
-      // Harlie's three phones (PNG Tiles/jumpstart tile 1 to 3), made free-standing.
-      screens: ['jf-tile-profile', 'jf-tile-home', 'jf-tile-third'],
-    },
-    alt: 'Three Jumpstart Finance phone screens: home, the learning journey, and the community',
-  },
-  {
     id: 'merchandising-platform',
     title: 'Merchandising Dashboard',
-    line: 'An independent prototype for product analysis and replenishment planning.',
+    line: 'Product operations · Independent prototype',
     // The merchandising dashboard recording (Harlie's request; PlanetArt/Merchandising Dashboard/Dashboard Video.mov
     // through its site encode, merch-console-960.mp4, 56.3s): the whole walkthrough, muted at normal speed, looping.
     media: { kind: 'video', src: '/media/video/merch-console-960.mp4', poster: '/media/img/merch-console-poster-960.jpg', position: '30% 50%' },
     alt: 'A recording of the Merchandising Dashboard prototype: the overview, the product catalog, a product’s reorder calculation, the inventory and the vendors',
   },
   {
+    id: 'jumpstart-finance',
+    title: 'Jumpstart Finance',
+    line: 'App concept · Student venture',
+    media: {
+      kind: 'screens',
+      // Harlie's three phones (PNG Tiles/jumpstart tile 1 to 3), made free-standing.
+      screens: ['jf-tile-profile', 'jf-tile-home', 'jf-tile-third'],
+    },
+    alt: 'Three Jumpstart Finance phone screens: the learning journey, the home screen, and the community forum',
+  },
+  {
     id: 'ai-leasing-agent',
     title: 'AI Leasing Agent',
-    line: 'Requirements, workflow design, and testing for an AI leasing assistant.',
+    line: 'AI implementation · Valiance Capital',
     // Shortened from the messages in the case study's illustrative conversation (valiance-messages): general questions
-    // answered, the fee waiver and the unit hold routed to the leasing staff. No availability, price or appointment is confirmed.
+    // answered, the fee waiver and the unit hold routed to the leasing staff. No availability, price or appointment is
+    // confirmed.
     media: {
       kind: 'chat',
       initials: 'J',
@@ -133,6 +110,26 @@ export const FIELD: readonly FieldProject[] = [
       ],
     },
     alt: 'An illustrative leasing conversation: a renter asks about a two-bedroom, a fee waiver and a unit hold, and the assistant answers the general questions and passes the requests to the leasing staff',
+  },
+  {
+    id: 'cafepress-uk',
+    title: 'CafePress UK',
+    line: 'Market entry · PlanetArt',
+    // Harlie's video for the tile (cafepress uk tile.mov, 2330x1234, 10.3s): 1.0 to 5.3s at its own speed, then the
+    // same in reverse, so the page scrolls down and back up in one seamless loop (8.5s; Harlie's requests). In the
+    // rounded frame like Creative Production, muted. Kept to the left so the CafePress logo stays in the frame.
+    media: { kind: 'video', src: '/media/video/cafepress-tile-960.mp4', poster: '/media/img/cafepress-tile-poster-960.jpg', position: '25% 0%' },
+    // The recording shows the live US site, the model the UK research assessed (the case study's opening); it was
+    // described as if it were Harlie's UK prototype (Harlie's brief, 2026-09-28).
+    alt: 'A recording scrolling through CafePress Business’s US storefront, the model the UK research started from: custom products, categories, featured brands and customer reviews',
+  },
+  {
+    id: 'creative',
+    title: 'Creative Portfolio',
+    line: 'Film and visual art',
+    // The paint video from the About page's Creative Portfolio card (art-portfolio-960.mp4), muted; it loops.
+    media: { kind: 'video', src: '/media/video/art-portfolio-960.mp4', poster: '/media/img/art-portfolio-poster-960.jpg' },
+    alt: 'Wet pink, violet and orange paint in motion, from the art portfolio',
   },
 ]
 

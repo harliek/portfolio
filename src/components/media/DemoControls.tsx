@@ -1,15 +1,14 @@
-import { useCallback, useState, useSyncExternalStore, type CSSProperties, type KeyboardEvent, type ReactNode, type Ref, type RefObject } from 'react'
+import { useCallback, useState, useSyncExternalStore, type CSSProperties, type KeyboardEvent, type Ref, type RefObject } from 'react'
 import { ExpandIcon } from './ExpandIcon'
 
 /*
- * DemoControls: the compact control bar BELOW a recording or a film (brief-v13 and v15; DemoVideo, the Creative
- * Production films in FilmPlayer, and their larger views): play or pause, a seek slider, sound, and the player's
- * enlarge control. Nothing is drawn over the picture itself (no timer, no native timeline), so it stays clean.
+ * DemoControls: the compact control bar BELOW a recording or a film (brief-v13 and v15; today the Creative Production
+ * films' larger view, FilmDialog): play or pause, a seek slider, sound, and the player's enlarge control. Nothing is
+ * drawn over the picture itself (no timer, no native timeline), so it stays clean.
  *
  * - One source of truth: the <video> element. The bar reads it through a small external store (paused, muted,
  *   position, duration) refreshed by the element's own events; it keeps no playback state of its own, and every
- *   action goes to the element or, for play and pause, to the player's handler (DemoVideo applies its autoplay
- *   rules there, FilmPlayer its preview rules).
+ *   action goes to the element.
  * - Names: "Play recording" or "Pause recording", "Mute recording" or "Unmute recording" (`noun` names the medium,
  *   e.g. "film"), "Seek", and the enlarge control's own name; the bar is the group "<title> controls".
  * - Seek: a native range input named "Seek" whose position is given to assistive technology as text ("0:04 of
@@ -18,10 +17,7 @@ import { ExpandIcon } from './ExpandIcon'
  *   wrap to its start at once).
  * - Sound: a recording without an audio track shows the control disabled, named "This recording has no sound", so
  *   the bar never offers a switch that does nothing.
- * - A shorter bar (a film's muted preview): `seekable` and `sound` false leave play or pause, the player's own
- *   control (`children`, e.g. Watch with sound) and enlarge. The same bar stays mounted as it changes, so focus on
- *   its play button survives.
- * - Colour (case.css .cs-controls): neutral at rest; the project accent only on the focused or pressed control and
+ * - Colour (case.css .cs-controls): neutral at rest; the blue violet accent only on the focused or pressed control and
  *   on the slider while it is dragged.
  * - Size: 32px glyph buttons with a 40px pointer target; on touch screens 44px controls (and a 44px tall slider) in a
  *   48px bar.
@@ -74,8 +70,8 @@ function createVideoStore(fallbackDuration: number) {
   return { subscribe, getSnapshot: () => snap, read }
 }
 
-/** "1:05" (minutes and seconds), for the slider's spoken position. */
-const clock = (s: number) => {
+/** "1:05" (minutes and seconds), for the slider's spoken position and a film's length (Creative Production). */
+export const clock = (s: number) => {
   const t = Math.max(0, Math.round(s))
   return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`
 }
@@ -115,20 +111,10 @@ export interface DemoControlsProps {
   title: string
   /** What the play and sound controls call the medium (default 'recording'; e.g. 'film'). */
   noun?: string
-  /** Show the seek slider (default true). */
-  seekable?: boolean
-  /** Show the sound control (default true). */
-  sound?: boolean
-  /** The player's own control, after play or pause (e.g. a film preview's Watch with sound). */
-  children?: ReactNode
   /** The manifest's duration in seconds, used until the element has its metadata. */
   duration: number
   /** The recording has a sound track; otherwise the sound control is shown disabled. */
   hasAudio: boolean
-  /** Play or pause through the player (its autoplay rules); by default the element itself. */
-  onTogglePlay?: () => void
-  /** The play and pause button (DemoVideo moves focus here after its own Play demo button). */
-  playRef?: Ref<HTMLButtonElement>
   /** The enlarge control at the end of the bar (shown when `onExpand` is given), and its name. */
   onExpand?: () => void
   expandLabel?: string
@@ -139,13 +125,8 @@ export function DemoControls({
   videoRef,
   title,
   noun = 'recording',
-  seekable = true,
-  sound = true,
-  children,
   duration: fallbackDuration,
   hasAudio,
-  onTogglePlay,
-  playRef,
   onExpand,
   expandLabel = 'Expand video',
   expandRef,
@@ -156,10 +137,6 @@ export function DemoControls({
   const progress = duration > 0 ? Math.min(100, (time / duration) * 100) : 0
 
   const togglePlay = () => {
-    if (onTogglePlay) {
-      onTogglePlay()
-      return
-    }
     const v = videoRef.current
     if (!v) return
     if (v.paused || v.ended) v.play().catch(() => {})
@@ -193,8 +170,8 @@ export function DemoControls({
                   : undefined
     if (target === undefined) return
     e.preventDefault()
-    // End: the recording's last frame. A looping copy would wrap to its start at once, so it stops there instead (a
-    // pause the player counts as the visitor's own), as a recording that ends does.
+    // End: the recording's last frame. A looping copy would wrap to its start at once, so it stops there instead, as a
+    // recording that ends does.
     if (e.key === 'End') videoRef.current?.pause()
     seek(target)
   }
@@ -206,37 +183,31 @@ export function DemoControls({
 
   return (
     <div className="cs-controls" role="group" aria-label={`${title} controls`}>
-      <button ref={playRef} type="button" className="cs-ctl" aria-label={`${paused ? 'Play' : 'Pause'} ${noun}`} onClick={togglePlay}>
+      <button type="button" className="cs-ctl" aria-label={`${paused ? 'Play' : 'Pause'} ${noun}`} onClick={togglePlay}>
         {paused ? <PlayGlyph /> : <PauseGlyph />}
       </button>
-      {children}
-      {seekable ? (
-        <input
-          type="range"
-          className="cs-seek"
-          min={0}
-          max={duration}
-          step="any"
-          value={time}
-          aria-label="Seek"
-          aria-valuetext={`${clock(time)} of ${clock(duration)}`}
-          style={{ '--p': `${progress}%` } as CSSProperties}
-          onChange={(e) => seek(Number(e.currentTarget.value))}
-          onKeyDown={onSeekKey}
-        />
+      <input
+        type="range"
+        className="cs-seek"
+        min={0}
+        max={duration}
+        step="any"
+        value={time}
+        aria-label="Seek"
+        aria-valuetext={`${clock(time)} of ${clock(duration)}`}
+        style={{ '--p': `${progress}%` } as CSSProperties}
+        onChange={(e) => seek(Number(e.currentTarget.value))}
+        onKeyDown={onSeekKey}
+      />
+      {hasAudio ? (
+        <button type="button" className="cs-ctl" aria-label={`${muted ? 'Unmute' : 'Mute'} ${noun}`} onClick={toggleMute}>
+          <SoundGlyph state={muted ? 'off' : 'on'} />
+        </button>
       ) : (
-        <span className="cs-controls__gap" />
+        <button type="button" className="cs-ctl" disabled aria-label={`This ${noun} has no sound`} title={`This ${noun} has no sound`}>
+          <SoundGlyph state="none" />
+        </button>
       )}
-      {sound &&
-        (hasAudio ? (
-          <button type="button" className="cs-ctl" aria-label={`${muted ? 'Unmute' : 'Mute'} ${noun}`} onClick={toggleMute}>
-            <SoundGlyph state={muted ? 'off' : 'on'} />
-          </button>
-        ) : (
-          <button type="button" className="cs-ctl" disabled aria-label={`This ${noun} has no sound`} title={`This ${noun} has no sound`}>
-            <SoundGlyph state="none" />
-          </button>
-        ))}
       {onExpand && (
         <button ref={expandRef} type="button" className="cs-ctl cs-ctl--expand" aria-label={expandLabel} onClick={onExpand}>
           <ExpandIcon />

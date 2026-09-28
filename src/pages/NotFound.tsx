@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { PageLink } from '../components/transition/PageLink'
 import { usePageMeta } from '../hooks/usePageMeta'
 
 export function NotFound() {
@@ -10,14 +10,14 @@ export function NotFound() {
       </h1>
       <ul className="not-found__links">
         <li>
-          <Link className="button" to="/">
+          <PageLink className="button" to="/" direction="back">
             View work
-          </Link>
+          </PageLink>
         </li>
         <li>
-          <Link className="button button--quiet" to="/about">
+          <PageLink className="button button--quiet" to="/about">
             About
-          </Link>
+          </PageLink>
         </li>
       </ul>
     </div>

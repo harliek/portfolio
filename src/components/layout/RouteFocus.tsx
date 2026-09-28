@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { useLocation, useNavigationType } from 'react-router-dom'
-import { prefersReducedMotion } from '../../hooks/useReducedMotion'
 
 /** The element to focus for a section target: its first heading, else the target itself. */
 function focusTarget(el: HTMLElement): HTMLElement {
@@ -14,31 +13,12 @@ function focusQuietly(el: HTMLElement) {
 }
 
 /**
- * Scrolls a section to the top of the view (below the header, via the
- * root's scroll-padding). A newly shown page is still rising into place
- * (.route-reveal translates it a few px), so the scroll subtracts that
- * offset: the section ends exactly in place when the reveal finishes.
+ * Scrolls a section to the top of the view, below the header (by its scroll margin, --header-safe; base.css). The
+ * route's wrapper (.route-reveal) is never moved any more (page changes move pictures of the page, pageChange.ts), so
+ * there is no rise to allow for (2026-09-28).
  */
 function scrollToAnchor(el: HTMLElement) {
   el.scrollIntoView({ block: 'start' })
-  const reveal = el.closest<HTMLElement>('.route-reveal')
-  const transform = reveal ? getComputedStyle(reveal).transform : 'none'
-  const offset = transform && transform !== 'none' ? new DOMMatrixReadOnly(transform).m42 : 0
-  if (Math.abs(offset) > 0.5) window.scrollBy(0, -offset)
-}
-
-/**
- * Scrolls to an in-page section by id (smoothly unless motion is reduced;
- * the root's scroll-padding keeps it clear of the sticky header) and moves
- * keyboard focus to its heading. Returns false when the id is not on the
- * page, so a link can fall back to ordinary navigation.
- */
-export function goToSection(id: string, behavior?: ScrollBehavior): boolean {
-  const el = document.getElementById(id)
-  if (!el) return false
-  el.scrollIntoView({ behavior: behavior ?? (prefersReducedMotion() ? 'auto' : 'smooth'), block: 'start' })
-  focusQuietly(focusTarget(el))
-  return true
 }
 
 /**

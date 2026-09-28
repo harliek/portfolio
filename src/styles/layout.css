@@ -1,4 +1,4 @@
-/* Page shell: skip link, header with the Work shelf and the small-screen menu, main, route reveal, compact footer. */
+/* Page shell: skip link, header with the small-screen menu, main, compact footer, not-found page. */
 
 .shell {
   width: 100%;
@@ -35,13 +35,11 @@
 /* ----------------------------------------------------------------------- */
 
 /*
- * Harlie's original portfolio header (brief v14), on every professional page:
- * a near-black bar (--header-height, 61px: 60px and a hairline divider under
- * it) with HOME at the left and the navigation at the right, all in small
- * capitals with wide tracking. The bar is its own layer (::before), so its
- * backdrop blur never becomes the containing block of the fixed small-screen
- * menu inside the header, and its blur and near-black keep text scrolled
- * underneath from reading through.
+ * Harlie's original portfolio header (brief v14), on every professional page: a bar --header-height tall with Back and
+ * HOME at the left and the navigation at the right, all in small capitals with wide tracking. The bar is its own
+ * layer (::before), so a backdrop blur never becomes the containing block of the fixed small-screen menu inside the
+ * header. As wide as the original's (1800px at most), the words 32px from the window's edges (20px on the narrowest
+ * phones); each item's 12px padding keeps its 44px target without moving the words.
  */
 .site-header {
   position: sticky;
@@ -50,43 +48,44 @@
   height: var(--header-height);
 }
 
-/* The bar, behind the header's content (the header is its own stacking context). */
+/*
+ * The bar, behind the header's content (the header is its own stacking context): transparent, with no line (Harlie's
+ * request), so the cursor's light shows through it. It fades as the pill forms (below) and follows the small-screen
+ * menu's ground as that closes (--dur-1).
+ */
 .site-header::before {
   content: '';
   position: absolute;
   z-index: -1;
   inset: 0;
-  /* Transparent, with no line (Harlie's request): the cursor's light shows through it. */
   background: transparent;
   pointer-events: none;
-}
-
-/* Phones, on the case studies: a black bar behind the header, so the steps passing under the held stage never show beside the menu. */
-@media (max-width: 899.98px) {
-  .site-header[data-route='case']::before,
-  .site-header[data-route='case'][data-floating]::before {
-    background: #000;
-    opacity: 1;
-  }
-}
-
-/*
- * The resizable navbar (Header.tsx; after Aceternity's): past 100px of
- * scroll the full-width bar fades and its contents gather into a narrower
- * pill floating a few pixels below the top, on a blurred, translucent ground
- * with a soft shadow. The header itself keeps its 61px.
- */
-.site-header::before {
-  transition: opacity 320ms var(--ease-standard);
+  transition:
+    opacity 320ms var(--ease-standard),
+    background-color var(--dur-1) var(--ease-standard);
 }
 
 .site-header[data-floating]::before {
   opacity: 0;
 }
 
+/*
+ * The resizable navbar (Header.tsx; after Aceternity's): once the page scrolls past Header.tsx's FLOAT_AT (12px), the
+ * full-width bar fades and its contents gather into a narrower pill floating a few pixels below the top, on a blurred,
+ * translucent ground (no shadow). The header itself keeps its height.
+ */
 .site-header__inner {
+  --header-pad: clamp(20px, 8.2vw, 32px);
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
   width: 100%;
+  height: calc(100% - 1px);
+  max-width: 1800px;
+  margin-inline: auto;
+  padding-inline: calc(var(--header-pad) - 12px);
   transition:
     width 560ms cubic-bezier(0.22, 1, 0.36, 1),
     height 560ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -119,18 +118,52 @@
   border-radius: 999px;
 }
 
-/* The pill: a light, blurred ground (the light behind still glows through), a soft shadow and no outline. */
+/*
+ * The pill: a light, blurred ground (the light behind still glows through) and no outline. At 0.48 its 14px items keep
+ * 4.5:1 over the brightest pictures (Harlie's QA pass, 2026-09-28: 4.41:1 over Aristocracy's pink set at 0.38), so the
+ * ground stays as it is. No shadow (Harlie's brief, 2026-09-28: the floating navigation less dominant against the
+ * pages' titles): on the black pages it drew nothing, and over the homepage film and Creative Production's frames it
+ * laid a grey cloud 16 to 64px under the pill, across the titles and pictures passing beneath it.
+ */
 .site-header[data-floating] .site-header__inner::before {
-  background: rgb(0 0 0 / 0.38);
+  background: rgb(0 0 0 / 0.48);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
-  box-shadow: 0 16px 48px rgb(0 0 0 / 0.35);
+}
+
+/*
+ * The case studies below 900px, and in any window at most 540px tall (a phone on its side, 926 or 932px wide
+ * included; Harlie's QA pass, 2026-09-28): a black bar behind the header, so the steps passing under the held stage
+ * never show beside it, and a page's end never leaves a line of text under the floating pill (the words there are
+ * several times the window's height). CaseStory reads the bar as opaque; the page change counts it as covering
+ * (pieces.ts NARROW).
+ */
+@media (max-width: 899.98px), (max-height: 540.98px) {
+  .site-header[data-route='case']::before,
+  .site-header[data-route='case'][data-floating]::before {
+    background: #000;
+    opacity: 1;
+  }
 }
 
 @media (max-width: 899.98px) {
   .site-header[data-floating] .site-header__inner {
     width: min(var(--pill-w, 100%), calc(100% - 24px));
     border-radius: 16px;
+  }
+
+  /*
+   * The small-screen menu open: the header's row takes the menu's own ground at once, so the row and the panel below
+   * it read as one surface and nothing on the page (the homepage film, About's copy) shows through the row (Harlie's
+   * brief, 2026-09-28). It follows the panel out as that closes.
+   */
+  .site-header[data-open='menu']::before,
+  .site-header[data-open='menu'][data-route][data-floating]::before,
+  .site-header[data-open='menu'][data-floating] .site-header__inner::before {
+    background: var(--surface-menu);
+    opacity: 1;
+    box-shadow: none;
+    transition: none;
   }
 }
 
@@ -140,61 +173,6 @@
   .site-header__inner::before {
     transition: none;
   }
-}
-
-/* The hover pill: one soft pill that glides to the navigation item under the pointer. */
-.site-nav {
-  position: relative;
-}
-
-.site-nav__pill {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 0;
-  height: 36px;
-  margin-top: -18px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.09);
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
-    width 260ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 180ms var(--ease-standard);
-}
-
-.site-nav__pill[data-on] {
-  opacity: 1;
-}
-
-/* With the pill, hover no longer draws the line under the words (keyboard focus keeps it). */
-.site-nav .site-nav__item:hover:not(:focus-visible)::after {
-  opacity: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .site-nav__pill {
-    transition: opacity 120ms linear;
-  }
-}
-
-/*
- * Not positioned: the Work shelf (inside the Work item) spans the whole
- * header. As wide as the original's (1800px at most), the words 32px from the
- * window's edges (20px on the narrowest phones); each item's 12px padding
- * keeps its 44px target without moving the words.
- */
-.site-header__inner {
-  --header-pad: clamp(20px, 8.2vw, 32px);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  height: calc(100% - 1px);
-  max-width: 1800px;
-  margin-inline: auto;
-  padding-inline: calc(var(--header-pad) - 12px);
 }
 
 /* The left group: ← Back (case studies and About) and HOME, in one fixed place so the bar never changes height. */
@@ -219,13 +197,12 @@
 }
 
 /*
- * HOME and the navigation (and the small-screen Menu button): the original's
- * small capitals, 14px Inter set as small caps with 0.1em tracking, in white.
- * The current page's item is the red accent (no glow, no fill). Hover and
- * keyboard focus draw a thin line under the words that slides open from the
- * centre (--dur-2, respond; the only hover change: never a red text glow);
- * Work keeps a red line while its shelf is open. The focus ring appears at
- * once.
+ * Back, HOME and the navigation (and the small-screen Menu button): the original's small capitals, 14px Inter set as
+ * small caps with 0.1em tracking, in white. The current page's item is set in the statement rose (no glow). Hover draws
+ * nothing on the words: the cursor's outline is the header's only hover (Harlie's request, 2026-09-27; since
+ * 2026-09-28 the same for Back, HOME and Menu, which kept an underline, and after a tap on a phone Menu's stayed).
+ * Keyboard focus draws a thin line under the words that slides open from the centre (--dur-2, respond) inside the
+ * focus ring, which appears at once; the open Menu keeps a glowing line.
  */
 .site-nav__item,
 .menu-button {
@@ -253,7 +230,7 @@
   transition: color var(--dur-1) var(--ease-standard);
 }
 
-/* The line under the words (ending before the tracking after the last letter, and before Work's chevron). */
+/* The line under the words (ending before the tracking after the last letter). */
 .site-nav__item::after,
 .menu-button::after {
   content: '';
@@ -271,53 +248,30 @@
     background-color var(--dur-1) var(--ease-standard);
 }
 
-.site-nav__work {
-  --_line-end: 28px;
-}
-
-.site-nav__item:hover::after,
 .site-nav__item:focus-visible::after,
-.menu-button:hover::after,
 .menu-button:focus-visible::after {
   opacity: 0.6;
   transform: none;
 }
 
+/* Keyboard focus: a near-white line at the item's edge inside the rose ring (tokens.css --focus-inner-line). */
 .site-nav__item:focus-visible,
 .menu-button:focus-visible {
-  outline: 2px solid var(--red);
-  outline-offset: 2px;
+  outline: 2px solid var(--statement);
+  outline-offset: 3px;
+  box-shadow: var(--focus-inner-line);
 }
 
-/* The current page (HOME on the homepage, Work on a case study, About on About): the red accent, as HOME was in the original. */
+/* The current page (HOME on the homepage, About on About): the statement colour, no glow (as deployed; 2026-09-28). */
 .site-nav__item[data-active='true'] {
-  color: var(--red);
+  color: var(--statement);
 }
 
-/* Work while its shelf is open: a crisp red line under the word. */
-.site-nav__work[aria-expanded='true']::after {
-  background: var(--red);
-  opacity: 1;
-  transform: none;
-}
-
-.site-nav__chevron,
 .site-nav__mark {
   flex: none;
   transition:
     transform var(--dur-2) var(--ease-respond),
     opacity var(--dur-1) var(--ease-standard);
-}
-
-.site-nav__chevron {
-  width: 9px;
-  height: 9px;
-  margin-left: -2px;
-  opacity: 0.8;
-}
-
-.site-nav__work[aria-expanded='true'] .site-nav__chevron {
-  transform: rotate(180deg);
 }
 
 /* "Creative Portfolio" leaves for another site: a small arrow set a little high after the words. */
@@ -346,7 +300,8 @@ a:focus-visible > .site-nav__mark {
 }
 
 .menu-button[aria-expanded='true']::after {
-  background: var(--red);
+  background: var(--statement-line);
+  box-shadow: var(--statement-line-glow);
   opacity: 1;
   transform: none;
 }
@@ -381,17 +336,14 @@ a:focus-visible > .site-nav__mark {
 }
 
 /* ----------------------------------------------------------------------- */
-/* Project links shared by the Work shelf and the small-screen menu         */
+/* The small-screen menu's project links (WorkShelf.tsx ProjectLink)       */
 /* ----------------------------------------------------------------------- */
 
 /*
- * Each entry is one link, except the current project, which is text (on a
- * visible outlined surface in the small-screen
- * menu; boxless at rest in the Work shelf): the project's PNG object whole
- * (contained in a 48px square, never cropped), the name, and a muted
- * category line. Hover and focus light the entry in the project's
- * own accent (edge, faint fill, soft glow; the object grows 6%); nothing
- * changes size or position, so nothing shifts.
+ * Each entry is one link, except the current project, which is text on a visible outlined surface: the project's PNG
+ * object whole (contained in a 48px square, never cropped), the name, and a muted category line. Hover gives a faint
+ * ground; keyboard focus lights the entry in the project's own accent (edge, faint fill, soft glow; the object grows
+ * 6%); nothing changes size or position, so nothing shifts.
  */
 .shelf-item {
   --_acc: var(--accent-default);
@@ -414,29 +366,27 @@ a:focus-visible > .site-nav__mark {
     box-shadow var(--dur-1) var(--ease-standard);
 }
 
-/*
- * In the Work shelf the entries rest on its one surface, without a box
- * each; hover, focus and the current page (the rules below) draw it.
- */
-.work-shelf .shelf-item {
-  border-color: transparent;
-  background: transparent;
+/* Hover: a faint ground only, no lit edge or glow (Harlie's request, 2026-09-27: no light outline on hover except the cursor's, on the navigation and "Watch the film"); keyboard focus draws the edge. */
+.shelf-item:is(a):hover {
+  background: rgb(255 255 255 / 0.06);
 }
 
-.shelf-item:is(a):hover,
 .shelf-item:focus-visible {
   border-color: rgb(var(--_acc-rgb) / 0.62);
   background: rgb(var(--_acc-rgb) / 0.08);
   box-shadow: 0 0 22px -8px rgb(var(--_acc-rgb) / 0.7);
-}
-
-.shelf-item:focus-visible {
   outline: 2px solid var(--_acc);
   outline-offset: 2px;
 }
 
-.shelf-item:is(a):active {
-  background: rgb(var(--_acc-rgb) / 0.05);
+/*
+ * Pressed, and the entry chosen from the phone menu while the menu leaves with the page (Header.tsx data-pressed;
+ * Harlie's QA pass, 2026-09-28: a tap showed nothing for about 300ms).
+ */
+.shelf-item:is(a):active,
+.shelf-item[data-pressed] {
+  border-color: rgb(var(--_acc-rgb) / 0.42);
+  background: rgb(var(--_acc-rgb) / 0.14);
 }
 
 .shelf-item__thumb {
@@ -462,6 +412,9 @@ a:focus-visible > .site-nav__mark {
 .shelf-item:is(a):hover .shelf-item__thumb .picture img,
 .shelf-item:focus-visible .shelf-item__thumb .picture img {
   transform: scale(1.06);
+}
+
+.shelf-item:focus-visible .shelf-item__thumb .picture img {
   filter: drop-shadow(0 0 5px rgb(var(--_acc-rgb) / 0.65));
 }
 
@@ -479,12 +432,15 @@ a:focus-visible > .site-nav__mark {
   transition: color var(--dur-1) var(--ease-standard);
 }
 
-.shelf-item:is(a):hover .shelf-item__name,
+.shelf-item:is(a):hover .shelf-item__name {
+  color: #fff;
+}
+
 .shelf-item:focus-visible .shelf-item__name {
   color: color-mix(in oklch, var(--_acc) 38%, #fff);
 }
 
-/* The context line (employer or independent work), in the shelf and the menu alike. */
+/* The metadata line: kind of work, then context (MetaLine keeps each part whole). */
 .shelf-item__meta {
   color: #b3b7c6;
   font-size: 0.8125rem;
@@ -494,7 +450,7 @@ a:focus-visible > .site-nav__mark {
 }
 
 /*
- * The current project: text, not a link (WorkShelf.tsx), with its accent
+ * The current project: text, not a link (WorkShelf.tsx, the small-screen menu), with its accent
  * edge and a plain "Current page" line (text, not colour alone); it does
  * not respond to hover.
  */
@@ -505,104 +461,6 @@ a:focus-visible > .site-nav__mark {
 
 .shelf-item[aria-current='page'] .shelf-item__meta {
   color: var(--_acc);
-}
-
-/* ----------------------------------------------------------------------- */
-/* Work shelf (desktop, WorkShelf.tsx)                                      */
-/* ----------------------------------------------------------------------- */
-
-/*
- * Held just under the header (fixed at its 61px, whatever the navbar's
- * shape), full width; the page never moves. The layer itself is clear: its
- * one solid panel (the list) sits at the right under the navigation, one
- * project per row, and the page below is dimmed while it is open, so the
- * menu never reads as part of the content behind it.
- */
-.work-shelf {
-  position: fixed;
-  top: var(--header-height);
-  left: 0;
-  right: 0;
-  z-index: 1;
-  padding-block: 8px 0;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-6px);
-  transition:
-    opacity calc(var(--shelf-dur) * 0.7) var(--ease-standard),
-    transform calc(var(--shelf-dur) * 0.7) var(--ease-standard),
-    visibility 0s linear calc(var(--shelf-dur) * 0.7);
-}
-
-/*
- * The dimmed page (a press there only closes the menu; Header.tsx cancels
- * its click), from the header's lower edge to the window's, behind the
- * panel, so the open menu never adds scrolling below the page.
- */
-.work-shelf::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: -1;
-  height: calc(100vh - var(--header-height));
-  background: rgb(3 4 7 / 0.5);
-  pointer-events: none;
-}
-
-.work-shelf[data-open] {
-  opacity: 1;
-  visibility: visible;
-  transform: none;
-  transition:
-    opacity var(--shelf-dur) var(--ease-standard),
-    transform var(--shelf-dur) var(--ease-respond),
-    visibility 0s;
-}
-
-/* The panel: one project per row, each name on one line. */
-.work-shelf__list {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 2px;
-  width: max-content;
-  max-width: 100%;
-  margin-left: auto;
-  padding: 8px;
-  border: 1px solid rgb(255 255 255 / 0.12);
-  border-radius: 12px;
-  /* Transparent (Harlie's request): only a blur behind the names keeps them readable over the page. */
-  background: rgb(8 8 10 / 0.18);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
-  box-shadow: none;
-  list-style: none;
-}
-
-.work-shelf .shelf-item {
-  min-height: 60px;
-  padding: 6px 18px 6px 8px;
-}
-
-.work-shelf .shelf-item__name,
-.work-shelf .shelf-item__meta {
-  white-space: nowrap;
-}
-
-/* Entries arrive from the Work side with a short stagger. */
-.work-shelf__entry {
-  opacity: 0;
-  transform: translateX(var(--shelf-offset));
-  transition:
-    opacity calc(var(--shelf-dur) * 0.8) var(--ease-standard),
-    transform var(--shelf-dur) var(--ease-respond);
-}
-
-.work-shelf[data-open] .work-shelf__entry {
-  opacity: 1;
-  transform: none;
-  transition-delay: calc((5 - var(--i)) * var(--shelf-stagger));
 }
 
 /* ----------------------------------------------------------------------- */
@@ -620,29 +478,41 @@ a:focus-visible > .site-nav__mark {
   overscroll-behavior: contain;
   padding-block: var(--space-3) var(--space-7);
   border-top: 1px solid rgb(255 255 255 / 0.08);
-  background: #0b0c12;
+  background: var(--surface-menu);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-8px);
   transition:
     opacity var(--dur-1) var(--ease-standard),
-    transform var(--dur-1) var(--ease-standard),
     visibility 0s linear var(--dur-1);
 }
 
+/*
+ * Opening: the panel's ground covers the page at once (with the header's row, above), and only its contents fade and
+ * settle in, so the menu's words never lie over the page's (Harlie's brief, 2026-09-28: the whole panel faded in
+ * over 240ms, the page's copy showing through it). Closing, the panel fades out over --dur-1.
+ */
 .site-menu[data-open] {
   opacity: 1;
   visibility: visible;
-  transform: none;
-  transition:
-    opacity var(--dur-2) var(--ease-standard),
-    transform var(--dur-2) var(--ease-respond),
-    visibility 0s;
+  transition: none;
 }
 
 .site-menu__inner {
   display: grid;
   gap: var(--space-3);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition:
+    opacity var(--dur-1) var(--ease-standard),
+    transform var(--dur-1) var(--ease-standard);
+}
+
+.site-menu[data-open] .site-menu__inner {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--dur-2) var(--ease-standard),
+    transform var(--dur-2) var(--ease-respond);
 }
 
 .site-menu__label {
@@ -697,13 +567,19 @@ a:focus-visible > .site-nav__mark {
     text-decoration-color var(--dur-1) var(--ease-standard);
 }
 
-.site-menu__link:hover,
-.site-menu__link:focus-visible {
-  color: color-mix(in oklch, var(--_acc) 38%, #fff);
-  text-decoration-color: color-mix(in oklch, var(--_acc) 70%, transparent);
+.site-menu__link:hover {
+  color: #fff;
+}
+
+.site-menu__link:active,
+.site-menu__link[data-pressed] {
+  color: #fff;
+  text-decoration-color: rgb(var(--statement-rgb) / 0.7);
 }
 
 .site-menu__link:focus-visible {
+  color: color-mix(in oklch, var(--_acc) 38%, #fff);
+  text-decoration-color: color-mix(in oklch, var(--_acc) 70%, transparent);
   outline: 2px solid var(--_acc);
   outline-offset: -2px;
   border-radius: 6px;
@@ -759,22 +635,6 @@ html.is-menu-open {
   padding: 20px clamp(24px, 4.45vw, 64px) 24px;
 }
 
-.site-end__name {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  font-family: var(--font-editorial);
-  font-size: 1.25rem;
-  color: #f3eee7;
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color var(--dur-1) var(--ease-standard);
-}
-
-.site-end__name:hover {
-  border-bottom-color: var(--red);
-}
-
 .site-end__links {
   display: flex;
   flex-wrap: wrap;
@@ -782,13 +642,31 @@ html.is-menu-open {
   min-width: 0;
 }
 
+/*
+ * LinkedIn and the résumé keep to one line together: in a narrow window the email address takes the first line and
+ * the two share the next (Harlie's brief, 2026-09-28: at 360px "Résumé" wrapped onto a line of its own).
+ */
+.site-end__pair {
+  display: flex;
+  gap: inherit;
+}
+
+/*
+ * The email address, LinkedIn and the résumé: a little brighter and in the site's cool white (Harlie's brief,
+ * 2026-09-28: "clearly visible ... not buried in very low-contrast footer text. Preserve restraint"; they were a warm
+ * grey, #c9c3bb, and the copyright half white), so they read as the ways to reach Harlie without growing.
+ */
 .site-end__link {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
+  /* A little room either side for the focus ring's inner line, without moving the words. */
+  margin-inline: -6px;
+  padding-inline: 6px;
+  border-radius: 4px;
   font-family: var(--font-sans);
   font-size: 0.875rem;
-  color: #c9c3bb;
+  color: #e2e4ec;
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition:
@@ -797,21 +675,21 @@ html.is-menu-open {
 }
 
 .site-end__link:hover {
-  color: #f3eee7;
-  border-bottom-color: rgb(243 238 231 / 0.5);
+  color: #fff;
+  border-bottom-color: rgb(255 255 255 / 0.55);
 }
 
-.site-end__name:focus-visible,
 .site-end__link:focus-visible {
-  outline: 1px solid var(--color-focus);
+  outline: 2px solid var(--color-focus);
   outline-offset: 3px;
+  box-shadow: var(--focus-inner-line);
 }
 
 .site-end__copy {
   margin: 0 0 0 auto;
   font-family: var(--font-sans);
   font-size: 0.75rem;
-  color: rgb(243 238 231 / 0.5);
+  color: rgb(236 238 246 / 0.64);
 }
 
 @media (max-width: 599.98px) {
@@ -821,9 +699,13 @@ html.is-menu-open {
   }
 }
 
-/* A case study's Previous and Next project buttons: small red pills in the footer's lower corners. */
+/*
+ * A case study's Previous and Next project buttons: small pills in the footer's lower corners. The space between the
+ * label and its arrow (and the loader, while it shows) is each one's own margin, not the pill's gap: the gap also fell
+ * either side of the two hidden stateful icons, so the words sat 16px off centre (Harlie's brief, 2026-09-28).
+ */
 .site-end__pager {
-  gap: 8px;
+  gap: 0;
   min-height: 40px;
   padding: 0 16px;
   font-family: var(--font-sans);
@@ -834,6 +716,22 @@ html.is-menu-open {
   text-decoration: none;
 }
 
+/*
+ * A lighter outline than the page's other pills (.stateful's 0.34, components.css, which loads after this file; hence
+ * the second class): the words stay white and 13px, so the buttons are as easy to find, but the ending weighs less
+ * than the case study above it (Harlie's brief, 2026-09-28).
+ */
+.site-end .site-end__pager {
+  border-color: rgb(255 255 255 / 0.24);
+}
+
+/* Touch screens: a 44px target, like every other control there. */
+@media (pointer: coarse) {
+  .site-end__pager {
+    min-height: 44px;
+  }
+}
+
 .site-end__pager .stateful__loader,
 .site-end__pager .stateful__check {
   width: 0;
@@ -841,29 +739,36 @@ html.is-menu-open {
 
 .site-end__pager[data-state='loading'] .stateful__loader {
   width: 16px;
-  margin-right: 0;
+  margin-right: 8px;
 }
 
 .site-end__pager-arrow {
+  margin-left: 8px;
   font-weight: 400;
 }
 
-.site-end__pager:focus-visible {
-  outline: 1px solid var(--color-focus);
-  outline-offset: 3px;
+.site-end__pager--previous .site-end__pager-arrow {
+  margin: 0 8px 0 0;
 }
 
 /*
- * A case study's ending: one row, well below the last section. Previous project at the left, the links and the
- * copyright between, Next project at the right. Narrow windows: the two buttons on one line, the links under them.
+ * A case study's ending: one row under the last section. Previous project at the left, the links and the copyright
+ * between, Next project at the right. Narrow windows: the two buttons on one line, the links under them.
+ *
+ * Supporting navigation, not a section of its own (Harlie's brief, 2026-09-28: the footer "takes too much viewport";
+ * reduce its height and visual weight, keep Previous and Next easy to find and the links reachable). Its top padding
+ * was clamp(72px, 8vw, 120px), so it took 17.8 to 24.2% of a desktop window (187px of 900 at 1440) and left 136 to
+ * 196px of black between the held picture and the row. Now 32 to 48px above the row and 20px below it: 102 to 112px,
+ * about 10 to 14%. CaseStory and ClientWork measure the footer every time (--end-rows, --cw-footer-h), so the pages'
+ * ends follow on their own; the words still end at least 24px above the footer (CaseStory's settleEnd).
  */
 .site-end[data-pager] .site-end__inner {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas: 'previous contact next';
-  gap: 16px 32px;
-  padding-top: clamp(72px, 8vw, 120px);
-  padding-bottom: 28px;
+  gap: 8px 32px;
+  padding-top: clamp(32px, 3vw, 48px);
+  padding-bottom: 20px;
 }
 
 .site-end__pager--previous {
@@ -890,28 +795,38 @@ html.is-menu-open {
   margin: 0;
 }
 
+/*
+ * Below 900px: 24px above the buttons (it was clamp(56px, 12vw, 80px); Harlie's brief, 2026-09-28, the footer's
+ * height), and the copyright on the links' line wherever it fits (a tablet, a landscape phone); on a phone it wraps
+ * under them on its own. 211px (25% of an 844px phone) before, about 150px now.
+ */
 @media (max-width: 899.98px) {
   .site-end[data-pager] .site-end__inner {
     grid-template-columns: auto auto;
     grid-template-areas:
       'previous next'
       'contact contact';
-    padding-top: clamp(56px, 12vw, 80px);
+    padding-top: 24px;
   }
 
   .site-end__contact {
     justify-content: flex-start;
     gap: 0 24px;
   }
+}
 
-  .site-end__contact .site-end__copy {
-    width: 100%;
-    margin-top: 4px;
+/*
+ * Phones: the two buttons still share their line, closer together (Harlie's QA pass, 2026-09-28: one above the other
+ * they made the ending 271 to 315px tall, and on a short phone the last step had no room left between the held band
+ * and the ending). Both fit from 344px wide (292px of buttons); only narrower still do they stack.
+ */
+@media (max-width: 419.98px) {
+  .site-end[data-pager] .site-end__inner {
+    column-gap: 12px;
   }
 }
 
-/* The narrowest phones: the two buttons one above the other, then the links. */
-@media (max-width: 419.98px) {
+@media (max-width: 343.98px) {
   .site-end[data-pager] .site-end__inner {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:

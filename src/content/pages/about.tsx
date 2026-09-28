@@ -4,21 +4,18 @@ import type { ImageId } from '../media'
  * Copy of the /about page (src/components/about/AboutContent.tsx).
  *
  * Sources (see docs/content-provenance.md):
- * - Introduction (brief v21; copy from Harlie's editorial pass, v23): the
- *   label, name, descriptor and three short paragraphs (ABOUT.intro).
- * - Education: the résumé (public/resume/harlie-katz-resume.pdf). School,
- *   degree, minor, certificate and Sutardja Center, "Aug 2023 - May 2026".
- *   GPA is left out on purpose. Wording and paragraph are Harlie's (v26). The two
- *   paragraphs are Harlie's (brief v8, section 15) with one accuracy edit:
- *   "psychology" is dropped from the subjects, because the résumé's
- *   coursework (Artificial Intelligence, Large Language Models, Machine
- *   Learning, Computational Cognitive Modeling, Data Analytics, AI
- *   Governance, Human Behavior, Computer Science, User Experience, Economic
- *   Systems) does not name it. Machine learning, data science (the minor and
- *   Data Analytics), computer science, user experience and human cognition
- *   (the Cognitive Science degree, Computational Cognitive Modeling) are all
- *   supported. The separate coursework list is gone (brief v8: no duplicate
- *   list of the same subjects).
+ * - Introduction (Harlie's brief of 2026-09-28, which replaces the bio Harlie supplied earlier): the label, the name,
+ *   a three-part descriptor and two short paragraphs (ABOUT.intro), in that order of weight, then the portrait. The
+ *   paragraphs say how Harlie works (notice where a system breaks down, study how the work is done and what the data
+ *   shows, then build the fix or define it for engineering), which is what the case studies show. No employers,
+ *   metrics or list of projects: the work below and the case studies carry those.
+ * - Education: the résumé (public/resume/harlie-katz-resume.pdf). School, degree, minor, certificate and Sutardja
+ *   Center, "Aug 2023 - May 2026" (years only on the site). GPA is left out on purpose. The certificate keeps the
+ *   résumé's own name, "Certificate in Entrepreneurship & Technology", with Harlie's "Berkeley’s Sutardja Center"
+ *   (2026-09-28). The coursework line names four course titles from Harlie's transcript (DATA C100, INDENG 115,
+ *   SOCIOL 150 and PHILOS 132), written out in full; titles only, nothing else from that document. The thesis is
+ *   the brief's: Cognitive Science for human intelligence and behavior, Data Science for a computational view of
+ *   them, as a perspective, not a list of subjects.
  * - Experience is no longer on this page (brief v21); the roles are in the
  *   résumé and the case studies.
  * - Creative work: the original creative portfolio (/creative/) and An
@@ -33,17 +30,33 @@ import type { ImageId } from '../media'
 const FILM_POSTER: ImageId = 'film-artistic-end'
 
 export const ABOUT = {
+  /**
+   * The page's meta description (About.tsx): the identity line the homepage and the site description share, then the
+   * page's sections (Harlie's brief, 2026-09-28; it was "Harlie Katz builds AI-enabled products and operational
+   * tools", a phrase the brief retires).
+   */
+  description: 'Harlie Katz works in AI product, implementation, and product operations. Education at UC Berkeley, creative work, and contact.',
   /** Brief v21: the old creative portfolio's About format (a small label, the name, a descriptor, short paragraphs, the portrait at the right). */
   label: 'About',
   name: 'Harlie Katz',
-  /** Harlie's own wording (the résumé header, AI IMPLEMENTATION | PRODUCT STRATEGY & OPERATIONS). */
-  descriptor: 'AI implementation · Product strategy and operations',
-  /** Harlie's editorial pass (v23): the name heading introduces Harlie, and the education detail is not repeated from Education. */
+  /**
+   * Three concrete categories the work shown supports (Harlie's brief, 2026-09-28: at most three; it was "AI
+   * implementation · Product strategy and operations", from the résumé header). AI product first: the leasing
+   * assistant, and the two builds that grew from the AI tool concept Harlie presented at PlanetArt (both run on rules,
+   * as their pages say); implementation for the leasing requirements, testing and rollout; product operations for the
+   * PlanetArt work. AboutContent.tsx splits it at each " · ".
+   */
+  descriptor: 'AI product · Implementation · Product operations',
+  /**
+   * Harlie's brief of 2026-09-28: two short paragraphs, 59 words, in Harlie's register rather than the brief's own
+   * sentence. The first names what Harlie notices; the second how Harlie works from there, joining the cognitive
+   * science (how the work is actually done), the data science (what the data shows), and the product, AI and
+   * operations work (where automation should help, where a person stays in control, and building or defining the fix)
+   * without listing disciplines. The project list and the early-career paragraph are gone at Harlie's request.
+   */
   intro: [
-    // Harlie's words (v26), each on its own line.
-    'I am incredibly invested in the future of AI implementation.',
-    'Across my experience, I have consistently moved beyond my defined role to identify operational friction, uncover opportunities, and develop solutions.',
-    'I am pursuing early-career roles in AI product management, strategy, and implementation. I hope to join a company I’m excited to grow with and contribute to from day one.',
+    'I’m drawn to the point where a system stops working and people start working around it.',
+    'From there, I study how the work is actually done and what the data shows. Then I map where automation should help and where a person should stay in control, and either build the fix or define it for an engineering team.',
   ],
   portraitLabel: 'Portrait of Harlie Katz',
 
@@ -51,14 +64,38 @@ export const ABOUT = {
   education: {
     /** Harlie's wording (v26): three lines, the school with its years, then the degree and the certificate. */
     school: 'University of California, Berkeley',
-    dates: '2023 to 2026',
-    lines: ['B.A. in Cognitive Science – Data Science minor', 'Certificate in Entrepreneurship and Technology – Sutardja Center'],
-    /** Under the three lines, Harlie's wording (v26). */
-    coursework: 'Coursework: machine learning, data science, user experience, computer science, psychology, human cognition',
-    /** Harlie's paragraph, word for word (v26). */
+    /** Years only, with the en dash the case studies' meta uses (2026-09-28; was "2023 to 2026"). */
+    dates: '2023–2026',
+    // The certificate's name as the résumé has it ("&", not "and"), with Harlie's "Berkeley’s Sutardja Center".
+    lines: ['B.A. in Cognitive Science – Data Science minor', 'Certificate in Entrepreneurship & Technology – Berkeley’s Sutardja Center'],
+    /**
+     * Four actual course titles from Harlie's transcript, written out (Harlie's brief, 2026-09-28: real course names
+     * or no line). It was a list of subjects, one of which ("machine learning") is not a course title.
+     */
+    coursework: 'Courses include Principles and Techniques of Data Science, Industrial and Commercial Data Systems, Social Psychology, and Philosophy of Mind.',
+    /**
+     * The perspective the two fields gave Harlie, secondary to the degree lines (Harlie's brief, 2026-09-28; it was
+     * "I studied intelligence across cognitive and computational systems, learning how people think ...", which the
+     * brief asked to replace).
+     */
     text: [
-      'Studied intelligence across cognitive and computational systems, developing an interdisciplinary foundation for understanding how people think, how intelligent systems are built, and how technology can be designed around human behavior.',
+      'Cognitive Science taught me to start with human intelligence and behavior, and Data Science gave me a computational way to model them. I\u00a0rarely use one without the other.',
     ],
+  },
+
+  /** Get in touch (Harlie's request, 2026-09-27): a name, an email address and a message (ContactForm.tsx). */
+  contactTitle: 'Get in touch',
+  contact: {
+    name: 'Name',
+    email: 'Email',
+    message: 'Message',
+    send: 'Send message',
+    sent: 'Thank you. Your message was sent.',
+    /**
+     * Followed by the site's email address as a mailto link and a full stop (ContactForm.tsx builds it from SITE, so
+     * the address is never typed twice): "Your message could not be sent. Please email harliekatz@berkeley.edu."
+     */
+    failed: 'Your message could not be sent. Please email',
   },
 
   creativeTitle: 'Creative work',
@@ -66,15 +103,21 @@ export const ABOUT = {
     /** The restored original creative homepage (a separate static build, outside the router). */
     href: '/creative/',
     title: 'Creative Portfolio',
-    /** Beneath the title (Harlie's editorial pass, v23). */
-    line: 'Film and visual art',
+    /**
+     * Each card's line is kind · scope or role (Harlie's brief, 2026-09-28: one taxonomy for the three cards, where
+     * a collection, a category and a single work had mixed scope, medium and role).
+     */
+    line: 'Full portfolio · Film and visual art',
     action: 'Open portfolio',
   },
-  /** The creative portfolio's Charcoal Art page (a separate static build: a plain link, full page load). */
+  /**
+   * The creative portfolio's Charcoal Art page (a separate static build: a plain link, full page load). The title is
+   * that page's own name (it was "Art"); the three drawings are portraits and figures.
+   */
   art: {
     href: '/creative/art',
-    title: 'Art',
-    line: 'Charcoal drawings',
+    title: 'Charcoal Art',
+    line: 'Drawings · Portraits and figures',
     action: 'View art',
     /** Harlie's three portrait drawings (A Life, Beautifully Worn; Time Unspoken; Written by Time), side by side in the one link. */
     images: ['about-art', 'about-art-time-unspoken', 'about-art-written-by-time'] as ImageId[],
@@ -92,8 +135,14 @@ export const ABOUT = {
     youtube: 'Watch on YouTube',
   },
 
+  /**
+   * The direct ways to reach Harlie, beside "Send message" (Harlie's request, 2026-09-28: email, LinkedIn and the
+   * résumé "clearly visible near the contact section", not only in the footer). The address and links are the
+   * site's own (src/content/site.ts), as the footer shows them; no phone number and no GitHub.
+   */
   links: {
-    label: 'Email and LinkedIn',
+    label: 'Email, LinkedIn, and résumé',
     linkedin: 'LinkedIn',
+    resume: 'Résumé',
   },
 }

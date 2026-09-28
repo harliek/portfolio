@@ -4,6 +4,14 @@ import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { CursorLight } from '../ui/CursorLight'
 
 /**
+ * Where the film starts on arrival: the frame its poster was taken from (media.ts, film-bg-poster: 12.5s), so the
+ * poster hands over to the moving film without a cut (Harlie's brief, 2026-09-28: about 1s in, the still of the
+ * standing figure cut to the film's first frame, a blurred close-up). A media fragment, so the browser starts there
+ * itself; the loop then runs the whole film from its start.
+ */
+const POSTER_AT = 12.5
+
+/**
  * The homepage's film (brief v16): Harlie's original cinematic loop, fixed
  * behind the whole homepage. It autoplays muted and inline, loops, and has
  * no controls, and the pointer no longer bends it (Harlie's request: the
@@ -49,7 +57,7 @@ export function HomeFilm() {
         <video
           ref={videoRef}
           className="home-film__video"
-          src={file.src}
+          src={`${file.src}#t=${POSTER_AT}`}
           width={file.width}
           height={file.height}
           muted

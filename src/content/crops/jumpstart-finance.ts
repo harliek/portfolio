@@ -5,12 +5,14 @@ import type { ImageAsset } from '../media'
  * node scripts/prepare-media.mjs crops jumpstart-finance). Keys are image ids; each entry
  * is a full ImageAsset (type: 'image') with the dimensions the task prints.
  *
- * The four original 2024 prototype screens, each cropped to its phone body
- * (584×1194 in every file) plus 8px of transparent margin, so all four sit in
- * a 600×1210 canvas and render at exactly the same size in the case frame.
+ * Three of the original 2024 prototype screens (the profile, lessons and
+ * community screens, proto 2–4), each cropped to its phone body (584×1194 in
+ * every file) plus 8px of transparent margin, so all three sit in a 600×1210
+ * canvas at exactly the same size. The case page itself now shows Harlie's
+ * tile phones (jf-tile-*); these crops are no longer rendered.
  * Sources are the matte-removed full-resolution screens that
  * `node scripts/prepare-media.mjs images` writes to .media-cache/covers/
- * (from JumpStart Finance/proto 1–4.png; the screens are untouched).
+ * (from JumpStart Finance/proto 2–4.png; the screens are untouched).
  */
 const screen = (id: string, proto: number, rect: string, alt: string): ImageAsset => ({
   id,
@@ -25,18 +27,12 @@ const screen = (id: string, proto: number, rect: string, alt: string): ImageAsse
   provenance: 'original-artifact',
   synthetic: false,
   source: `JumpStart Finance/proto ${proto}.png`,
-  role: 'Jumpstart Finance case frame (prototype screen)',
+  role: 'Prototype screen crop (not rendered since the case page uses jf-tile-*)',
   crop: `${rect} of .media-cache/covers/proto-${proto}.png (the phone body plus 8px of transparent margin)`,
   opaque: { x: 1.33, y: 0.66, w: 97.33, h: 98.68 },
 })
 
 export const JUMPSTART_FINANCE_CROPS = {
-  'jf-screen-home': screen(
-    'jf-screen-home',
-    1,
-    'x 16–616, y 2–1212',
-    'Jumpstart prototype home screen with a sample balance, a tip about diversifying investments, six learning topics (portfolio, budget, banks, stocks, taxes, spending), and a list of simulated events.',
-  ),
   'jf-screen-lessons': screen(
     'jf-screen-lessons',
     3,

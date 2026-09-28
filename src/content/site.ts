@@ -2,12 +2,12 @@
 export const SITE = {
   name: 'Harlie Katz',
   titleSuffix: 'Harlie Katz',
-  description: 'Harlie Katz, AI product management, strategy, and implementation. Case studies and creative work.',
+  // The one identity line the homepage, About and index.html share (Harlie's brief, 2026-09-28).
+  description: 'Harlie Katz works in AI product, implementation, and product operations. Case studies and creative work.',
   email: 'harliekatz@berkeley.edu',
   emailHref: 'mailto:harliekatz@berkeley.edu',
   linkedin: 'https://www.linkedin.com/in/harliekatz/',
   resume: '/resume/harlie-katz-resume.pdf',
-  resumeDownloadName: 'Harlie-Katz-Resume.pdf',
 } as const
 
 /** Document titles use a middle dot (no em dashes or colons in visitor-facing copy). */

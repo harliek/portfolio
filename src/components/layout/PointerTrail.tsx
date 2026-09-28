@@ -2,16 +2,12 @@ import { useEffect, useRef } from 'react'
 import { MOTION } from '../../config/motion'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
-
-/** Over reading text the trail is dimmer and shorter. */
-const TEXT = 'p, li, h1, h2, h3, h4, dt, dd, figcaption, blockquote, label'
-/** Over playback and other controls, links and video it nearly disappears (their own hover states lead). */
-const CONTROL = 'video, iframe, button, [role="button"], .button, a[href], summary, input, select, textarea'
+import { pointerOver } from './pointerContext'
 
 const FINE_POINTER = '(hover: hover) and (pointer: fine)'
 
-/** The same colour at zero alpha, so the tail fades without a dark fringe. */
-const clear = (color: string) => (/^rgb\([^/]*\)$/.test(color) ? color.replace(/\)$/, ' / 0)') : 'rgb(238 234 226 / 0)')
+/** The same colour at zero alpha, so the tail fades without a dark fringe (the tokens are written rgb(r g b)). */
+const clear = (color: string) => (/^rgb\([^/]*\)$/.test(color) ? color.replace(/\)$/, ' / 0)') : 'transparent')
 
 interface Point {
   x: number
@@ -20,18 +16,24 @@ interface Point {
 }
 
 /**
- * A short glowing trail that stays attached to the real mouse pointer: a
- * crisp, near-white luminous core inside a soft violet glow (three halo
+ * A short glowing trail that stays attached to the mouse pointer: a
+ * crisp, near-white luminous core inside a soft blue violet glow (three halo
  * layers added together, so the light is brightest at the centre line),
- * tapering to nothing at its tail. Points expire after ~150ms, so the tail retracts into the cursor
- * and the whole trail is gone within ~200ms of the pointer stopping. Its
- * length is capped (the tail is cut, never a long straight streak), and it
- * dims over text and almost vanishes over controls and video. Nothing
+ * tapering to nothing at its tail. Points expire after MOTION.trail.lifeMs (lengthened at Harlie's
+ * request, "the light trail a bit longer"), so the tail retracts into the ball of light and the
+ * whole trail is gone shortly after the pointer stops. Its
+ * length is capped (the tail is cut, never a long straight streak). Nothing
  * detached: no sparkles, no particles, no blobs.
  *
- * The system cursor stays visible; the canvas never takes pointer events,
- * so clicks and text selection are untouched (the trail also hides while
- * a mouse button is held, e.g. during a selection). Nothing in React
+ * Its head sits under the blue violet ball of light that stands in for the system
+ * cursor (CustomCursor, which draws exactly at the pointer), and it fades out
+ * while that light's outline wraps a navigation item or "Watch the film"
+ * (cursor.css). It is decoration, so it passes beneath the page (Harlie's brief, 2026-09-28: "Keep decorative
+ * lighting underneath functional UI"; stage.css): copy, fields, buttons, focus rings, the header and the footer are
+ * drawn over it, and only the ball is above them. Over a form, its fields and controls it nearly disappears, over
+ * copy it is dimmer and shorter (pointerContext.ts, the same reading as the ball's and the soft light's). The canvas
+ * never takes pointer events, so clicks and text selection are untouched
+ * (the trail also hides while a mouse button is held, e.g. during a selection). Nothing in React
  * re-renders on movement; one animation-frame loop runs only while the
  * trail is visible. Off for touch and coarse pointers, under reduced motion
  * (the operating system setting), and while anything is fullscreen.
@@ -49,10 +51,12 @@ export function PointerTrail() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     const cfg = MOTION.trail
+    // Every colour is a token of the pointer's light (tokens.css), so one edit there recolours the trail too.
     const styles = getComputedStyle(document.documentElement)
-    const core = styles.getPropertyValue('--trail-core').trim() || 'rgb(250 248 255)'
-    const glow = styles.getPropertyValue('--trail-glow').trim() || 'rgb(214 202 255)'
-    const halo = styles.getPropertyValue('--trail-halo').trim() || 'rgb(160 132 255)'
+    const core = styles.getPropertyValue('--trail-core').trim()
+    const glow = styles.getPropertyValue('--trail-glow').trim()
+    const halo = styles.getPropertyValue('--trail-halo').trim()
+    if (!core || !glow || !halo) return
 
     let points: Point[] = []
     let lastTarget: EventTarget | null = null
@@ -163,11 +167,9 @@ export function PointerTrail() {
       }
       if (e.target !== lastTarget) {
         lastTarget = e.target
-        const el = e.target instanceof Element ? e.target : null
-        const control = el?.closest(CONTROL)
-        const text = !control && el?.closest(TEXT)
-        dimTarget = control ? cfg.overControl : text ? cfg.overText : 1
-        lengthTarget = control || text ? cfg.lengthPx * cfg.shortShare : cfg.lengthPx
+        const over = pointerOver(e.target instanceof Element ? e.target : null)
+        dimTarget = over === 'text' ? cfg.overText : over ? cfg.overControl : 1
+        lengthTarget = over ? cfg.lengthPx * cfg.shortShare : cfg.lengthPx
       }
       const now = performance.now()
       const events = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : []

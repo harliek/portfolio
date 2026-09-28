@@ -14,9 +14,9 @@ const project = projectById('spreadsheet-agent')
 export default function SpreadsheetAgent() {
   return (
     <CasePage project={project} className="page-spreadsheet-agent">
-      <CaseStory project={project} title={C.title} meta={C.meta} lede={C.lede} steps={C.steps} stage={{
+      <CaseStory title={C.title} meta={C.meta} lede={C.lede} steps={C.steps} stage={{
           kind: 'video',
-          src: '/media/video/sa-demo-scrub-1440.mp4',
+          src: '/media/video/sa-demo-1440.mp4',
           poster: '/media/img/sa-demo-poster-1440.jpg',
           width: 1440,
           height: 900,
@@ -26,6 +26,8 @@ export default function SpreadsheetAgent() {
           free: true,
           // A little faster than recorded (Harlie's request).
           rate: 1.5,
+          // Harlie's brief, 2026-09-28: the recording is polished enough to be taken for a shipped product.
+          status: 'Prototype',
         }} />
     </CasePage>
   )

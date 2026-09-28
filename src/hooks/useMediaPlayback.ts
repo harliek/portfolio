@@ -10,20 +10,16 @@ const audible = (el: HTMLMediaElement) => !el.paused && !el.muted && el.volume >
  *   audio element with sound pauses. Muted previews never pause anything and
  *   are never paused by this rule, so several muted previews may play
  *   together (e.g. the stacked Creative Production films while visible);
- * - exclusive players (`data-exclusive`, e.g. a player that must stop others
- *   even while muted) keep the earlier rule: starting one pauses every other
- *   non-ambient video;
  * - all media pause when the document becomes hidden.
- * Paused media are never resumed by this hook. A case study's DemoVideo
- * resumes itself when the page is visible again (unless the visitor paused
- * it); when this policy pauses a player, the player counts that as the
- * visitor's pause and does not restart on its own. Its larger view pauses the
- * inline copy itself, so two copies of one recording never play.
+ * Paused media are never resumed by this hook. The muted players that play by
+ * themselves (a case study's recording, the Creative Production excerpts, the
+ * homepage tiles and film) start again themselves when the page is visible
+ * again; a film with sound, or a recording's larger view, stays paused until
+ * the visitor plays it.
  *
- * Ambient loops (`data-ambient`: the muted stage background and the About art
- * preview) are exempt in both directions: they never pause a film and a film
- * start does not count them. They resume themselves when the page is visible
- * again.
+ * Ambient loops (`data-ambient`: the About art preview) are exempt in both
+ * directions: they never pause a film and a film start does not count them.
+ * They resume themselves when the page is visible again.
  */
 export function useMediaPlayback() {
   useEffect(() => {
@@ -33,13 +29,9 @@ export function useMediaPlayback() {
     const enforce = (event: Event) => {
       const target = event.target
       if (!(target instanceof HTMLMediaElement) || target.hasAttribute('data-ambient') || target.paused) return
-      if (target.hasAttribute('data-exclusive')) {
-        others(target).forEach((el) => el.pause())
-        return
-      }
       if (!audible(target)) return
       others(target).forEach((el) => {
-        if (audible(el) || el.hasAttribute('data-exclusive')) el.pause()
+        if (audible(el)) el.pause()
       })
     }
     const onVisibility = () => {

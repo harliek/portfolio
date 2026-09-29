@@ -128,3 +128,4 @@ Verified with Playwright against the dev server at 1440×900, 1280×720, 768×10
 - Tests: the image-dialog accessibility check waits for the view to finish fading in (it failed intermittently under load on the old build too).
 - Verified: tsc (app + node), `eslint .`, production build, full Playwright suite (desktop, mobile, media), route crawl with no failed requests or console errors.
 - Not yet done: replacing GSAP ScrollTrigger (approved; it will ship separately after its own equivalence testing).
+- Later the same day (Harlie's requests): the homepage subtitle reads "AI Product Strategy, Deployment & Implementation" ("&" kept with "Implementation" where it wraps on phones), and the phone Work menu no longer labels Spreadsheet Assistant and Merchandising Dashboard "Independent prototype" (their rows show the name alone). Full Playwright suite: 68 passed, 3 skipped.

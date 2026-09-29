@@ -110,7 +110,8 @@ export function Home() {
               </span>
             </h1>
             <p className="hero__line">
-              <TypeLine text="AI Product Strategy & Implementation" delay={1.0} duration={0.8} />
+              {/* "&" stays with "Implementation" where the line wraps (phones). */}
+              <TypeLine text={'AI Product Strategy, Deployment &\u00a0Implementation'} delay={1.0} duration={0.8} />
             </p>
           </div>
         </div>

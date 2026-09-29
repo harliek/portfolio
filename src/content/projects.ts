@@ -49,8 +49,12 @@ export interface Project {
   displaySubtitle: string
   /** Supporting label (carousel caption, case subtitle when none is given). */
   label: string
-  /** Very short context for the Work shelf and menu, as on the case page (employer or internship, or independent work). */
-  category: string
+  /**
+   * Very short context for the Work shelf and menu, as on the case page (employer or internship). None for the
+   * Spreadsheet Assistant and the Merchandising Dashboard (Harlie's request, 2026-09-29: delete "Independent
+   * prototype"); their menu entries show the name alone.
+   */
+  category?: string
   /** One short factual sentence for the Selected work index. */
   summary: string
   /** Year or timeframe for lists. */
@@ -127,7 +131,6 @@ export const PROJECTS: Project[] = [
     displayName: 'Spreadsheet Assistant',
     displaySubtitle: 'A rule-based prototype for generating editable spreadsheets from written requests',
     label: 'Request-to-spreadsheet prototype',
-    category: 'Independent prototype',
     summary: 'A rule-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
     year: '2026',
     dateRange: '2026',
@@ -179,7 +182,6 @@ export const PROJECTS: Project[] = [
     displayName: 'Merchandising Dashboard',
     displaySubtitle: 'An independent prototype for product analysis and replenishment planning',
     label: 'Independent merchandising prototype',
-    category: 'Independent prototype',
     summary: 'An independent application prototype for reviewing product, pricing, inventory, and vendor information with synthetic data.',
     year: '2026',
     dateRange: '2026',

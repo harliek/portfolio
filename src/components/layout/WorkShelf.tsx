@@ -42,7 +42,7 @@ function ProjectLink({ project, current, thumbs, className, onNavigate }: { proj
       </span>
       <span className="shelf-item__text">
         <span className="shelf-item__name">{project.displayName}</span>
-        <span className="shelf-item__meta">{current ? 'Current page' : project.category}</span>
+        {(current || project.category) && <span className="shelf-item__meta">{current ? 'Current page' : project.category}</span>}
       </span>
     </>
   )

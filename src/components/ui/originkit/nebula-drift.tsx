@@ -731,7 +731,9 @@ function OriginkitBaseNebulaDrift({
 
     over: false,
 
-    moveAt: 0,
+    // A pointer that has never moved counts as long gone, so the resting field sleeps once its first black frame
+    // is drawn.
+    moveAt: -Infinity,
     known: false,
   })
 
@@ -1385,6 +1387,8 @@ function OriginkitBaseNebulaDrift({
 
     // The pointer anywhere over the window (the page's content lies over the field, so it gets no events of its own).
     const onPointerMove = (e: PointerEvent) => {
+      // Reduced motion never steps the field, so the pointer has nothing to drive: it stays black and asleep.
+      if (reduceMotion) return
       const rect = host.getBoundingClientRect()
       if (!rect.width || !rect.height) return
       const p = pointerRef.current

@@ -457,3 +457,94 @@ Sources as above (S1 Harlie's instructions, S2 project files and recordings, S3 
 - Merchandising Platform: authorship (“I developed this independent prototype”) rests on the brief; the 2026 timeframe comes from `projects.ts` (the in-app date 2026-09-01 belongs to the synthetic data); “no backend” and “edits are stored in the browser” come from the app's own text (no reload is shown); CSV export and “does not place orders” are stated by the drawer's note (no export is run); the catalog filters are shown but not used; the Ask result's Order column is read from its header and summary line.
 - Spreadsheet Agent: “can be reopened” (the new sheet is listed first in All Sheets and starred, but never reopened on screen); “editable” (toolbar, formula bar and an “Ask for a change” field are visible, but no cell edit is typed); only Build sheet of the three plan controls is used; the 2026 timeframe comes from `projects.ts`.
 
+<a id="copy-brief-2026-09-28"></a>
+
+## Copy revision: Harlie's copy brief of 2026-09-28
+
+Harlie's brief of 2026-09-28 is the editorial target. Its factual statements are recorded here as **USER** (Harlie's own statement, a user-provided fact). The other codes: **ART** (a document or image made during the work), **CODE** (prototype source, file named), **REC** (a recording, at a time), **SELF** (Harlie's later self-written documents: résumés, READMEs, earlier site copy). Copy only: no layout, media or behaviour changes. Deck pages are PDF pages of `PlanetArt/planetart presentation.pdf`.
+
+### Where each piece of copy sits
+
+- **Stage status labels carry provenance beside the pictures.** The label is one line (no wrap), so each is short. In a gallery's column it has to fit beside the small picture above the large one: about 160px at 900 x 700, 190px at 1280 x 720. Harlie's longer captions were shortened to fit:
+  - CafePress: "Concept UI" (storefront), "Later illustration" (drinkware; made 2026-09-25), "Proposed · not built" (assistant; made 2026-09-25). These replace "Created after the internship to illustrate the recommendations." and "Later illustration of a proposed feature. No working assistant was implemented."
+  - AI Leasing: "Concept mockup". This replaces "Illustrative concept screens with synthetic information. Not screenshots of the production assistant." The "invented figures" and "not the deployed system" wording stays in each picture's description (alt).
+  - Jumpstart: "Redrawn in 2026 from our 2024 prototype". This replaces "Screens redrawn in 2026 from the team's 2024 prototype."
+  - Merchandising Dashboard: "Prototype · synthetic data".
+  - Spreadsheet Assistant: "Rules-based · no language model". This is the one place the page states it.
+
+  The larger view shows each picture's own label (`ImageDialog` `statuses`).
+- **Result sentences** go in each page's last section. There is no results slot, and new sections are out of scope.
+- **Spreadsheet Assistant** keeps its two sections. The brief's "Request" and "Review the proposed plan" share the first ("Request and plan review").
+- **CafePress UK** links to the Merchandising Dashboard once, as the last sentence of the last section ("My independent Merchandising Dashboard is a separate, later project."). The footer's Next project stays in the case studies' loop (Creative Production). Changing it would change navigation.
+- **Not placed (no slot):**
+  - The Creative Production captions ("Interview film produced by Shift Content for Nickleby Capital.", "Agency campaign film shown as part of the production work I supported."). No film has a caption element, and each text's first sentence already names Shift Content as producer.
+  - The Creative Production opening. The page has none and does not need one.
+  - "I also contributed to pitch decks, Google Ads campaigns, and CSS updates to the agency's Squarespace website." This is supported (journals, report) but has no existing slot.
+  - Destination names on the footer's Previous and Next pills. The pills are nowrap and share one row at 390px, where the names would overflow. They stay in each pill's accessible name ("Next project, Spreadsheet Assistant").
+
+### Claims
+
+| Page | Public claim | Source | Status |
+|---|---|---|---|
+| About | Two biography paragraphs; education paragraph | USER (verbatim) | Perspective. "Completed my Berkeley degree in three years": ART (registrar record, Fall 2023 to 05/15/2026) |
+| About | Degree, minor, certificate, 2023–2026 (unchanged listing) | ART (registrar: major, minor, dates); SELF (certificate: résumé only) | Certificate completion still unconfirmed |
+| About | "A short film I wrote, directed, filmed, and edited." | SELF (Harlie's original portfolio credits: writer, director, cinematographer, editor) | Credits kept as documented; not independently verified |
+| About | "Selected drawings and studies" / "Drawn in charcoal." | ART (the creative site's "Charcoal Art" page; the three drawings shown are charcoal portraits) | Medium supported. "Studies" is Harlie's title |
+| About | "I'm interested in opportunities in applied AI, product development, and implementation."; Email me, LinkedIn, View résumé | USER | The email link keeps the address for screen readers |
+| CafePress | "researched the UK promotional-products market" | ART (deck p.2 "UK B2B market"; storefront concept headline "Branded Promotional Products for UK Businesses") + USER | Harlie's framing of the B2B market |
+| CafePress | "recurring product categories, familiar brands, and environmentally focused ranges across UK competitors" | ART (deck p.4: category-led sites, recognizable brands, recurring eco-friendly products; p.8 top-nav sheet with UK competitor notes "VP UK", "TM UK") | The p.4 logos (Printful, Prodigi, Printify, Vistaprint, 4imprint USA) are not all UK firms; "UK competitors" means their UK offerings |
+| CafePress | "similarities with US merchandising led me to recommend targeted changes to the existing offer" | ART (p.4 "mirrored US-style merchandising"; p.5 takeaway; p.9 rec 1) | Supported. "CafePress did not need a separate UK strategy" removed per the brief |
+| CafePress | UK suppliers; assortment, terminology and currency recommendations; storefront concept | ART (p.5 PF Concept, Ralawise; p.7 language shifts and GBP; p.8 "early prototype elements") | Supported. The concept image has ChatGPT origin metadata (see the evidence report) |
+| CafePress | Operational recommendations; AI-assisted discovery as a future opportunity | ART (p.9 rec 3; p.14) | Supported |
+| CafePress | Market research, recommendations and a storefront concept; no production launch | ART | Supported |
+| CafePress | Merchandising Dashboard is "a separate, later project" | USER; CODE (repo first commit 2026-09-13) | Supported. Two résumé variants date it Jun–Aug 2026 (SELF, conflicting) |
+| Merch | Mapped fragmented workflows; proposed a shared workspace | ART (deck pp.10–12) | Supported |
+| Merch | "later developed the idea independently" | USER; SELF (README "outside of work"); CODE (repo 2026-09-13) | Supported. An earlier note (v27) said it was built during the internship |
+| Merch | "Eight tools and hundreds of spreadsheets"; engineering's security feedback | SELF / USER only | **Removed** (not documented in the deck) |
+| Merch | One product record joining pricing, margin, inventory, sales, vendor information | CODE (`ProductDrawer.tsx`); REC (0.3 s overview "joined into one view"; 16.6–18.6 s panel) | Supported |
+| Merch | Calculation: recent sales, available stock, incoming units, supplier lead times, minimum orders; safety buffer; one further lead time of demand | CODE (`inventory.ts` `assess()`: 28-day velocity and σ, on hand less committed, `onOrder`, `quotedLeadDays`, MOQ floor, 1.645·σ·√L, order-up-to = ROP + v·L) | Supported. The formula stays out of the paragraph |
+| Merch | "Users can review the inputs before acting on a recommendation" | CODE (`ProductDrawer.tsx` "Show the working"); REC (14.0–15.9 s) | Supported |
+| Merch | Ranked by estimated **contribution** margin at risk, not stock quantity | CODE (`inventory.ts:218` risk × daily velocity × lead days × `unit.contribution`; `Inventory.tsx` sort); REC (21.5 s) | Supported. "The profit a product stands to lose" removed: contribution margin is not profit |
+| Merch | Supports product review, replenishment calculations, order-sheet export; no orders, no production backend; estimates not validated forecasts | CODE (drawer: "does not place orders"; Export order sheet; README "no backend"; `docs/limitations.md`) | Supported. Export is visible in the recording but never clicked |
+| Merch | "Its Ask screen matches supported query patterns and does not use a language model." | CODE (`lib/ask.ts`, `Ask.tsx`: "fixed set of query shapes … There is no language model involved"); REC (Ask screen in the whole recording, shown on the homepage tile and in the larger view) | Supported |
+| Spreadsheet | Interpreter identifies fields, filters, sorting, row limits | CODE (`query.ts`) | Supported |
+| Spreadsheet | "It lists any words it could not interpret instead of silently leaving them out." | CODE (`query.ts` `unmatchedTerms`; `PlanReview.tsx` "Not used"); REC in the **older** recording only (20.5 s) | Narrowed from "flags instructions it cannot interpret": the code lists unused words and does not parse instructions it cannot perform. A request that matches nothing gets guidance and no plan (code only) |
+| Spreadsheet | Plan shows source, filters, columns, sorting; users can revise it | CODE (`PlanReview.tsx` Edit plan: filters, columns, sort, limit; Discard; Build sheet); REC (sa-demo 11.0–13.2 s shows the plan; only Build sheet is pressed) | Supported. Revising is code-supported, not recorded |
+| Spreadsheet | Cell details identify source records in the synthetic catalog | CODE (`CellDetail.tsx`, `provenance.ts`); REC (sa-demo 21.3–24.7 s: dataset, record B2B-1595, field) | Supported |
+| Spreadsheet | Calculated values show their formulas | CODE (`provenance.ts` derived → `CellDetail.tsx` "Calculation") | Code only. The recording shows the derived-column dot but not the formula |
+| Spreadsheet | Manual edits remain distinguishable | CODE (`provenance.ts` "edited", "Your edit"); ART (`docs/screenshots/edited-cell.png`) | Code and repo screenshot. Not in the recordings. An edit back to the original value stops reading as an edit (`docs/value-sources.md`) |
+| Spreadsheet | Undo edits; save sheets to folders | CODE (`useWorkspace.ts`) | Code only. The undo buttons and "No folder" selector are visible but unused in the recording |
+| Spreadsheet | Rules-based, no language model | CODE (README; `docs/limitations.md`) | Supported. The Product résumé's "LLM API" conflicts; the code wins |
+| Leasing | Company, role, October 2024–June 2025 | SELF (chosen résumé) | The meta shows years only. The AI résumé's role title differs |
+| Leasing | "I proposed an AI assistant … worked on its requirements and testing" | USER; SELF (résumés: "Defined development requirements"; AI résumé: "Proposed an AI leasing agent") | Proposal still conflicts with the Sept 10 copy ("was being introduced") |
+| Leasing | A third-party platform supplied the production system | USER (earlier copy names the vendor; not named) | USER only |
+| Leasing | Current pricing and availability vs. established property policies | USER | USER only |
+| Leasing | Which questions the assistant could handle; when staff took over | USER | USER only |
+| Leasing | Tested responses about availability, pricing, tours, application status and leasing policies; flagged answers requiring changes | USER (earlier briefs' test topics) | No test log. "Introduced in lower-risk scenarios" removed, so the rollout does not read as Harlie's |
+| Leasing | Adopted across 18 properties; response time and conversion not independently verified | SELF (résumé) + USER | No adoption document or date. The résumé's figures are not published |
+| Jumpstart | Five-person international team; European Innovation Academy; Porto (meta) | ART (pitch p.2) + SELF | Supported |
+| Jumpstart | First concept aimed at people in their twenties; interviews led to younger users; Harlie helped redirect it | USER | No file records the ages or findings |
+| Jumpstart | "The prototype combined lessons, visible progression, and a forum for financial questions." | ART (pitch pp.5–6; `proto 2–4.png`) | Narrowed: "short" lessons removed (no length shown) |
+| Jumpstart | Presented to investors at the program's close | SELF (résumés) | Not in the project files |
+| Jumpstart | Customer interviews, mobile prototype, landing page, pitch deck | ART (p.10 "Encouraging customer interviews"; pp.5–6 screens; the deck; the pitch's webflow link) + SELF (rebuild README) | Landing page: link and README only |
+| Jumpstart | "The program pitch reported 150 sign-ups in 24 hours." with its qualification | ART (p.10) | Published as the pitch's report. What was counted is unresolved; p.9 lists "First 100 users" as a future milestone, so these were not app users |
+| Creative | Nickleby: one-day shoot; Harlie's equipment, lighting and B-roll | ART (agency case studies); SELF (journal) | Linking the journal's "investment firm" shoot to Nickleby is an inference |
+| Creative | Aristocracy: spring/summer campaign ahead of the Manchester store launch; setup, lighting, on-set coordination, behind-the-scenes | ART (agency case studies); SELF (report) | Supported |
+| Creative | Night Club: an event bringing women together to run after dark; "I filmed participants and supported production on site" | ART (agency case studies: the event); USER (Harlie's part) | Harlie's filming is USER. The report names "a branded Run Club event" only. Gymshark is no longer named (branding, not a documented role) |
+
+## Copy revision: Harlie's copy brief of 2026-09-29
+
+Harlie's brief of 2026-09-29 supersedes the 2026-09-28 copy above wherever they differ. Its wording is used verbatim (USER) except where noted. Copy only. Negative disclaimers were removed from the narrative, and no launch, revenue, performance or capability claim replaced them. Neutral provenance labels are in the case meta ("Independent prototype · Synthetic data", "Rule-based prototype · Synthetic data"). The labels beside pictures ("Illustrative concept screen", "Screens reconstructed from the original prototype", the CafePress later-image caption) are set in the pages' media props.
+
+| Page | Change | Source | Note |
+|---|---|---|---|
+| About | Two new paragraphs; education sentence; contact invitation | USER (verbatim) | Perspective and intent; no employers. The coursework line loses its colon ("Coursework in …"). The three-year degree: ART (registrar record) |
+| About | Creative Portfolio card: title "Creative Portfolio" (the homepage tile's name), line "My creative portfolio brings together films, drawings, and earlier work."; film action "Watch film" | USER | The title was "My creative portfolio", which the new line would have repeated |
+| CafePress | Lede, Competitor research, Localization, Operational recommendations | ART (deck pp.2–9, p.14) + USER | Launch disclaimer and results summary removed. "Promotional products" is Harlie's framing (deck p.2 says "UK B2B market"). The one link to the Merchandising Dashboard is kept as a single sentence: "Merchandising workflows became the focus of a separate project, my independent Merchandising Dashboard." |
+| CafePress | Tile line, project summary and status say "storefront concept", not "prototype" | ART (deck p.8 image, ChatGPT origin metadata) | Narrowed: no coded storefront is documented |
+| Merch | Lede; Product information; Reorder calculations; Product ranking | ART (deck pp.10–12); CODE (`ProductDrawer.tsx`, `inventory.ts` `assess()`, `Inventory.tsx` sort by `marginAtRisk`) | The brief's Replenishment paragraph is split across the existing second and third steps, so the three recording segments stay. Removed: result summary, extended reorder explanation, backend, order placement and Ask statements |
+| Spreadsheet | Lede; Review the plan; Inspect and continue | CODE (`query.ts`, `PlanReview.tsx`, `CellDetail.tsx`, `SpreadsheetGrid.tsx`, `useWorkspace.ts`) | Narrowed: "see which **words of the request** were not recognized" (brief: "which instructions"). The "Not used" line lists words that mapped to no field or filter (`unmatchedTerms`); it does not detect every instruction it cannot perform. Edits, formulas, undo and folders are code-supported, not recorded. The "no language model" sentence is gone; "Rule-based prototype" is in the meta |
+| Leasing | Lede; Information requirements; Staff handoff; Testing and adoption | USER; SELF (résumé: requirements, 18 properties) | Response-time/conversion sentence and the third-party-platform sentence removed. Nothing says Harlie built the assistant |
+| Jumpstart | Lede; Audience; Product concept; Investor pitch | ART (pitch pp.2, 5–6, 10); SELF (résumés); USER (audience change) | "150 sign-ups in 24 hours" is attributed to the program pitch; what was counted is still unresolved. The meta drops "Porto", which the lede now names |
+| Creative | Three film texts | ART (agency case studies); SELF (journal, report); USER | "I set up equipment and lighting" is Harlie's wording; the journal says "helping with all the equipment and lighting". Night Club filming is USER. The brief's opening and "Other agency work" paragraph are not placed: the page has no slot for them (CaseTitle takes a title and meta only) |
+| Site-wide | Homepage tile lines: "Production work on agency films", "UK market research and storefront concept", "Films, drawings, and earlier work"; SEO descriptions aligned; "rules-based" → "rule-based" | — | The Previous and Next pills still show no destination names. They are nowrap and share one row at 390px, and with a name added they overflow (measured: "Next project · Merchandising Dashboard" pushes the page to 509px wide). The names stay in the accessible names |

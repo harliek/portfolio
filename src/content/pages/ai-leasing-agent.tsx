@@ -1,47 +1,40 @@
 /**
- * AI Leasing Agent (brief v19; copy from Harlie's editorial pass, v23, and the September 26 copy): a compact page.
- * The introduction, then three sections, each beside the illustrative interface it goes with, in the order Harlie
- * set for the pictures: the listing (current property information), the inbox (scope and escalation), the dashboard
- * (testing and rollout). No caption (Harlie's request).
+ * AI Leasing Agent (route /work/valiance; brief v19; copy from Harlie's copy brief of 2026-09-28): a compact page.
+ * The introduction, then three sections, each beside the illustrative interface it goes with, in the order Harlie set
+ * for the pictures: the listing, the inbox, the dashboard, in a card-hover gallery. No captions or labels on the
+ * pictures (Harlie's request, 2026-09-28), and no "Illustrative screens" label in the meta line either (Harlie's
+ * request, 2026-09-29).
  *
- * Facts (unchanged from the verified copy): Leasing and Operations Associate,
- * Valiance Capital, Berkeley, October 2024 to June 2025; CRM and leasing
- * operations for more than 1,000 tenants; tested with questions about
- * availability, pricing, tours, application status and leasing policies;
- * introduced in lower-risk scenarios, then expanded; adopted across 18
- * properties; the production assistant ran on a third-party platform.
- *
- * Harlie's QA pass, 2026-09-28 (for Harlie to confirm): the lede names what the assistant was for, "for recurring
- * renter questions" (projects.ts's description, "recurring leasing questions"; docs/content-provenance.md).
- *
- * Harlie's brief of 2026-09-28 (this page is the benchmark): the lede stays as it was; the three sections keep their
- * headings and read as scope, safeguards and rollout, each with the reason behind it (an old price quoted as current;
- * which questions a person must see; lower-risk scenarios first). No sentence says Harlie built or deployed the
- * production assistant, and its platform is not named. "With the conversation attached" rests on the earlier site
- * only; the tested topics and the lower-risk rollout on Harlie's earlier briefs (flagged for Harlie).
+ * Facts: Leasing & Operations Associate, Valiance Capital, October 2024 to June 2025 (résumé); requirements for the
+ * AI leasing assistant (résumé: "Defined development requirements"); adopted across 18 properties (résumé; no adoption
+ * date). Harlie's statements (no project document records them): the proposal, the testing and the situations it was
+ * tested against, the test topics (availability, pricing, tours, application status, leasing policies), approval and
+ * judgment as the handoff points, and the third-party platform (no longer stated on the page; nothing on it says
+ * Harlie built the assistant). Copy brief of 2026-09-29: the response-time and conversion sentence is removed; the
+ * résumé's figures are not published.
  */
 export const LEASING = {
   title: 'AI Leasing Agent',
-  /** The role, then the company and the years ("company – year", years only; Harlie's requests). */
+  /** The role, then the company and the years ("company · years"; Harlie's requests). */
   meta: ['Leasing and Operations Associate', 'Valiance Capital · 2024–2025'],
+  /** Harlie's copy brief of 2026-09-29, verbatim; the sections follow the pictures' order. */
   lede: (
     <p>
-      At Valiance Capital, I proposed an AI leasing assistant for recurring renter questions and defined its requirements for operations serving more than 1,000 tenants.
+      While working in leasing and operations at Valiance Capital, I encountered recurring questions about properties and applications that the team answered repeatedly. I proposed an AI assistant to handle routine inquiries and translated those workflows into requirements for its information sources, responses, and staff handoffs.
     </p>
   ),
-  /** The sections follow the pictures' order (the listing first, then the inbox, then the dashboard). */
   sections: [
     {
-      title: 'Current property information',
-      text: 'To avoid quoting an old price as current, I specified which answers needed live pricing and availability.',
+      title: 'Information requirements',
+      text: 'I distinguished questions answerable through approved property policies from those requiring current pricing and availability.',
     },
     {
-      title: 'Scope and escalation',
-      text: 'I separated routine questions from those needing staff review, which went to the leasing team with the conversation attached.',
+      title: 'Staff handoff',
+      text: 'I defined which requests the assistant could handle and when staff needed to take over for approval or individual review.',
     },
     {
-      title: 'Testing and rollout',
-      text: 'I tested answers on availability, pricing, tours, application status, and leasing policies. The assistant then moved from lower-risk scenarios to 18 properties.',
+      title: 'Testing and adoption',
+      text: 'I tested responses across common leasing scenarios and identified answers requiring revision. The assistant was adopted across 18 properties.',
     },
   ],
 }

@@ -121,7 +121,7 @@ To fill a slot: add the file to `scripts/prepare-media.mjs`, add an `IMAGES` ent
 ## Performance notes
 
 - The project transition uses the browser's View Transitions and CSS only (no GSAP). The unused `useReveal` hook was removed.
-- Inter is subset to the characters the site uses (112KB instead of 344KB, still preloaded); see `docs/media-plan.md` and `scripts/subset-font.sh`.
+- Inter is subset to the characters and OpenType features the site uses (82KB instead of 344KB), and Playfair Display to its characters (27KB instead of 42KB); both are requested by the `@font-face` rules in `index.html`. See `docs/media-plan.md` and `scripts/subset-font.sh`.
 - Work shelf thumbnails load only after interest in Work.
 - Not done: `src/content/media.ts` (≈38KB) is still one module in the entry chunk; splitting the art, film and transcript entries into their routes would shrink it. Run `npm run build` once no other agent is working and record the real chunk sizes (the committed `dist/` is out of date).
 

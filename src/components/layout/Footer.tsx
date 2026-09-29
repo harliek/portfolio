@@ -36,7 +36,7 @@ function PagerLink({ to, dir }: { to: Project; dir: 'previous' | 'next' }) {
           ←
         </span>
       )}
-      {dir === 'next' ? 'Next project' : 'Previous project'}
+      <span>{dir === 'next' ? `Next project · ${to.displayName}` : 'Previous project'}</span>
       {dir === 'next' && (
         <span className="site-end__pager-arrow" aria-hidden="true">
           →
@@ -49,13 +49,9 @@ function PagerLink({ to, dir }: { to: Project; dir: 'previous' | 'next' }) {
 /**
  * The end of every page (brief v18): transparent and without a line (Harlie's request). The email address, LinkedIn
  * and the résumé (checked: no phone number in it), and the copyright; no name link (Harlie's request). On a case
- * study it is one row under the page's last section: "Previous project" at the left, the links and the
+ * study it is one row, well below the page's last section: "Previous project" at the left, the links and the
  * copyright in the middle, "Next project" at the right, following the case studies' loop. Elsewhere, the links with
  * the copyright in the far right corner. Narrow windows: the two buttons on one line, the links under them.
- *
- * Supporting navigation, not a content section (Harlie's brief, 2026-09-28): on a case study the row sits 32 to 48px
- * under the last section (24px on narrow windows), not 72 to 120px, so the ending takes about 12% of a desktop window,
- * not 18 to 24% (layout.css). The buttons keep their 40px targets, 44px on touch screens; the links keep 44px.
  *
  * On About the contact section just above carries the same three links beside the form (ContactForm.tsx; Harlie's
  * brief, 2026-09-28, item 8), so the footer keeps only the copyright there: no second set 100 to 180px below the first,
@@ -112,3 +108,4 @@ export function Footer() {
     </footer>
   )
 }
+

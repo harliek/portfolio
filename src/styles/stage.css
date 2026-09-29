@@ -162,38 +162,17 @@ html:is([data-pointer-over='field'], [data-pointer-over='form']) .case-ground {
   --decor-level: 0.3;
 }
 
-/*
- * About (CaseGround calm, Harlie's brief, 2026-09-28: the purple atmospheric animation "must stay atmospheric, not a
- * third focal object" beside the name and the portrait; "reduce opacity/scale/brightness/movement/proximity if
- * needed; don't remove the identity"). A page factor on top of the pointer-over levels above: the field and the soft
- * light at 0.55 anywhere on the page, and at 0.35 while the pointer is within the opening (the name, its descriptor,
- * the copy and the portrait), where it passed right beside the face (a pointer pass along the portrait left 11% of the
- * 240px beside it violet). With the calmer stirring (CaseGround CALM) the flow stays near the pointer and fades
- * soon, dark everywhere else as before. The case studies keep the factor of 1.
- */
-.case-ground {
-  --decor-page: 1;
-}
-
-.case-ground[data-calm] {
-  --decor-page: 0.55;
-}
-
-html:has(.about-hero:hover) .case-ground[data-calm] {
-  --decor-page: 0.35;
-}
-
 /* The flow (CaseGround wraps the field in .case-ground__quiet; its own fade-in stays on .case-ground__field). */
 .case-ground__quiet {
   position: absolute;
   inset: 0;
-  opacity: calc(var(--decor-level) * var(--decor-page));
+  opacity: var(--decor-level);
   transition: opacity 700ms var(--ease-standard);
 }
 
 /* The soft light by brightness, so its own fade in and out (opacity) and its screen blending are untouched. */
 .case-ground .cursor-light {
-  filter: brightness(calc(var(--decor-level) * var(--decor-page)));
+  filter: brightness(var(--decor-level));
   transition:
     opacity 300ms var(--ease-arrive),
     filter 700ms var(--ease-standard);
@@ -247,3 +226,4 @@ html[data-pointer-over] .case-ground .cursor-light {
     opacity: 0;
   }
 }
+

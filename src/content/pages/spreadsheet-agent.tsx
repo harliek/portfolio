@@ -16,19 +16,17 @@
  * earlier recording (a comparison request its plan did not answer) is not
  * shown.
  *
- * Harlie's brief of 2026-09-28: the lede says at once what the prototype does and that its chat runs on rules, not a
- * language model (the facts above), so "Agent" is not read as more than it is. The synthetic 1,200-record catalog
- * stays.
- * The two concepts keep their headings and say only what the recording cannot: why the plan is reviewed first (the
- * rules' unused words surface there, so a wrong assumption is caught before a sheet exists) and why every generated
- * cell keeps its source (so any figure can be checked). No step note: the lede already says what is not automated.
+ * Copy brief of 2026-09-29: the narrative no longer repeats that there is no language model, and there is no closing
+ * restatement. The meta is one line, "Independent project · 2026" (Harlie's request, 2026-09-29: the labels
+ * "Product design and build" and "Rule-based prototype · Synthetic data" removed).
  */
 export const SHEET = {
-  title: 'Spreadsheet Agent',
-  meta: ['Product design and build', 'Independent project · 2026'],
+  title: 'Spreadsheet Assistant',
+  meta: ['Independent project · 2026'],
+  /** Harlie's copy brief of 2026-09-29, verbatim (README: nothing reaches a sheet until the plan is approved). */
   lede: (
     <p>
-      I designed and built a chat-style prototype that turns requests into editable spreadsheets from a synthetic 1,200&#8209;record product catalog, using rules instead of a language model.
+      I designed and built a spreadsheet assistant that translates written requests into editable sheets through a reviewable plan.
     </p>
   ),
   /**
@@ -44,15 +42,23 @@ export const SHEET = {
     [19.3, 24.73],
   ] as const,
   stills: [11.5, 23.5],
-  /** Two concepts, headings kept (Harlie's brief, 2026-09-28: shortened to the reason each exists). */
+  /**
+   * Harlie's copy brief of 2026-09-29, checked against the prototype's source (~/Desktop/monty-sheets 11/
+   * spreadsheet-agent), not the recordings: query.ts reads fields, filters, sorting and row limits; PlanReview.tsx
+   * "Edit plan" changes filters, columns, sort and limit before Build sheet, and its "Not used" line lists the request's
+   * words that did not map to a field or filter (query.ts unmatchedTerms), so the copy says words, not instructions;
+   * CellDetail.tsx names the dataset, record and field and a derived column's formula ("Calculation"); cell edits
+   * (SpreadsheetGrid.tsx), undo and redo and saved folders (useWorkspace.ts). Which of these the recording shows is
+   * recorded in docs/content-provenance.md.
+   */
   steps: [
     {
-      title: 'Review before generation',
-      text: 'The plan, and anything the rules ignored, is reviewed before a sheet exists, so wrong assumptions surface early.',
+      title: 'Review the plan',
+      text: 'The interpreter identifies the requested fields, filters, sorting, and row limits. Users can adjust the proposed plan and see which instructions were not recognized before creating the sheet.',
     },
     {
-      title: 'Data provenance',
-      text: 'Every generated cell traces back to the record and fields behind it, so any figure can be checked.',
+      title: 'Inspect and edit',
+      text: 'Cell details trace values to their source records and formulas. Users can edit the sheet, undo changes, and save it to a folder.',
     },
   ],
 }

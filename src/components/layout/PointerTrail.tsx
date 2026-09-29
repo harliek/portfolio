@@ -59,7 +59,9 @@ export function PointerTrail() {
     if (!core || !glow || !halo) return
 
     let points: Point[] = []
-    let lastTarget: EventTarget | null = null
+    // Held weakly: after a click or key press to another page, the element last under a still pointer must not keep
+    // the page just left (its pictures and videos) alive.
+    let lastTarget: WeakRef<EventTarget> | null = null
     let dimTarget = 1
     let lengthTarget: number = cfg.lengthPx
     let dim = 1
@@ -165,8 +167,8 @@ export function PointerTrail() {
         points = []
         return
       }
-      if (e.target !== lastTarget) {
-        lastTarget = e.target
+      if (e.target !== (lastTarget?.deref() ?? null)) {
+        lastTarget = e.target ? new WeakRef(e.target) : null
         const over = pointerOver(e.target instanceof Element ? e.target : null)
         dimTarget = over === 'text' ? cfg.overText : over ? cfg.overControl : 1
         lengthTarget = over ? cfg.lengthPx * cfg.shortShare : cfg.lengthPx

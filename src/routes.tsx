@@ -79,7 +79,6 @@ function CreativeDocument({ to }: { to?: string }) {
 }
 
 export const router = createBrowserRouter([
-  ...(import.meta.env.DEV ? [{ path: '/component-demos', lazy: async () => ({ Component: (await import('./components/ui/demo')).default }) }] : []),
   {
     path: '/',
     Component: PageShell,

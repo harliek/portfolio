@@ -38,9 +38,6 @@ export const MOTION = {
   /** The named curves as CSS timing functions (the values of --ease-*). */
   ease: EASE,
 
-  /** The Work shelf: fades down from the header while its entries arrive from the Work side. */
-  shelf: { durationMs: T.respond, itemOffsetPx: 16, itemStaggerMs: 14 },
-
   /**
    * Pointer trail (fine pointers only; src/components/layout/PointerTrail.tsx):
    * a crisp luminous core in a soft blue violet glow, attached to the pointer; a long

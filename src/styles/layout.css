@@ -72,7 +72,7 @@
 /*
  * The resizable navbar (Header.tsx; after Aceternity's): once the page scrolls past Header.tsx's FLOAT_AT (12px), the
  * full-width bar fades and its contents gather into a narrower pill floating a few pixels below the top, on a blurred,
- * translucent ground (no shadow). The header itself keeps its height.
+ * translucent ground with a soft shadow. The header itself keeps its height.
  */
 .site-header__inner {
   --header-pad: clamp(20px, 8.2vw, 32px);
@@ -119,16 +119,15 @@
 }
 
 /*
- * The pill: a light, blurred ground (the light behind still glows through) and no outline. At 0.48 its 14px items keep
- * 4.5:1 over the brightest pictures (Harlie's QA pass, 2026-09-28: 4.41:1 over Aristocracy's pink set at 0.38), so the
- * ground stays as it is. No shadow (Harlie's brief, 2026-09-28: the floating navigation less dominant against the
- * pages' titles): on the black pages it drew nothing, and over the homepage film and Creative Production's frames it
- * laid a grey cloud 16 to 64px under the pill, across the titles and pictures passing beneath it.
+ * The pill: a light, blurred ground (the light behind still glows through), a soft shadow and no outline. At 0.48 its
+ * 14px items keep 4.5:1 over the brightest pictures (Harlie's QA pass, 2026-09-28: 4.41:1 over Aristocracy's pink set
+ * at 0.38).
  */
 .site-header[data-floating] .site-header__inner::before {
   background: rgb(0 0 0 / 0.48);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 0.35);
 }
 
 /*
@@ -143,6 +142,14 @@
   .site-header[data-route='case'][data-floating]::before {
     background: #000;
     opacity: 1;
+  }
+
+  /*
+   * The black bar already sets the pill apart there: its shadow would only grey the top of the held picture below it
+   * (Harlie's brief, 2026-09-28: the Merchandising recording under a grey cloud at 768 and 390).
+   */
+  .site-header[data-route='case'][data-floating] .site-header__inner::before {
+    box-shadow: none;
   }
 }
 
@@ -198,7 +205,7 @@
 
 /*
  * Back, HOME and the navigation (and the small-screen Menu button): the original's small capitals, 14px Inter set as
- * small caps with 0.1em tracking, in white. The current page's item is set in the statement rose (no glow). Hover draws
+ * small caps with 0.1em tracking, in white. The current page's item glows as the pointer does (no fill). Hover draws
  * nothing on the words: the cursor's outline is the header's only hover (Harlie's request, 2026-09-27; since
  * 2026-09-28 the same for Back, HOME and Menu, which kept an underline, and after a tap on a phone Menu's stayed).
  * Keyboard focus draws a thin line under the words that slides open from the centre (--dur-2, respond) inside the
@@ -254,7 +261,7 @@
   transform: none;
 }
 
-/* Keyboard focus: a near-white line at the item's edge inside the rose ring (tokens.css --focus-inner-line). */
+/* Keyboard focus: a near-white line at the item's edge inside the blue violet ring (tokens.css --focus-inner-line). */
 .site-nav__item:focus-visible,
 .menu-button:focus-visible {
   outline: 2px solid var(--statement);
@@ -440,7 +447,7 @@ a:focus-visible > .site-nav__mark {
   color: color-mix(in oklch, var(--_acc) 38%, #fff);
 }
 
-/* The metadata line: kind of work, then context (MetaLine keeps each part whole). */
+/* The context line (employer or independent work). */
 .shelf-item__meta {
   color: #b3b7c6;
   font-size: 0.8125rem;
@@ -716,15 +723,6 @@ html.is-menu-open {
   text-decoration: none;
 }
 
-/*
- * A lighter outline than the page's other pills (.stateful's 0.34, components.css, which loads after this file; hence
- * the second class): the words stay white and 13px, so the buttons are as easy to find, but the ending weighs less
- * than the case study above it (Harlie's brief, 2026-09-28).
- */
-.site-end .site-end__pager {
-  border-color: rgb(255 255 255 / 0.24);
-}
-
 /* Touch screens: a 44px target, like every other control there. */
 @media (pointer: coarse) {
   .site-end__pager {
@@ -752,23 +750,16 @@ html.is-menu-open {
 }
 
 /*
- * A case study's ending: one row under the last section. Previous project at the left, the links and the copyright
- * between, Next project at the right. Narrow windows: the two buttons on one line, the links under them.
- *
- * Supporting navigation, not a section of its own (Harlie's brief, 2026-09-28: the footer "takes too much viewport";
- * reduce its height and visual weight, keep Previous and Next easy to find and the links reachable). Its top padding
- * was clamp(72px, 8vw, 120px), so it took 17.8 to 24.2% of a desktop window (187px of 900 at 1440) and left 136 to
- * 196px of black between the held picture and the row. Now 32 to 48px above the row and 20px below it: 102 to 112px,
- * about 10 to 14%. CaseStory and ClientWork measure the footer every time (--end-rows, --cw-footer-h), so the pages'
- * ends follow on their own; the words still end at least 24px above the footer (CaseStory's settleEnd).
+ * A case study's ending: one row, well below the last section. Previous project at the left, the links and the
+ * copyright between, Next project at the right. Narrow windows: the two buttons on one line, the links under them.
  */
 .site-end[data-pager] .site-end__inner {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas: 'previous contact next';
-  gap: 8px 32px;
-  padding-top: clamp(32px, 3vw, 48px);
-  padding-bottom: 20px;
+  gap: 16px 32px;
+  padding-top: clamp(72px, 8vw, 120px);
+  padding-bottom: 28px;
 }
 
 .site-end__pager--previous {
@@ -795,30 +786,41 @@ html.is-menu-open {
   margin: 0;
 }
 
-/*
- * Below 900px: 24px above the buttons (it was clamp(56px, 12vw, 80px); Harlie's brief, 2026-09-28, the footer's
- * height), and the copyright on the links' line wherever it fits (a tablet, a landscape phone); on a phone it wraps
- * under them on its own. 211px (25% of an 844px phone) before, about 150px now.
- */
 @media (max-width: 899.98px) {
   .site-end[data-pager] .site-end__inner {
     grid-template-columns: auto auto;
     grid-template-areas:
       'previous next'
       'contact contact';
-    padding-top: 24px;
+    padding-top: clamp(56px, 12vw, 80px);
   }
 
   .site-end__contact {
     justify-content: flex-start;
     gap: 0 24px;
   }
+
+  .site-end__contact .site-end__copy {
+    width: 100%;
+    margin-top: 4px;
+  }
+}
+
+/*
+ * A landscape phone: the copyright stays on the links' line, so the ending is two rows and the held picture keeps
+ * more of the short window above it (Harlie's QA pass, 2026-09-28; case-v16.css).
+ */
+@media (max-width: 899.98px) and (orientation: landscape) and (max-height: 540.98px) {
+  .site-end__contact .site-end__copy {
+    width: auto;
+    margin-top: 0;
+  }
 }
 
 /*
  * Phones: the two buttons still share their line, closer together (Harlie's QA pass, 2026-09-28: one above the other
  * they made the ending 271 to 315px tall, and on a short phone the last step had no room left between the held band
- * and the ending). Both fit from 344px wide (292px of buttons); only narrower still do they stack.
+ * and the ending). Both fit from 360px wide (292px of buttons); only narrower still do they stack.
  */
 @media (max-width: 419.98px) {
   .site-end[data-pager] .site-end__inner {
@@ -858,4 +860,37 @@ html.is-menu-open {
   flex-wrap: wrap;
   gap: var(--space-3);
   list-style: none;
+}
+
+
+/* Destination names remain readable inside the compact project pager. */
+.site-end__pager--next {
+  max-width: 100%;
+  white-space: normal;
+  padding-block: 8px;
+}
+@media (max-width: 699.98px) {
+  .site-end[data-pager] .site-end__inner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  }
+  .site-end__pager { min-width: 0; }
+}
+
+/*
+ * Phones: the Previous and Next buttons stack, Previous above Next, once the destination's name is in the Next button
+ * (2026-09-29: at 390px the two overlapped by about 9px and the Next label ran to three lines). Below 344px they
+ * already stacked (above); this carries that to every narrow window.
+ */
+@media (max-width: 599.98px) {
+  .site-end[data-pager] .site-end__inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'previous'
+      'next'
+      'contact';
+  }
+
+  .site-end__pager--next {
+    justify-self: start;
+  }
 }

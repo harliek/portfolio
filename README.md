@@ -47,7 +47,6 @@ End-to-end tests run against the production build (Playwright starts `npm run bu
 ```bash
 npx playwright install chromium   # first time only
 npm run test:e2e                  # functional, content and axe accessibility checks
-npx playwright test --grep @screens   # writes review screenshots to tests/screenshots/
 ```
 
 Media playback tests use the locally installed Google Chrome (`channel: 'chrome'`), because Playwright's bundled Chromium cannot decode H.264. When Chrome is missing, those assertions are skipped with an annotation.
@@ -56,24 +55,32 @@ Media playback tests use the locally installed Google Chrome (`channel: 'chrome'
 
 ```
 src/
-  content/      projects.ts (the six work entries, order, labels, routes, next project),
-                media.ts (provenance manifest), site.ts (identity and verified links),
-                creative.ts (films), slots.ts (empty diagram slots, debug flag), transcripts.tsx,
-                pages/<id>.ts(x) (one copy file per page: cafepress-uk, merchandising-platform,
-                spreadsheet-agent, ai-leasing-agent, jumpstart-finance, client-work, about, art)
-  config/       motion.ts (motion values: shelf, crossfade, highlight, route, trail),
-                carousel.ts (concave carousel geometry and speed), stage.ts (background set)
-  components/   layout/ (PageShell, Header, WorkShelf, Footer with Reduce motion, StageBackground,
-                PointerTrail, RouteFocus), home/ (ConcaveCarousel, SelectedWork),
-                case/ (CaseLayout, CaseOpening, CaseSection, StickyVisual, Results, NextProject),
-                pages/<id>/ (page-specific parts), transition/ (image continuity), creative/
-                (FilmPlayer, CreativeNav), media/ (ResponsiveImage, Figure, VideoFigure, ImageDialog,
-                DiagramSlot)
-  pages/        Home, About, Art, Film, NotFound, RouteError, work/<Project>.tsx
-  hooks/        useMotionPreference (single motion source), media playback policy, page meta, reveal
-  styles/       tokens, base, layout, components, stage, home, case, creative, pages/<id>.css
+  main.tsx, App.tsx, routes.tsx (lazy case-study and About chunks, prefetch), scrollPositions.ts
+  content/      projects.ts (the six case studies: order, names, routes, opening media, next project),
+                field.ts (the homepage's tiles, in Harlie's order), media.ts (provenance manifest),
+                crops/ (each page's crop registry), site.ts (identity and verified links),
+                pages/<id>.tsx (one copy file per page: spreadsheet-agent, client-work, cafepress-uk,
+                merchandising-platform, jumpstart-finance, ai-leasing-agent, about)
+  config/       motion.ts (motion scale, pointer trail), transition.ts (page-change waits),
+                stage.ts (background per route)
+  components/   layout/ (PageShell, Header, WorkShelf with the phone menu, Footer, StageBackground,
+                CaseGround, OrbBackground, PointerTrail, CustomCursor, RouteFocus),
+                home/ (ProjectField, PlaneMedia, HomeFilm), case/ (CasePage, CaseStory),
+                about/ (AboutContent, FeaturedFilm, ArtPreview, ContactForm),
+                pages/client-work/ (FilmDialog), media/ (ResponsiveImage, ImageDialog, DemoControls,
+                mediaTilt), transition/ (PageLink, pageChange and its pieces, warm),
+                ui/ (adapted components: Nebula Drift, Card Hover, TypeLine, Stateful, DockTitle,
+                CursorLight; see docs/motion-components.md)
+  pages/        Home, About, NotFound, RouteError, work/<Project>.tsx
+  hooks/        useMotionPreference (single motion source), useReducedMotion, useMediaPlayback
+                (media playback policy), useMediaQuery, usePageMeta
+  lib/          gsap.ts (the one GSAP entry point, ScrollTrigger)
+  styles/       tokens, base, layout, components, cursor, stage, home, plane, case, case-v16,
+                pages/about.css, pages/client-work.css
 scripts/prepare-media.mjs   reproducible media pipeline (originals → public/media)
-docs/                       build log, asset audit, content provenance, transcripts, QA report
+scripts/subset-font.sh      Inter subset (scripts/fonts → public/fonts)
+docs/                       build log, asset audit and checklist, content provenance, media plan,
+                            site structure, motion components, transcripts
 tests/                      Playwright specs
 ```
 

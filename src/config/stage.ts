@@ -1,7 +1,7 @@
 /**
- * The background treatment per route. PageShell picks the page's ground by it
- * (and passes it to StageBackground); the header carries it as `data-route`
- * for its styles on the case studies (layout.css).
+ * The background treatment per route. PageShell picks the page's ground by it;
+ * the header carries it as `data-route` for its styles on the case studies
+ * (layout.css).
  */
 export type StageRoute = 'home' | 'case' | 'about' | 'other'
 

@@ -30,9 +30,8 @@ export default function AILeasingAgent() {
           // Next follow them too. No caption (Harlie's request).
           layers: [{ image: 'valiance-listing' }, { image: 'valiance-inbox' }, { image: 'valiance-dashboard' }],
           show: [0, 1, 2],
-          // Harlie's brief, 2026-09-28: the assistant did run in production (on a third-party platform), so these
-          // illustrative screens (invented people and figures) could be taken for screenshots of that system.
-          status: 'Concept UI',
+          // The imagery is synthetic (invented figures); no label beside the pictures or in the meta line says so
+          // (Harlie's requests, 2026-09-28 and 2026-09-29).
         }}
       />
     </CasePage>

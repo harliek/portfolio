@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
 import { getImage, largestSrc, type ImageId } from '../../content/media'
 import { closeOnCancel, closeWithFade } from './dialogExit'
 import { CloseIcon } from './ExpandIcon'
@@ -6,11 +7,6 @@ import { CloseIcon } from './ExpandIcon'
 export interface OpenOptions {
   /** The images to page through (pass `[id]` for a single image). */
   gallery: ImageId[]
-  /**
-   * The stage's status label ("Prototype", "Concept UI"), shown in the bar before the count, so an enlarged mockup
-   * is never presented as a live system (Harlie's brief, 2026-09-28: credibility). Optional.
-   */
-  status?: string
 }
 
 interface DialogApi {
@@ -38,7 +34,8 @@ export function useImageDialog(): DialogApi {
  * - The image is always shown whole, fitted to the screen (no "Actual size" view: Harlie's request, 2026-09-27).
  *   On a phone a wide screenshot opens at the view's full height instead and pans sideways: fitted to the width it
  *   was hardly larger than on the page (Harlie's brief, 2026-09-28).
- * - No caption (brief-v8 section 8): only the picture's status label, when the page gives one, before the count.
+ * - No caption and no status label (Harlie's request, 2026-09-28: "there should be no captions for any photos"); only
+ *   the count when there are several pictures.
  */
 export function ImageDialogProvider({ children }: { children: ReactNode }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -46,19 +43,28 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
   const closeRef = useRef<HTMLButtonElement>(null)
   const [gallery, setGallery] = useState<ImageId[]>([])
   const [index, setIndex] = useState(0)
-  const [status, setStatus] = useState<string | undefined>()
   const [isOpen, setIsOpen] = useState(false)
 
-  const open = useCallback((id: ImageId, trigger: HTMLElement, { gallery: list, status: label }: OpenOptions) => {
+  const open = useCallback((id: ImageId, trigger: HTMLElement, { gallery: list }: OpenOptions) => {
     triggerRef.current = trigger
     setGallery(list.length ? list : [id])
     setIndex(Math.max(0, list.indexOf(id)))
-    setStatus(label)
     setIsOpen(true)
   }, [])
 
   const count = gallery.length
   const current = isOpen && count ? getImage(gallery[index]) : null
+
+  // Browser Back or Forward with an image enlarged: the image goes with the page it belongs to (it stayed open over the
+  // next page, still scroll-locked; bug fix approved by Harlie, 2026-09-29). The provider sits outside the keyed route,
+  // so nothing else closes it. At once, without the fade: the page has already changed. onClose then lifts the scroll
+  // lock and skips refocusing the gone trigger; RouteFocus (or the homepage's remembered tile) places focus. Declared
+  // before the opening effect and keyed to the pathname only, so it never closes a dialog opening in the same commit.
+  const { pathname } = useLocation()
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (dialog?.open) dialog.close()
+  }, [pathname])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -118,8 +124,6 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
           <div className="image-dialog__panel">
             <div className="image-dialog__bar">
               <p className="image-dialog__count t-small tabular">
-                {status}
-                {status && count > 1 && <span aria-hidden="true"> · </span>}
                 <span aria-live="polite">{count > 1 ? `${index + 1} / ${count}` : ''}</span>
               </p>
               <div className="image-dialog__controls">
@@ -141,7 +145,7 @@ export function ImageDialogProvider({ children }: { children: ReactNode }) {
                 </button>
               </div>
             </div>
-            <div className="image-dialog__stage" data-wide={current.width > current.height * 1.2 || undefined}>
+            <div className="image-dialog__stage" tabIndex={0} role="region" aria-label="Enlarged image" data-wide={current.width > current.height * 1.2 || undefined}>
               <picture key={current.id}>
                 <source type="image/avif" srcSet={largestSrc(current, 'avif')} />
                 <source type="image/webp" srcSet={largestSrc(current, 'webp')} />

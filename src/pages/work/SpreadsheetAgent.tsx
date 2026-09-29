@@ -17,17 +17,21 @@ export default function SpreadsheetAgent() {
       <CaseStory title={C.title} meta={C.meta} lede={C.lede} steps={C.steps} stage={{
           kind: 'video',
           src: '/media/video/sa-demo-1440.mp4',
-          poster: '/media/img/sa-demo-poster-1440.jpg',
+          // WebP made from the JPEG (the same frame, about half the bytes; scripts/prepare-media.mjs, task `posters`,
+          // 2026-09-29).
+          poster: '/media/img/sa-demo-poster-1440.webp',
           width: 1440,
           height: 900,
           segments: C.segments,
           stills: C.stills,
-          label: 'The Spreadsheet Agent prototype building a sheet from a written request',
+          label: 'The Spreadsheet Assistant prototype creating a sheet from a written request',
           free: true,
           // A little faster than recorded (Harlie's request).
           rate: 1.5,
-          // Harlie's brief, 2026-09-28: the recording is polished enough to be taken for a shipped product.
-          status: 'Prototype',
+          // The control that opens the recording larger (Harlie's copy brief, 2026-09-28).
+          action: 'Play spreadsheet demo',
+          // The implementation is rules-based (README, docs/limitations.md); the page's meta line says only
+          // "Independent project · 2026" (Harlie's request, 2026-09-29).
         }} />
     </CasePage>
   )

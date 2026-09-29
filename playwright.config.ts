@@ -12,8 +12,6 @@ import { defineConfig, devices } from '@playwright/test'
  * - media    1440×900 in the installed Google Chrome (`channel: 'chrome'`),
  *            which decodes the site's H.264 recordings and films; only
  *            tests/media.spec.ts. Playwright's bundled Chromium cannot.
- * - screens  review screenshots (tests tagged @screens, no assertions),
- *            written to tests/screenshots/ (git-ignored).
  */
 const assertions = { grepInvert: /@screens/, testIgnore: /media\.spec\.ts/ }
 
@@ -42,12 +40,6 @@ export default defineConfig({
       testMatch: /media\.spec\.ts/,
       grepInvert: /@screens/,
       use: { ...devices['Desktop Chrome'], channel: 'chrome', viewport: { width: 1440, height: 900 } },
-    },
-    {
-      name: 'screens',
-      testMatch: /screens\.spec\.ts/,
-      grep: /@screens/,
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
   ],
 })

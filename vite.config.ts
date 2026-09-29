@@ -1,7 +1,6 @@
 import { createReadStream, existsSync } from 'node:fs'
 import { extname, join, resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 import { defineConfig, type Connect, type Plugin } from 'vite'
 
 /**
@@ -90,8 +89,7 @@ function creativeSite(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), creativeSite()],
-  resolve: { alias: { '@': resolve(import.meta.dirname, 'src') } },
+  plugins: [react(), creativeSite()],
   server: {
     // Media working files (frames, renders, transcript work) are large and
     // irrelevant to the app; keep the dev watcher away from them.
@@ -108,9 +106,14 @@ export default defineConfig({
         // downloaded, it is requested in parallel with the app entry, and it
         // stays cached across content deploys. The homepage gallery is only
         // about 5% of the entry and stays eager so the homepage has no extra
-        // round trip.
+        // round trip. GSAP is stable vendor code too, so it gets its own
+        // long-cached file instead of being re-downloaded inside the app
+        // entry after every content deploy.
         codeSplitting: {
-          groups: [{ name: 'framework', test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/ }],
+          groups: [
+            { name: 'framework', test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/ },
+            { name: 'gsap', test: /[\\/]node_modules[\\/]gsap[\\/]/ },
+          ],
         },
       },
     },

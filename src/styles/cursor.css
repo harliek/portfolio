@@ -171,6 +171,12 @@ html:is([data-pointer-over='text'], [data-pointer-over='field'], [data-pointer-o
   animation: cursor-flicker 2.3s ease-in-out infinite;
 }
 
+/* Unseen (before the first move, outside the window, the window blurred), the halo and core rest. */
+.custom-cursor:not([data-visible]) .custom-cursor__light::before,
+.custom-cursor:not([data-visible]) .custom-cursor__core::before {
+  animation-play-state: paused;
+}
+
 /* Breathing: the halo swells and settles, a touch wider than tall at the top of each breath. */
 @keyframes cursor-breathe {
   0% {

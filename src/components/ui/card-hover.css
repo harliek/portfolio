@@ -1,0 +1,147 @@
+/*
+ * The card-hover gallery (card-hover.tsx; Harlie's request, 2026-09-29). The card: the current picture in its own
+ * proportions, as wide as the room allows and never taller than --card-max-h (the page sets it), with the site's
+ * distinct glowing border (tokens.css --glow-media). The circles: a column on the card's right, the current one larger
+ * and ringed with the pointer's blue violet. The picture changes by growing in over 0.5s, as the original's cards do.
+ */
+.card-hover {
+  --card-dot: 52px;
+  --card-gap: 18px;
+  display: flex;
+  align-items: center;
+  gap: var(--card-gap);
+  width: 100%;
+}
+
+.card-hover__main {
+  display: grid;
+  flex: 1 1 auto;
+  justify-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.card-hover__card {
+  position: relative;
+  display: block;
+  width: min(100%, calc(var(--card-max-h, 70svh) * var(--card-aspect, 1.6)));
+  aspect-ratio: var(--card-aspect, 1.6);
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 14px;
+  background: var(--card-bg, #0b0b0e);
+  box-shadow: var(--glow-media);
+  cursor: zoom-in;
+}
+
+.card-hover__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(0.965);
+  transition:
+    opacity 500ms cubic-bezier(0.45, 0, 0.2, 1),
+    transform 500ms cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+.card-hover__slide[data-on] {
+  opacity: 1;
+  transform: none;
+}
+
+.card-hover__slide .picture,
+.card-hover__slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.card-hover__slide img {
+  object-fit: contain;
+}
+
+/* A short neutral label under the card (the picture's provenance, where it needs one). */
+.card-hover__label {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--cx-dim, rgb(236 238 246 / 0.66));
+}
+
+.card-hover__dots {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card-hover__dot {
+  position: relative;
+  width: var(--card-dot);
+  height: var(--card-dot);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  border-radius: 50%;
+  background: #0b0b0e;
+  cursor: pointer;
+  opacity: 0.7;
+  transition:
+    transform 300ms ease,
+    opacity 300ms ease,
+    box-shadow 300ms ease,
+    border-color 300ms ease;
+}
+
+.card-hover__dot .picture,
+.card-hover__dot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.card-hover__dot img {
+  object-fit: cover;
+  object-position: center top;
+}
+
+.card-hover__dot:hover {
+  opacity: 1;
+}
+
+.card-hover__dot[data-on] {
+  opacity: 1;
+  transform: scale(1.12);
+  border-color: rgb(var(--pointer-light-rgb, 118 104 255) / 0.95);
+  box-shadow:
+    0 0 0 2px rgb(var(--pointer-rgb, 118 132 255) / 0.55),
+    0 0 18px 2px rgb(var(--pointer-rgb, 118 132 255) / 0.55);
+}
+
+.card-hover__card:focus-visible,
+.card-hover__dot:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+@media (max-width: 599.98px) {
+  .card-hover {
+    --card-dot: 38px;
+    --card-gap: 12px;
+  }
+
+  .card-hover__dots {
+    gap: 10px;
+  }
+
+  .card-hover__card {
+    border-radius: 10px;
+  }
+}
+
+html[data-motion='reduce'] .card-hover__slide,
+html[data-motion='reduce'] .card-hover__dot {
+  transition: none;
+}

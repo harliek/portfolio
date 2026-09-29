@@ -1,10 +1,11 @@
 import type { ImageId } from './media'
 
 /**
- * The six work entries, in the homepage field's order (field.ts, Harlie's order of 2026-09-28; About me and Creative
- * Portfolio, tiles there, are not case studies): Creative Production, Spreadsheet Agent, Merchandising Dashboard,
- * Jumpstart Finance, AI Leasing Agent, CafePress UK. The Work menu and the next-project sequence follow it (CafePress
- * UK loops back to Creative Production).
+ * The six work entries, in the homepage field's order (field.ts, Harlie's order of 2026-09-29, with Spreadsheet
+ * Assistant moved after Creative Production at their later request that day; About me and Creative Portfolio, tiles
+ * there, are not case studies): Creative Production, Spreadsheet Assistant, CafePress UK, Merchandising Dashboard,
+ * Jumpstart Finance, AI Leasing Agent. The array's order is the Work menu's (WorkShelf.tsx); `order` numbers it,
+ * and `next` makes the Previous and Next loop (AI Leasing Agent loops back to Creative Production).
  * Page copy lives in src/content/pages/<id>.ts(x).
  *
  * Verified facts only (résumé and project sources; see
@@ -24,13 +25,11 @@ export type ProjectId =
 /**
  * An image a case study shows first beside its heading, with the `sizes` its
  * component passes, so the route transition fetches and decodes the very
- * file the page will pick. `media` limits it to the viewports where the page
- * shows it (a phone crop replaces a wide one below 600px).
+ * file the page will pick.
  */
 export interface OpeningImage {
   image: ImageId
   sizes: string
-  media?: string
 }
 
 export interface Project {
@@ -50,10 +49,7 @@ export interface Project {
   displaySubtitle: string
   /** Supporting label (carousel caption, case subtitle when none is given). */
   label: string
-  /**
-   * The Work shelf's and the menu's line under the name: the homepage tile's own caption, "type · context" (field.ts;
-   * Harlie's brief, 2026-09-28), so the metadata reads the same across the site.
-   */
+  /** Very short context for the Work shelf and menu, as on the case page (employer or internship, or independent work). */
   category: string
   /** One short factual sentence for the Selected work index. */
   summary: string
@@ -105,14 +101,14 @@ export const PROJECTS: Project[] = [
     displayName: 'Creative Production',
     displaySubtitle: 'Client film production at Shift Content',
     label: 'Client film production at Shift Content',
-    category: 'Client films · Shift Content',
-    summary: 'Production support on client films and related agency work during an internship at Shift Content in London.',
+    category: 'Shift Content internship',
+    summary: 'Production work on client films and related agency work during an internship at Shift Content in London.',
     year: '2026',
     dateRange: 'Jan–May 2026',
     role: 'Creative Strategy and Client Solutions Intern',
     org: 'Shift Content, London',
     status: 'Agency client work',
-    description: 'Production and campaign support at Shift Content.',
+    description: 'Production preparation, filming, and coordination at Shift Content.',
     meta: { company: 'Shift Content, London', role: 'Creative Strategy & Client Solutions Intern', dates: 'January to May 2026', status: 'Three completed client films' },
     cover: 'obj-creative-production',
     // The opening is a moving frame (a video poster, not a registered image): nothing to warm.
@@ -120,44 +116,70 @@ export const PROJECTS: Project[] = [
     next: 'spreadsheet-agent',
     seo: {
       title: 'Creative Production',
-      description: 'Client film production at Shift Content in London.',
+      description: 'Production preparation, filming, and coordination on fashion, interview, and event projects at Shift Content in London.',
     },
   },
   {
     id: 'spreadsheet-agent',
     slug: 'spreadsheet-agent',
     order: 2,
-    name: 'Spreadsheet Agent',
-    displayName: 'Spreadsheet Agent',
-    displaySubtitle: 'A rules-based prototype for generating editable spreadsheets from written requests',
-    label: 'Rules-based spreadsheet prototype',
-    category: 'Data tool · Rules-based prototype',
-    summary: 'A rules-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
+    name: 'Spreadsheet Assistant',
+    displayName: 'Spreadsheet Assistant',
+    displaySubtitle: 'A rule-based prototype for generating editable spreadsheets from written requests',
+    label: 'Request-to-spreadsheet prototype',
+    category: 'Independent prototype',
+    summary: 'A rule-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
     year: '2026',
     dateRange: '2026',
     role: 'Independent project',
     org: 'Independent',
     status: 'Independent prototype',
     description: 'A request, a reviewable plan, and an editable spreadsheet.',
-    meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Rules-based prototype using synthetic data' },
+    meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Rule-based prototype using synthetic data' },
     cover: 'obj-spreadsheet-agent',
     // The opening is the recording's poster (a plain URL, not a registered image): nothing to warm.
     hero: [],
+    next: 'cafepress-uk',
+    seo: {
+      title: 'Spreadsheet Assistant',
+      description: 'A rule-based spreadsheet assistant that turns written requests into editable sheets, with a review step before generation and cell details that trace values to their source.',
+    },
+  },
+  {
+    id: 'cafepress-uk',
+    slug: 'cafepress-uk',
+    order: 3,
+    name: 'CafePress UK',
+    displayName: 'CafePress UK',
+    displaySubtitle: 'Market research, supplier evaluation, and a localized UK storefront concept',
+    label: 'UK market research and storefront concept',
+    category: 'PlanetArt internship',
+    summary: 'UK market research and a localized storefront concept during a PlanetArt internship.',
+    year: '2026',
+    dateRange: 'Jun–Aug 2026',
+    role: 'Product Operations & Merchandising Intern',
+    org: 'PlanetArt',
+    status: 'Research and storefront concept',
+    description: 'UK market research and a localized storefront concept.',
+    meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and storefront concept' },
+    cover: 'obj-cafepress-uk',
+    // The storefront concept beside the introduction.
+    hero: [{ image: 'cp-storefront', sizes: STAGE_SIZES }],
     next: 'merchandising-platform',
     seo: {
-      title: 'Spreadsheet Agent',
-      description: 'A rules-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
+      title: 'CafePress UK',
+      description: 'UK market research and recommendations for adapting CafePress’s business offer, with a storefront concept, from a PlanetArt internship.',
     },
   },
   {
     id: 'merchandising-platform',
     slug: 'merchandising-platform',
-    order: 3,
+    order: 4,
     name: 'Merchandising Dashboard',
     displayName: 'Merchandising Dashboard',
     displaySubtitle: 'An independent prototype for product analysis and replenishment planning',
-    label: 'Independent merchandising application prototype',
-    category: 'Product operations · Independent prototype',
+    label: 'Independent merchandising prototype',
+    category: 'Independent prototype',
     summary: 'An independent application prototype for reviewing product, pricing, inventory, and vendor information with synthetic data.',
     year: '2026',
     dateRange: '2026',
@@ -172,18 +194,18 @@ export const PROJECTS: Project[] = [
     next: 'jumpstart-finance',
     seo: {
       title: 'Merchandising Dashboard',
-      description: 'An independent prototype for product analysis and replenishment planning, using synthetic data.',
+      description: 'An independent merchandising prototype on synthetic data that connects product information with reorder calculations and ranks replenishment by estimated contribution margin at risk.',
     },
   },
   {
     id: 'jumpstart-finance',
     slug: 'jumpstart',
-    order: 4,
+    order: 5,
     name: 'Jumpstart Finance',
     displayName: 'Jumpstart Finance',
     displaySubtitle: 'Product development for a financial education app concept',
-    label: 'Financial education startup developed during a student venture program',
-    category: 'App concept · Student venture',
+    label: 'Financial education venture concept',
+    category: 'Student venture',
     summary: 'A financial education concept and mobile prototype developed at the European Innovation Academy in Porto.',
     year: '2024',
     dateRange: 'Jun–Jul 2024',
@@ -202,18 +224,18 @@ export const PROJECTS: Project[] = [
     next: 'ai-leasing-agent',
     seo: {
       title: 'Jumpstart Finance',
-      description: 'Product development for a financial education app concept at the European Innovation Academy in Porto, 2024.',
+      description: 'A five-person student venture at the European Innovation Academy in Porto, from customer interviews to a financial education app prototype and investor pitch.',
     },
   },
   {
     id: 'ai-leasing-agent',
     slug: 'valiance',
-    order: 5,
+    order: 6,
     name: 'AI Leasing Agent',
     displayName: 'AI Leasing Agent',
     displaySubtitle: 'Requirements, workflow design, and testing for an AI leasing assistant',
-    label: 'Workflow requirements and testing at Valiance Capital',
-    category: 'AI implementation · Valiance Capital',
+    label: 'Workflow requirements and testing',
+    category: 'Valiance Capital',
     summary: 'Workflow requirements and testing for a third-party leasing assistant adopted across 18 properties.',
     year: '2024–2025',
     dateRange: 'Oct 2024–Jun 2025',
@@ -225,39 +247,12 @@ export const PROJECTS: Project[] = [
     cover: 'obj-ai-leasing-agent',
     // The listing with its assistant, the first of the three pictures beside the introduction.
     hero: [{ image: 'valiance-listing', sizes: STAGE_SIZES }],
-    next: 'cafepress-uk',
-    seo: {
-      title: 'AI Leasing Agent',
-      description: 'Requirements, workflow design, and testing for an AI leasing assistant at Valiance Capital, deployed across 18 properties.',
-    },
-  },  {
-    id: 'cafepress-uk',
-    slug: 'cafepress-uk',
-    order: 6,
-    name: 'CafePress UK',
-    displayName: 'CafePress UK',
-    displaySubtitle: 'Market research, assortment planning, and early UK storefront prototyping',
-    label: 'UK market research and storefront prototype',
-    category: 'Market entry · PlanetArt',
-    summary: 'UK market research and a localized storefront prototype during a PlanetArt internship.',
-    year: '2026',
-    dateRange: 'Jun–Aug 2026',
-    role: 'Product Operations & Merchandising Intern',
-    org: 'PlanetArt',
-    status: 'Research and prototype',
-    description: 'UK market research and a localized storefront prototype.',
-    meta: { company: 'PlanetArt (CafePress)', role: 'Product Operations & Merchandising Intern', dates: 'June to August 2026', status: 'Research and prototype, not launched' },
-    cover: 'obj-cafepress-uk',
-    // The storefront prototype beside the introduction.
-    hero: [{ image: 'cp-storefront', sizes: STAGE_SIZES }],
     next: 'client-work',
     seo: {
-      title: 'CafePress UK',
-      // The case study's question (Harlie's brief, 2026-09-28), in place of a list of activities.
-      description: 'Whether CafePress’s US B2B model could be adapted for the UK, assessed during a PlanetArt internship.',
+      title: 'AI Leasing Agent',
+      description: 'A proposed AI leasing assistant at Valiance Capital, with workflow requirements and response testing, adopted across 18 properties.',
     },
   },
-
 ]
 
 export const projectById = (id: ProjectId): Project => {

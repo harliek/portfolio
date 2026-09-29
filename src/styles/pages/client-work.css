@@ -26,18 +26,6 @@
   padding-top: clamp(40px, 5vw, 64px);
 }
 
-/*
- * The title and its details fade as they rise to the floating navigation (ClientWork sets --cw-intro, 1 to 0; Harlie's
- * brief, 2026-09-28: while the first film plays, the title ran under the navigation's words, a third and fourth layer
- * of text over its subtitles). Only where the navigation floats over the page: below 900px wide, or 540px tall, the
- * header is an opaque bar (layout.css) and the title simply passes beneath it.
- */
-@media (min-width: 900px) and (min-height: 541px) {
-  .cw-intro {
-    opacity: var(--cw-intro, 1);
-  }
-}
-
 /* Each film: the frame in the wider column (two thirds; Harlie's request: bigger, was 1.5 to 1), its text beside it. */
 .cw-film {
   display: grid;
@@ -74,17 +62,15 @@
  * the footer (--cw-footer-h, ClientWork.tsx), so at the end of the page the top edge falls in the space above it,
  * clear of the floating navigation. The page ended wherever the words ended, slicing through the Aristocracy section
  * at the top edge (its heading at 1920px, its button's foot at 1440px), which was also where leaving the page began.
- * The film sits a little above the middle of the room between the navigation and the footer's links (three fifths of
- * the spare room above it, two fifths below; Harlie's brief, 2026-09-28: with the footer's height about halved, a
- * third above and two thirds below left some 200px empty under the film at 1440x900, the footer's old share of the
- * page's end now blank). Below 900px the films are stacked and
+ * The film sits a little above the middle of that screen (a third of the spare room above it, two thirds below), so
+ * on the way down it arrives only a little further on than the films before it. Below 900px the films are stacked and
  * the header is an opaque bar: the last film fills the room below the bar, its frame at the top (Harlie's QA pass,
  * 2026-09-28: at 834px the end began mid-sentence under the bar, and at 414px the Aristocracy button's top edge was
  * cut by it). Where the last film is taller than that room (a short phone), the page ends as it falls.
  */
 @media (min-width: 900px) {
   .cw-film:last-of-type {
-    grid-template-rows: 3fr auto 2fr;
+    grid-template-rows: 1fr auto 2fr;
     row-gap: 0;
     min-height: calc(100svh - var(--cw-footer-h, 0px) - 2 * var(--cx-section));
   }
@@ -128,50 +114,18 @@
   transform: scale(1.12);
 }
 
-/*
- * The film that leads the page (ClientWork: the one most in the window) plays; the others rest under a light veil, so
- * their paused frames and burned-in subtitles recede while another film has the eye (Harlie's brief, 2026-09-28: no
- * more than two strong text layers at once). A black overlay like the case galleries' small pictures, never a blur;
- * the pointer over a film lifts it. The frame clips it to its corners.
- */
-.cw-frame::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: #000;
-  opacity: 0;
-  transition: opacity 500ms var(--ease-standard);
-  pointer-events: none;
-}
-
-.cw-film:not([data-lead]) .cw-frame::after {
-  opacity: 0.45;
-}
-
 .cw-text {
   display: grid;
-  gap: 14px;
+  gap: var(--cx-s2);
   align-content: start;
 }
 
-/*
- * The film's name, set as a label for the frame rather than a second title (Harlie's brief, 2026-09-28: when a film
- * dominates, the text beside it stays subordinate; it was 28 to 40px, as large as the page's own title on phones): 24
- * to 32px. White while its film leads, and the case studies' quieter heading grey (--cx-step-quiet, 12.8:1) while
- * another does, never faded.
- */
 .cw-name {
   margin: 0;
   font-family: var(--font-editorial);
-  font-size: clamp(1.5rem, 1.2rem + 0.8vw, 2rem);
+  font-size: clamp(1.75rem, 1.3rem + 1.2vw, 2.5rem);
   font-weight: 400;
-  line-height: 1.1;
-  color: var(--cx-step-quiet);
-  text-wrap: balance;
-  transition: color 500ms var(--ease-standard);
-}
-
-.cw-film[data-lead] .cw-name {
+  line-height: 1.02;
   color: #fff;
 }
 
@@ -187,8 +141,7 @@
 .cw-watch {
   justify-self: start;
   min-height: 44px;
-  /* 24px under the film's sentence (the text's 14px gap and this). */
-  margin-top: 10px;
+  margin-top: 4px;
   padding: 0 20px 0 16px;
   font-family: var(--font-sans);
   font-size: 0.75rem;
@@ -243,10 +196,6 @@
   .cw-frame:hover {
     transform: scale(1.03);
   }
-
-  .cw-film:not([data-lead]) .cw-frame:hover::after {
-    opacity: 0;
-  }
 }
 
 /* The film under the pointer also tilts towards it in 3D (mediaTilt.ts; Harlie's request), its shadow moving too. */
@@ -264,9 +213,5 @@
   .cw-frame:hover {
     transform: none;
   }
-
-  .cw-frame::after,
-  .cw-name {
-    transition: none;
-  }
 }
+

@@ -115,14 +115,6 @@
   --btn-border: var(--btn-secondary-border);
 }
 
-/* Selected (a toggle that is on): the solid primary surface. */
-.button--secondary[aria-pressed='true'],
-.button--quiet[aria-pressed='true'] {
-  --btn-bg: var(--btn-primary-bg);
-  --btn-fg: var(--btn-primary-fg);
-  --btn-border: var(--btn-primary-bg);
-}
-
 .button--small {
   --control-gap: 8px;
   min-height: var(--control-height-small);
@@ -260,7 +252,6 @@
   border-radius: 999px;
 }
 
-.image-dialog__controls .button--quiet,
 .image-dialog__controls .button--secondary {
   --btn-secondary-bg: var(--color-bg);
 }
@@ -452,16 +443,4 @@ html.is-dialog-open {
   .stateful[data-state='loading'] .stateful__loader {
     animation: none;
   }
-}
-
-/* ----------------------------------------------------------------------- */
-/* Metadata lines (MetaLine.tsx)                                            */
-/* ----------------------------------------------------------------------- */
-
-/*
- * One part of a "kind · context" line, kept whole, so the line wraps only at its dot (Harlie's brief, 2026-09-28: the
- * homepage tiles' and the phone menu's metadata).
- */
-.meta-part {
-  white-space: nowrap;
 }

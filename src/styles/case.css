@@ -11,7 +11,7 @@
 
 /*
  * The viewer's own values (it sits outside any case page): the controls' glyphs in the dialog's text colour, at rest
- * and on hover; the site's statement rose (as on the Close button beside them) for the focus ring, a pressed
+ * and on hover; the site's statement blue violet (as on the Close button beside them) for the focus ring, a pressed
  * control and the dragged slider; and the control bar's height, its 32px controls (44px on touch screens) and the 1px
  * rule above.
  */
@@ -218,13 +218,7 @@
 
 /* The film or recording fades in over the black once its first frame is on screen (videoFrame.ts). */
 .cs-video-dialog__video {
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: var(--radius-inner);
   background: #000;
-  box-shadow: 0 0 0 1px var(--color-media-edge);
   opacity: 0;
   transition: opacity 120ms linear;
 }
@@ -256,9 +250,6 @@
   width: 100%;
   height: 100%;
   max-width: none;
-  max-height: none;
-  border-radius: 0;
-  box-shadow: none;
 }
 
 .cs-video-dialog__screen > .cs-video-dialog__video:not([controls]) {
@@ -279,7 +270,7 @@
 /* Reduced motion                                                           */
 /* ----------------------------------------------------------------------- */
 
-/* Every change is instant: the global 1ms reduced-motion transition (base.css) is switched off here. */
+/* Every change is instant (base.css already sets 0s transitions under reduced motion; this keeps it explicit). */
 html[data-motion='reduce'] :is(.cs-video-dialog__video, .cs-ctl) {
   transition: none !important;
 }
@@ -291,3 +282,4 @@ html[data-motion='reduce'] .cs-seek::-webkit-slider-thumb {
 html[data-motion='reduce'] .cs-seek::-moz-range-thumb {
   transition: none;
 }
+

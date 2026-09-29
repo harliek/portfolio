@@ -4,7 +4,6 @@ import { ResponsiveImage } from '../media/ResponsiveImage'
 import { PageLink } from '../transition/PageLink'
 import { leaveSite } from '../transition/pageChange'
 import { isPlainClick } from '../transition/warm'
-import { MetaLine } from './MetaLine'
 
 /** Rendered size of a shelf thumbnail (CSS px): the project's PNG object, contained in a 48px square. */
 const THUMB_SIZES = '48px'
@@ -22,11 +21,12 @@ export function ExternalMark() {
  * One project entry: one ordinary link with a small thumbnail of the
  * project's PNG object (whole, never cropped), the project's display title
  * (`displayName`, the same name the homepage tile uses) and its
- * metadata line, kind of work then context (projects.ts `category`, the homepage tiles' captions; MetaLine wraps it
- * at its dot where the column is narrow, Harlie's brief, 2026-09-28), the same in the shelf and the small-screen
- * menu. Hover and focus use the statement rose and prepare the destination (its code and opening image). A plain
- * click changes the page like every other link in the site (PageLink: the page comes apart and the next builds
- * itself); modified clicks stay native (new tab, new window).
+ * one-line context (employer or independent work), the same in the shelf
+ * and the small-screen menu. Hover and focus use the statement blue violet
+ * and prepare the destination (its code and opening image). A plain click
+ * changes the page like every other link in the site (PageLink: the page
+ * comes apart and the next builds itself); modified clicks stay native (new
+ * tab, new window).
  *
  * The project on screen is not a link: the same entry, highlighted and
  * saying "Current page", as plain text marked `aria-current="page"`
@@ -42,7 +42,7 @@ function ProjectLink({ project, current, thumbs, className, onNavigate }: { proj
       </span>
       <span className="shelf-item__text">
         <span className="shelf-item__name">{project.displayName}</span>
-        <span className="shelf-item__meta">{current ? 'Current page' : <MetaLine text={project.category} />}</span>
+        <span className="shelf-item__meta">{current ? 'Current page' : project.category}</span>
       </span>
     </>
   )

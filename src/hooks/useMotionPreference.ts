@@ -32,10 +32,12 @@ function apply() {
 
 if (hasWindow) {
   apply()
-  mql?.addEventListener('change', () => {
+  const onChange = () => {
     apply()
     listeners.forEach((l) => l())
-  })
+  }
+  mql?.addEventListener('change', onChange)
+  import.meta.hot?.dispose(() => mql?.removeEventListener('change', onChange))
   try {
     window.localStorage.removeItem(LEGACY_KEY)
   } catch {

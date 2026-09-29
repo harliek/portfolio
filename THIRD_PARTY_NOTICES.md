@@ -9,7 +9,7 @@ This portfolio's source code is original to this project unless noted below. It 
 | react | 19.3.0 | MIT | © Meta Platforms, Inc. and affiliates |
 | react-dom | 19.3.0 | MIT | © Meta Platforms, Inc. and affiliates |
 | react-router / react-router-dom | 7.18.4 | MIT | © Remix Software Inc., React Training LLC |
-| gsap (core, ScrollTrigger, Flip) | 3.15.0 | GSAP Standard “no charge” License | **Not MIT.** Terms: <https://gsap.com/standard-license>. Ordinary portfolio use falls within its no-charge terms. The package's own license headers are retained; the license is not relabeled. |
+| gsap (core, ScrollTrigger) | 3.15.0 | GSAP Standard “no charge” License | **Not MIT.** Terms: <https://gsap.com/standard-license>. Ordinary portfolio use falls within its no-charge terms. The package's own license headers are retained; the license is not relabeled. |
 
 MIT license text (applies to the MIT packages above; copyright holders as listed):
 
@@ -24,6 +24,7 @@ MIT license text (applies to the MIT packages above; copyright holders as listed
 | Asset | Version | License | Source |
 |---|---|---|---|
 | Inter Variable (`public/fonts/InterVariable.woff2`) | 4.1 | SIL Open Font License 1.1 | Official release, <https://github.com/rsms/inter/releases/tag/v4.1> (<https://rsms.me/inter/>). Full license: `public/fonts/Inter-LICENSE.txt`. |
+| Playfair Display Regular (`public/fonts/PlayfairDisplay-Regular.woff2`) | 1.203 | SIL Open Font License 1.1 | © 2017 The Playfair Display Project Authors, <https://github.com/clauseggers/Playfair-Display>. Full license: `public/fonts/PlayfairDisplay-LICENSE.txt`. |
 
 ## Build and test tooling (not shipped to visitors)
 
@@ -33,9 +34,12 @@ Vite (MIT), @vitejs/plugin-react (MIT), TypeScript (Apache-2.0), ESLint and type
 
 This section separates code that was copied or adapted from sources that were used only as visual or conceptual references.
 
-- **Copied or adapted code:** none. No third-party component source ships in this site.
+- **Copied or adapted code:** these components in `src/components/ui` ship in the site, adapted as their source comments describe. Licence terms to be confirmed by Harlie for each; none is stated in the source.
+  - Originkit “Nebula Drift” (`npx originkit@latest add nebula-drift --custom-style`), with Harlie's preset: `src/components/ui/originkit/nebula-drift.tsx`. Its header lists the changes from the supplied code.
+  - 21st.dev “Card Hover”, adapted: `src/components/ui/card-hover.tsx` and `card-hover.css`. (21st.dev was recorded here earlier as having mixed or unclear licences.)
+  - Aceternity UI: `TypeLine.tsx` (after TypewriterEffectSmooth, `@aceternity/typewriter-effect-demo-1`, adapted without Tailwind or Motion), `Stateful.tsx` (after the stateful button, `@aceternity/stateful-button`, adapted without Motion), and `DockTitle.tsx` with `dockLetters.ts` (after the Floating Dock: its hover magnification and spring, on title letters). (Aceternity UI was recorded here earlier as having a proprietary licence.)
 - **Layout idea adapted (no code copied):** Lightswind “3D Image Slider” (lightswind 3.2.5, MIT; <https://lightswind.com/r/3d-image-slider.json>). Its idea of stacking cards in one grid cell and placing each with `rotateY`/`translateZ` informs the project carousel, which was written from scratch in GSAP and plain CSS as a shallow arc with no continuous rotation.
-- **Researched and not adopted:** Motion, Motion Primitives, Magic UI, Aceternity UI (proprietary licence), ScrollX UI (MIT plus Commons Clause), 21st.dev (mixed or unclear licences), HeroUI (full design system; its styles import Tailwind's preflight), uselayouts, Tailwind CSS and Three.js. This follows Harlie's final instruction to keep GSAP and plain CSS; see the note in `DESIGN_RULES.md`.
+- **Researched and not adopted:** Motion, Motion Primitives, Magic UI, ScrollX UI (MIT plus Commons Clause), HeroUI (full design system; its styles import Tailwind's preflight), uselayouts, Tailwind CSS and Three.js. This follows Harlie's final instruction to keep GSAP and plain CSS; see the note in `DESIGN_RULES.md`.
 - **Visual and conceptual references only (no code copied):**
   - codrops/3DCarousel (MIT), <https://github.com/codrops/3DCarousel>: the general idea of arranging cards with CSS 3D transforms. The shallow-arc geometry here was written independently for this site.
   - codrops/ScrollBasedLayoutAnimations (MIT), <https://github.com/codrops/ScrollBasedLayoutAnimations>: the capture → change layout → animate pattern described in GSAP's Flip documentation.

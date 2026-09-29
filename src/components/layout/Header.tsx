@@ -12,14 +12,6 @@ import { ExternalMark, MobileMenu } from './WorkShelf'
 /** Scroll (px) past which the bar gathers into the floating pill: early, so nothing passes under the transparent bar. */
 const FLOAT_AT = 12
 
-/**
- * The space between the pill's two groups (px), besides each item's own 12px padding: 16, so HOME and About are 40px
- * apart, a little more than the 32px between the words of a group. It was 40 (64px apart), which made the pill 437px
- * wide at desktop sizes, 30% of a 1440px window, centred over the titles that pass beneath it (Harlie's brief,
- * 2026-09-28: the floating navigation "less dominant" where it competes with page titles). Now 413px.
- */
-const PILL_GAP = 16
-
 const MENU_ID = 'site-menu'
 const DESKTOP_QUERY = '(min-width: 900px)'
 const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -34,15 +26,14 @@ const modified = (e: MouseEvent) => e.button !== 0 || e.metaKey || e.ctrlKey || 
 /**
  * Header, styled after Harlie's original portfolio (brief v14): a transparent bar on every professional page, the
  * same on each route. As soon as the page scrolls (past FLOAT_AT, 12px) it becomes a resizable navbar (after
- * Aceternity's): the bar's contents gather into a narrower floating pill with a blurred, translucent ground, and
- * back again at the top; the header keeps its height throughout. After a page change it takes the new
+ * Aceternity's): the bar's contents gather into a narrower floating pill with a blurred, translucent ground and a soft
+ * shadow, and back again at the top; the header keeps its height throughout. After a page change it takes the new
  * page's state at once, so it never morphs after the page has arrived (Harlie's brief, 2026-09-28). Hovering an item
  * draws nothing on it: the cursor's outline is the header's only hover (Harlie's requests, 2026-09-27 and 2026-09-28).
  * At the left, "← Back" on case studies and About (brief v21: it returns to the previous view in the site; opened
  * from outside, it goes to the homepage's project collection, centred on the project just left), then HOME (a link to
  * "/"); the navigation at the right. Every item is small capitals with wide tracking (layout.css); the current page's
- * item is set in the statement rose with no glow, and keyboard focus draws a thin line under the words inside the
- * focus ring.
+ * item is set in white with a soft glow, and keyboard focus draws a thin line under the words inside the focus ring.
  *
  * - About: the dedicated About page (`/about`).
  * - Creative Portfolio: a plain link to the restored original creative
@@ -54,15 +45,11 @@ const modified = (e: MouseEvent) => e.button !== 0 || e.metaKey || e.ctrlKey || 
  * panel in every browser, and Escape closes. A page chosen from it changes with the menu still open, so the menu
  * leaves with the page being left (Harlie's brief, 2026-09-28). HOME stays at the left at every width.
  *
- * Every state uses the statement colour, the deployed site's rose (tokens.css --statement; the per-project accents
- * were read by no rule and are gone). Keyboard focus is a near-white line inside a rose ring, so it never reads as the
- * pointer's blue violet light (Harlie's brief, 2026-09-28; layout.css). The header is --header-height tall as a bar
- * and as the floating pill alike, and --header-safe (tokens.css) is the navigation's safe area for anything that
- * settles below it.
- *
- * Supporting, never the focal point (Harlie's brief, 2026-09-28): the pill hugs its words more closely (PILL_GAP) and
- * casts no shadow (layout.css), so where a page's title passes beneath it the title still leads; the words keep their
- * size, colour and 4.5:1 over the brightest film frames, and every item keeps its 44px target.
+ * Every state uses the statement blue violet (the per-project accents, rose, lime and amber, were read by no rule and
+ * are gone; Harlie's QA pass, 2026-09-28: blue violet only). Keyboard focus is a near-white line inside a blue violet
+ * ring, so it never reads as the pointer's light (Harlie's brief, 2026-09-28; layout.css). The
+ * header is --header-height tall as a bar and as the floating pill alike, and --header-safe (tokens.css) is the
+ * navigation's safe area for anything that settles below it.
  */
 export function Header() {
   const { pathname } = useLocation()
@@ -82,7 +69,7 @@ export function Header() {
     setOpen(false)
   }
 
-  // The floating pill hugs its contents (Harlie's request): the left group, PILL_GAP, the navigation.
+  // The floating pill hugs its contents (Harlie's request: no big gap): the left group, a 40px gap, the navigation.
   useEffect(() => {
     const header = headerRef.current
     if (!header) return
@@ -90,7 +77,7 @@ export function Header() {
       const start = header.querySelector<HTMLElement>('.site-header__start')
       const end = header.querySelector<HTMLElement>('.site-nav, .menu-button')
       if (!start || !end) return
-      header.style.setProperty('--pill-w', `${Math.ceil(start.scrollWidth + end.scrollWidth + PILL_GAP + 16)}px`)
+      header.style.setProperty('--pill-w', `${Math.ceil(start.scrollWidth + end.scrollWidth + 40 + 16)}px`)
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -303,3 +290,4 @@ export function Header() {
     </header>
   )
 }
+

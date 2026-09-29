@@ -86,13 +86,58 @@ export function CaseTitle({ title, meta }: { title: string; meta: readonly strin
       ro.disconnect()
     }
   }, [title])
+
+  // A details line breaks only between its " · " parts, and a "·" left at a line's end is hidden (kept in place, so
+  // nothing reflows): on a phone "Student venture · 2024 · Reconstructed screen" ended its first line on a stray dot
+  // (2026-09-29). Measured again only when the details' width changes.
+  useLayoutEffect(() => {
+    const list = metaRef.current
+    if (!list) return
+    let width = -1
+    const mark = () => {
+      width = list.clientWidth
+      for (const li of list.children) {
+        const parts = [...li.querySelectorAll<HTMLElement>('.cx-meta__part')]
+        parts.forEach((part, i) => {
+          const next = parts[i + 1]
+          if (next && next.offsetTop > part.offsetTop) part.dataset.lineEnd = ''
+          else delete part.dataset.lineEnd
+        })
+      }
+    }
+    mark()
+    const ro = new ResizeObserver(() => {
+      if (list.clientWidth !== width) mark()
+    })
+    ro.observe(list)
+    let live = true
+    void document.fonts?.ready.then(() => live && mark())
+    return () => {
+      live = false
+      ro.disconnect()
+    }
+  }, [meta])
+
   return (
     <>
       <DockTitle className="cx-title" tabIndex={-1} text={title} />
       <ul ref={metaRef} className="cx-meta" aria-label="Project details">
-        {meta.map((m) => (
-          <li key={m}>{m}</li>
-        ))}
+        {meta.map((m) => {
+          const parts = m.split(' · ')
+          return (
+            <li key={m}>
+              {parts.map((part, i) => (
+                <span key={i}>
+                  <span className="cx-meta__part">
+                    {part}
+                    {i < parts.length - 1 && <span className="cx-meta__sep"> ·</span>}
+                  </span>
+                  {i < parts.length - 1 && ' '}
+                </span>
+              ))}
+            </li>
+          )
+        })}
       </ul>
     </>
   )

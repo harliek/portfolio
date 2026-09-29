@@ -453,7 +453,7 @@
 }
 
 /*
- * Keyboard focus: the site's shared ring (tokens.css, 2px rose with the near-white inner line; Harlie's brief,
+ * Keyboard focus: the site's shared ring (tokens.css, 2px blue violet with the near-white inner line; Harlie's brief,
  * 2026-09-28: it was a 1px ring here), 6px out from the cover, which keeps its own shadow. A free-standing tile has
  * no shadow, only the inner line.
  */
@@ -472,40 +472,6 @@
 /* Every tile at full brightness, wherever it is in the strip (Harlie's request). */
 .plane[data-free] .plane__media {
   overflow: visible;
-}
-
-/*
- * The pause for the drift, for keyboard users: it appears only when focused, before the tiles. It shows just above
- * the strip's right end, 16px clear of the tiles (Harlie's brief, 2026-09-28: it was at the top of the collection,
- * over the film about 220px above the strip), with the shared focus ring; above the tiles in the collection's own
- * stacking, nothing higher.
- */
-.field__motion:not(:focus-visible) {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.field__motion:focus-visible {
-  position: absolute;
-  top: max(8px, calc(var(--horizon) - var(--plane-h, 35vw) / 2 - 60px));
-  right: var(--edge);
-  z-index: 3;
-  min-height: 44px;
-  padding: 0 18px;
-  border: 1px solid rgb(255 255 255 / 0.4);
-  border-radius: 999px;
-  background: rgb(0 0 0 / 0.6);
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  color: #fff;
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-  box-shadow: var(--focus-inner-line);
 }
 
 /* Each card's own caption: the title 20px below the cover, the line 8px below it, the same height for every card. */
@@ -535,26 +501,16 @@
     text-shadow 240ms var(--ease-standard);
 }
 
-/*
- * The tile's metadata: what kind of work it is, then its context ("Market entry · PlanetArt"; field.ts), set as the
- * case studies' own meta lines are (case-v16.css .cx-meta: 12px capitals, 0.08em tracking), so the strip reads as a
- * range of kinds of work at a glance, not a row of paragraphs (Harlie's brief, 2026-09-28: "no paragraphs; concise
- * metadata"). One line on every desktop tile, so the reserve is one line (it was two, for sentences); on a phone a
- * long one wraps at its dot (MetaLine), never inside a part. A little brighter than the case pages' meta (about
- * #d5d8e1, 12.9:1 on black), as it lies over the film's shade.
- */
 .plane__line {
   display: block;
-  text-wrap: balance;
-  min-height: 1.5em;
+  text-wrap: pretty;
+  min-height: calc(2 * 1.5em);
   max-width: 56ch;
   margin-top: 8px;
   font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: clamp(0.875rem, 0.82rem + 0.15vw, 0.9375rem);
   line-height: 1.5;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  /* A cool light grey between the body text and the muted tone (about #d5d8e1), a step below the title. */
   color: color-mix(in srgb, var(--color-text) 55%, var(--color-muted));
   transition: color 240ms var(--ease-standard);
 }
@@ -626,7 +582,7 @@
  * collection is exactly the room between the header and the footer, the tile's top 12px below its top (the tile's
  * size is measured so its caption fits whole beneath it), the opening sized so the tile still peeks 66px on arrival.
  * To leave the tile a useful size, the footer's row is closer to the page's end (its links keep their 44px) and the
- * titles are a size smaller (they keep to one line; the metadata lines are already 12px).
+ * captions are a size smaller (the titles keep to one line, the lines to about three).
  */
 @media (max-height: 520px) {
   .home {
@@ -643,6 +599,10 @@
 
   .plane__title {
     font-size: 1.125rem;
+  }
+
+  .plane__line {
+    font-size: 0.8125rem;
   }
 
   .site-main:has(.home) + .site-end .site-end__inner {
@@ -667,3 +627,4 @@
     opacity: 1;
   }
 }
+

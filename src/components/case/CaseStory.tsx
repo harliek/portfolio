@@ -2,7 +2,7 @@ import '../../styles/case.css'
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { getImage, type ImageId } from '../../content/media'
 import { PHONE_SIZES, STAGE_SIZES } from '../../content/projects'
-import { prefersReducedMotion } from '../../hooks/useReducedMotion'
+import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { ScrollTrigger } from '../../lib/gsap'
 import { DemoControls } from '../media/DemoControls'
 import { ResponsiveImage } from '../media/ResponsiveImage'
@@ -11,21 +11,19 @@ import { closeOnCancel, closeWithFade } from '../media/dialogExit'
 import { CloseIcon } from '../media/ExpandIcon'
 import { enterFullscreen } from '../media/fullscreen'
 import { onFramePresented } from '../media/videoFrame'
+import { CardHover } from '../ui/card-hover'
 import { CaseTitle } from './CasePage'
 
 export interface StoryStep {
   title: string
   text: ReactNode
-  /**
-   * A qualification set small under the step's text (scope, data or status), not a sentence of the story (Harlie's
-   * brief, 2026-09-28: the Merchandising Dashboard's "does not place orders" moved out of the page's last beat into a
-   * smaller note). Inside the step, so the step's rule, the reading line and the page's settled end all include it.
-   */
-  note?: ReactNode
 }
 
-/** One layer of a stage that changes with the steps: a picture (contained, never cropped) or composed content. */
-export type StageLayer = { image: ImageId; alt?: string } | { node: ReactNode; label: string }
+/**
+ * One layer of a stage that changes with the steps: a picture (with an optional short neutral `label` under it, for a
+ * picture whose provenance needs one).
+ */
+export type StageLayer = { image: ImageId; alt?: string; label?: string }
 
 /**
  * A recording's part for one step: seconds [start, end], looped while the step is current; with 'hold', played once
@@ -38,16 +36,23 @@ export type Segment = readonly [number, number] | readonly [number, number, 'hol
  * What the fixed stage shows. Each kind holds one state per step:
  * - video: a real recording; it plays each step's segment (`play`: on a loop, or once and held, and faster while the
  *   page scrolls), or (`free`) the whole recording loops by itself;
- * - layers: distinct artifacts as a gallery, all shown at once, the step's own large and the others small; as the
- *   scroll reaches the next step its picture grows where it stands while the large one shrinks (`show` picks the
- *   layer per step; at once under reduced motion);
+ * - layers: distinct artifacts in a card-hover gallery, the step's own picture in a large card and every picture as a
+ *   small circle on its right (`show` picks the layer per step; hovering, focusing or clicking a circle shows it);
  * - phones: the app's screens as cutouts in one row, the step's own screen brought forward (`step` on each phone).
- * Any kind can carry a `status` (StageStatus).
+ * Layers and phones may carry one short neutral `label` beside the pictures (Harlie's copy brief, 2026-09-29:
+ * "Illustrative concept screen", "Screens reconstructed from the original prototype"); nothing else is written on or
+ * under them. No page sets a label at present (Harlie's requests, 2026-09-29: none beside the pictures, then none in
+ * the meta line either).
  */
-export type Stage = (
+export type Stage =
   | {
       kind: 'video'
       src: string
+      /**
+       * The recording the larger view plays, when the page's `src` is only the part the page shows (a shorter cut of
+       * the same file, the same frames and times). Left out, the larger view plays `src`.
+       */
+      dialogSrc?: string
       poster: string
       width: number
       height: number
@@ -62,24 +67,11 @@ export type Stage = (
       free?: boolean
       /** Its playing speed (1 when left out; Harlie's request: the Spreadsheet and Merchandising recordings faster). */
       rate?: number
+      /** The name of the control that opens the recording larger ("Play dashboard demo"). */
+      action?: string
     }
-  | { kind: 'layers'; aspect: number; layers: readonly StageLayer[]; show: readonly number[]; /** The colour of any sliver left around a picture whose proportions differ a little. */ screen?: string }
-  | { kind: 'phones'; phones: readonly { image: ImageId; name: string; step: number | readonly number[] }[]; /** One picture of all the phones, opened larger on a click. */ all?: ImageId }
-) & {
-  /**
-   * What the pictures are, shown in a small label above them (Harlie's brief, 2026-09-28: "Prototype" or "Concept
-   * UI", only where a polished mockup could be mistaken for a live production system; left out everywhere else).
-   */
-  status?: StageStatus
-}
-
-/** The stage's status labels (case-v16.css .story__status). */
-export type StageStatus = 'Prototype' | 'Concept UI'
-
-/** The stage's status, when it has one: first in the stage (read before its pictures), shown above its left edge. */
-function StatusLabel({ status }: { status?: StageStatus }) {
-  return status ? <p className="story__status">{status}</p> : null
-}
+  | { kind: 'layers'; aspect: number; layers: readonly StageLayer[]; show: readonly number[]; /** The colour of any sliver left around a picture whose proportions differ a little. */ screen?: string; /** A short neutral label for pictures without their own. */ label?: string }
+  | { kind: 'phones'; phones: readonly { image: ImageId; name: string; step: number | readonly number[] }[]; /** One picture of all the phones, opened larger on a click. */ all?: ImageId; /** A short neutral label under the phones. */ label?: string }
 
 /**
  * The stage's listener, called as the page scrolls: the current step, the progress through its scroll (0 to 1) and
@@ -249,12 +241,6 @@ interface EndRoom {
   cover: (scroll: number) => Cover
   /** Phones: the last step's whole block, kept below the band at the end where the room allows. */
   tail?: HeadingBand
-  /**
-   * Wide windows under the floating pill, the steps held on their own (below): a line of text (not a heading, which
-   * keeps its own rule) above this (px, the navigation's safe line) crowds the top of the window beside the pill, so it
-   * costs as much as a cut line.
-   */
-  zone?: number
 }
 
 /**
@@ -275,7 +261,7 @@ interface EndRoom {
  * the introduction or a step, since a heading may not rest in the safe area; that line is then whole, reaching under
  * the pill's end as little as it can.
  */
-function settleEnd({ rest, lowest, last, least, covered, row, vh, bands, lines, cover, tail, zone = 0 }: EndRoom) {
+function settleEnd({ rest, lowest, last, least, covered, row, vh, bands, lines, cover, tail }: EndRoom) {
   // The page's scroll once the words end at `end`, and a heading's place then.
   const scroll = (end: number) => Math.max(0, last - end)
   const at = (end: number, h: HeadingBand) => ({ top: h.top - scroll(end), bottom: h.bottom - scroll(end) })
@@ -337,7 +323,6 @@ function settleEnd({ rest, lowest, last, least, covered, row, vh, bands, lines, 
       const across = edges.some((e) => top < e + 1 && bottom > e - 1)
       const shown = !across && !merged.some(([a, b]) => top >= a - 1 && bottom <= b + 1)
       if (across) sum += 1000
-      else if (shown && zone && !l.head && top < zone - 1) sum += 1000
       else if (shown && merged.some(([, b]) => top >= b - 1 && top < b + near)) sum += 200
       if (l.step >= 0) {
         if (l.head) headHidden.set(l.step, (headHidden.get(l.step) ?? true) && !shown)
@@ -384,10 +369,9 @@ function settleEnd({ rest, lowest, last, least, covered, row, vh, bands, lines, 
  * media's own proportions with rounded corners and a soft glow (case-v16.css), the recording or screenshot filling it
  * whole (never cropped).
  */
-function MediaBox({ aspect, status, onZoom, zoomLabel, children }: { aspect: number; status?: StageStatus; onZoom?: (trigger: HTMLElement) => void; zoomLabel?: string; children: ReactNode }) {
+function MediaBox({ aspect, onZoom, zoomLabel, children }: { aspect: number; onZoom?: (trigger: HTMLElement) => void; zoomLabel?: string; children: ReactNode }) {
   return (
     <div className="story__stage story__box" style={{ '--aspect': aspect } as CSSProperties}>
-      <StatusLabel status={status} />
       <div className="story__screen">{children}</div>
       {onZoom && <ZoomButton onZoom={onZoom} label={zoomLabel} />}
     </div>
@@ -410,8 +394,7 @@ function MediaBox({ aspect, status, onZoom, zoomLabel, children }: { aspect: num
  * reach the line in turn, each step after the first still keeps its own scroll (stepScroll; on phones once the band is
  * held), the changes spaced evenly: the words come to their end and are held there, like the picture, while the
  * steps change, then the footer rises beneath them (Harlie's QA pass, 2026-09-28). The current step takes a glowing
- * rule and a white heading; the others stay fully readable, never faded (Harlie's brief, 2026-09-28: inactive copy
- * reads as secondary, not disabled; case-v16.css --cx-step-quiet). A step may end on a small note (StoryStep.note).
+ * rule and a glowing heading; the others stay fully readable.
  *
  * Phones and tablets held upright (PHONE): the introduction, then a compact stage held under the header (about 30% of
  * the screen), with the steps below it.
@@ -428,43 +411,17 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
     const list = listRef.current
     if (!list) return
     const n = steps.length
-    /**
-     * Scroll positions where each step becomes current, the page's last scroll position, the space added under the
-     * steps, and on phones and tablets what the page needs besides the band's picture (--story-need).
-     */
-    const m = { t: [0], end: 1, pad: 0, need: '' }
+    /** Scroll positions where each step becomes current, the page's last scroll position, and the space added under the steps. */
+    const m = { t: [0], end: 1, pad: 0 }
     const cs = list.closest<HTMLElement>('.cs')
     const intro = cs?.querySelector<HTMLElement>(':scope > .cs__intro')
+    // A refresh queued below is dropped once the page has gone (the next page's triggers refresh themselves).
+    let live = true
     const measure = () => {
       // The words where the page places them: a hold (below) is let go while they are measured, in the same frame.
       if (cs) cs.dataset.measuring = ''
       const y = window.scrollY
       const vh = window.innerHeight
-      /*
-       * Phones and tablets held upright: what the page needs besides the band's picture (the header, the band's own
-       * padding, the steps and the footer, with the 56px the words keep above it at the end). On tall tablets the
-       * picture takes the rest, between 30% and 40% of the screen (case-v16.css --story-need; Harlie's brief,
-       * 2026-09-28: with shorter copy and a shorter footer, a fixed 720px left 150 to 250px empty under the steps at
-       * 768x1024). Set first, since the band's height moves everything measured below; nothing it counts depends on it.
-       */
-      const media = cs && window.matchMedia(PHONE).matches ? cs.querySelector<HTMLElement>('.cs__media') : null
-      if (cs && media) {
-        const ms = getComputedStyle(media)
-        const chrome = (parseFloat(ms.paddingTop) || 0) + (parseFloat(ms.paddingBottom) || 0) + (parseFloat(ms.marginTop) || 0)
-        const gap = parseFloat(getComputedStyle(list.parentElement ?? list).marginTop) || 0
-        const headerH = document.querySelector<HTMLElement>('.site-header')?.offsetHeight ?? 0
-        const footerH = document.querySelector<HTMLElement>('.site-end')?.offsetHeight ?? 0
-        const need = `${Math.ceil(headerH + chrome + gap + list.getBoundingClientRect().height + footerH + 56)}px`
-        cs.style.setProperty('--story-need', need)
-        // A gallery is laid out again for the new height only after this measure (its ResizeObserver): measured again.
-        if (need !== m.need) {
-          m.need = need
-          requestAnimationFrame(() => ScrollTrigger.refresh())
-        }
-      } else {
-        cs?.style.removeProperty('--story-need')
-        m.need = ''
-      }
       const items = [...list.children] as HTMLElement[]
       const tops = items.map((el) => el.getBoundingClientRect().top + y)
       const body = list.parentElement ?? list
@@ -535,31 +492,10 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
       // On phones, words to be held come to rest as low as they may, the steps whole under the band where they fit
       // (the gap kept above the footer is for a page whose own length ends it).
       if (cs && !wide && lastBottom - settled < least - 0.5) settled = settleEnd({ ...room, rest: lowest })
-      /*
-       * Wide windows where the words are taller than the room at the end (Harlie's QA pass, 2026-09-28: at 1024 to
-       * 1440px the page ended on the introduction's first line a few pixels under the window's top, the title gone,
-       * or reaching under the floating navigation's end). The title may not rest across the navigation's safe line, and
-       * the space between the words' blocks (30px) is less than that safe area (77px), so wherever the words end
-       * together some line crowds the window's top. There the steps are held on their own: they stop where they end,
-       * clear of the safe area, while the introduction goes on up and out of view, and the page ends on the steps
-       * beside the picture, the first heading below the navigation. They end where the whole words would have: level
-       * with the held picture's bottom (`rest`; Harlie's brief, 2026-09-28, spacing: from the first pass's end, which
-       * had moved up until the title was out of view, the Merchandising Dashboard's steps ended 150px above its
-       * picture at 1440x900 with the rest of the window empty down to the footer).
-       */
-      const zone = pill && bands.length ? bands[0].safe : 0
-      const upAt = Math.max(0, lastBottom - settled)
-      // Headings (the title with its details, each step's) keep their own rule, their boxes against the safe line.
-      const crowdsTop = Boolean(zone) && lines.some((l) => !l.head && !l.glow && l.bottom - upAt > 1 && l.top - upAt < zone - 1)
-      const split = Boolean(cs && intro) && crowdsTop && bands.length > 1
-      if (split) {
-        const stepLines = lines.filter((l) => l.step >= 0)
-        settled = settleEnd({ ...room, rest, least: 0, bands: bands.slice(1), lines: stepLines, zone })
-      }
-      // The page's scroll once the words (or, split, the steps) have come to that end.
+      // Keep the introduction and reading blocks on the same scroll trajectory.
+      // Holding only the steps caused the title to slide away independently at the page end.
+      // The page's scroll once the complete text column reaches its resting position.
       const moved = Math.max(0, lastBottom - settled)
-      // Split, the scroll that takes the introduction wholly out of view (its details' glow too).
-      const introGone = split && intro ? intro.getBoundingClientRect().bottom + y + 8 : 0
       /*
        * Where the words reach their end before the steps have had their scroll (a short page; Harlie's QA pass,
        * 2026-09-28), they stop there and are held, like the picture beside them (on phones, the steps under the held
@@ -570,19 +506,19 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
        * footer's top padding the footer comes up over that row (--hold-under). Elsewhere the page's own length does the
        * work: the space under the words (the body's padding, or a negative margin for space taken back).
        */
-      const holding = Boolean(cs && intro) && (split || moved < least - 0.5)
+      const holding = wide && Boolean(cs && intro) && moved < least - 0.5
       let pad: number
       if (holding && cs && intro) {
-        // The page's whole scroll: the steps' own, and split, at least until the introduction is out of view.
-        const scrollTo = Math.max(least, split ? Math.max(moved, introGone) : 0)
+        // Hold the complete text column while the remaining media steps finish.
+        const scrollTo = least
         pad = Math.round(scrollTo + vh - footerH - lastBottom - between)
         const under = Math.max(0, Math.ceil(settled - footerAtEnd + between))
         cs.style.setProperty('--hold-rest', `${pad + under}px`)
         cs.style.setProperty('--hold-under', `${-under}px`)
         cs.style.setProperty('--hold-intro', `${(intro.getBoundingClientRect().top + y - moved).toFixed(1)}px`)
         cs.style.setProperty('--hold-body', `${(body.getBoundingClientRect().top + y - moved).toFixed(1)}px`)
-        // 'words': the introduction and the steps held together; 'steps': the steps alone (case-v16.css).
-        cs.dataset.hold = split ? 'steps' : 'words'
+        // The introduction and steps always remain together.
+        cs.dataset.hold = 'words'
         body.style.paddingBottom = ''
         body.style.marginBottom = ''
       } else {
@@ -597,7 +533,7 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
       if (cs) delete cs.dataset.measuring
       if (pad !== m.pad) {
         m.pad = pad
-        requestAnimationFrame(() => ScrollTrigger.refresh())
+        requestAnimationFrame(() => live && ScrollTrigger.refresh())
       }
       // Each step becomes current when its top reaches the reading line.
       const end = Math.max(1, document.documentElement.scrollHeight - vh)
@@ -644,6 +580,7 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
       onUpdate: update,
     })
     return () => {
+      live = false
       trigger.kill()
       const body = list.parentElement ?? list
       body.style.paddingBottom = ''
@@ -694,7 +631,6 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
             <li key={s.title} className="story__step" data-current={k === active || undefined}>
               <h2 className="story__title">{s.title}</h2>
               <p className="story__text">{s.text}</p>
-              {s.note && <p className="story__note">{s.note}</p>}
             </li>
           ))}
         </ol>
@@ -704,7 +640,7 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
 }
 
 /** A transparent control over the whole picture: a click opens it larger (Harlie's request). */
-function ZoomButton({ onZoom, label = 'View larger' }: { onZoom: (trigger: HTMLElement) => void; label?: string }) {
+function ZoomButton({ onZoom, label = 'Enlarge image' }: { onZoom: (trigger: HTMLElement) => void; label?: string }) {
   return <button type="button" className="story__zoom" aria-label={label} onClick={(e) => onZoom(e.currentTarget)} />
 }
 
@@ -715,11 +651,9 @@ function ZoomButton({ onZoom, label = 'View larger' }: { onZoom: (trigger: HTMLE
  * stage was showing (so it opens on the current section), fading in over the black once its first frame is on screen;
  * below it the site's compact controls (DemoControls: play or pause, seek, the sound control shown disabled, full
  * screen). The page behind is locked like every larger view (html.is-dialog-open). Close, Escape or a click outside
- * close it with the shared fade; focus returns to the picture. The stage's status leads the bar, as in the pictures'
- * larger view (ImageDialog; Harlie's brief, 2026-09-28: "Prototype" stays visible wherever the product could be taken
- * for a live system).
+ * close it with the shared fade; focus returns to the picture.
  */
-function VideoDialog({ src, poster, title, status, width, height, duration, start, rate, trigger, onClose }: { src: string; poster: string; title: string; status?: StageStatus; width: number; height: number; duration: number; start: number; rate: number; trigger: HTMLElement | null; onClose: () => void }) {
+function VideoDialog({ src, poster, title, width, height, duration, start, rate, trigger, onClose }: { src: string; poster: string; title: string; width: number; height: number; duration: number; start: number; rate: number; trigger: HTMLElement | null; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -781,12 +715,6 @@ function VideoDialog({ src, poster, title, status, width, height, duration, star
       <div className="image-dialog__panel">
         <div className="image-dialog__bar">
           <p id={titleId} className="image-dialog__count t-small">
-            {status && (
-              <>
-                {status}
-                <span aria-hidden="true"> · </span>
-              </>
-            )}
             {title}
           </p>
           <div className="image-dialog__controls">
@@ -847,311 +775,47 @@ function VideoDialog({ src, poster, title, status, width, height, duration, star
 function StageView({ stage, active, bind, name }: { stage: Stage; active: number; bind: Bind; name: string }) {
   if (stage.kind === 'video') return <VideoStage stage={stage} bind={bind} name={name} />
   if (stage.kind === 'phones') return <PhoneRow stage={stage} active={active} />
-  return <LayerGallery stage={stage} bind={bind} />
+  return <GalleryStage stage={stage} active={active} />
 }
 
 /**
- * The gallery (CafePress UK, AI Leasing Agent). Harlie's requests, 2026-09-28: "maybe
- * show all of the images at once, but as they scroll, like one gets like a lot bigger", then "show all three images
- * with one bigger but as you scroll they like take turns getting bigger ... you can see them all at once and they like
- * grow like a cool effect". Every screenshot is on the stage at once, in the order the steps show them, in a column
- * (or, where the room is wider than tall, a row): the current step's picture large and the others small. As the
- * scroll reaches the next step, its picture grows where it stands while the current one shrinks, the others sliding
- * along to make room, following the scroll both ways; the group keeps its size throughout. The small pictures are a
- * little dimmed (an overlay, never a blur). Each picture is its own control, opening it larger.
- *
- * The stage's status label (on wide screens) stands above the picture that is large; when another picture grows past
- * the large one, the label fades out, moves to it and fades back in (Harlie's QA pass, 2026-09-28: it used to follow a
- * weighted average of the two corners and floated over the empty space between them mid-change). On phones it stays
- * above the stage's top left corner, in the band's top padding, drawn over the pictures.
+ * The screenshots of CafePress UK and the AI Leasing Agent in a card-hover gallery (Harlie's request, 2026-09-29: "Try
+ * with the pages with multiple photos try something like this but with three small circles on the right side", with
+ * 21st.dev's Card Hover; CardHover in src/components/ui; it replaced the image accordion of 2026-09-28). The current
+ * step's picture fills the card and every picture stands as a small circle on its right; hovering, focusing or clicking
+ * a circle shows its picture for as long as that step is current, and scrolling to another step shows that step's.
+ * Clicking the card enlarges the picture. A picture's own `label`, or the stage's, stands under the card.
  */
-const GALLERY = {
-  /** A small picture's size, as a share of the large one's ("a lot bigger"). */
-  small: 0.28,
-  /** The space between the pictures (px; less in the phones' band). */
-  gap: 16,
-  gapPhone: 8,
-  /** How far a small picture is dimmed (the opacity of a black overlay). */
-  dim: 0.28,
-  /**
-   * The change between two steps' pictures is centred on the moment the next step becomes current: it takes this share
-   * of the scroll at the end of one step and at the start of the next (at most `edgeMax` px of each), so each step's
-   * own picture rests large through the middle of its scroll.
-   */
-  edge: 0.34,
-  edgeMax: 200,
-  /** Where a step's scroll is short, the change takes at least this many px of it (up to the whole of both halves). */
-  edgeMin: 90,
-  /**
-   * The gallery follows the scroll through a critically damped spring (its stiffness, per second) at most `speed`
-   * steps a second, measured in time rather than frames: a wheel's notch, or a short page's few pixels, still show the
-   * change over about half a second, the same on any display, and a change of direction eases rather than jumps.
-   */
-  spring: 10,
-  speed: 2.6,
-  /** How much larger than the labelled picture another must grow before the label moves to it (no flicker). */
-  labelLead: 0.1,
-  /** The label's fade out before it moves (ms; case-v16.css fades it back in over the same time). */
-  labelFade: 90,
-}
-
-/** An even start and finish for the scrubbed change. */
-const smooth = (t: number) => {
-  const c = Math.min(1, Math.max(0, t))
-  return c * c * (3 - 2 * c)
-}
-
-/**
- * The gallery's arrangement for `count` pictures of proportions `aspect` in the room there is (`roomW` by `roomH`,
- * px): the large picture's size (`w`, `h`; every picture is laid out at it and scaled to its own size), whether they
- * run down a column or across a row (whichever lets the large one be larger), and the group's size (`boxW`, `boxH`),
- * which is the same whichever picture is large (their scales always add up to the same).
- */
-function layGallery(roomW: number, roomH: number, aspect: number, count: number, gap: number) {
-  const along = 1 + Math.max(0, count - 1) * GALLERY.small
-  const gaps = Math.max(0, count - 1) * gap
-  const column = Math.max(1, Math.min(roomW, ((roomH - gaps) / along) * aspect))
-  const row = Math.max(1, Math.min((roomW - gaps) / along, roomH * aspect))
-  const down = column >= row
-  const w = down ? column : row
-  const h = w / aspect
-  return down ? { w, h, down, boxW: w, boxH: along * h + gaps } : { w, h, down, boxW: along * w + gaps, boxH: h }
-}
-
-/** The screenshots (CafePress UK, AI Leasing Agent) as a gallery whose large picture changes with the steps (GALLERY). */
-function LayerGallery({ stage, bind }: { stage: Extract<Stage, { kind: 'layers' }>; bind: Bind }) {
+function GalleryStage({ stage, active }: { stage: Extract<Stage, { kind: 'layers' }>; active: number }) {
   const dialog = useImageDialog()
-  const galleryRef = useRef<HTMLDivElement>(null)
-  const probeRef = useRef<HTMLSpanElement>(null)
-  const tiles = useRef<(HTMLDivElement | null)[]>([])
-  const shades = useRef<(HTMLDivElement | null)[]>([])
-  const count = stage.layers.length
-  const key = `${count}:${stage.show.join(',')}:${stage.aspect}`
-  // The gallery's order: the layers in the order the steps first show them, then any the steps never show.
-  const seen = [...new Set(stage.show)].filter((k) => k >= 0 && k < count)
-  const order = [...seen, ...stage.layers.map((_, k) => k).filter((k) => !seen.includes(k))]
-  const layerIds = order.flatMap((k) => {
-    const layer = stage.layers[k]
-    return 'image' in layer ? [layer.image] : []
-  })
-
-  // Before the first paint, so the page opens on the gallery already in place.
-  useLayoutEffect(() => {
-    const gallery = galleryRef.current
-    const probe = probeRef.current
-    const band = gallery?.closest<HTMLElement>('.cs__media')
-    if (!gallery || !probe || !band) return
-    const label = gallery.querySelector<HTMLElement>('.story__status')
-    // The stage's layers, steps and proportions, from `key` (the page passes a new stage object on every render).
-    const [countText, showText, aspectText] = key.split(':')
-    const total = Number(countText)
-    const aspect = Number(aspectText)
-    const shown = showText ? showText.split(',').map(Number) : [0]
-    const firsts = [...new Set(shown)].filter((k) => k >= 0 && k < total)
-    const sequence = [...firsts, ...Array.from({ length: total }, (_, k) => k).filter((k) => !firsts.includes(k))]
-    // Each step's large picture, as a place in the gallery's order.
-    const large = shown.map((k) => Math.max(0, sequence.indexOf(k)))
-    const last = large.length - 1
-    let layout = { w: 1, h: 1, down: true, boxW: 1, boxH: 1 }
-    let gap = GALLERY.gap
-    let target = 0
-    let pos = 0
-    let speed = 0
-    let then = 0
-    let frame = 0
-    let phone = false
-    // The picture the status label stands above (a place in the gallery's order; -1 before the first paint), and the
-    // timer of its move to another.
-    let labelled = -1
-    let labelMove = 0
-
-    // Each picture's size, place and dimming for the gallery's position (steps, 0 to the last): the step's picture
-    // large, the next step's growing and it shrinking in between, and each placed after the ones before it.
-    const paint = () => {
-      const i = Math.min(last, Math.floor(pos))
-      const f = pos - i
-      const grown = tiles.current.map(() => 0)
-      grown[large[i]] += 1 - f
-      grown[large[Math.min(last, i + 1)]] += f
-      let along = 0
-      // Each picture's top left corner, where the status label stands above the large one.
-      const corners: [number, number][] = []
-      tiles.current.forEach((el, p) => {
-        const s = GALLERY.small + (1 - GALLERY.small) * Math.min(1, grown[p])
-        const w = layout.w * s
-        const h = layout.h * s
-        const x = layout.down ? (layout.boxW - w) / 2 : along
-        const y = layout.down ? along : (layout.boxH - h) / 2
-        along += (layout.down ? h : w) + gap
-        corners[p] = [x, y]
-        if (!el) return
-        el.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${s.toFixed(4)})`
-        // The larger picture is drawn over the smaller where their glows meet.
-        el.style.zIndex = String(1 + Math.round(grown[p] * 10))
-        // The focus ring keeps its width at any scale (case-v16.css).
-        el.style.setProperty('--inv', (1 / s).toFixed(3))
-        const shade = shades.current[p]
-        if (shade) shade.style.opacity = (GALLERY.dim * (1 - Math.min(1, grown[p]))).toFixed(3)
-      })
-      placeLabel(grown, corners)
-    }
-
-    // The status label: on phones at the stage's corner; otherwise above the large picture, moving to another only
-    // once that one has clearly grown past it, faded out while it moves (at once under reduced motion).
-    const placeLabel = (grown: number[], corners: [number, number][]) => {
-      if (!label) return
-      const lead = grown.indexOf(Math.max(...grown))
-      if (phone || labelled < 0 || prefersReducedMotion()) {
-        window.clearTimeout(labelMove)
-        labelMove = 0
-        labelled = lead
-        delete label.dataset.moving
-      } else if (lead !== labelled && grown[lead] > grown[labelled] + GALLERY.labelLead && !labelMove) {
-        label.dataset.moving = ''
-        labelMove = window.setTimeout(() => {
-          labelMove = 0
-          labelled = -1
-          paint()
-        }, GALLERY.labelFade)
-      }
-      const [x, y] = phone ? [0, 0] : corners[labelled]
-      gallery.style.setProperty('--status-x', `${x.toFixed(1)}px`)
-      gallery.style.setProperty('--status-y', `${y.toFixed(1)}px`)
-    }
-
-    // The room there is: the column's width and the stage's height (--stage-h, read through the probe).
-    const lay = () => {
-      phone = window.matchMedia(PHONE).matches
-      const style = getComputedStyle(band)
-      const roomW = band.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
-      const roomH = probe.offsetHeight
-      if (roomW <= 0 || roomH <= 0) return
-      gap = phone ? GALLERY.gapPhone : GALLERY.gap
-      layout = layGallery(roomW, roomH, aspect, total, gap)
-      gallery.style.width = `${layout.boxW.toFixed(1)}px`
-      gallery.style.height = `${layout.boxH.toFixed(1)}px`
-      for (const el of tiles.current) {
-        if (!el) continue
-        el.style.width = `${layout.w.toFixed(1)}px`
-        el.style.height = `${layout.h.toFixed(1)}px`
-      }
-      paint()
-    }
-
-    const tick = (now: number) => {
-      frame = 0
-      // Seconds since the last frame (the first frame of a move counts as one at 60Hz; a long pause as a short one).
-      const dt = then ? Math.min(0.05, (now - then) / 1000) : 1 / 60
-      then = now
-      const k = GALLERY.spring
-      speed += (k * k * (target - pos) - 2 * k * speed) * dt
-      speed = Math.max(-GALLERY.speed, Math.min(GALLERY.speed, speed))
-      pos = Math.max(0, Math.min(last, pos + speed * dt))
-      if (Math.abs(target - pos) < 0.001 && Math.abs(speed) < 0.02) {
-        pos = target
-        speed = 0
-      }
-      paint()
-      if (pos !== target) frame = requestAnimationFrame(tick)
-      else then = 0
-    }
-
-    // Phones: the held band scrolls with the page until it meets the header, and the first step's picture stays large
-    // until then, so the pictures only ever change while the band is held. Only where the page can hold the band: one
-    // too short for it (CaseStory gives the page that length, so only for a moment while it is measured) would
-    // otherwise keep the first picture for every step (Harlie's QA pass, 2026-09-28: on tablets the gallery never
-    // changed).
-    const bandComing = () => {
-      if (!phone) return false
-      const held = parseFloat(getComputedStyle(band).top) || 0
-      if (document.documentElement.scrollHeight - window.innerHeight <= bandTravel(band) + 1) return false
-      return band.getBoundingClientRect().top > held + 1
-    }
-
-    bind((k, local, span) => {
-      const i = Math.max(0, Math.min(k, last))
-      if (prefersReducedMotion()) {
-        // The step's own picture large, straight away.
-        target = i
-        pos = i
-        speed = 0
-        paint()
-        return
-      }
-      // The first half of the change at the end of a step, the second half at the start of the next; where a step's
-      // scroll is short, more of it (up to all of it), so the change is spread over what scroll there is.
-      const s = Math.max(1, span)
-      const edge = Math.min(0.5, Math.max(GALLERY.edge, GALLERY.edgeMin / s), GALLERY.edgeMax / s)
-      if (bandComing()) target = 0
-      else if (local > 1 - edge && i < last) target = i + smooth((0.5 * (local - (1 - edge))) / edge)
-      else if (local < edge && i > 0) target = i - 1 + smooth(0.5 + (0.5 * local) / edge)
-      else target = i
-      if (!frame) frame = requestAnimationFrame(tick)
-    })
-
-    lay()
-    const ro = new ResizeObserver(lay)
-    ro.observe(band)
-    // The stage's height follows the footer's rows (CaseStory measures --end-rows), which the band's size does not
-    // show.
-    ro.observe(probe)
-    window.addEventListener('resize', lay)
-    return () => {
-      bind(null)
-      cancelAnimationFrame(frame)
-      window.clearTimeout(labelMove)
-      ro.disconnect()
-      window.removeEventListener('resize', lay)
-    }
-  }, [key, bind])
-
+  const items = stage.layers.map((l) => ({ image: l.image, alt: l.alt, label: l.label }))
+  const ids = items.map((i) => i.image)
+  const step = Math.max(0, Math.min(active, stage.show.length - 1))
+  const stepPicture = Math.max(0, Math.min(stage.show[step] ?? 0, items.length - 1))
+  // A picture the reader chose by hand, kept while the step it was chosen on is current.
+  const [picked, setPicked] = useState<{ step: number; index: number } | null>(null)
+  const current = picked && picked.step === step ? picked.index : stepPicture
   return (
-    <div ref={galleryRef} className="story__stage story__gallery">
-      <StatusLabel status={stage.status} />
-      {/* The stage's height (--stage-h), measured for the arrangement. */}
-      <span ref={probeRef} className="story__probe" aria-hidden="true" />
-      {order.map((k, p) => {
-        const layer = stage.layers[k]
-        return (
-          <div
-            key={k}
-            ref={(el) => {
-              tiles.current[p] = el
-            }}
-            className="story__tile"
-            data-tilt-box=""
-          >
-            <div className="story__screen" style={{ background: stage.screen }}>
-              {'image' in layer ? <ResponsiveImage image={layer.image} sizes={STAGE_SIZES} priority={p === 0} alt={layer.alt} /> : layer.node}
-              <div
-                ref={(el) => {
-                  shades.current[p] = el
-                }}
-                className="story__shade"
-                aria-hidden="true"
-              />
-            </div>
-            {'image' in layer && (
-              <ZoomButton
-                label={`View picture ${p + 1} of ${count} larger`}
-                // The larger view keeps the stage's status (Harlie's QA pass, 2026-09-28: the enlarged AI Leasing
-                // listing, a Zillow-styled mockup, lost its "Concept UI").
-                onZoom={(trigger) => dialog.open(layer.image, trigger, { gallery: layerIds, status: stage.status })}
-              />
-            )}
-          </div>
-        )
-      })}
+    <div className="story__stage story__cards">
+      <CardHover
+        items={items}
+        active={current}
+        aspect={stage.aspect}
+        background={stage.screen}
+        sizes={STAGE_SIZES}
+        label={stage.label}
+        onActivate={(index) => setPicked({ step, index })}
+        onEnlarge={(index, trigger) => dialog.open(ids[index], trigger, { gallery: ids })}
+      />
     </div>
   )
 }
 
 /**
  * The phones (Jumpstart): the three cutouts in one row, in Harlie's order (Profile, Home, Community, as on the homepage
- * tile). Harlie's request, 2026-09-28: the phones "back to how they were before" the scroll stack. The centre phone
- * leads the row in every state and the current section's phone is lit (Harlie's brief, 2026-09-28: "central phone
- * dominant"; case-v16.css). Each phone reads its own description (media.ts; Harlie's QA pass, 2026-09-28: they were
- * named only "Profile screen" and so on).
+ * tile), the current section's phone brought forward and the other two a little smaller and dimmed (case-v16.css).
+ * Harlie's request, 2026-09-28: the phones "back to how they were before" the scroll stack. Each phone reads its own
+ * description (media.ts; Harlie's QA pass, 2026-09-28: they were named only "Profile screen" and so on).
  */
 function PhoneRow({ stage, active }: { stage: Extract<Stage, { kind: 'phones' }>; active: number }) {
   const dialog = useImageDialog()
@@ -1159,34 +823,24 @@ function PhoneRow({ stage, active }: { stage: Extract<Stage, { kind: 'phones' }>
   const aspects = stage.phones.map((p) => getImage(p.image).width / getImage(p.image).height)
   const widest = Math.max(...aspects)
   const holds = (p: (typeof stage.phones)[number]) => (typeof p.step === 'number' ? p.step === active : p.step.includes(active))
-  // The middle phone of an odd row (Jumpstart's Home), which leads it.
-  const centre = stage.phones.length % 2 ? (stage.phones.length - 1) / 2 : -1
   return (
     <div className="story__stage story__phones">
-      <StatusLabel status={stage.status} />
       {stage.phones.map((p, k) => (
-        <div
-          key={p.image}
-          className="story__phone"
-          data-on={holds(p) || undefined}
-          data-centre={k === centre || undefined}
-          style={{ width: `${((aspects[k] / widest) * 100).toFixed(2)}%` }}
-        >
+        <div key={p.image} className="story__phone" data-on={holds(p) || undefined} style={{ width: `${((aspects[k] / widest) * 100).toFixed(2)}%` }}>
           <ResponsiveImage image={p.image} sizes={PHONE_SIZES} priority />
         </div>
       ))}
       <ZoomButton
-        label="View the screens larger"
         onZoom={(trigger) => {
-          // The larger view keeps the stage's status, as the gallery's does (Harlie's QA pass, 2026-09-28).
           if (stage.all) {
-            dialog.open(stage.all, trigger, { gallery: [stage.all], status: stage.status })
+            dialog.open(stage.all, trigger, { gallery: [stage.all] })
             return
           }
           const ids = stage.phones.map((p) => p.image)
-          dialog.open(stage.phones.find(holds)?.image ?? ids[0], trigger, { gallery: ids, status: stage.status })
+          dialog.open(stage.phones.find(holds)?.image ?? ids[0], trigger, { gallery: ids })
         }}
       />
+      {stage.label && <p className="story__media-label">{stage.label}</p>}
     </div>
   )
 }
@@ -1212,6 +866,7 @@ function playWhenVisible(video: HTMLVideoElement, wanted: () => boolean = () => 
     sync,
     stop: () => {
       io.disconnect()
+      video.pause()
       document.removeEventListener('visibilitychange', sync)
     },
   }
@@ -1219,6 +874,7 @@ function playWhenVisible(video: HTMLVideoElement, wanted: () => boolean = () => 
 
 /** The recording: playing by itself (`play`, `free`), and one still per step under reduced motion. */
 function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'video' }>; bind: Bind; name: string }) {
+  const reduced = useReducedMotion()
   const ref = useRef<HTMLVideoElement>(null)
   const [zoom, setZoom] = useState<{ from: HTMLElement; at: number } | null>(null)
 
@@ -1234,7 +890,7 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
     /** Held on the current segment's last frame. */
     let held = false
     const range = () => stage.segments[Math.min(seg, last)]
-    const reducedNow = prefersReducedMotion()
+    const reducedNow = reduced
     const playing = reducedNow ? null : playWhenVisible(video, () => !held)
     const show = (i: number) => {
       seg = Math.max(0, Math.min(i, last))
@@ -1342,7 +998,7 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
       video.removeEventListener('loadedmetadata', onMeta)
       cancelAnimationFrame(frame)
     }
-  }, [stage, bind])
+  }, [stage, bind, reduced])
 
   // Free: the whole recording plays by itself on a loop (Harlie's request), whatever the step, pausing off screen or
   // in a hidden tab. Reduced motion: the current step's still, changing with the step (Harlie's QA pass, 2026-09-28:
@@ -1350,7 +1006,7 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
   useEffect(() => {
     const video = ref.current
     if (!video || !stage.free) return
-    if (prefersReducedMotion()) {
+    if (reduced) {
       let seg = 0
       const still = () => {
         video.currentTime = stage.stills[Math.min(seg, stage.stills.length - 1)]
@@ -1371,14 +1027,13 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
     video.defaultPlaybackRate = stage.rate ?? 1
     video.playbackRate = stage.rate ?? 1
     return playWhenVisible(video).stop
-  }, [stage, bind])
+  }, [stage, bind, reduced])
 
   return (
     <>
       <MediaBox
         aspect={stage.width / stage.height}
-        status={stage.status}
-        zoomLabel="View the recording larger"
+        zoomLabel={stage.action ?? 'Enlarge recording'}
         onZoom={(trigger) => setZoom({ from: trigger, at: ref.current?.currentTime ?? 0 })}
       >
         <video
@@ -1397,13 +1052,13 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
           aria-label={stage.label}
         />
       </MediaBox>
-      {/* Outside the picture, so the larger view's pointer never tilts or enlarges the picture behind it. */}
+      {/* Outside the picture, so the larger view's pointer never tilts or enlarges the picture behind it. The whole
+          recording (dialogSrc) when the page plays a shorter cut of it. */}
       {zoom && (
         <VideoDialog
-          src={stage.src}
+          src={stage.dialogSrc ?? stage.src}
           poster={stage.poster}
           title={`${name} recording`}
-          status={stage.status}
           width={stage.width}
           height={stage.height}
           duration={stage.segments[stage.segments.length - 1][1]}

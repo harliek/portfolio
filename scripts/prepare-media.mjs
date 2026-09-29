@@ -8,8 +8,8 @@
  *
  * Usage:
  *   node scripts/prepare-media.mjs            # everything
- *   node scripts/prepare-media.mjs video      # video derivatives only
- *   node scripts/prepare-media.mjs previews   # edited 1.5× previews of the two product recordings (prints the time maps)
+ *   node scripts/prepare-media.mjs video      # video derivatives only (with the Nickleby tile and Merchandising page cuts)
+ *   node scripts/prepare-media.mjs posters    # WebP copies of the JPEG-only video posters
  *   node scripts/prepare-media.mjs images     # frames, PDF excerpts, images, covers
  *   node scripts/prepare-media.mjs stage      # background set video + posters, film stills
  *   node scripts/prepare-media.mjs creative   # Art drawings (all 23), film stills
@@ -21,7 +21,11 @@
  *   node scripts/prepare-media.mjs crops [page]  # focused evidence crops from scripts/crops/<page>.json
  *   node scripts/prepare-media.mjs tiles      # carousel tile artwork (final tiles/, 3:4 focal-point crops)
  *   node scripts/prepare-media.mjs objects    # carousel PNG objects (final png tiles/, trimmed, alpha kept)
- *   node scripts/prepare-media.mjs room       # homepage room background: seam-free loop, portrait crop, posters
+ *
+ * Removed on 2026-09-29 with the files they made (git history keeps both): the `previews` task (edited 1.5× previews
+ * of the two product recordings), the `room` task (the brief v15 homepage room), the Spreadsheet Agent recording and
+ * the 1600 Merchandising Dashboard encode, and the stills, crops and posters of the entries in
+ * archive/media-registry-unplaced.ts.
  *
  * Requires: ffmpeg/ffprobe, poppler (pdftoppm, pdfimages), sharp, and
  * Playwright's Chromium (for the typographic cover and social image).
@@ -49,15 +53,12 @@ const report = []
 /* ------------------------------------------------------------------ */
 
 const VIDEOS = [
-  // Screen recordings: 60fps timebase → 30fps, no audio stream, no cropping.
-  // `trim` ends each recording before the macOS capture toolbar appears
-  // (first visible at 56.45s and 36.55s respectively).
+  // Screen recording: 60fps timebase → 30fps, no audio stream, no cropping.
+  // `trim` ends the recording before the macOS capture toolbar appears
+  // (first visible at 56.45s). Only the 960 encode is used (the homepage's
+  // Merchandising Dashboard tile, src/content/field.ts); the 1600 encode and
+  // the Spreadsheet Agent recording were removed on 2026-09-29.
   { id: 'merch-console', src: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', trim: 56.3, variants: [
-    { suffix: '1600', scale: '1600:-2', crf: 23, fps: 30 },
-    { suffix: '960', scale: '960:-2', crf: 24, fps: 30 },
-  ], audio: false },
-  { id: 'spreadsheet-agent', src: 'Spreadsheet Agent/Spreadsheet Video.mov', trim: 36.4, variants: [
-    { suffix: '1600', scale: '1600:-2', crf: 23, fps: 30 },
     { suffix: '960', scale: '960:-2', crf: 24, fps: 30 },
   ], audio: false },
   // Aristocracy: 4000×3000 master (544MB). Preserve 4:3.
@@ -92,167 +93,6 @@ function encodeVideo(v) {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Edited previews of the product recordings (brief-v8 sections 9, 10)  */
-/* ------------------------------------------------------------------ */
-
-/**
- * Short, edited, accelerated previews for inline playback on the case pages;
- * expanding a preview plays the complete recording at original speed (the
- * VIDEOS entries above). Every moving part plays at exactly `speed` (the
- * player says "Edited preview · 1.5× speed"); the edits are cuts between
- * screens (a short dissolve), idle stretches left out, and still holds of
- * the last frame of a segment, which give a meaningful state time to be read.
- * Holds are pauses in the preview, never presented as waits in the product.
- * The last frames dissolve into the first, so the loop has no jump.
- *
- * `segments` are in seconds of the complete recording (the same timeline as
- * its site encode). A segment that starts where the previous one ended joins
- * it without a cut. The task prints the time map ([previewSeconds,
- * fullSeconds] pairs) that the page passes to DemoVideo, so expanding
- * continues at the same moment of the complete recording.
- *
- * `fallback`: the site's own encode of the same recording (identical
- * timeline, SSIM 0.99+ against the original), used only when the original
- * cannot be read (e.g. an iCloud placeholder that is not downloaded).
- *
- * Usage: node scripts/prepare-media.mjs previews [id]   (FORCE is implied)
- */
-const PREVIEW_FPS = 30
-const PREVIEWS = [
-  {
-    id: 'merch-console-preview',
-    src: 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov',
-    fallback: 'public/media/video/merch-console-1600.mp4',
-    speed: 1.5,
-    dissolve: 0.25,
-    segments: [
-      // The Canyon Pouch drawer: 200 units, "Kestrel Goods has a 200 unit minimum, which sets this quantity" and the
-      // note "This is a calculation and a CSV export. The console does not place orders."; Show the working opens the
-      // arithmetic (safety stock, reorder point, order-up-to, "floored at the 200 unit MOQ"), held to be read.
-      { from: 12.0, to: 15.45, hold: 3.0 },
-      // Inventory: the replenishment list with Export order sheet, held.
-      { from: 20.45, to: 21.6, hold: 1.3 },
-      // Ask: "What is out of stock?" runs; the query it ran (metric, category, vendor, sort, limit) sits above the answer.
-      { from: 44.0, to: 46.4, hold: 1.8 },
-    ],
-  },
-  {
-    id: 'spreadsheet-agent-preview',
-    src: 'Spreadsheet Agent/Spreadsheet Video.mov',
-    fallback: 'public/media/video/spreadsheet-agent-1600.mp4',
-    speed: 1.5,
-    dissolve: 0.3,
-    segments: [
-      // The request "Compare vendor prices across B2B products" finishes typing (the typing from 4s is left out).
-      { from: 17.0, to: 18.35, hold: 0.3 },
-      // Sent; "Interpreting request"; the build plan (source, filters, columns, sort, row limit, Not used), held with
-      // the pointer on Build sheet.
-      { from: 18.35, to: 21.9, hold: 0.8 },
-      // Build sheet: the sheet is created and fills to 1,200 rows; the reply "Vendor Pricing and Margin is ready", held.
-      { from: 21.9, to: 26.5, hold: 1.2 },
-      // A short scroll through the populated sheet.
-      { from: 26.5, to: 28.75 },
-    ],
-  },
-]
-
-const PREVIEW_VARIANTS = [
-  { suffix: '1600', width: 1600, crf: 23 },
-  { suffix: '960', width: 960, crf: 24 },
-]
-
-/** The readable source: the original, or the site encode when the original cannot be read. */
-function previewSource(p) {
-  try {
-    run('ffprobe', ['-v', 'error', '-read_intervals', '%+0.1', '-show_entries', 'frame=pts', '-of', 'csv', src(p.src)])
-    return { file: src(p.src), note: p.src }
-  } catch {
-    if (!existsSync(src(p.fallback))) throw new Error(`${p.id}: neither ${p.src} nor ${p.fallback} can be read`)
-    return { file: src(p.fallback), note: `${p.fallback} (the original could not be read)` }
-  }
-}
-
-/** Filter graph, output length and time map for one preview at one width. */
-function previewGraph(p, width) {
-  const n = p.segments.length
-  const D = p.dissolve
-  const norm = `fps=${PREVIEW_FPS},scale=${width}:-2:flags=lanczos,setsar=1,format=yuv420p,settb=1/${PREVIEW_FPS}`
-  // Constant frame rate first: a screen recording has no frames while nothing changes, and a part that begins in such
-  // a gap must begin with the frame on screen then (the one before the gap), not the next one.
-  const parts = [`[0:v]fps=60,split=${n + 1}${Array.from({ length: n + 1 }, (_, i) => `[in${i}]`).join('')}`]
-  const lens = []
-  p.segments.forEach((s, i) => {
-    const moving = (s.to - s.from) / p.speed
-    const hold = s.hold ?? 0
-    lens.push(moving + hold)
-    // Exactly `moving` seconds (the last frame extended, then cut at the planned length), so the time map stays exact.
-    parts.push(`[in${i}]trim=start=${s.from}:end=${s.to},setpts=(PTS-STARTPTS)/${p.speed},${norm},tpad=stop_mode=clone:stop_duration=1,trim=duration=${moving.toFixed(4)},setpts=PTS-STARTPTS${hold ? `,tpad=stop_mode=clone:stop_duration=${hold}` : ''}[s${i}]`)
-  })
-  // The loop's end: the first frame, still, for the length of the closing dissolve.
-  const first = p.segments[0].from
-  parts.push(`[in${n}]trim=start=${first},setpts=PTS-STARTPTS,${norm},trim=end_frame=1,tpad=stop_mode=clone:stop_duration=${D}[loop]`)
-
-  const map = []
-  const push = (a, b) => map.push([Math.round(a * 1000) / 1000, Math.round(b * 100) / 100])
-  let cur = 's0'
-  let length = lens[0]
-  let start = 0
-  push(0, p.segments[0].from)
-  for (let i = 0; i < n; i++) {
-    const s = p.segments[i]
-    const moving = (s.to - s.from) / p.speed
-    push(start + moving, s.to)
-    const next = p.segments[i + 1]
-    if (!next) break
-    const join = Math.abs(next.from - s.to) < 1e-6
-    const out = `j${i}`
-    if (join) {
-      if (s.hold) push(length, s.to)
-      parts.push(`[${cur}][s${i + 1}]concat=n=2:v=1:a=0,settb=1/${PREVIEW_FPS}[${out}]`)
-      start = length
-      length += lens[i + 1]
-    } else {
-      // The next screen dissolves in over the end of this segment's hold.
-      const offset = length - D
-      if (s.hold) push(offset, s.to)
-      parts.push(`[${cur}][s${i + 1}]xfade=transition=fade:duration=${D}:offset=${offset.toFixed(3)}[${out}]`)
-      start = offset + 0.001
-      push(start, next.from)
-      start = offset
-      length += lens[i + 1] - D
-    }
-    cur = out
-  }
-  const last = p.segments[n - 1]
-  if (last.hold) push(length - D, last.to)
-  parts.push(`[${cur}][loop]xfade=transition=fade:duration=${D}:offset=${(length - D).toFixed(3)}[out]`)
-  return { graph: parts.join(';'), length, map }
-}
-
-function encodePreviews() {
-  for (const p of PREVIEWS) {
-    if (!only(p.id)) continue
-    const source = previewSource(p)
-    let map
-    for (const v of PREVIEW_VARIANTS) {
-      const out = join(VID, `${p.id}-${v.suffix}.mp4`)
-      const g = previewGraph(p, v.width)
-      map = g.map
-      console.log(`encoding ${out}`)
-      run('ffmpeg', ['-y', '-v', 'error', '-i', source.file, '-filter_complex', g.graph, '-map', '[out]',
-        '-c:v', 'libx264', '-preset', 'slow', '-crf', String(v.crf), '-profile:v', 'high', '-pix_fmt', 'yuv420p',
-        '-g', String(PREVIEW_FPS * 2), '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709',
-        '-an', '-movflags', '+faststart', out])
-      const probe = JSON.parse(run('ffprobe', ['-v', 'error', '-show_entries', 'format=duration:stream=width,height', '-of', 'json', out]).toString())
-      const st = probe.streams[0]
-      report.push(`${out} ${st.width}×${st.height} ${Number(probe.format.duration).toFixed(2)}s ${statSync(out).size} bytes (planned ${g.length.toFixed(2)}s)`)
-    }
-    report.push(`${p.id} source: ${source.note}`)
-    report.push(`${p.id} map: ${JSON.stringify(map)}`)
-  }
-}
-
 function copyNickleby() {
   // Source is already H.264 Main/yuv420p, ~0.45 Mbps, moov-first. Re-encoding
   // would only lose quality, so remux losslessly with fast-start.
@@ -260,6 +100,53 @@ function copyNickleby() {
   run('ffmpeg', ['-y', '-v', 'error', '-i', src('Shift Content/Nickleby Capital Video 1.mp4'),
     '-c', 'copy', '-movflags', '+faststart', out])
   report.push(`${out} ${(statSync(out).size / 1e6).toFixed(1)}MB (lossless remux)`)
+}
+
+/** Frames and length of a video's first stream, decoded (not from the header). */
+function countFrames(file) {
+  const probe = JSON.parse(run('ffprobe', ['-v', 'error', '-count_frames', '-select_streams', 'v:0',
+    '-show_entries', 'stream=nb_read_frames:format=duration', '-of', 'json', file]).toString())
+  return { frames: Number(probe.streams[0].nb_read_frames), duration: Number(probe.format.duration) }
+}
+
+/**
+ * The Creative Production homepage tile (src/content/field.ts): the start of the Nickleby film, not the whole 1:40,
+ * so the tile's first seconds no longer fetch footage a visitor rarely sees (Harlie's approval, 2026-09-29). Video only
+ * (the muted tile never plays sound) and a stream copy of nickleby-640.mp4: the same frames, not re-encoded. It ends
+ * at a scene cut: the last frame is the cricket shot's (35.6s; its subtitle sentence has finished), and the next frame,
+ * the question card "What has changed in your business since Nickleby invested?", begins the next part. So the loop
+ * back to the film's first frame is a cut between shots, not a jump in the middle of one (35.6s rather than the cut at
+ * 34.47s, which falls mid-sentence). 1069 frames, 35.63s.
+ *
+ * `-t` counts decode timestamps in a stream copy, and the film has B-frames: 35.55 keeps every packet decoded before
+ * the 35.7s frame, which is exactly frames 0 to 35.6s; 35.63 would add two frames of the next shot. The frame count is
+ * checked, and the frames were checked against the film's first 1069 (framemd5, identical).
+ */
+function nicklebyTileCut() {
+  const out = join(VID, 'nickleby-tile-cut-640.mp4')
+  run('ffmpeg', ['-y', '-v', 'error', '-i', join(VID, 'nickleby-640.mp4'), '-map', '0:v:0', '-an', '-t', '35.55',
+    '-c', 'copy', '-movflags', '+faststart', out])
+  const { frames, duration } = countFrames(out)
+  if (frames !== 1069) throw new Error(`${out}: ${frames} frames, expected 1069 (the scene cut at 35.63s)`)
+  report.push(`${out} ${(statSync(out).size / 1e6).toFixed(2)}MB, ${frames} frames, ${duration.toFixed(2)}s (stream copy)`)
+}
+
+/**
+ * The Merchandising Dashboard page's recording (src/pages/work/MerchandisingPlatform.tsx): the page only ever shows 0
+ * to 21.6s of merch-console-scrub-1280.mp4 (its segments end at 21.5s, held; the reduced-motion stills end at 21.6s),
+ * so it loads the first 26s alone, and Play dashboard demo opens the whole file (the stage's dialogSrc; 2026-09-29).
+ * A stream copy, the same frames at the same times: the recording has a keyframe every 0.5s and no B-frames, so it
+ * ends cleanly at 26s (624 frames at 24fps). 26s rather than 22s: about 4.5s of margin keeps the file's end (whose
+ * `ended` replays the segment instead of holding it) out of reach of a late hold. merch-console-scrub-1280.mp4 itself
+ * is not made by this script.
+ */
+function merchPageCut() {
+  const out = join(VID, 'merch-console-scrub-page-1280.mp4')
+  run('ffmpeg', ['-y', '-v', 'error', '-i', join(VID, 'merch-console-scrub-1280.mp4'), '-t', '26', '-c', 'copy',
+    '-movflags', '+faststart', out])
+  const { frames, duration } = countFrames(out)
+  if (frames !== 624) throw new Error(`${out}: ${frames} frames, expected 624 (26s at 24fps)`)
+  report.push(`${out} ${(statSync(out).size / 1e6).toFixed(2)}MB, ${frames} frames, ${duration.toFixed(2)}s (stream copy)`)
 }
 
 /* ------------------------------------------------------------------ */
@@ -272,19 +159,14 @@ const FRAMES = [
   ['merch-overview', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 0.3],
   ['merch-vendors', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 28.7],
   ['merch-drawer', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 53.9],
-  ['sheet-request', 'Spreadsheet Agent/Spreadsheet Video.mov', 12.9],
   ['sheet-returned', 'Spreadsheet Agent/Spreadsheet Video.mov', 25.3],
-  ['sheet-list', 'Spreadsheet Agent/Spreadsheet Video.mov', 35.5],
   ['sheet-start', 'Spreadsheet Agent/Spreadsheet Video.mov', 1.5],
-  // The Spreadsheet Agent poster: the build plan under review (the cursor rests below Row limit).
-  ['sheet-poster', 'Spreadsheet Agent/Spreadsheet Video.mov', 21.0],
   ['sheet-plan', 'Spreadsheet Agent/Spreadsheet Video.mov', 20.5],
   // Sources of the Spreadsheet Agent case crops (scripts/crops/spreadsheet-agent.json).
   ['sheet-request-typed', 'Spreadsheet Agent/Spreadsheet Video.mov', 17.7],
   ['sheet-plan-review', 'Spreadsheet Agent/Spreadsheet Video.mov', 21.7],
   ['sheet-list-new', 'Spreadsheet Agent/Spreadsheet Video.mov', 34.0],
   ['merch-replenish', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 12.0],
-  ['merch-ask', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 46.0],
   ['merch-promotions', 'PlanetArt/Merchandising Dashboard/Dashboard Video.mov', 36.5],
   ['aristocracy-poster', 'Shift Content/Aristocracy.mp4', 30.5],
   ['nickleby-poster', 'Shift Content/Nickleby Capital Video 1.mp4', 12.0],
@@ -318,9 +200,10 @@ function extractPdf() {
 /**
  * Writes `${id}-${w}.{avif,webp,jpg|png}` for each width not exceeding the
  * source width. `fallback` is 'jpg' for photos and screenshots, 'png' for
- * images that need transparency.
+ * images that need transparency. `avif: false` leaves out the AVIF files
+ * (video posters: a poster attribute takes one URL, WebP or JPEG).
  */
-async function variants(id, input, widths, { fallback = 'jpg', quality = 'photo' } = {}) {
+async function variants(id, input, widths, { fallback = 'jpg', quality = 'photo', avif = true } = {}) {
   const base = sharp(input, { failOn: 'none' }).rotate()
   const meta = await base.metadata()
   const srcW = meta.autoOrient?.width ?? meta.width
@@ -331,7 +214,7 @@ async function variants(id, input, widths, { fallback = 'jpg', quality = 'photo'
     : { avif: { quality: 58 }, webp: { quality: 80 }, jpg: { quality: 82, mozjpeg: true } }
   for (const w of used) {
     const resized = () => sharp(input, { failOn: 'none' }).rotate().resize({ width: w, withoutEnlargement: true })
-    await resized().avif(q.avif).toFile(join(IMG, `${id}-${w}.avif`))
+    if (avif) await resized().avif(q.avif).toFile(join(IMG, `${id}-${w}.avif`))
     await resized().webp(q.webp).toFile(join(IMG, `${id}-${w}.webp`))
     if (fallback === 'png') await resized().png({ compressionLevel: 9, palette: false }).toFile(join(IMG, `${id}-${w}.png`))
     else await resized().flatten({ background: '#11131b' }).jpeg(q.jpg).toFile(join(IMG, `${id}-${w}.jpg`))
@@ -480,58 +363,38 @@ async function images() {
 
   // Carousel / shelf / next-project covers are the 3:4 compositions (task `covers`, covers3x4()).
 
-  // PlanetArt evidence
-  dims['planetart-uk'] = await variants('planetart-uk', src('PlanetArt/cafepress uk/uk web.png'), [800, 1200, 1672], { quality: 'ui' })
+  // PlanetArt evidence (planetart-uk, the whole storefront, is no longer made: 2026-09-29; the case page uses the
+  // cp-storefront crop, scripts/crops/cafepress-uk.json)
   const pdf = (n) => join(CACHE, 'pdf', n)
   await cropTo(pdf('slide-04.png'), pdf('competitors-crop.png'), { left: 60, top: 60, width: 1880, height: 1000 })
   await cropTo(pdf('slide-05.png'), pdf('assortment-crop.png'), { left: 36, top: 60, width: 1952, height: 1040 })
   dims['planetart-competitors'] = await variants('planetart-competitors', pdf('competitors-crop.png'), [800, 1200, 1880], { quality: 'ui' })
   dims['planetart-assortment'] = await variants('planetart-assortment', pdf('assortment-crop.png'), [800, 1200, 1952], { quality: 'ui' })
-  // Locate the embedded originals by their native size rather than by index.
-  const embedded = async (w, h) => {
-    for (const f of readdirSync(join(CACHE, 'pdf')).filter((n) => n.startsWith('embedded-'))) {
-      const m = await sharp(pdf(f)).metadata()
-      if (m.width === w && m.height === h) return pdf(f)
-    }
-    throw new Error(`embedded image ${w}×${h} not found`)
-  }
-  dims['planetart-concept-dashboard'] = await variants('planetart-concept-dashboard', await embedded(808, 514), [808], { quality: 'ui' })
-  dims['planetart-concept-workflow'] = await variants('planetart-concept-workflow', await embedded(620, 414), [620], { quality: 'ui' })
-  // The product spreadsheet embedded beside the "Problem" text (PDF page 11):
-  // the real "before" state to the concept dashboard's "after".
-  dims['planetart-concept-table'] = await variants('planetart-concept-table', await embedded(681, 217), [681], { quality: 'ui' })
-  for (const n of ['merch-catalog', 'merch-vendors', 'merch-drawer']) {
+  // planetart-concept-{dashboard,workflow,table} (the PDF's embedded images) are no longer generated (2026-09-29;
+  // archive/media-registry-unplaced.ts).
+  // The stills merch-catalog, merch-replenish, merch-ask, sheet-request, sheet-returned, sheet-list, sheet-plan, the
+  // spreadsheet-agent-poster, valiance-messages and jumpstart-competitors are no longer made (2026-09-29: their entries
+  // are in archive/media-registry-unplaced.ts). The frames of merch-catalog, merch-replenish, sheet-returned and
+  // sheet-plan stay in FRAMES for covers3x4() and the crops.
+  for (const n of ['merch-vendors', 'merch-drawer']) {
     dims[n] = await variants(n, F(n), [800, 1200, 1600], { quality: 'ui' })
   }
-  dims['merch-console-poster'] = await variants('merch-console-poster', F('merch-overview'), [960, 1600], { quality: 'ui' })
-
-  // Spreadsheet Agent
-  for (const n of ['sheet-request', 'sheet-returned', 'sheet-list']) {
-    dims[n] = await variants(n, F(n), [800, 1200, 1600], { quality: 'ui' })
-  }
-  for (const n of ['sheet-plan', 'merch-replenish', 'merch-ask', 'merch-promotions']) {
-    dims[n] = await variants(n, F(n), [800, 1200, 1600], { quality: 'ui' })
-  }
-  dims['spreadsheet-agent-poster'] = await variants('spreadsheet-agent-poster', F('sheet-poster'), [960, 1600], { quality: 'ui' })
-
-  // Valiance
-  dims['valiance-messages'] = await variants('valiance-messages', src('Valiance Capital/messages.png'), [800, 1200, 1672], { quality: 'ui' })
+  // The Merchandising Dashboard poster (the page's and the homepage tile's <video poster>, src/content/field.ts):
+  // JPEG and WebP only.
+  dims['merch-console-poster'] = await variants('merch-console-poster', F('merch-overview'), [960, 1600], { quality: 'ui', avif: false })
 
   // Jumpstart (phone frames carry transparency → PNG fallback)
   for (const n of [1, 2, 3, 4]) {
     dims[`jumpstart-proto-${n}`] = await variants(`jumpstart-proto-${n}`, phone(n), [320, 640], { fallback: 'png', quality: 'ui' })
   }
-  dims['jumpstart-competitors'] = await variants('jumpstart-competitors', src('JumpStart Finance/competitors.png'), [800, 1200, 1680, 2494], { fallback: 'png', quality: 'ui' })
   dims['jumpstart-business-model'] = await variants('jumpstart-business-model', src('JumpStart Finance/business model.png'), [800, 1200, 2016], { fallback: 'png', quality: 'ui' })
   dims['jumpstart-traction'] = await jumpstartTraction()
 
-  // Shift
-  dims['aristocracy-poster'] = await variants('aristocracy-poster', F('aristocracy-poster'), [960, 1440])
-  dims['nickleby-poster'] = await variants('nickleby-poster', F('nickleby-poster'), [1138])
-  dims['heck-poster'] = await variants('heck-poster', F('heck-poster'), [1280, 1920])
-  for (const n of ['234', '103', '077']) {
-    dims[`aristocracy-photo-${n}`] = await variants(`aristocracy-photo-${n}`, src(`Shift Content/Aristocracy-${n}.jpg`), [480, 800, 1200])
-  }
+  // Shift: the film posters, only ever a <video poster> (FilmDialog; the Creative Production tile), at the one width
+  // each is used at, JPEG and WebP only (src/content/media.ts; 2026-09-29).
+  dims['aristocracy-poster'] = await variants('aristocracy-poster', F('aristocracy-poster'), [960], { avif: false })
+  dims['nickleby-poster'] = await variants('nickleby-poster', F('nickleby-poster'), [1138], { avif: false })
+  dims['heck-poster'] = await variants('heck-poster', F('heck-poster'), [1280], { avif: false })
 
   // About
   dims['headshot'] = await variants('headshot', src('personal assets/headshot copy.PNG'), [360, 640])
@@ -596,11 +459,8 @@ async function workingModel() {
     run('ffmpeg', ['-y', '-v', 'error', '-ss', String(t), '-i', src(file), '-frames:v', '1', '-vf', vf, out])
     await variants(name, out, [320, 640])
   }
-
-  // Spreadsheet Agent intermediate state: "Interpreting request" (18.9s).
-  const interp = join(CACHE, 'frames', 'sheet-interpreting.png')
-  run('ffmpeg', ['-y', '-v', 'error', '-ss', '18.9', '-i', src('Spreadsheet Agent/Spreadsheet Video.mov'), '-frames:v', '1', interp])
-  await variants('sheet-interpreting', interp, [800, 1200, 1600], { quality: 'ui' })
+  // sheet-interpreting ("Interpreting request", 18.9s of the Spreadsheet Agent recording) is no longer made
+  // (2026-09-29; archive/media-registry-unplaced.ts).
 }
 
 /* ------------------------------------------------------------------ */
@@ -924,16 +784,16 @@ async function tiles() {
 /* ------------------------------------------------------------------ */
 
 /**
- * The seven supplied transparent PNG objects (final png tiles/, matched by
- * content): a headshot cut-out and six project covers (monitor, mug,
- * laptop, tablet, camera, phone) with their titles embedded in the artwork.
+ * The supplied transparent PNG objects (final png tiles/, matched by
+ * content): six project covers (monitor, mug, laptop, tablet, camera,
+ * phone) with their titles embedded in the artwork. The seventh, the
+ * headshot cut-out (obj-about), is no longer made (2026-09-29).
  * Each is trimmed to its visible pixels (alpha ≥ 8) plus a small transparent
  * margin, so CSS sizes describe the object rather than empty canvas, then
  * exported as AVIF/WebP/PNG with alpha. Never cropped into the artwork,
  * never stretched, never recoloured. Originals are not modified.
  */
 const OBJECTS = [
-  { id: 'obj-about', src: 'final png tiles/about me.png' },
   { id: 'obj-merchandising-platform', src: 'final png tiles/merch dash.png' },
   { id: 'obj-cafepress-uk', src: 'final png tiles/cafepress uk.png' },
   { id: 'obj-spreadsheet-agent', src: 'final png tiles/spreadsheet agent.png' },
@@ -964,135 +824,31 @@ async function objects() {
 }
 
 /* ------------------------------------------------------------------ */
-/* The room: the homepage's background loop (brief v15)                 */
+/* WebP video posters                                                   */
 /* ------------------------------------------------------------------ */
 
-const ROOM_SRC = 'Background video.m4v'
-
 /**
- * The supplied room video (1280×720, 24fps, 175 frames, H.264 plus an
- * embedded MJPEG cover image, which is ignored) is a dark architectural
- * corridor with a slow dolly towards its central vanishing point. Frame by
- * frame (brief v15 verification notes): frames 0 to 93 are the camera's one
- * forward move (about a 10% push in; 93 is the nearest point); frames 94 to
- * 174 replay 92 down to 12 in reverse (frame j matches frame 186 − j within
- * compression noise). So the file is a ping-pong that stops short: played
- * as a plain loop it jumps from frame 12's position back to frame 0's (a
- * camera snap of about 6px at the frame edges) and reverses its direction
- * there, and its turnaround at frame 93 is a hard bounce (the edges move
- * about 0.9px per frame in, then 0.9px per frame out).
- *
- * The derivative plays the forward move out and back on one smooth cosine
- * path: output frame k shows source position
- *   s(k) = first + (last − first) · (1 − cos(2πk / period)) / 2,
- * so the camera slows to rest at both ends of its move and turns round
- * without a bounce (speed and acceleration continuous everywhere), never
- * faster than the original (at most 1.01× in mid move), and the file ends
- * where it begins: the loop point is the far turnaround, where the camera
- * is at rest (frames k and period − k are identical), so the loop has no
- * cut, snap, fade or brightness change, and a frame the browser holds at
- * the loop point cannot be seen. A fractional position blends the two
- * source frames either side of it (in the decoded 4:2:0 planes, no colour
- * conversion); consecutive source frames differ by under 1px of camera
- * travel, so a blend never ghosts. Nothing is added or recoloured.
- *
- * The encode keeps the loop point clean too. The master's last and first
- * frames are identical, but a plain encode is not: frame 0 is a fresh
- * keyframe and the last frame the end of a long chain of predicted frames,
- * so the fine texture of the pillars and floor changed at the loop point (a
- * faint shimmer where the picture is otherwise still). One keyframe per
- * loop, keyframes and predicted frames at the same quality, and `zones`:
- * the still frames either side of the loop point are encoded almost
- * losslessly (quantiser 8), stepping gently back to the normal quality
- * (12, then 15) over the frames where the camera starts to move, so both
- * sides of the loop point match the master and no step in quality shows.
- * Verified on the decoded files (brief v15 notes): the loop point's
- * difference is 0.055 of 255 on average, as small as any step between two
- * still frames, where a plain encode gave 0.63.
- *
- * Outputs (muted, H.264, faststart; never upscaled): room-1280.mp4 (the
- * full frame) and room-portrait-480.mp4 (a centred 480×720 crop for
- * portrait phones: the same pixels a phone's cover crop shows, at a third
- * of the data), their posters (the loop's first frame, the reduced-motion
- * still), and a lossless master in .media-cache/room/.
+ * WebP copies of the video posters that exist only as JPEG (frames of their videos, made outside this script), for the
+ * <video poster> attributes that name them (src/content/field.ts, src/content/pages/client-work.tsx,
+ * src/pages/work/SpreadsheetAgent.tsx). A poster attribute takes one URL, with no fallback, so WebP rather than AVIF:
+ * every browser the build targets decodes it, except Safari on macOS 10.15, which shows no poster until the first
+ * frame. The same pixels re-encoded from the JPEG: quality 82 with sharp YUV conversion (smartSubsample) keeps each
+ * at SSIM 0.9876 to 0.9935 of its JPEG (ffmpeg's ssim on the decoded pixels; luma alone at least 0.986), at 35 to 48%
+ * fewer bytes (2026-09-29). Posters with a frame in this pipeline get their WebP from variants().
  */
-const ROOM = {
-  width: 1280, height: 720, fps: 24, first: 0, last: 93, period: 288, portraitWidth: 480, crf: 21,
-  /** [first frame, last frame, quantiser]: near lossless at the loop point, graded back to the base quality. */
-  zones: [[0, 5, 8], [6, 11, 12], [12, 17, 15], [252, 257, 15], [258, 263, 12], [264, 287, 8]],
+const POSTERS_WEBP = [
+  'about-tile-poster-960', 'spreadsheet-tile-poster-960', 'cafepress-tile-poster-960', 'sa-demo-poster-1440',
+  'nickleby-loop-poster', 'aristocracy-loop-poster', 'heck-loop-poster',
+]
+
+async function postersWebp() {
+  for (const n of POSTERS_WEBP) {
+    const out = join(IMG, `${n}.webp`)
+    await sharp(join(IMG, `${n}.jpg`)).webp({ quality: 82, effort: 6, smartSubsample: true }).toFile(out)
+    report.push(`${out} ${statSync(out).size} bytes`)
+  }
 }
 
-/** The source frame position shown at output frame k (see above). */
-const roomPosition = (k) => ROOM.first + ((ROOM.last - ROOM.first) * (1 - Math.cos((2 * Math.PI * k) / ROOM.period))) / 2
-
-async function roomLoop() {
-  const { spawn } = await import('node:child_process')
-  const { once } = await import('node:events')
-  const dir = join(CACHE, 'room')
-  ensure(VID); ensure(IMG); ensure(dir)
-  const { width: W, height: H, fps, first, last, period, portraitWidth: PW } = ROOM
-  const size = (W * H * 3) / 2
-  const count = last - first + 1
-  const color = ['-color_range', 'tv', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709']
-
-  // The forward move, decoded once as raw 4:2:0 planes (the H.264 stream only).
-  const raw = execFileSync('ffmpeg', ['-v', 'error', '-i', src(ROOM_SRC), '-map', '0:v:0', '-frames:v', String(last + 1),
-    '-f', 'rawvideo', '-pix_fmt', 'yuv420p', 'pipe:1'], { maxBuffer: size * (last + 2) })
-  if (raw.length !== size * (last + 1)) throw new Error(`room: expected ${last + 1} frames, decoded ${raw.length / size}`)
-  const frame = (i) => raw.subarray((first + i) * size, (first + i + 1) * size)
-
-  // The master: one output frame per step of the cosine path, blended between neighbours; lossless.
-  const master = join(dir, 'room-master.mkv')
-  const enc = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'yuv420p', '-s', `${W}x${H}`, '-r', String(fps), ...color,
-    '-i', 'pipe:0', '-c:v', 'libx264', '-qp', '0', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', ...color, master], { stdio: ['pipe', 'ignore', 'inherit'] })
-  const done = new Promise((resolve, reject) => {
-    enc.on('error', reject)
-    enc.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`room master: ffmpeg exited ${code}`))))
-  })
-  const map = []
-  for (let k = 0; k < period; k++) {
-    const s = roomPosition(k) - first
-    const i0 = Math.min(Math.floor(s + 1e-9), count - 1)
-    const i1 = Math.min(i0 + 1, count - 1)
-    const f = Math.max(0, s - i0)
-    const a = frame(i0)
-    const b = frame(i1)
-    // A new buffer per frame: the pipe may still hold the previous one.
-    const out = Buffer.allocUnsafe(size)
-    if (f < 1e-6 || i0 === i1) a.copy(out)
-    else for (let p = 0; p < size; p++) out[p] = Math.round(a[p] + (b[p] - a[p]) * f)
-    map.push([k, +(first + s).toFixed(4)])
-    if (!enc.stdin.write(out)) await once(enc.stdin, 'drain')
-  }
-  enc.stdin.end()
-  await done
-  writeFileSync(join(dir, 'room-timemap.json'), JSON.stringify(map))
-
-  // The derivatives: one keyframe per loop, keyframes at the predicted frames' quality, the loop point near lossless.
-  const x264 = [
-    'aq-mode=3', 'ipratio=1.0', 'pbratio=1.0', `keyint=${period + 12}`, `min-keyint=${period + 12}`, 'scenecut=0',
-    `zones=${ROOM.zones.map(([a, b, q]) => `${a},${b},q=${q}`).join('/')}`,
-  ].join(':')
-  const encode = (out, vf) => {
-    run('ffmpeg', ['-y', '-v', 'error', '-i', master, '-map', '0:v:0', '-an', ...(vf ? ['-vf', vf] : []),
-      '-c:v', 'libx264', '-preset', 'veryslow', '-crf', String(ROOM.crf), '-profile:v', 'high', '-pix_fmt', 'yuv420p',
-      '-x264-params', x264, ...color, '-movflags', '+faststart', join(VID, out)])
-    report.push(`${out} ${(statSync(join(VID, out)).size / 1e6).toFixed(2)}MB`)
-  }
-  const crop = `crop=${PW}:${H}:${(W - PW) / 2}:0`
-  encode('room-1280.mp4', null)
-  encode('room-portrait-480.mp4', crop)
-
-  // Posters: the loop's first frame (full frame and the portrait crop).
-  const still = (name, vf) => {
-    const out = join(dir, `${name}.png`)
-    run('ffmpeg', ['-y', '-v', 'error', '-i', master, '-frames:v', '1', ...(vf ? ['-vf', vf] : []), out])
-    return out
-  }
-  await variants('room-poster', still('room-poster'), [640, 960, 1280], { quality: 'photo' })
-  await variants('room-poster-portrait', still('room-poster-portrait', crop), [480], { quality: 'photo' })
-  report.push(`room: source frames ${first}–${last}, ${period} frames (${(period / fps).toFixed(2)}s) per loop`)
-}
 /* ------------------------------------------------------------------ */
 
 const task = process.argv[2] ?? 'all'
@@ -1100,8 +856,10 @@ ensure(CACHE); ensure(OUT); ensure(VID); ensure(IMG)
 if (task === 'video' || task === 'all') {
   for (const v of VIDEOS) encodeVideo(v)
   copyNickleby()
+  nicklebyTileCut()
+  merchPageCut()
 }
-if (task === 'previews' || task === 'all') encodePreviews()
+if (task === 'posters' || task === 'all') await postersWebp()
 if (task === 'images' || task === 'all') await images()
 if (task === 'stage' || task === 'all') await workingModel()
 if (task === 'creative' || task === 'all') await creative()
@@ -1112,6 +870,5 @@ if (task === 'phones' || task === 'all') await phones()
 if (task === 'crops' || task === 'all') await crops()
 if (task === 'tiles' || task === 'all') await tiles()
 if (task === 'objects' || task === 'all') await objects()
-if (task === 'room' || task === 'all') await roomLoop()
 console.log(report.join('\n'))
 if (existsSync(join(CACHE, 'dimensions.json'))) console.log('dimensions → .media-cache/dimensions.json')

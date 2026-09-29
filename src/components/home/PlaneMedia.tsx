@@ -1,5 +1,5 @@
 import '../../styles/plane.css'
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 import type { ChatLine, FieldProject } from '../../content/field'
 import { fallbackSrc, getImage, srcSet } from '../../content/media'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
@@ -110,10 +110,10 @@ export function PlaneMedia({ item, videoRef }: { item: FieldProject; videoRef: (
   if (media.kind === 'chat') return <Conversation initials={media.initials} lines={media.lines} />
   return (
     <div className="plane__screens">
-      {media.screens.map((id, k) => {
+      {media.screens.map((id) => {
         const asset = getImage(id)
         return (
-          <picture key={id} className="plane__screen" style={{ '--k': k } as CSSProperties}>
+          <picture key={id} className="plane__screen">
             <source type="image/avif" srcSet={srcSet(asset, 'avif')} sizes="(min-width: 1100px) 10vw, 24vw" />
             <source type="image/webp" srcSet={srcSet(asset, 'webp')} sizes="(min-width: 1100px) 10vw, 24vw" />
             <img src={fallbackSrc(asset, 320)} alt="" width={asset.width} height={asset.height} loading="lazy" decoding="async" draggable={false} />

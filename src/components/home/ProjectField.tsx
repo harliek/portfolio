@@ -4,7 +4,6 @@ import { FIELD, fieldPath, isExternalTile, isFree } from '../../content/field'
 import { prefersReducedMotion, useReducedMotion } from '../../hooks/useReducedMotion'
 import { gsap } from '../../lib/gsap'
 import { changePage, leaveSite } from '../transition/pageChange'
-import { MetaLine } from '../layout/MetaLine'
 import { isPlainClick, warmProject } from '../transition/warm'
 import { headerHeight } from './headerHeight'
 import { PlaneMedia } from './PlaneMedia'
@@ -18,13 +17,22 @@ const STORAGE_KEY = 'field-active'
  */
 const ACTION: Partial<Record<string, string>> = {
   about: 'Open the About page',
-  creative: 'Open the creative portfolio (a separate site)',
+  creative: 'Open creative portfolio (a separate site)',
 }
 
 /** The collection's own steady drift to the left, in projects per second (one project about every 6.5s). */
 const SPEED = 1 / 6.5
-/** How quickly the drift eases to a stop (keyboard focus, a drag, the pause control) and back up again (s). */
+/**
+ * How quickly the drift eases to a stop (keyboard focus, a drag) and back up again (s); it eases up the same way from
+ * rest after the visitor's first movement (MOVES).
+ */
 const EASE_V = 0.45
+/**
+ * What counts as the visitor's first movement, which sets the tiles drifting (Harlie's request, 2026-09-29: "have the
+ * tiles not start moving until any type of scroll or movement with mouse"): any scroll of the page, a wheel or
+ * trackpad movement, a finger moving on a touch screen, or the pointer moving.
+ */
+const MOVES = ['scroll', 'wheel', 'touchmove', 'pointermove'] as const
 /** HOME while the tiles are in view: how long they glide back to the first tile (s). */
 const RESET_GLIDE = 0.9
 
@@ -125,7 +133,9 @@ const atEnd = () => window.scrollY + window.innerHeight >= document.documentElem
  * last comes the first, both ways) that moves continuously to the left in one
  * steady motion, and keeps moving under the pointer (Harlie's request); it
  * eases to a stop only while a tile's link has keyboard focus or a tile is
- * being dragged. The page ends here: the
+ * being dragged. On arriving it waits, still where it starts, until the
+ * visitor first scrolls or moves the pointer or a finger (MOVES; Harlie's
+ * request, 2026-09-29), then eases into its drift. The page ends here: the
  * collection fills the window between the header and the footer, which sits
  * just below it, so the page never scrolls further; scrolling on down from
  * there (wheel, trackpad or a swipe) keeps moving the projects instead, so the
@@ -138,10 +148,10 @@ const atEnd = () => window.scrollY + window.innerHeight >= document.documentElem
  * slightly (home.css). Clicking any tile
  * unfolds its page out of it (pageChange.ts): the tile's picture becomes the
  * page's, and the page's pieces come out of the tile into their places.
- * There are no arrows, counter or visible label; a pause control appears for
- * keyboard users when focused (before the tiles in the tab order), just above
- * the strip's right end, and keyboard focus arriving here settles the page at
- * its end (Harlie's brief, 2026-09-28). Footage
+ * There are no arrows, counter, visible label or pause control (the pause
+ * control, just above the strip's right end, was removed at Harlie's request,
+ * 2026-09-29); keyboard focus arriving here settles the page at its end
+ * (Harlie's brief, 2026-09-28). Footage
  * plays muted at normal speed on every tile that can be in view,
  * continuing where it left off; a tile that has passed out of view on the
  * left waits on its last frame until it comes round again (or is dragged
@@ -164,7 +174,6 @@ export function ProjectField() {
   const [initial] = useState(() => readStored(back, arrival?.from))
   const [active, setActive] = useState(() => mod(Math.round(initial.pos), N))
   const [running, setRunning] = useState(false)
-  const [userPaused, setUserPaused] = useState(false)
   const [turning, setTurning] = useState(false)
   /** Tiles either side of the centred one that can be in view (reachFor), following the window's size. */
   const [reach, setReach] = useState(() => reachFor(layoutFor(window.innerWidth, window.innerHeight)))
@@ -184,14 +193,15 @@ export function ProjectField() {
     /** Reasons the drift eases to a stop. */
     focus: false,
     dragging: false,
-    userPaused: false,
+    /** The visitor has moved since the homepage arrived (MOVES); until then the drift is held at rest. */
+    started: false,
     /** Set while the arrow keys move focus, so the focus handler leaves the move alone. */
     keyed: false,
     /** The tiles are on screen (horizontal scrolling anywhere on the page then moves them). */
     visible: false,
     /**
-     * Starts the frame loop again when it has stopped (the loop rests while nothing moves: paused, held or under
-     * reduced motion). Everything that can set the tiles moving calls it; a no-op while the tiles are off screen.
+     * Starts the frame loop again when it has stopped (the loop rests while nothing moves: held, not started yet or
+     * under reduced motion). Everything that can set the tiles moving calls it; a no-op while the tiles are off screen.
      */
     wake: () => {},
   })
@@ -206,6 +216,15 @@ export function ProjectField() {
       if (!el) continue
       const x = around(i, s.pos) * L.step
       el.style.transform = `translate3d(${(x - L.w / 2).toFixed(2)}px, ${(-L.h / 2).toFixed(2)}px, 0)`
+      const video = videoRefs.current[i]
+      // A tile whose footage was never loaded (the footage effect leaves one wholly out of view on the left unloaded)
+      // gets its file as soon as any of its frame is in the window, even when the centred tile has not changed (a
+      // small drag to the right just after arriving), and plays under the same conditions as below; its poster shows
+      // while the footage loads.
+      if (video && Math.abs(x) - L.w / 2 < half - 1 && !video.hasAttribute('src') && video.dataset.src) {
+        video.setAttribute('src', video.dataset.src)
+        if (s.visible && !prefersReducedMotion() && document.visibilityState === 'visible') void video.play().catch(() => {})
+      }
       // Only a tile wholly outside the window is hidden (where the loop joins, it moves from one end to the other):
       // clipped away (home.css data-away), not made invisible, so every project stays a link a screen reader lists
       // (Harlie's QA pass, 2026-09-28: with visibility hidden, half of them were missing at any moment).
@@ -214,8 +233,7 @@ export function ProjectField() {
       el.toggleAttribute('data-away', hide)
       // Its footage: once out of view on the left (the side the drift leaves by) it pauses on its frame; brought back
       // into view (a drag) it carries on. Out of view on the right it keeps playing, so it arrives already moving.
-      // One not loaded yet is loaded and started by the footage effect below.
-      const video = videoRefs.current[i]
+      // One not loaded yet is loaded and started by the footage effect below (or just above, once in the window).
       if (!video) continue
       if (hide) {
         if (x < 0 && !video.paused) video.pause()
@@ -344,10 +362,17 @@ export function ProjectField() {
         // Every tile that can be in view plays (the centred one and those either side, at least two each way), so
         // each arrives already moving; one that played and then passed out of view on the left waits (apply). A
         // tile beyond view on the left (the side the drift leaves by) that has never been loaded stays unloaded:
-        // the drift carries it away, and it loads as it comes round from the right, or once moved back into view.
+        // the drift carries it away, and it loads as it comes round from the right, or once moved back into view
+        // (apply). That includes a tile wholly left of the window though within reach, like the last tile, whose
+        // right edge meets the window's left edge where the strip starts (startPosition): the Creative Portfolio
+        // tile's 1.9 MB footage was fetched and played unseen there at every arrival until it moved to the front
+        // (performance audit F3, 2026-09-29; the last tile is now the AI Leasing conversation, which has no footage).
         const k = around(i, active)
         const near = Math.abs(k) <= Math.max(2, reach)
-        if (near && k >= -reach && !video.getAttribute('src') && video.dataset.src) video.setAttribute('src', video.dataset.src)
+        const L = m.current.layout
+        const x = L ? around(i, m.current.pos) * L.step : 0
+        const leftOfView = L !== null && x < 0 && x + L.w / 2 <= -window.innerWidth / 2 + 1
+        if (near && k >= -reach && !leftOfView && !video.getAttribute('src') && video.dataset.src) video.setAttribute('src', video.dataset.src)
         video.defaultPlaybackRate = 1
         video.playbackRate = 1
         const gone = Boolean(planeRefs.current[i]?.hasAttribute('data-away')) && around(i, m.current.pos) < 0 && video.played.length > 0
@@ -418,29 +443,47 @@ export function ProjectField() {
   }, [apply, initial.tile])
 
   // Visibility: the frame loop, the turning and the tile films run whenever any of the tiles is on screen, even while
-  // they only peek under the opening before the page is scrolled (Harlie's request: they move from the start).
+  // they only peek under the opening before the page is scrolled (the films play from the start; the drift waits for
+  // the visitor's first movement, below).
   useEffect(() => {
     const section = sectionRef.current
     const stage = stageRef.current
     if (!section || !stage) return
-    const io = new IntersectionObserver(([e]) => setRunning(e.isIntersecting))
-    io.observe(stage)
-    // Any part of the tiles on screen, even peeking under the title, counts for horizontal scrolling.
-    const seen = new IntersectionObserver(([e]) => {
+    const io = new IntersectionObserver(([e]) => {
+      // Any part of the tiles on screen, even peeking under the title, counts for horizontal scrolling.
       m.current.visible = e.isIntersecting
+      setRunning(e.isIntersecting)
     })
-    if (stageRef.current) seen.observe(stageRef.current)
+    io.observe(stage)
+    return () => io.disconnect()
+  }, [])
+
+  /*
+   * The drift waits for the visitor's first movement (MOVES; Harlie's request, 2026-09-29), once per arrival: coming
+   * Back, HOME from another page and a new visit each wait again. Any scroll counts, the page's own included (Back's
+   * scroll restoration, HOME's scroll back up while here), and a drag or glide moves the strip anyway. Until then
+   * the drift is held like any other hold (the frame loop rests, the strip exactly where it starts); the footage, the
+   * conversation, the phones, hovering, dragging and the glides to a tile all work as ever. Then it eases up (EASE_V).
+   */
+  useEffect(() => {
+    const s = m.current
+    const start = () => {
+      s.started = true
+      for (const type of MOVES) window.removeEventListener(type, start)
+      s.wake()
+    }
+    for (const type of MOVES) window.addEventListener(type, start, { passive: true })
     return () => {
-      io.disconnect()
-      seen.disconnect()
+      for (const type of MOVES) window.removeEventListener(type, start)
     }
   }, [])
 
   /*
    * The frame loop: the collection drifts steadily to the left (easing to a stop while it is held), and the displayed
-   * position follows the followed one (quickly; at once under reduced motion). Once nothing moves (held, paused or
-   * under reduced motion, at rest, no glide under way) the loop stops, and `wake` starts it again (Harlie's brief,
-   * 2026-09-28, code cleanup: no frame every frame for a still strip); frozen (a tile opening), it waits the same way.
+   * position follows the followed one (quickly; at once under reduced motion). Once nothing moves (held, not started
+   * yet or under reduced motion, at rest, no glide under way) the loop stops, and `wake` starts it again (Harlie's
+   * brief, 2026-09-28, code cleanup: no frame every frame for a still strip); frozen (a tile opening), it waits the
+   * same way.
    */
   useEffect(() => {
     if (!running) return
@@ -457,8 +500,9 @@ export function ProjectField() {
         return
       }
       const reducedNow = prefersReducedMotion()
-      // Hovering does not stop it (Harlie's request: keep moving); keyboard focus and dragging do.
-      const held = s.focus || s.dragging || s.userPaused || reducedNow || document.hidden
+      // Hovering does not stop it (Harlie's request: keep moving); keyboard focus and dragging do, and it waits for the
+      // visitor's first movement.
+      const held = s.focus || s.dragging || !s.started || reducedNow || document.hidden
       const want = held ? 0 : SPEED
       s.v += (want - s.v) * (1 - Math.exp(-dt / EASE_V))
       if (Math.abs(s.v - want) < 0.0005) s.v = want
@@ -556,17 +600,6 @@ export function ProjectField() {
     m.current.keyed = true
     planeRefs.current[j]?.focus({ preventScroll: true })
     m.current.keyed = false
-  }
-
-  const togglePause = () => {
-    const next = !m.current.userPaused
-    m.current.userPaused = next
-    if (next) {
-      m.current.tween?.kill()
-      m.current.tween = null
-    }
-    m.current.wake()
-    setUserPaused(next)
   }
 
   // Drag and swipe (horizontal) and horizontal trackpad gestures move the tiles directly, then settle.
@@ -702,9 +735,9 @@ export function ProjectField() {
       aria-labelledby="field-label"
       data-reduced={reduced || undefined}
       onFocus={(e) => {
-        // Keyboard focus coming into the collection (the pause control or a tile): the page settles at its end, where
-        // the strip sits clear of the header; the browser's own focus scroll stopped part way, with PORTFOLIO cut under
-        // the navigation (Harlie's brief, 2026-09-28).
+        // Keyboard focus coming into the collection (a tile): the page settles at its end, where the strip sits clear
+        // of the header; the browser's own focus scroll stopped part way, with PORTFOLIO cut under the navigation
+        // (Harlie's brief, 2026-09-28).
         if (!e.target.matches(':focus-visible') || atEnd()) return
         window.scrollTo({ top: document.documentElement.scrollHeight, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
       }}
@@ -714,11 +747,6 @@ export function ProjectField() {
         <h2 className="visually-hidden" id="field-label">
           Selected work
         </h2>
-        {!reduced && (
-          <button type="button" className="field__motion" aria-pressed={userPaused} onClick={togglePause}>
-            {userPaused ? 'Resume the moving projects' : 'Pause the moving projects'}
-          </button>
-        )}
         <div
           ref={stageRef}
           className="field__stage"
@@ -748,7 +776,7 @@ export function ProjectField() {
                 data-kind={item.media.kind}
                 data-free={isFree(item.media) || undefined}
                 href={path}
-                aria-label={`${item.title}. ${item.alt}. ${ACTION[item.id] ?? 'Open the case study'}`}
+                aria-label={`${item.title}. ${item.alt}. ${ACTION[item.id] ?? 'View case study'}`}
                 aria-current={i === active ? 'true' : undefined}
                 draggable={false}
                 onClick={(e) => onPlaneClick(e, i)}
@@ -773,9 +801,7 @@ export function ProjectField() {
                 </span>
                 <span className="plane__caption" aria-hidden="true">
                   <span className="plane__title">{item.title}</span>
-                  <span className="plane__line">
-                    <MetaLine text={item.line} />
-                  </span>
+                  <span className="plane__line">{item.line}</span>
                 </span>
               </a>
             )

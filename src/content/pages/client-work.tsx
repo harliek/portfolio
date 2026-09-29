@@ -2,15 +2,24 @@ import type { ReactNode } from 'react'
 import type { VideoId } from '../media'
 
 /**
+ * Latest copy approved by Harlie on 2026-09-29, including her clarification of
+ * client management and campaign coordination on Aristocracy.
+ *
  * Creative Production (route /work/creative-production; the files keep the
  * older client-work name). Three stacked project sections, each pairing its
  * own description with its own film (brief-v8 section 13).
  *
- * Copy (Harlie's brief of 2026-09-28): one short sentence per film, with no subject, each naming Harlie's part with
- * the most precise verb the journal supports ("helped set up", "filmed", "worked on", "documented"). "Supported" is
- * gone, and with it "supported end-to-end", which contradicted itself. The Shift Content team's production is never
- * read as Harlie's alone. The non-breaking hyphens keep the compound words (B-roll, on-set, two-day,
- * Gymshark-powered) whole at a line end.
+ * Copy brief of 2026-09-29: each film's text is Harlie's, verbatim (documented contributions only, no sole
+ * authorship). The brief's opening ("At Shift Content in London, I worked across production preparation, filming, and
+ * coordination ...") and "Other agency work" paragraph (pitch decks, Google Ads, Squarespace CSS) apply only where a
+ * slot exists; the page has none (CaseTitle takes a title and meta only), so neither is placed. Shift Content as the
+ * producer is named by the page's meta and in the Nickleby and Night Club sentences.
+ *
+ * Earlier copy (brief of 2026-09-28, superseded above): each film's two sentences named the agency's production, then
+ * Harlie's part. No opening paragraph (the
+ * page's meta names the internship) and no captions (none of the films has a caption slot, and the first sentence of
+ * each text already names the agency as producer). The Night Club sentence no longer names Gymshark (branding, not
+ * a documented role). The non-breaking hyphens keep the compound words (B-roll, on-set) whole at a line end.
  *
  * Evidence (docs/content-provenance.md, Shift Content)
  * - Harlie's weekly journals and Data 197 report (Shift Content/Shift
@@ -59,11 +68,12 @@ export interface ClientFilm {
   /** Section heading and anchor link label. */
   name: string
   video: VideoId
-  /** Harlie's part, in one short sentence (Harlie's brief, 2026-09-28). */
+  /** Harlie's part, in Harlie's own sentence (2026-09-28). */
   work: ReactNode
   /**
    * The moving frame on the page (a short muted excerpt; the full film opens with sound on request). `fill` crops it to
-   * fill the 16:9 frame.
+   * fill the 16:9 frame. The posters are WebP made from the excerpts' JPEG posters (the same frames, about 40% fewer
+   * bytes; scripts/prepare-media.mjs, task `posters`, 2026-09-29).
    */
   clip: { src: string; poster: string; width: number; height: number; fill?: boolean }
 }
@@ -79,10 +89,10 @@ export const CLIENT_WORK = {
       // The loop starts on the wide shot (Harlie's brief, 2026-09-28): it was cut 7 frames (0.23s) early and opened on
       // a flash of a close-up with another line's subtitle, on arrival and every 6s. Re-cut from the wide shot
       // (5.77s); its poster is the loop's first frame.
-      clip: { src: '/media/video/nickleby-loop-trim-1138.mp4', poster: '/media/img/nickleby-loop-poster.jpg', width: 1138, height: 640 },
+      clip: { src: '/media/video/nickleby-loop-trim-1138.mp4', poster: '/media/img/nickleby-loop-poster.webp', width: 1138, height: 640 },
       work: (
         <p>
-          Helped set up lighting and equipment, and filmed B&#8209;roll during the interviews.
+          We produced testimonial, FAQ, and social films in a single day, using a question-card format to capture unscripted responses. I handled lighting, equipment setup, and B-roll filming.
         </p>
       ),
     },
@@ -91,10 +101,10 @@ export const CLIENT_WORK = {
       name: 'Aristocracy London',
       video: 'aristocracy',
       // Cropped to fill the 16:9 frame (Harlie's request: no black borders).
-      clip: { src: '/media/video/aristocracy-loop-854.mp4', poster: '/media/img/aristocracy-loop-poster.jpg', width: 854, height: 640, fill: true },
+      clip: { src: '/media/video/aristocracy-loop-854.mp4', poster: '/media/img/aristocracy-loop-poster.webp', width: 854, height: 640, fill: true },
       work: (
         <p>
-          Worked on lighting and on&#8209;set coordination, and documented the two&#8209;day shoot behind the scenes.
+          I worked across client management, campaign coordination, and production for Aristocracy London’s spring/summer campaign ahead of its Manchester store launch, creating behind-the-scenes photography alongside the film, e-commerce, and social deliverables.
         </p>
       ),
     },
@@ -103,10 +113,10 @@ export const CLIENT_WORK = {
       name: 'The Night Club Global Tour',
       video: 'heck',
       // The whole 16:9 frame (14.6s to 21.5s of the film).
-      clip: { src: '/media/video/heck-loop-1138.mp4', poster: '/media/img/heck-loop-poster.jpg', width: 1138, height: 640 },
+      clip: { src: '/media/video/heck-loop-1138.mp4', poster: '/media/img/heck-loop-poster.webp', width: 1138, height: 640 },
       work: (
         <p>
-          Filmed participants at a Gymshark&#8209;powered night run.
+          I filmed The Night Club Global Tour’s nighttime run for Shift Content, capturing its participants and atmosphere.
         </p>
       ),
     },

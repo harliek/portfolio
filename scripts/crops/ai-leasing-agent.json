@@ -1,5 +1,4 @@
 [
-  { "id": "ala-conversation", "source": "Valiance Capital/messages.png", "rect": { "x": 262, "y": 208, "width": 831, "height": 640 }, "widths": [640, 831], "fallback": "jpg" },
   { "id": "ala-phone-renter", "source": "Valiance Capital/messages.png", "rect": { "x": 376, "y": 262, "width": 660, "height": 134 }, "widths": [660], "fallback": "jpg" },
   { "id": "ala-phone-assistant", "source": "Valiance Capital/messages.png", "rect": { "x": 376, "y": 470, "width": 660, "height": 150 }, "widths": [660], "fallback": "jpg" },
   { "id": "ala-phone-staff", "source": "Valiance Capital/messages.png", "rect": { "x": 376, "y": 699, "width": 660, "height": 124 }, "widths": [660], "fallback": "jpg" }

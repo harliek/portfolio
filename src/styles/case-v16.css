@@ -4,13 +4,12 @@
  * system as it now is).
  *
  *   Grid     a told case (CaseStory): one centred composition at most 1300px wide, the words in 36% and the held
- *            stage in 64% (44/56 below 1100px); below 900px (portrait, or at least 541px tall) the words, then a
+ *            stage in 64% (42/58 below 1100px); below 900px (portrait, or at least 541px tall) the words, then a
  *            compact band held under the header. Creative Production (client-work.css) keeps its own layout.
  *   Type     title: the editorial serif, 36 to 72px (fitted to its column); step heading: serif, 20 to 24px;
  *            body: 16px on a 1.6 line, at most about 60 characters; labels 12px in small capitals
- *   Colour   near-black ground, warm white text, a readable grey (--cx-step-quiet, --cx-dim: the floor for
- *            secondary copy, never faded), and the rose statement accent (tokens.css --statement, its glowing lines
- *            --statement-line; words never glow); the pictures' glow stays the pointer's blue violet (--glow-media)
+ *   Colour   near-black ground, warm white text, a readable grey, and the blue violet statement accent
+ *            (tokens.css --statement: glowing white words, glowing lines, the pictures' --glow-media)
  *   Media    pictures directly on the page with 14px corners and the soft blue violet glow; motion moves pictures
  *            and emphasis, never the explanatory text away
  *   Ground   the Nebula background (CaseGround), dark until the pointer moves
@@ -23,14 +22,6 @@
   --cx-inner: clamp(24px, 2.2vw, 32px);
   --cx-text: #f3eee7;
   --cx-dim: #aaa49c;
-  /*
-   * The floor for copy that follows the scroll (Harlie's brief, 2026-09-28: inactive text must read as intentionally
-   * secondary, never as disabled). A step that is not current keeps its body at --cx-text and its heading at this warm
-   * grey (12.8:1 on the black ground); the current step leads by its rose rule and a white heading. No scroll-linked
-   * copy goes below 7:1, and none is faded with `opacity` (a faded block reads as switched off). Small notes and labels
-   * use --cx-dim (8.5:1).
-   */
-  --cx-step-quiet: #cfc9c1;
   --cx-hair: rgb(243 238 231 / 0.14);
   /* The told case's centred composition (CaseStory): gutters and the column gap. */
   --story-gutter: clamp(24px, 4vw, 48px);
@@ -72,8 +63,8 @@
    * were 60svh in a 40/60 split of a 1200px page, and 66svh, 35/65, before that); the words keep their room from the edge.
    */
   /*
-   * In a short window (below about 500px tall: a landscape phone), a little less, so the stage's status label above
-   * the picture stays below the header (Harlie's QA pass, 2026-09-28). And never so tall that its bottom, placed a
+   * In a short window (below about 500px tall: a landscape phone), a little less, so the top of the stage keeps clear
+   * of the header (Harlie's QA pass, 2026-09-28). And never so tall that its bottom, placed a
    * little above the middle of the room under the header (0.76 to 1.24, .story__hold), reaches the footer's rows once
    * they have risen at the end (CaseStory measures --end-rows; 12px kept between): at about 430 to 600px tall "Next
    * project" came up over the picture. Taller windows keep 72svh.
@@ -140,8 +131,8 @@
 
 /*
  * A landscape phone: half each, since the short window keeps the picture small and the words need the width. The held
- * picture keeps to the room between the header and the footer's rows once they have risen (--end-rows), its status
- * label in the space above it, so the footer's buttons never come up over it at the end (Harlie's QA pass,
+ * picture keeps to the room between the header and the footer's rows once they have risen (--end-rows), with a little
+ * space above it, so the footer's buttons never come up over it at the end (Harlie's QA pass,
  * 2026-09-28: "Next project" sat on the white mockup, nearly unreadable).
  */
 @media (max-width: 899.98px) and (orientation: landscape) and (max-height: 540.98px) {
@@ -267,41 +258,6 @@
   min-width: 0;
 }
 
-/*
- * The stage's status (Harlie's brief, 2026-09-28: a subtle "Prototype" or "Concept UI" label only where a polished
- * mockup could be mistaken for a live production system; the page passes it as the stage's `status`). Set like the
- * details under the title (small capitals, restrained tracking) but muted and without their glow, so it reads as a
- * plain fact rather than something to press; it hangs just above the picture's left edge, travels with the picture,
- * and takes no room from it or the pointer. It is drawn over the gallery's pictures (they take z-index 1 to 11 as they
- * grow; Harlie's QA pass, 2026-09-28: on phones a picture covered it), under the header, at the site's 12px floor.
- */
-.story__status {
-  position: absolute;
-  z-index: 20;
-  bottom: calc(100% + 10px);
-  left: 0;
-  margin: 0;
-  /*
-   * In a gallery on a wide screen, just above the picture that is large (LayerGallery sets these, and fades it while it
-   * moves to another picture: data-moving); on phones and elsewhere, above the stage's top left corner.
-   */
-  transform: translate(var(--status-x, 0px), var(--status-y, 0px));
-  transition: opacity 90ms linear;
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--cx-dim);
-  pointer-events: none;
-}
-
-.story__status[data-moving] {
-  opacity: 0;
-}
-
 .story__video {
   display: block;
   width: 100%;
@@ -312,7 +268,8 @@
 /*
  * The picture itself (Harlie's request, 2026-09-26: no device or frame PNG): a box in the media's own proportions,
  * the recording or screenshot filling it whole, with rounded corners, a faint hairline and a soft blue glow around
- * its edges (--glow-media; not a neon border). The same on every told case study.
+ * its edges (--glow-media: a distinct glowing border since Harlie's request of 2026-09-29). The same on every told
+ * case study.
  */
 .story__box {
   aspect-ratio: var(--aspect);
@@ -334,58 +291,32 @@
 }
 
 /*
- * The gallery (CaseStory; Harlie's request, 2026-09-28: "show all three images with one bigger but as you scroll they
- * like take turns getting bigger"): CafePress UK's and AI Leasing Agent's screenshots all on the stage in a column,
- * the current step's large and the others small, each growing and shrinking where it stands. CaseStory sizes the
- * gallery to the group and lays every picture out at the large one's size, placing and scaling each (transform only)
- * and dimming the small ones with an overlay; each is the rounded, glowing picture (.story__screen) with its own
- * control to open it larger.
+ * CafePress UK's and the AI Leasing Agent's screenshots in a card-hover gallery (CaseStory GalleryStage;
+ * src/components/ui/card-hover; Harlie's request, 2026-09-29). It takes the column's full width; its card is never
+ * taller than the stage (--stage-h).
  */
-
-/* The stage's height, measured by CaseStory for the arrangement; it takes no room. */
-.story__probe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0;
-  height: var(--stage-h);
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.story__tile {
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform-origin: 0 0;
-  will-change: transform;
-}
-
-.story__tile .picture,
-.story__tile img {
-  display: block;
+.story__hold > .story__stage.story__cards,
+.story__stage.story__cards {
   width: 100%;
-  height: 100%;
+  --card-max-h: var(--stage-h);
 }
 
-.story__tile img {
-  object-fit: contain;
-}
-
-/* The small pictures' dimming: a black overlay, never a filter or a blur (CaseStory sets its opacity). */
-.story__shade {
+/*
+ * A short neutral label beside the pictures, where their provenance needs one (Harlie's copy brief, 2026-09-29): under
+ * the phone row, hanging below it so the row keeps its place.
+ */
+.story__media-label {
   position: absolute;
-  inset: 0;
-  background: #000;
-  opacity: 0;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--cx-dim);
   pointer-events: none;
-}
-
-/* A small picture's focus ring stays as wide as the large one's (CaseStory sets --inv, the inverse of its scale). */
-.story__tile .story__zoom:focus-visible {
-  outline-width: calc(2px * var(--inv, 1));
-  outline-offset: calc(3px * var(--inv, 1));
-  box-shadow: 0 0 0 calc(1.5px * var(--inv, 1)) var(--focus-inner);
 }
 
 /*
@@ -424,41 +355,19 @@
 }
 
 /*
- * The centre phone leads the row (Harlie's brief, 2026-09-28: "central phone dominant"): it stands forward at full
- * brightness whatever the section, and the two beside it stay a little smaller. The current section's phone is still
- * marked (Harlie's request: one phone at a time): a side phone that is current comes up to full brightness and a
- * little larger, but never past the centre one. The quiet side phones are dimmed only to 0.72 (they were 0.6, which
- * read as switched off). Each keeps its place and scales from its centre, so none collide; the row keeps room for the
- * centre phone's 12% (CaseStory marks it data-centre).
+ * One phone at a time (Harlie's request): the current section's phone grows a little and is at full brightness; the
+ * other two stay slightly smaller and dimmed. Each keeps its place and scales from its centre, so none collide.
  */
 .story__phones .story__phone {
   position: relative;
   transform: scale(0.94);
-  opacity: 0.72;
+  opacity: 0.6;
 }
 
 .story__phones .story__phone[data-on] {
-  transform: scale(1);
-  opacity: 1;
-}
-
-.story__phones .story__phone[data-centre] {
   z-index: 1;
   transform: scale(1.12);
   opacity: 1;
-}
-
-/*
- * Beside the words, the phones' status label stands in the row's top padding at its left edge, just above the phones
- * (Harlie's brief, 2026-09-28: "Concept UI" legible wherever a mockup could be taken for a product); above the row's
- * padded box it floated about 60px clear of them. In the phones' band the band's own rule places it.
- */
-@media (min-width: 900px), (orientation: landscape) and (max-height: 540.98px) {
-  .story__phones > .story__status {
-    top: 0;
-    bottom: auto;
-    left: 2%;
-  }
 }
 
 /*
@@ -532,9 +441,7 @@
   font-size: clamp(1.25rem, 1.1rem + 0.4vw, 1.5rem);
   font-weight: 400;
   line-height: 1.2;
-  color: var(--cx-step-quiet);
-  /* A heading that wraps splits evenly, never one word left alone on its second line. */
-  text-wrap: balance;
+  color: #cfc9c1;
   transition: color 200ms var(--ease-standard);
 }
 
@@ -549,22 +456,6 @@
   font-size: 1rem;
   line-height: 1.6;
   color: var(--cx-text);
-}
-
-/*
- * A step's note (CaseStory StoryStep.note; Harlie's brief, 2026-09-28: a qualification such as the Merchandising
- * Dashboard's "does not place orders" is set as a small annotation, not as the story's last sentence). Set like the
- * status label and the details under the title (the sans at 13px, the muted --cx-dim at 8.5:1), the same in every
- * state of the step, so it is plainly secondary without reading as switched off.
- */
-.story__note {
-  max-width: 60ch;
-  margin: 8px 0 0;
-  font-family: var(--font-sans);
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  letter-spacing: 0.01em;
-  color: var(--cx-dim);
 }
 
 /*
@@ -593,8 +484,7 @@
 
   /* The words at a comfortable measure (at most about 60 characters a line) where the column is wider than that. */
   .cs__intro p,
-  .story__text,
-  .story__note {
+  .story__text {
     max-width: 28rem;
   }
 
@@ -624,28 +514,14 @@
     pointer-events: none;
   }
 
-  /* A stage with a status: room in the band above the picture for its label (.story__status, just below). */
-  .cs__media:has(.story__status) {
-    padding-top: 26px;
-  }
-
-  .cs__media .story__status {
-    bottom: calc(100% + 5px);
-  }
-
   /* Phones: the holder is not fixed; the stage sits in the held band. */
   .story__hold {
     display: contents;
   }
 
-  /*
-   * 24px under the band, 4px clear of its 20px fade (Harlie's brief, 2026-09-28: at 20px the first heading rested
-   * exactly on the fade's edge, CaseStory counted it as crowding the band, and the page ended with the first step
-   * scrolled under the band and up to 250px empty below the last).
-   */
   .cs__body {
     grid-row: 3;
-    margin-top: 24px;
+    margin-top: 20px;
   }
 
   .cs[data-hold] {
@@ -658,7 +534,7 @@
 }
 
 @media (max-width: 599.98px) and (orientation: portrait) {
-  .cs:has(.story__gallery) {
+  .cs:has(.story__cards) {
     --stage-h: 28svh;
   }
 }
@@ -667,22 +543,19 @@
 /*
  * Tall tablets held upright: the band takes the height the steps below it do not need, up to 40% of the screen
  * (Harlie's QA pass, 2026-09-28: at 834x1112 and 820x1180 the steps were held under a phone-sized band and the lower
- * third of the screen stayed empty until the footer rose). CaseStory measures what the page needs besides the picture
- * (--story-need: the header, the band's padding, the steps and the footer at the end), so each page's picture takes
- * what its own steps leave (Harlie's brief, 2026-09-28: the shorter copy and footer left 150 to 250px empty under the
- * steps at 768x1024 with the fixed 720px, which stays as the value before the first measure).
+ * third of the screen stayed empty until the footer rose). About 720px is the header, the band's padding, the steps
+ * and the footer's rows at the end; a 1024px tall tablet keeps 30%.
  */
 @media (min-width: 600px) and (max-width: 899.98px) and (orientation: portrait) {
   .cs {
-    --stage-h: clamp(30svh, calc(100svh - var(--story-need, 720px)), 40svh);
+    --stage-h: clamp(30svh, calc(100svh - 720px), 40svh);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .story__phone,
   .story__step::before,
-  .story__title,
-  .story__status {
+  .story__title {
     transition: none;
   }
 }
@@ -698,6 +571,15 @@
 }
 
 /* Labels ------------------------------------------------------------------------------ */
+
+/* A details line breaks only between its parts; a "·" left at a line's end is hidden (CaseTitle marks it). */
+.cx-meta__part {
+  white-space: nowrap;
+}
+
+.cx-meta__part[data-line-end] .cx-meta__sep {
+  visibility: hidden;
+}
 
 .cx-meta {
   display: flex;
@@ -826,26 +708,23 @@
   }
 }
 
-/* No single word alone on the last line of the introductions, steps, notes and film texts. */
+/* No single word alone on the last line of the introductions, steps and film texts. */
 .cx-lede,
 .story__text,
-.story__note,
 .cw-text .cx-body {
   text-wrap: pretty;
 }
 
 /*
- * Hovering the held picture (the recording or screenshot, the phones) enlarges it a little (Harlie's request). The
- * gallery grows only while the pointer is over one of its pictures: its box is as wide as the large picture, so the
- * empty space beside the small ones is part of it (Harlie's QA pass, 2026-09-28).
+ * Hovering the held picture (the recording or the phones) enlarges it a little (Harlie's request). The card-hover
+ * gallery is left out: its circles change the picture instead.
  */
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .story__hold > .story__stage {
     transition: transform 420ms var(--ease-arrive);
   }
 
-  .story__hold > .story__stage:not(.story__gallery):hover,
-  .story__hold > .story__gallery:has(.story__tile:hover) {
+  .story__hold > .story__stage:not(.story__cards):hover {
     transform: scale(1.03);
   }
 }
@@ -863,7 +742,7 @@
 }
 
 /*
- * Keyboard focus: the site's one focus mark (tokens.css, layout.css), a near-white edge inside a 2px rose ring.
+ * Keyboard focus: the site's one focus mark (tokens.css, layout.css), a near-white edge inside a 2px blue violet ring.
  * A 1px ring read as a sharper edge of the pictures' own blue violet glow (Harlie's brief, 2026-09-28, item 6: focus
  * distinguishable from the decorative light).
  */
@@ -872,3 +751,4 @@
   outline-offset: 3px;
   box-shadow: var(--focus-inner-line);
 }
+

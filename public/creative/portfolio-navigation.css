@@ -139,3 +139,14 @@ body:has(.fixed.inset-0.bg-black\/85) .professional-return {
     transition: none;
   }
 }
+
+/* Keep the original poem readable over the light areas of the charcoal artwork. */
+[class~='text-white/85'][style*='Kapakana'] {
+  background: rgb(0 0 0 / 0.88);
+  color: #fff;
+  padding: 14px 12px;
+  border-radius: 6px;
+}
+[class~='text-white/85'][style*='Kapakana'] > div:hover {
+  color: #ff969a;
+}

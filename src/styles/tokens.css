@@ -19,15 +19,18 @@
 :root {
   /*
    * The glow around a case study's pictures and films, in the pointer's bright blue violet (Harlie's requests,
-   * 2026-09-27: red for a while, then "the light around the images" blue violet again, with the cursor): a faint
-   * hairline, a soft light close to the edge and a wider haze beyond it. --glow-media-drop is the same light for
-   * cutouts (phones), following their shape.
+   * 2026-09-27: "the light around the images" blue violet, with the cursor; 2026-09-29: "make the images on the case
+   * study pages glow more. So there's like a distinct like glowing border"): a crisp, bright border line at the edge,
+   * a strong light hugging it, and a wider haze beyond. --glow-media-drop is the same light for cutouts (phones),
+   * following their shape.
    */
   --glow-media:
-    0 0 0 1px rgb(236 238 255 / 0.14),
-    0 0 22px 2px rgb(var(--pointer-rgb) / 0.34),
-    0 0 72px 10px rgb(var(--pointer-rgb) / 0.18);
-  --glow-media-drop: drop-shadow(0 0 10px rgb(var(--pointer-rgb) / 0.42)) drop-shadow(0 0 34px rgb(var(--pointer-rgb) / 0.22));
+    0 0 0 1.5px rgb(196 204 255 / 0.9),
+    0 0 6px 1px rgb(var(--pointer-rgb) / 0.9),
+    0 0 26px 4px rgb(var(--pointer-rgb) / 0.55),
+    0 0 80px 12px rgb(var(--pointer-rgb) / 0.26);
+  --glow-media-drop: drop-shadow(0 0 1.5px rgb(196 204 255 / 0.95)) drop-shadow(0 0 8px rgb(var(--pointer-rgb) / 0.85))
+    drop-shadow(0 0 30px rgb(var(--pointer-rgb) / 0.4));
 
   color-scheme: dark;
 
@@ -58,7 +61,6 @@
   --color-muted: #b0b4c3;
   /* The statement rose marks focus and interactions. */
   --color-focus: var(--statement);
-  --color-line: #303545;
   --color-media-edge: rgb(255 255 255 / 0.08);
   /* Opaque: nothing from the page shows around an enlarged image. */
   --color-scrim: rgb(5 6 10);
@@ -67,7 +69,6 @@
 
   /* The setting: the film on the homepage, a quiet near-black ground
      (--stage-room) behind every other page (stage.css). */
-  --stage-violet: #a58cf0;
   /* Headings and bold text: a cool near-white in the body text's hue (size and weight carry the hierarchy). */
   --stage-ivory: #eaebf1;
   --stage-room: #050609;
@@ -76,8 +77,8 @@
    * "that bright blue, purple color again"): the light that replaces the mouse and its
    * outline (CustomCursor), its trail (PointerTrail), the large soft light around it (CursorLight) and the glow around
    * the pictures (--glow-media). A crisp near-white core, a violet-white inner glow and a soft blue violet halo; the
-   * trail's halo is the ball's own colour (Harlie's request: "the trail the same color as the mouse"). The statement
-   * colour is the rose above, not this (Harlie's brief, 2026-09-28).
+   * trail's halo is the ball's own colour (Harlie's request: "the trail the same color as the mouse"). Since 2026-09-28
+   * the statement colour is this blue violet too (above), so the site has one colour family.
    */
   --trail-core: rgb(250 248 255);
   --trail-glow: rgb(214 202 255);
@@ -86,7 +87,7 @@
   --pointer-light-rgb: 118 104 255;
 
   /*
-   * Interactive accent: the statement rose on every page (Harlie's QA pass, 2026-09-28: the per-project
+   * Interactive accent: the statement blue violet on every page (Harlie's QA pass, 2026-09-28: the per-project
    * accents, src/content/accents.ts, were read by no rule and are gone). Rules resolve it on the element itself
    * (--_acc, --case-accent), never through another :root token.
    */
@@ -142,7 +143,6 @@
 
   /* Surfaces */
   --radius-inner: 12px;
-  --pad-frame: 8px;
   --radius-button: 8px;
 
   /*
@@ -179,9 +179,9 @@
   --focus-ring: 2px solid var(--color-focus);
   --focus-offset: 3px;
   /*
-   * A crisp near-white line inside the rose ring (--color-focus), at the control's own edge (Harlie's brief,
-   * 2026-09-28: "focus/hover distinguishable from the decorative trail"): the pointer's light is a soft blue violet
-   * glow with no edge, so a white line in a rose ring never reads as it. A box-shadow, added by the rules that draw the
+   * A crisp near-white line inside the blue violet ring, at the control's own edge (Harlie's brief, 2026-09-28:
+   * "focus/hover distinguishable from the decorative trail"): the pointer's light is a soft blue violet glow with no
+   * edge, so a white line in a blue violet ring never reads as it. A box-shadow, added by the rules that draw the
    * ring with an offset of 3px or more (layout.css: the header's items, the footer's links and project buttons).
    */
   --focus-inner: rgb(250 248 255);
@@ -222,8 +222,6 @@
     --color-surface: oklch(0.1885 0.0166 273.77);
     --color-text: oklch(0.9708 0.0067 277.16);
     --color-muted: oklch(0.7714 0.0218 273.95);
-    --color-line: oklch(0.3311 0.0292 271.22);
-    --stage-violet: oklch(0.72 0.16 295);
     --stage-ivory: oklch(0.94 0.008 277);
     --stage-room: oklch(0.1016 0.0078 271.2);
   }

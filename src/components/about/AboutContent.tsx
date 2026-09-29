@@ -5,7 +5,7 @@ import { ResponsiveImage } from '../media/ResponsiveImage'
 import { DockTitle } from '../ui/DockTitle'
 import { StatefulIcons } from '../ui/Stateful'
 import { ArtPreview } from './ArtPreview'
-import { ContactForm, ContactLinks } from './ContactForm'
+import { ContactForm } from './ContactForm'
 import { FeaturedFilm } from './FeaturedFilm'
 import { useRestingEnd } from './useRestingEnd'
 
@@ -21,45 +21,34 @@ const ART_PIECE_SIZES = '(min-width: 1128px) 104px, (min-width: 900px) 10vw, (mi
  */
 const PORTRAIT_SIZES = '(min-width: 1323px) 344px, (min-width: 820px) 300px, (min-width: 750px) 32vw, (min-width: 720px) 240px, (min-width: 560px) 344px, calc(100vw - 40px)'
 
-/**
- * The descriptor's parts, either side of its middle dots (Harlie's brief, 2026-09-28: at most three concrete
- * categories, "AI product", "Implementation" and "Product operations"; it was two halves, "AI implementation" and
- * "Product strategy and operations").
- */
+/** The descriptor's halves, either side of its middle dot ("AI implementation" and "Product strategy and operations"). */
 const DESCRIPTOR = ABOUT.descriptor.split(' · ')
 
 /**
  * The /about page (brief v21), in the old creative portfolio's About format:
  *
  * 1. Opening. On the left a small "About" label with its rule, the name
- *    "Harlie Katz", the descriptor in the statement rose (no glow), and two
- *    short paragraphs; on the right the colour portrait (4:5, 240 to 344px
- *    wide). Beside the words from 720px wide (2026-09-28; it was 820px, which
- *    left tablets a lone portrait with empty space beside it); narrower, the
- *    text and then the portrait. Harlie's brief of 2026-09-28 sets the order
- *    of attention: the name, the positioning line, the short thesis, then the
- *    portrait (about.css keeps the thesis light and at 50 to 70 characters a
- *    line). The descriptor's parts each wrap as one where they can.
+ *    "Harlie Katz", a short descriptor in the blue violet glow, and two short
+ *    paragraphs (Harlie's baseline, 2026-09-28); on the right the colour
+ *    portrait (4:5, 240 to 344px wide). Beside the words from 720px wide
+ *    (2026-09-28; it was 820px, which left tablets a lone portrait with
+ *    empty space beside it); narrower, the text and then the portrait.
+ *    The descriptor's two halves each wrap as one where they can.
  * 2. Education, numbered as on the creative site: the school with its years,
- *    the degree and the certificate (the primary lines), the courses line,
- *    then Harlie's one paragraph, set a step quieter than the degree (Harlie's
- *    brief, 2026-09-28: "degree info primary, thesis secondary").
+ *    the degree and the certificate, the coursework line, then Harlie's one
+ *    paragraph.
  * 3. Creative work, compact: the Creative Portfolio (its Art tile; opens the
  *    original creative homepage at /creative/, a separate build, so a plain
  *    link), An Artistic End (its authentic poster; plays the film, with the
  *    YouTube player requested only after that press), and Art (three of
  *    Harlie's charcoal portraits; opens the creative portfolio's Art page).
- * 4. Get in touch: the email address, LinkedIn and the résumé first
- *    (ContactLinks), then a name, an email address and a message
- *    (ContactForm; Harlie's brief, 2026-09-28: the direct links at least as
- *    easy to reach as the form, which should not dominate). It is the page's
- *    last section and its resting place (useRestingEnd): nothing scrolls the
- *    page away from it.
+ * 4. Get in touch: a name, an email address and a message (ContactForm.tsx),
+ *    with the email address, LinkedIn and the résumé beside "Send message"
+ *    (Harlie's request, 2026-09-28). It is the page's last section and its
+ *    resting place (useRestingEnd): nothing scrolls the page away from it.
  *
  * No parallax. Like the rest of the site, the page sits on the Nebula ground, lit only where the pointer moves
- * (CaseGround.tsx), about half as strong here as on the case studies, so it stays atmosphere rather than a third
- * thing to look at beside the name and the portrait (about.css; Harlie's brief, 2026-09-28). The portrait and the
- * cards answer the pointer (a 3D tilt, a hover scale).
+ * (CaseGround.tsx), and the portrait and the cards answer the pointer (a 3D tilt, a hover scale).
  */
 export function AboutContent() {
   const { education: edu } = ABOUT
@@ -83,7 +72,7 @@ export function AboutContent() {
         <div className="about-hero__text">
           <p className="about-label">{ABOUT.label}</p>
           <DockTitle id="about-title" className="about-name" text={ABOUT.name} />
-          {/* Each part kept whole where the line allows (2026-09-28; it broke inside "Product strategy"). */}
+          {/* The two halves, each kept whole where the line allows (2026-09-28: it broke as "... PRODUCT STRATEGY" / "AND OPERATIONS"). */}
           <p className="about-descriptor">
             {DESCRIPTOR.map((part, i) => (
               <Fragment key={part}>
@@ -116,21 +105,11 @@ export function AboutContent() {
               {edu.school} <span className="about-school__dates tabular">{edu.dates}</span>
             </p>
             <ul className="about-school__credentials" role="list">
-              {/* Each side of the en dash kept whole where the line allows (2026-09-28: at 16px on a phone the degree broke
-                  as "B.A. in Cognitive Science – Data" / "Science minor"). */}
               {edu.lines.map((l) => (
-                <li key={l}>
-                  {l.split(' – ').map((part, i, parts) => (
-                    <Fragment key={part}>
-                      {i > 0 && ' '}
-                      <span className="about-school__part">{i < parts.length - 1 ? `${part} –` : part}</span>
-                    </Fragment>
-                  ))}
-                </li>
+                <li key={l}>{l}</li>
               ))}
             </ul>
-            {/* Optional: the line goes if Harlie's materials support no course titles (Harlie's brief, 2026-09-28). */}
-            {edu.coursework && <p className="about-school__coursework">{edu.coursework}</p>}
+            <p className="about-school__coursework">{edu.coursework}</p>
           </div>
           <div className="about-school__text">
             {edu.text.map((p) => (
@@ -154,7 +133,7 @@ export function AboutContent() {
               <a
                 href={ABOUT.portfolio.href}
                 className="about-work__hit"
-                aria-label={`${ABOUT.portfolio.action}, ${ABOUT.portfolio.title}`}
+                aria-label={`${ABOUT.portfolio.action} (a separate site)`}
                 onClick={leave('portfolio')}
               >
                 <ArtPreview />
@@ -167,14 +146,13 @@ export function AboutContent() {
             </div>
             <div className="about-work__foot">
               <h3 className="about-work__title">{ABOUT.portfolio.title}</h3>
-              <p className="about-work__line">{ABOUT.portfolio.line}</p>
             </div>
           </div>
           <FeaturedFilm />
           <div className="about-work about-work--art">
             <div className="about-work__frame">
               {/* The creative portfolio's Charcoal Art page, a separate static build: a plain link and a full page load. */}
-              {/* Named by its title, as the other cards are: "View art, Charcoal Art" (Harlie's brief, 2026-09-28). */}
+              {/* Named by its title, "View drawings, Selected drawings and studies" (copy brief of 2026-09-28). */}
               <a href={ABOUT.art.href} className="about-work__hit" aria-label={`${ABOUT.art.action}, ${ABOUT.art.title}`} onClick={leave('art')}>
                 {/* Three drawings filling the card side by side; the whole frame is the one link. */}
                 <span className="about-art-strip">
@@ -193,7 +171,6 @@ export function AboutContent() {
             </div>
             <div className="about-work__foot">
               <h3 className="about-work__title">{ABOUT.art.title}</h3>
-              <p className="about-work__line">{ABOUT.art.line}</p>
             </div>
           </div>
         </div>
@@ -206,11 +183,9 @@ export function AboutContent() {
           </span>
           {ABOUT.contactTitle}
         </h2>
-        <div className="about-contact__body">
-          <ContactLinks />
-          <ContactForm />
-        </div>
+        <ContactForm />
       </section>
     </div>
   )
 }
+

@@ -30,12 +30,22 @@ export function StatefulIcons() {
 export function useActionState(minMs = 450) {
   const [state, setState] = useState<ActionState>('idle')
   const timer = useRef(0)
-  useEffect(() => () => window.clearTimeout(timer.current), [])
+  // Set in the effect itself (not only at first render), so StrictMode's mount, cleanup, mount leaves it true.
+  const alive = useRef(false)
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false
+      window.clearTimeout(timer.current)
+    }
+  }, [])
   const run = useCallback(
     async (action?: () => unknown) => {
       window.clearTimeout(timer.current)
       setState('loading')
       await Promise.all([Promise.resolve(action?.()), new Promise((r) => window.setTimeout(r, minMs))])
+      // Gone during the wait (e.g. Back pressed while the loader shows): no state, and no timer left behind.
+      if (!alive.current) return
       setState('done')
       timer.current = window.setTimeout(() => setState('idle'), 2000)
     },

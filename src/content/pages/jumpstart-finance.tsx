@@ -14,20 +14,28 @@ import type { ImageId } from '../media'
  * the project files do not show it). Not claimed: a launched app, what people
  * signed up for.
  *
- * Harlie's brief of 2026-09-28: the phones carry the features, so the three sections give the reasoning instead, in
- * the order premise, point of difference, validation. "Learning design": levels and tailored lessons came from one
- * premise, that gamified, personalized learning keeps people engaged (the deck). "Community forum": the reason for it,
- * the competitor comparison (JumpStart Finance/competitors.png: Zogo was educational and gamified, and none of the
- * three apps compared had a forum). No pivot toward younger users is claimed; no source documents one. The phone
- * mapping is unchanged: Home (the topics) for Learning design, the Community forum for Community forum, the Profile
- * for the pitch.
+ * Harlie's QA pass, 2026-09-28 (for Harlie to confirm): the phones follow the September 26 sections again. The mapping
+ * was set for the earlier sections (Financial education, Learning progression, Community discussion), so the forum
+ * came forward for "Pitch and early interest" and the profile for "Community discussion". Now Home (the topics) comes
+ * forward for "Learning structure", the Community forum for "Community discussion", the Profile for "Pitch and early
+ * interest"; the other way round (Profile first, for its learning path) would also fit. Two sentences read more
+ * directly: "The prototype’s learning path used levels to keep users progressing" (was "The prototype used a learning
+ * path with levels to encourage continued learning") and "The prototype’s forum let users ask questions ..." (was "The
+ * proposed forum would let ..."; the forum screen is part of the 2024 prototype, jf-tile-third).
+ *
+ * Copy pass of 2026-09-28: the three phones are ChatGPT redraws (PNG Tiles, 2026-09-25) of the 2024 prototype screens
+ * (JumpStart Finance/proto 1 to 4) with details of their own. No caption or label on the phones (Harlie's request,
+ * 2026-09-28: "there should be no captions for any photos").
  */
 export const JUMPSTART = {
   title: 'Jumpstart Finance',
-  meta: ['Founder and Product Lead', 'Student venture, Portugal · 2024'],
+  /** The role, then the status and the year (the program and Porto are in the lede; copy brief of 2026-09-29). Role
+   * "Student Founder and CEO" and no "Reconstructed screens" label (Harlie's request, 2026-09-29). */
+  meta: ['Student Founder and CEO', 'Student venture · 2024'],
+  /** Harlie's copy brief of 2026-09-29, verbatim. */
   lede: (
     <p>
-      At the European Innovation Academy in Porto, I led a five&#8209;person team developing a financial education app concept.
+      At the European Innovation Academy in Porto, I led a five&#8209;person international team developing Jumpstart Finance to make practical financial education more accessible to students.
     </p>
   ),
   /**
@@ -40,21 +48,25 @@ export const JUMPSTART = {
     { image: 'jf-tile-home' as ImageId, name: 'Home', step: 0 },
     { image: 'jf-tile-third' as ImageId, name: 'Community', step: 1 },
   ],
-  /** The product reasoning behind the screens (Harlie's brief, 2026-09-28), not a tour of their features. */
+  /**
+   * Harlie's wording, verbatim (copy brief of 2026-09-29). The audience change is Harlie's account (no project file
+   * records the ages or the interview findings). The prototype's lessons, level path and forum are the 2024 screens
+   * (pitch pp.5–6; proto 2 to 4); "short" lessons stays out (no screen shows a length). The 150 sign-ups are attributed
+   * to the program pitch (p.10), where what was counted is not stated; no outcome is drawn from them. The landing page:
+   * the pitch's webflow link and the rebuild README.
+   */
   features: [
     {
-      title: 'Learning design',
-      text: 'Levels and tailored lessons came from one premise, that gamified, personalized learning keeps people engaged.',
+      title: 'The opportunity',
+      text: 'Financial knowledge is essential to independence and deserves a stronger place in education. We focused on spending, saving, and investing as skills students should develop before taking responsibility for their own finances.',
     },
     {
-      title: 'Community forum',
-      text: 'Zogo was already gamified, but none of the apps we compared had a forum, so community set us apart.',
+      title: 'Learning experience',
+      text: 'We designed the concept around lessons tailored to users’ experience and goals, combining gamified learning levels with a forum for financial questions. The aim was to make learning engaging, give progress a visible structure, and encourage discussion beyond individual lessons.',
     },
     {
-      // The figure the team's pitch cited (the pitch deck, p. 10), stated as what the pitch cited, not as customers or
-      // active users. Not claimed: what people signed up for. "Investors" is Harlie's statement.
-      title: 'Pitch and early interest',
-      text: 'I presented the concept to investors, citing 150 sign‑ups in 24 hours.',
+      title: 'Investor presentation',
+      text: 'I presented our research, mobile prototype, and proposed business model to investors at the program’s close. We attracted 150 sign-ups in 24 hours.',
     },
   ],
 }

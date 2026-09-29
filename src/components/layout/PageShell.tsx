@@ -31,12 +31,11 @@ export function PageShell() {
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <StageBackground route={route} />
+        <StageBackground />
         {/* Harlie's Orb shader behind the remaining pages (not found); idle on the homepage (the film covers it), the case studies and About. */}
         <OrbBackground active={route === 'other'} />
-        {/* The case studies and About: the Nebula Drift field with the cursor's blue violet light (CaseGround); calmer
-            on About, where it lies beside the name and the portrait (Harlie's brief, 2026-09-28). */}
-        <CaseGround on={route === 'case' || route === 'about'} calm={route === 'about'} />
+        {/* The case studies and About: the Nebula Drift field with the cursor's blue violet light (CaseGround). */}
+        <CaseGround on={route === 'case' || route === 'about'} />
         {/* The homepage portals its film here: outside the route wrapper, whose reveal animation would capture position: fixed. */}
         <div ref={setFilmSlot} id="stage-film" className="stage-film" />
         <Header />
@@ -55,3 +54,4 @@ export function PageShell() {
     </FilmSlotContext.Provider>
   )
 }
+

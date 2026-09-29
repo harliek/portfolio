@@ -39,8 +39,10 @@ All six are rendered by the `covers` task in `scripts/prepare-media.mjs` from re
 
 - `public/social-preview.jpg` (1200×630, `og:image`): "Harlie Katz", a small "Portfolio" label and the homepage sentence. `node scripts/prepare-media.mjs social`.
 - `public/resume/harlie-katz-resume.pdf`: the portfolio copy of the résumé, made by `scripts/portfolio-resume.py` from `personal assets/Harlie Katz Resume PDF copy.pdf` (which is never modified). It removes exactly two things, the phone number and ", reducing response time by 95%", by moving vector copies of the original text (fonts, spacing and links unchanged, text still selectable). Everything else is Harlie's own wording; see `docs/content-provenance.md`, Q1.
-- `public/fonts/InterVariable.woff2`: Inter variable (wght and opsz axes, all OpenType features) subset to Latin, Latin-1, Latin Extended-A, punctuation, arrows and a few symbols, 112KB instead of 344KB. Source `scripts/fonts/InterVariable.full.woff2`; regenerate with `scripts/subset-font.sh` (needs fonttools and brotli) after adding copy with other characters.
+- `public/fonts/InterVariable.woff2` and `public/fonts/PlayfairDisplay-Regular.woff2`: both subset to Latin, Latin-1, Latin Extended-A, punctuation, arrows and a few symbols (2026-09-29). Inter variable (wght and opsz axes) keeps only the OpenType features the CSS turns on or browsers apply by default (cv11, ss01, tnum, kern, calt, locl, plus frac/numr/dnom, case and cpsp): 82KB, was 112KB with every feature (the full font is 352KB). Playfair Display keeps every feature, its combining accents and glyph names, so it renders exactly as the full file did: 27KB instead of 42KB. Sources `scripts/fonts/InterVariable.full.woff2` and `scripts/fonts/PlayfairDisplay-Regular.full.woff2`; regenerate with `scripts/subset-font.sh` (needs fonttools and brotli) after adding copy with other characters or turning on another Inter feature in CSS, then bump the font's `?v=` in `index.html` (`/fonts/*` is cached immutable).
 - `jumpstart-traction`: `node scripts/prepare-media.mjs traction`.
+- `media/video/merch-console-scrub-page-1280.mp4`, the Merchandising Dashboard page's recording: the first 26s of `merch-console-scrub-1280.mp4` (the page shows 0 to 21.6s; Play dashboard demo plays the whole file), and `media/video/nickleby-tile-cut-640.mp4`, the Creative Production homepage tile: the Nickleby film's first 35.6s, video only, ending at a scene cut. Both stream copies (the same frames), `node scripts/prepare-media.mjs video` (2026-09-29).
+- WebP copies of the video posters that exist only as JPEG (the About, Spreadsheet and CafePress tiles, `sa-demo-poster-1440`, the three Creative Production loops), for their `<video poster>` attributes: `node scripts/prepare-media.mjs posters` (2026-09-29).
 
 ## Art archive
 
@@ -62,9 +64,11 @@ All 23 drawings from the previous portfolio (`old portfolio copy/public/art/`) a
 
 The 16:10 covers (`cover-planetart`, `cover-spreadsheet`, `cover-jumpstart`, `cover-shift`), the generated Valiance card (`cover-valiance-scenario`), and the Shift preview loop (`shift-preview.mp4`, `shift-preview-poster`) were deleted with their pipeline steps.
 
+On 2026-09-29, with Harlie's approval ("Delete archive-only media"), the files kept only for the archived v15 components, git stash@{0} or the room decision were removed with their pipeline steps (git history keeps them): the unplaced entries' files (`obj-about`, `sheet-*`, `merch-{ask,catalog,inventory,replenish}`, `planetart-uk`, `jumpstart-competitors`, `valiance-messages`, `ala-conversation`, `jf-screen-*`, `spreadsheet-agent-poster`, `merch-console-1600.mp4`, `spreadsheet-agent-1600.mp4` and the four edited previews), the homepage room (`room-1280.mp4`, `room-portrait-480.mp4`, `room-poster*`), the poster widths and formats no page can request (`aristocracy-poster-1440`, `heck-poster-1920`, and the AVIF files of the film and Merchandising Dashboard posters) and `nickleby-tile-640.mp4` (replaced by the tile cut). Inventory rows below that name them describe the earlier state.
+
 ## Inventory
 
-`Placed in` lists the source files that reference each id (generated from `src/content/media.ts` and `src/**`). "Not placed" entries are real evidence kept for the page owners.
+`Placed in` lists the source files that reference each id (generated from `src/content/media.ts` and `src/**`). "Not placed" entries are real evidence kept for the page owners; since 2026-09-29 their registry entries live in `archive/media-registry-unplaced.ts`, outside the bundled manifest.
 
 | Id | Files | Size (ratio) | Placed in | Source |
 |---|---|---|---|---|

@@ -19,9 +19,7 @@ export default function JumpstartFinance() {
         meta={C.meta}
         lede={C.lede}
         steps={C.features}
-        // "Concept UI" (Harlie's brief, 2026-09-28): the phones are restyled redraws of the 2024 prototype, with
-        // details of their own (the XP, lesson counts and level names), not screenshots of a built app.
-        stage={{ kind: 'phones', phones: C.phones, all: 'jf-phones-all', status: 'Concept UI' }}
+        stage={{ kind: 'phones', phones: C.phones, all: 'jf-phones-all' }}
       />
     </CasePage>
   )

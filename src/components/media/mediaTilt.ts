@@ -16,8 +16,6 @@ interface Box {
   top: number
   width: number
   height: number
-  /** How far beyond it still counts as over it (a share of its size; REACH unless set). */
-  reach?: number
 }
 
 /**
@@ -28,8 +26,8 @@ interface Box {
  * the perspective deepening to match, so every size moves alike. Its shadow moves with the tilt, as in the original:
  * offset by half the tilt, softer the further it leans.
  *
- * One listener for the whole site. While a picture is tilted, it follows it once a frame (a homepage tile keeps
- * drifting under a still pointer, a page can scroll) and lets go when the pointer is no longer over it. Positions are
+ * One listener for the whole site. While a picture is tilted, it follows it once a frame (a page can scroll under a
+ * still pointer) and lets go when the pointer is no longer over it. Positions are
  * measured from each element's untransformed box, so the tilt and the enlargement never feed back into themselves.
  * The page's CSS reads data-tilt with --tilt-x, --tilt-y, --tilt-p (perspective) and --tilt-sx, --tilt-sy,
  * --tilt-blur (the shadow). Touch screens and reduced motion: nothing tilts.
@@ -43,18 +41,8 @@ function install() {
   /** The tilt last written (degrees) and its perspective: a frame that changes neither by more than 0.05deg writes nothing. */
   let drawn: { x: number; y: number; p: number } | null = null
 
-  /**
-   * Its box as laid out, without any transform of its own (offsets from its offset parent, which may be moved). A
-   * picture in a case study's gallery is placed and scaled by its holder ([data-tilt-box], CaseStory), so its box is
-   * the holder's as drawn.
-   */
+  /** Its box as laid out, without any transform of its own (offsets from its offset parent, which may be moved). */
   const box = (el: HTMLElement): Box => {
-    const holder = el.parentElement?.closest<HTMLElement>('[data-tilt-box]')
-    if (holder) {
-      const r = holder.getBoundingClientRect()
-      // Exactly its own box: the gallery's pictures lie close together.
-      return { left: r.left, top: r.top, width: r.width, height: r.height, reach: 0 }
-    }
     const parent = el.offsetParent as HTMLElement | null
     const p = parent?.getBoundingClientRect() ?? { left: 0, top: 0 }
     return {
@@ -66,20 +54,18 @@ function install() {
   }
 
   const over = (b: Box) => {
-    const mx = b.width * (b.reach ?? REACH)
-    const my = b.height * (b.reach ?? REACH)
+    const mx = b.width * REACH
+    const my = b.height * REACH
     return x >= b.left - mx && x <= b.left + b.width + mx && y >= b.top - my && y <= b.top + b.height + my
   }
 
   /**
    * The picture under the pointer: the one it is over, or, through a case study's zoom button (a transparent button
-   * laid over the held picture, CaseStory), the picture or phone beneath it (in a gallery, the button's own picture).
+   * laid over the held picture, CaseStory), the picture or phone beneath it.
    */
   const pick = (target: Element | null): HTMLElement | null => {
     const own = target?.closest?.<HTMLElement>(MEDIA)
     if (own) return own
-    const tile = target?.closest?.('[data-tilt-box]')?.querySelector<HTMLElement>(MEDIA)
-    if (tile) return tile
     const stage = target?.closest?.('.story__zoom')?.closest('.story__stage')
     if (!stage) return null
     return [...stage.querySelectorAll<HTMLElement>(MEDIA)].find((el) => over(box(el))) ?? null

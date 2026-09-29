@@ -2,8 +2,7 @@
 export const SITE = {
   name: 'Harlie Katz',
   titleSuffix: 'Harlie Katz',
-  // The one identity line the homepage, About and index.html share (Harlie's brief, 2026-09-28).
-  description: 'Harlie Katz works in AI product, implementation, and product operations. Case studies and creative work.',
+  description: 'Harlie Katz, AI product strategy and implementation. Case studies on turning observations about how people work into product requirements, prototypes, and recommendations.',
   email: 'harliekatz@berkeley.edu',
   emailHref: 'mailto:harliekatz@berkeley.edu',
   linkedin: 'https://www.linkedin.com/in/harliekatz/',

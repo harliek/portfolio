@@ -3,10 +3,15 @@ import { Link, useLocation, useRouteError } from 'react-router-dom'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { CHUNK_RELOAD_KEY } from '../routes'
 
-/** A route's code chunk could not be loaded (an old tab after a deploy, a dev-server restart, offline). */
+/**
+ * A route's code chunk could not be loaded (an old tab after a deploy, a dev-server restart, offline). After a deploy
+ * the host answers an old chunk's URL with index.html, which Safari/WebKit reports as "'text/html' is not a valid
+ * JavaScript MIME type" and Vite's CSS preload (a router-first load) as "Unable to preload CSS for …"; both are
+ * matched as well, so every engine gets the one reload (2026-09-29).
+ */
 function isChunkLoadError(error: unknown) {
   const message = error instanceof Error ? `${error.name} ${error.message}` : String(error)
-  return /dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError|Failed to fetch/i.test(message)
+  return /dynamically imported module|Importing a module script failed|error loading dynamically imported module|not a valid JavaScript MIME type|Unable to preload CSS|ChunkLoadError|Failed to fetch/i.test(message)
 }
 
 /**

@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { useLocation, useNavigationType } from 'react-router-dom'
 
+/** Malformed fragments are literal IDs, not navigation errors. */
+function anchorId(hash: string) {
+  try { return decodeURIComponent(hash) } catch { return hash }
+}
+
 /** The element to focus for a section target: its first heading, else the target itself. */
 function focusTarget(el: HTMLElement): HTMLElement {
   const heading = el.matches('h1, h2, h3') ? el : el.querySelector<HTMLElement>('h1, h2')
@@ -74,7 +79,7 @@ export function RouteFocus() {
     window.addEventListener('keydown', onUser, { once: true })
     const align = () => {
       if (userScrolled) return
-      const el = document.getElementById(decodeURIComponent(hash))
+      const el = document.getElementById(anchorId(hash))
       if (el) scrollToAnchor(el)
     }
     const t1 = window.setTimeout(align, 60)
@@ -105,7 +110,7 @@ export function RouteFocus() {
     const outer = requestAnimationFrame(() => {
       inner = requestAnimationFrame(() => {
         done = true
-        const anchor = hash ? document.getElementById(decodeURIComponent(hash)) : null
+        const anchor = hash ? document.getElementById(anchorId(hash)) : null
         if (anchor) {
           // Back/Forward restore their own position; new navigations land on the section.
           if (navType !== 'POP') scrollToAnchor(anchor)

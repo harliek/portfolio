@@ -44,12 +44,12 @@ function warmImage(image: ImageId, sizes: string): { img: HTMLImageElement; read
   return { img, ready: img.decode().catch(() => {}) }
 }
 
-/** Prepares a destination: its code and its opening media (only the crops this viewport shows). Idempotent. */
+/** Prepares a destination: its code and its opening media. Idempotent. */
 export function warmProject(path: string) {
   prefetchRoute(path)
   if (warmed.has(path)) return
   const opening = TRANSITION.openingMedia[path] ?? projectForPath(path)?.hero ?? []
-  const openings = opening.filter((o) => !o.media || window.matchMedia(o.media).matches).map(({ image, sizes }) => warmImage(image, sizes))
+  const openings = opening.map(({ image, sizes }) => warmImage(image, sizes))
   warmed.set(path, { images: openings.map((w) => w.img), opening: Promise.all(openings.map((w) => w.ready)).then(() => {}) })
 }
 

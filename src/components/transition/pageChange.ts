@@ -178,8 +178,6 @@ interface Run {
   headerFloats: boolean
   /** The page being left shows the header's Back (every page but the homepage). */
   headerBack: boolean
-  /** The picture being left carries a status label (CaseStory's "Prototype", "Concept UI"), named on its own. */
-  status: boolean
   /** Where the old page's header items stood (paths.ts keeps the words clear of them). */
   header: Box[]
   /** WebKit, a new page landing scrolled: the new header comes in with the page's own picture (update()). */
@@ -238,6 +236,8 @@ export function changePage(opts: ChangeOptions): 'started' | 'plain' | 'ignored'
     complete(waiting)
   }
   const { to, navigate } = opts
+  // Any other destination chosen during a HOME glide: the glide's HOME is not followed afterwards (glideHome).
+  if (to !== '/') cancelGlide?.()
   if (typeof to === 'string') warmProject(to)
   if (to === '/' && window.location.pathname === '/' && glideHome(navigate, opts.state)) return 'plain'
   if ((typeof to === 'string' && to === window.location.pathname) || !supportsViewTransitions()) {
@@ -262,7 +262,6 @@ export function changePage(opts: ChangeOptions): 'started' | 'plain' | 'ignored'
     stills: [],
     headerFloats: false,
     headerBack: false,
-    status: false,
     header: [],
     headerInRoot: false,
     menu: false,
@@ -294,29 +293,44 @@ export function changePage(opts: ChangeOptions): 'started' | 'plain' | 'ignored'
 
 /** A HOME glide under way (glideHome): further clicks on HOME wait for it. */
 let gliding = false
+/** Drops the pending HOME glide's navigation (glideHome), for a visitor who chose another page meanwhile (changePage). */
+let cancelGlide: (() => void) | null = null
 
 /**
  * HOME on the homepage, scrolled down to the tiles (Harlie's brief, 2026-09-28: it was a jump cut from the tiles to the
  * top): the page glides back to the top, the header gathering back into its bar with the scroll as it does, and only
  * there is HOME followed (a new entry: the tiles start again from the first, out of sight below the hero). At the top
  * already, or with reduced motion, HOME is followed at once, as before. Returns whether it glides.
+ * A visitor who chooses another page during the glide (About, a tile, a page in the phone's menu), or goes Back or
+ * Forward in the browser, stays on that page: the glide's HOME is dropped rather than followed after it has arrived
+ * (bug fix approved by Harlie, 2026-09-29; the scroll itself still runs out underneath). The Creative Portfolio link
+ * leaves the site through leaveSite, not changePage, and is unchanged.
  */
 function glideHome(navigate: NavigateFunction, state: unknown): boolean {
   if (gliding) return true
   if (window.scrollY <= 0 || prefersReducedMotion()) return false
   gliding = true
   let done = false
-  const arrive = () => {
-    if (done) return
+  // Ends the glide's wait, once; false if it had already ended.
+  const stop = () => {
+    if (done) return false
     done = true
     gliding = false
+    cancelGlide = null
     window.clearTimeout(timer)
     window.removeEventListener('scrollend', arrive)
+    return true
+  }
+  const arrive = () => {
+    if (!stop()) return
+    // The visitor went elsewhere during the glide (browser Back or Forward): stay there.
+    if (window.location.pathname !== '/') return
     navigate('/', { state })
   }
   // At the top (scrollend), or after the longest a browser takes to glide there (one without scrollend).
   const timer = window.setTimeout(arrive, GLIDE_HOME_MS)
   window.addEventListener('scrollend', arrive)
+  cancelGlide = () => void stop()
   window.scrollTo({ top: 0, behavior: 'smooth' })
   return true
 }
@@ -540,11 +554,6 @@ function begin(r: Run) {
     const carrier = onHome ? (r.opts.from ?? tileFor(path)) : null
     r.old = piecesInView(carrier, true)
     r.old.forEach((p, i) => name(r, p.el, `tx-o${i}`, p.role === 'piece' ? 'tx-out' : 'tx-carry-out'))
-    // The status label just above a case study's picture: carried with the picture it turned and rose through the
-    // navigation as the page was left (QA, 2026-09-28), so it goes on its own, fading where it stands (over the band).
-    const status = r.old.find((p) => p.role === 'hero')?.el.querySelector<HTMLElement>('.story__status')
-    if (status) name(r, status, 'tx-status', 'tx-carry-out')
-    r.status = Boolean(status)
     // A phone's held band (black, over the steps scrolled under it) is pictured over the leaving pieces, so the steps
     // under it stay under it as they go, and it goes once they have (Harlie's brief, 2026-09-28: they popped out above
     // it and around its moving picture, its thumbnails over their words).
@@ -770,7 +779,6 @@ function choreograph(r: Run) {
       : headerFade
   animate('::view-transition-old(tx-header)', [{ opacity: 1 }, { opacity: 0 }], headerOut)
   animate('::view-transition-new(tx-header)', [{ opacity: 0 }, { opacity: 1 }], headerIn)
-  if (r.status) animate('::view-transition-old(tx-status)', r.menu ? unseen : [{ opacity: 1 }, { opacity: 0 }], { duration: 90, easing: EASE.fade })
 
   // Every move is planned first, checked against the others (paths.ts), then run.
   const plans: Plan[] = []

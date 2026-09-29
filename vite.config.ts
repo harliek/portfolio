@@ -106,13 +106,12 @@ export default defineConfig({
         // downloaded, it is requested in parallel with the app entry, and it
         // stays cached across content deploys. The homepage gallery is only
         // about 5% of the entry and stays eager so the homepage has no extra
-        // round trip. GSAP is stable vendor code too, so it gets its own
-        // long-cached file instead of being re-downloaded inside the app
-        // entry after every content deploy.
+        // round trip. (GSAP had a group of its own here until 2026-09-29,
+        // when it was removed from the site: Harlie's approval, audit
+        // D1/E4/G1; src/lib/scrollProgress.ts and ticker.ts replace it.)
         codeSplitting: {
           groups: [
             { name: 'framework', test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/ },
-            { name: 'gsap', test: /[\\/]node_modules[\\/]gsap[\\/]/ },
           ],
         },
       },

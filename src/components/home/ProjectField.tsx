@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { FIELD, fieldPath, isExternalTile, isFree } from '../../content/field'
 import { prefersReducedMotion, useReducedMotion } from '../../hooks/useReducedMotion'
-import { gsap } from '../../lib/gsap'
+import { tweenTo, type Tween } from '../../lib/ticker'
 import { changePage, leaveSite } from '../transition/pageChange'
 import { isPlainClick, warmProject } from '../transition/warm'
 import { headerHeight } from './headerHeight'
@@ -185,7 +185,7 @@ export function ProjectField() {
     layout: null as Layout | null,
     /** The `reach` state, for the frame loop. */
     reach,
-    tween: null as gsap.core.Tween | null,
+    tween: null as Tween | null,
     frozen: false,
     dragEndedAt: 0,
     /** The drift's current speed (projects per second), easing towards SPEED or 0. */
@@ -255,14 +255,18 @@ export function ProjectField() {
     }
   }, [])
 
-  /** Moves the followed position to `to` over `duration` seconds (at once under reduced motion). */
-  const glide = useCallback((to: number, duration: number, ease = 'power2.inOut') => {
+  /**
+   * Moves the followed position to `to` over `duration` seconds, easing in and out (power2.inOut; at once under
+   * reduced motion). Timed by lib/ticker.ts, which keeps GSAP's timing (its lag smoothing included) since GSAP went on
+   * 2026-09-29 (Harlie's approval, audit D1/E4/G1).
+   */
+  const glide = useCallback((to: number, duration: number) => {
     const s = m.current
     s.tween?.kill()
     if (prefersReducedMotion() || duration <= 0) {
       s.target = to
       s.tween = null
-    } else s.tween = gsap.to(s, { target: to, duration, ease, overwrite: true, onComplete: () => (s.tween = null) })
+    } else s.tween = tweenTo(s, 'target', to, duration, () => (s.tween = null))
     s.wake()
   }, [])
 

@@ -3,7 +3,8 @@
  * darkness and space; a short hold as scrolling begins; then the selected
  * work as a field of media planes over the faint film.
  *
- * Scroll writes two variables where they are read (Home.tsx, ScrollTrigger;
+ * Scroll writes two variables where they are read (Home.tsx, with
+ * lib/scrollProgress.ts, which replaced GSAP's ScrollTrigger on 2026-09-29;
  * the film lives in PageShell's fixed #stage-film slot); .home holds their
  * resting values:
  *   --enter   on the opening (.hero) and the film's slot: 0 to 1 through the

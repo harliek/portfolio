@@ -15,7 +15,7 @@ A static React site presented as a persistent “presentation frame”: a dark a
 
 Navigation: **Work** (menu: the five projects + All work) · **Art** · **Film** · **About** · **Resume ↗**.
 
-It is built with Vite, React 19, TypeScript and React Router. Styling is plain CSS custom properties. GSAP (core, ScrollTrigger, Flip) handles all motion. No Tailwind, Motion or Three.js; see `design:portfolio rules/DESIGN_RULES.md`.
+It is built with Vite, React 19, TypeScript and React Router. Styling is plain CSS custom properties. Motion is CSS plus two small modules of the site's own in `src/lib`: `scrollProgress.ts` (scroll-linked values, with ScrollTrigger's measurements and timing) and `ticker.ts` (GSAP's clock, for the homepage tiles' glide). GSAP was removed on 2026-09-29 (Harlie's approval, audit D1/E4/G1: ScrollTrigger kept an empty frame loop and a 250ms timer running on every page, and GSAP was about 44 KB gzip of every first load). No Tailwind, Motion, Three.js or GSAP; see `design:portfolio rules/DESIGN_RULES.md`.
 
 ## Requirements
 
@@ -74,7 +74,8 @@ src/
   pages/        Home, About, NotFound, RouteError, work/<Project>.tsx
   hooks/        useMotionPreference (single motion source), useReducedMotion, useMediaPlayback
                 (media playback policy), useMediaQuery, usePageMeta
-  lib/          gsap.ts (the one GSAP entry point, ScrollTrigger)
+  lib/          scrollProgress.ts (scroll-linked values: ScrollTrigger's measurements, without GSAP),
+                ticker.ts (GSAP's clock: the tiles' glide and the pause after a resize)
   styles/       tokens, base, layout, components, cursor, stage, home, plane, case, case-v16,
                 pages/about.css, pages/client-work.css
 scripts/prepare-media.mjs   reproducible media pipeline (originals → public/media)
@@ -132,4 +133,4 @@ There is no production domain yet, so no canonical URL is declared. Once a domai
 - `docs/qa-report.md`: responsive, accessibility, keyboard, reduced-motion and performance results.
 - `docs/site-structure.md`: the site architecture: routes, header and Work shelf, footer and the motion preference, the concave carousel, the shared case-study layout and sticky visual section, route transitions, pointer trail, empty diagram slots and their debug flag, and where each page's files live.
 - `docs/media-plan.md`: every image and video, its placement, source and aspect ratio, and what is still needed from Harlie.
-- `THIRD_PARTY_NOTICES.md`: licenses. GSAP uses its own Standard “no charge” license, not MIT; Inter uses the SIL OFL.
+- `THIRD_PARTY_NOTICES.md`: licenses. Inter uses the SIL OFL.

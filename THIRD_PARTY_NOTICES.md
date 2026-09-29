@@ -9,7 +9,6 @@ This portfolio's source code is original to this project unless noted below. It 
 | react | 19.3.0 | MIT | © Meta Platforms, Inc. and affiliates |
 | react-dom | 19.3.0 | MIT | © Meta Platforms, Inc. and affiliates |
 | react-router / react-router-dom | 7.18.4 | MIT | © Remix Software Inc., React Training LLC |
-| gsap (core, ScrollTrigger) | 3.15.0 | GSAP Standard “no charge” License | **Not MIT.** Terms: <https://gsap.com/standard-license>. Ordinary portfolio use falls within its no-charge terms. The package's own license headers are retained; the license is not relabeled. |
 
 MIT license text (applies to the MIT packages above; copyright holders as listed):
 
@@ -39,7 +38,8 @@ This section separates code that was copied or adapted from sources that were us
   - 21st.dev “Card Hover”, adapted: `src/components/ui/card-hover.tsx` and `card-hover.css`. (21st.dev was recorded here earlier as having mixed or unclear licences.)
   - Aceternity UI: `TypeLine.tsx` (after TypewriterEffectSmooth, `@aceternity/typewriter-effect-demo-1`, adapted without Tailwind or Motion), `Stateful.tsx` (after the stateful button, `@aceternity/stateful-button`, adapted without Motion), and `DockTitle.tsx` with `dockLetters.ts` (after the Floating Dock: its hover magnification and spring, on title letters). (Aceternity UI was recorded here earlier as having a proprietary licence.)
 - **Layout idea adapted (no code copied):** Lightswind “3D Image Slider” (lightswind 3.2.5, MIT; <https://lightswind.com/r/3d-image-slider.json>). Its idea of stacking cards in one grid cell and placing each with `rotateY`/`translateZ` informs the project carousel, which was written from scratch in GSAP and plain CSS as a shallow arc with no continuous rotation.
-- **Researched and not adopted:** Motion, Motion Primitives, Magic UI, ScrollX UI (MIT plus Commons Clause), HeroUI (full design system; its styles import Tailwind's preflight), uselayouts, Tailwind CSS and Three.js. This follows Harlie's final instruction to keep GSAP and plain CSS; see the note in `DESIGN_RULES.md`.
+- **Researched and not adopted:** Motion, Motion Primitives, Magic UI, ScrollX UI (MIT plus Commons Clause), HeroUI (full design system; its styles import Tailwind's preflight), uselayouts, Tailwind CSS and Three.js. This follows Harlie's final instruction to keep GSAP and plain CSS; see the note in `DESIGN_RULES.md`. GSAP itself was later removed (2026-09-29, Harlie's approval, audit D1/E4/G1), so no GSAP code ships now.
+- **Behaviour reproduced (no code copied):** GSAP 3.15.0's ScrollTrigger and ticker (GSAP Standard “no charge” License). `src/lib/scrollProgress.ts` and `src/lib/ticker.ts` were written for this site to keep the measurements and timing the site used from them, checked against GSAP's source; the package is no longer installed or bundled.
 - **Visual and conceptual references only (no code copied):**
   - codrops/3DCarousel (MIT), <https://github.com/codrops/3DCarousel>: the general idea of arranging cards with CSS 3D transforms. The shallow-arc geometry here was written independently for this site.
   - codrops/ScrollBasedLayoutAnimations (MIT), <https://github.com/codrops/ScrollBasedLayoutAnimations>: the capture → change layout → animate pattern described in GSAP's Flip documentation.

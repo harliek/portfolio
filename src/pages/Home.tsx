@@ -9,7 +9,7 @@ import { useFilmSlot } from '../components/layout/filmSlot'
 import { ProjectField } from '../components/home/ProjectField'
 import { SITE } from '../content/site'
 import { usePageMeta } from '../hooks/usePageMeta'
-import { ScrollTrigger } from '../lib/gsap'
+import { ScrollProgress } from '../lib/scrollProgress'
 
 /** The page's end, where the collection fills the window with the footer below it. */
 const landAtEnd = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'auto' })
@@ -21,10 +21,11 @@ const landAtEnd = () => window.scrollTo({ top: document.documentElement.scrollHe
  * with it (the footer just below), where scrolling moves the projects on.
  * As the opening scrolls out, the title eases up and fades a little
  * (`--enter`), and the film dims only slightly behind
- * the work (`--settle`). Both are written by ScrollTrigger straight to the
- * style of the elements that read them (`--enter` on the opening and the
- * film's slot, `--settle` on the slot), so a scroll frame restyles only
- * those; nothing re-renders on scroll.
+ * the work (`--settle`). Both are written by lib/scrollProgress.ts (ScrollTrigger's
+ * measurements and timing, without GSAP since 2026-09-29, Harlie's approval, audit
+ * D1/E4/G1) straight to the style of the elements that read them (`--enter` on
+ * the opening and the film's slot, `--settle` on the slot), so a scroll frame
+ * restyles only those; nothing re-renders on scroll.
  */
 export function Home() {
   usePageMeta(undefined, SITE.description)
@@ -66,7 +67,7 @@ export function Home() {
     const setSettle = (v: number) => slot?.style.setProperty('--settle', v.toFixed(4))
     // Under the header (its one height, tokens.css).
     const under = `top+=${headerHeight()}`
-    const opening = ScrollTrigger.create({
+    const opening = ScrollProgress.create({
       trigger: hero,
       start: `top ${under}`,
       // No hold: the title eases away as the opening scrolls out.
@@ -74,7 +75,7 @@ export function Home() {
       onUpdate: (self) => setEnter(self.progress),
       onRefresh: (self) => setEnter(self.progress),
     })
-    const field = ScrollTrigger.create({
+    const field = ScrollProgress.create({
       trigger: '.field',
       start: 'top bottom',
       end: `top ${under}`,
@@ -82,7 +83,7 @@ export function Home() {
       onRefresh: (self) => setSettle(self.progress),
     })
     // Media and fonts change heights after the first layout.
-    const refresh = () => ScrollTrigger.refresh()
+    const refresh = () => ScrollProgress.refresh()
     window.addEventListener('load', refresh)
     void document.fonts?.ready.then(refresh)
     return () => {

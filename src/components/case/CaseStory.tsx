@@ -3,7 +3,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type 
 import { getImage, type ImageId } from '../../content/media'
 import { PHONE_SIZES, STAGE_SIZES } from '../../content/projects'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
-import { ScrollTrigger } from '../../lib/gsap'
+import { ScrollProgress } from '../../lib/scrollProgress'
 import { DemoControls } from '../media/DemoControls'
 import { ResponsiveImage } from '../media/ResponsiveImage'
 import { useImageDialog } from '../media/ImageDialog'
@@ -533,7 +533,7 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
       if (cs) delete cs.dataset.measuring
       if (pad !== m.pad) {
         m.pad = pad
-        requestAnimationFrame(() => live && ScrollTrigger.refresh())
+        requestAnimationFrame(() => live && ScrollProgress.refresh())
       }
       // Each step becomes current when its top reaches the reading line.
       const end = Math.max(1, document.documentElement.scrollHeight - vh)
@@ -570,7 +570,7 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
       setActive(k)
       follow.current?.(k, Math.min(1, Math.max(0, (y - m.t[k]) / span)), span)
     }
-    const trigger = ScrollTrigger.create({
+    const trigger = ScrollProgress.create({
       start: 0,
       end: 'max',
       onRefresh: () => {

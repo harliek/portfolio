@@ -2,7 +2,7 @@
 
 The portfolio is an ordinary, scrolling website in a dark architectural setting: a fixed background video, a concave project carousel on the homepage, a Work shelf in the header, and one shared case-study layout with a single short sticky visual section per product page. This document replaces `presentation-frame.md` (the pinned presentation engine, scene dots and the old homepage carousel were removed).
 
-Stack: React 19, TypeScript, Vite, react-router-dom (data router), GSAP, plain CSS with custom properties. No Tailwind, Motion or Three.js.
+Stack: React 19, TypeScript, Vite, react-router-dom (data router), plain CSS with custom properties. No Tailwind, Motion, Three.js or GSAP: GSAP was removed on 2026-09-29 (Harlie's approval, audit D1/E4/G1; its ScrollTrigger kept an empty frame loop and a 250ms timer running on every page, and it was about 44 KB gzip of every first load). `src/lib/scrollProgress.ts` keeps ScrollTrigger's measurements and timing for the homepage's `--enter`/`--settle` and the case studies' current step, and `src/lib/ticker.ts` keeps GSAP's clock for the homepage tiles' glide and the pause after a resize.
 
 ## Routes
 

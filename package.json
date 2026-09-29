@@ -17,7 +17,6 @@
     "check": "npm run typecheck && npm run lint && npm run build"
   },
   "dependencies": {
-    "gsap": "3.15.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-router-dom": "7.18.4"

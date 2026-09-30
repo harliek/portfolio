@@ -315,13 +315,14 @@ body { background:
 h1 { font-size: 104px; font-weight: 560; letter-spacing: -0.045em; line-height: 1; }
 .kicker { margin-top: 28px; font-size: 24px; font-weight: 500; color: #b0b4c3; letter-spacing: 0.08em; text-transform: uppercase; }
 p { margin-top: 18px; max-width: 900px; font-size: 38px; line-height: 1.25; color: #d9dbe4; letter-spacing: -0.015em; }
-</style></head><body><h1>Harlie Katz</h1><div class="kicker">Portfolio</div><p>AI product management, strategy, and implementation</p></body></html>`
+</style></head><body><h1>Harlie Katz</h1><div class="kicker">Portfolio</div><p>AI Product Strategy, Deployment &amp;&nbsp;Implementation</p></body></html>`
 }
 
 /**
  * The link-preview card: the homepage's own opening text (no other positioning line). Its line is the homepage's
- * tagline, as in the site's description (2026-09-28; it still read "Selected work in applied AI, product development,
- * and creative production.").
+ * subtitle, "AI Product Strategy, Deployment & Implementation" (2026-09-30; it had kept the older "AI product
+ * management, strategy, and implementation"; before 2026-09-28 it read "Selected work in applied AI, product
+ * development, and creative production.").
  */
 async function social() {
   await renderHtml(socialHtml(), join(CACHE, 'social-preview.png'), 1200, 630)

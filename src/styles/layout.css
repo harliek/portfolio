@@ -134,8 +134,8 @@
  * The case studies below 900px, and in any window at most 540px tall (a phone on its side, 926 or 932px wide
  * included; Harlie's QA pass, 2026-09-28): a black bar behind the header, so the steps passing under the held stage
  * never show beside it, and a page's end never leaves a line of text under the floating pill (the words there are
- * several times the window's height). CaseStory reads the bar as opaque; the page change counts it as covering
- * (pieces.ts NARROW).
+ * several times the window's height). CaseStory reads the bar as opaque (CASE_BAR, src/config/stage.ts); the page
+ * change counts it as covering (pieces.ts NARROW).
  */
 @media (max-width: 899.98px), (max-height: 540.98px) {
   .site-header[data-route='case']::before,

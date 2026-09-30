@@ -6,10 +6,10 @@ import { projectById } from '../../content/projects'
 const project = projectById('spreadsheet-agent')
 
 /**
- * Spreadsheet Agent (brief v21): the introduction and two steps on the
- * left (the plan reviewed and the sheet built; a cell's source detail); a
- * real recording of the live prototype in the frame on the right, playing
- * by itself on a loop (Harlie's request).
+ * Spreadsheet Agent (brief v21): the introduction and four sections on the
+ * left (Harlie's text of 2026-09-30); a real recording of the live
+ * prototype in the frame on the right, playing by itself on a loop
+ * (Harlie's request), one still per section under reduced motion.
  */
 export default function SpreadsheetAgent() {
   return (

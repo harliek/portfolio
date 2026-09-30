@@ -17,24 +17,28 @@ export const LEASING = {
   title: 'AI Leasing Agent',
   /** The role, then the company and the years ("company · years"; Harlie's requests). */
   meta: ['Leasing and Operations Associate', 'Valiance Capital · 2024–2025'],
-  /** Harlie's copy brief of 2026-09-29, verbatim; the sections follow the pictures' order. */
+  /** Harlie's revised text of 2026-09-30, verbatim (four sections); the sections follow the pictures' order. */
   lede: (
     <p>
-      While working in leasing and operations at Valiance Capital, I encountered recurring questions about properties and applications that the team answered repeatedly. I proposed an AI assistant to handle routine inquiries and translated those workflows into requirements for its information sources, responses, and staff handoffs.
+      At Valiance Capital, I worked across leasing and operations for a portfolio of 18 properties.
     </p>
   ),
   sections: [
     {
-      title: 'Information requirements',
-      text: 'I distinguished questions answerable through approved property policies from those requiring current pricing and availability.',
+      title: 'Operational problem',
+      text: 'Staff repeatedly answered questions about properties, applications, availability, and leasing policies, creating avoidable manual work.',
     },
     {
-      title: 'Staff handoff',
-      text: 'I defined which requests the assistant could handle and when staff needed to take over for approval or individual review.',
+      title: 'Automation boundary',
+      text: 'Static policy questions could be handled consistently, while pricing, availability, approvals, and individual applications depended on current information or staff judgment.',
+    },
+    {
+      title: 'Assistant design',
+      text: 'I mapped recurring questions into requirements for an AI assistant, defining approved information sources, response boundaries, and staff handoffs.',
     },
     {
       title: 'Testing and adoption',
-      text: 'I tested responses across common leasing scenarios and identified answers requiring revision. The assistant was adopted across 18 properties.',
+      text: 'I tested common leasing scenarios, documented failure cases, and refined responses that required revision. The assistant was adopted across all 18 properties.',
     },
   ],
 }

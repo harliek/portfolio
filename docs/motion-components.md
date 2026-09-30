@@ -8,7 +8,7 @@ The app is React + TypeScript + Vite with plain CSS: the site's styles live in `
 - `card-hover.tsx` and `card-hover.css`: 21st.dev's Card Hover, adapted as the case studies' gallery for pages with several pictures (CaseStory).
 - `TypeLine.tsx`: after Aceternity's TypewriterEffectSmooth, the homepage's typed lines.
 - `Stateful.tsx`: after Aceternity's stateful button, without Motion; the loader and check on the site's action buttons.
-- `DockTitle.tsx`, `dockLetters.ts` and `dock-title.css`: title letters that magnify under the pointer, after Aceternity's Floating Dock.
+- `DockTitle.tsx`, `dockLetters.ts`, `dockText.ts` and `dock-title.css`: letters (titles and headings) and words (running text) that magnify under the pointer, after Aceternity's Floating Dock; on the titles since the start, on every text since 2026-09-30 (`dockText.ts`).
 - `CursorLight.tsx`: the soft light around the cursor on the homepage film and the case studies' ground (the site's own).
 
 Licence notes for the adapted components are in `THIRD_PARTY_NOTICES.md`.

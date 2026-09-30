@@ -5,8 +5,10 @@ for (const route of ['cafepress-uk', 'merchandising-platform', 'spreadsheet-agen
     await page.goto(`/work/${route}`)
     await expect(page.locator('.cs__intro')).toBeVisible()
     await page.evaluate(() => document.fonts.ready)
+    // The introduction's words, its lede last: where the compositor holds the fading window, the introduction's own box
+    // is held still in the window while its words scroll with the page (case-v16.css, 2026-09-30).
     const gap = () => page.evaluate(() => {
-      const intro = document.querySelector('.cs__intro')!.getBoundingClientRect()
+      const intro = document.querySelector('.cs__intro .cx-lede')!.getBoundingClientRect()
       const body = document.querySelector('.cs__body')!.getBoundingClientRect()
       return body.top - intro.bottom
     })

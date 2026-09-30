@@ -110,6 +110,16 @@ Scope page CSS under the page class (`.page-<id>`). Shared files (`projects.ts`,
 
 `src/components/layout/PointerTrail.tsx`, config `MOTION.trail`. One fixed canvas (`pointer-events: none`, `aria-hidden`) draws a ~34px line behind the real mouse pointer: a 1.2px ivory core with a soft violet halo, tapering to the tail, fading within ~190ms after movement stops. Points live in a ref; one animation-frame loop runs only while the line is visible; no React updates on movement. It is 40% as bright over text (a tag check of the element under the pointer). Off for touch and coarse pointers (`(hover: hover) and (pointer: fine)` required), under reduced motion, and whenever anything is fullscreen.
 
+## Text under the pointer
+
+Every text on the site answers a mouse or trackpad the same way (Harlie's requests, 2026-09-30). Its words turn the case pages' moving line's pale pink (`--lift-color`) in a rose glow (`--lift-glow`, or `--lift-glow-strong` for words that rest white), over 260ms (`src/styles/lift.css`), and the letters or words under the pointer swell like Aceternity's Floating Dock (`src/components/ui/dockLetters.ts`): the one under the pointer up to 1.45× (lower where there is no room), easing back to normal size 1.45em either side, on the dock's spring, with what follows sliding along. Titles and headings swell letter by letter (PORTFOLIO and the name above it, the case and Creative Production titles, About's name through `DockTitle`/`TypeLine`; step headings, film names, About's labels, school name and card titles, the not-found headings through `dockText.ts`); running text swells whole words (the homepage line, details lines, introductions, step and film texts, About's paragraphs, the school's other lines, the invitation and sent line, the route error's sentence, the footer's copyright). Blocks no longer grow as a whole (they grew 7% until 2026-09-30).
+
+- One pointer listener for the site (`dockText.ts`, imported by `main.tsx`) finds the block of words under the pointer and gives it a dock on its first move; the titles keep their own hook. The block lists in `dockText.ts` and `lift.css` must stay in step. Left out: links and buttons, the header and navigation, the homepage tiles and captions, the galleries, the recordings' controls, the held pictures, the contact form's fields, About's creative cards, the film viewer.
+- At rest nothing is changed: same markup, no transforms, no listeners but the pointer's, no animation frames. While hovered, a block of plain text is drawn by copies of itself in an inert, `aria-hidden` layer, each clipped to the letters or words it draws; neighbours that sit the same way share a copy (typically 5 to 16 copies for a paragraph), made on first need. Its own words stay underneath in no ink, so selection, links and the pointer's colour keep working. A copy must lay out exactly as the text (checked on each first move) or the text stays still for that hover, so a settled block is pixel-identical to one never hovered.
+- A line keeps its start and widens away from it, giving way the other way only up to what stands beside its block (the held picture, a step's moving line, About's portrait, a clipping or masked box, the viewport's 16px gutter); a full line swells less. Running text keeps its leading: other lines move only by what grown letters would overlap. The swell stops short of the content above and below.
+- The glow is a `drop-shadow` filter on the words' element, so swelling copies light as one, with no seams.
+- Mouse and trackpad only; under reduced motion the colour and glow still come, with no swell; nothing on touch screens.
+
 ## Diagram slots (empty = nothing)
 
 `src/content/slots.ts` and `src/components/media/DiagramSlot.tsx`. Slots mark where Harlie's own diagrams may go: `ai-leasing-agent-diagram`, `merchandising-platform-diagram`, `jumpstart-finance-diagram`. The site contains no generated flowcharts. An empty slot renders nothing (no box, no space) in development and production.
@@ -131,6 +141,7 @@ Focus outlines are a clean 2px solid ring (`--focus-ring`), drawn around media f
 
 ## Tuning
 
+- Text under the pointer: `dockLetters.ts` (`PEAK_SCALE`, `REACH_EM`, `SPRING`, `SIDE_CLEARANCE_EM`, `CLEARANCE_EM`) and `tokens.css` (`--lift-color`, `--lift-glow`, `--lift-glow-strong`); which blocks take letters or words: `dockText.ts`.
 - Carousel: `src/config/carousel.ts` (speed, radius, static radius, start offset, resume grace) and `home.css` (`--tile-h`, `--tile-gap`, `--caption-h`, `--pad-top`).
 - Carousel breakpoints: `CAROUSEL.arcMinWidth` (700px; narrower windows get the row), `CAROUSEL.staticArcMinWidth` (1100px), `CAROUSEL.edgeFade` (0.04, matches the mask).
 - Shelf, crossfade, highlight, route (`continuityMs`, `overlayFadeShare`, `heroFadeFrom`), trail: `src/config/motion.ts`; CSS durations `--dur-crossfade`, `--dur-highlight`, `--dur-route-reveal` in `tokens.css`.

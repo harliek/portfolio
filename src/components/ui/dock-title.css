@@ -1,7 +1,7 @@
 /*
- * Dock-style magnification on title letters (dockLetters.ts; Harlie's request,
- * after Aceternity's Floating Dock). Nothing here applies at rest except the
- * last rule: a title only changes while it is hovered (data-dock-active).
+ * Dock-style magnification on text (dockLetters.ts; Harlie's request, after Aceternity's Floating Dock, on the titles
+ * and since 2026-09-30 on every text: dockText.ts). Nothing here applies at rest except the last rule: text only
+ * changes while it is hovered (data-dock-active).
  */
 
 /* The text of a plain-text title (DockTitle): an ordinary inline run, so it lays out exactly as bare text. */
@@ -9,7 +9,7 @@
   display: inline;
 }
 
-/* While hovered, the plain title is drawn by copies of its text laid exactly over it; its own text stays underneath, invisible but selectable. */
+/* While hovered, the text is drawn by copies of it laid exactly over it; its own text stays underneath, unseen but selectable. */
 [data-dock-active] {
   position: relative;
 }
@@ -19,14 +19,29 @@
 }
 
 /*
- * Each copy takes the title's padding box and padding, so it wraps its text exactly as the title does. The layer
- * around them reaches past the title on every side, room for the swell (and to the right only as far as the
- * viewport's edge, --dock-out-right from dockLetters.ts), and clips there: a copy is the whole title scaled, and
- * without the clip its unseen rest would make the page wider while a title is hovered.
+ * Other text keeps its own words in place underneath, drawn in no ink (no fill, shadow or underline), so they still
+ * take the pointer: the colour under the pointer (lift.css) stays on, and a link among them (the contact form's sent
+ * line) still takes the click, with the copies showing it in its own colour. Important, since the pages give their
+ * words their own shadows and underlines.
+ */
+[data-dock-copies],
+[data-dock-copies] :not(.dock-title__layer, .dock-title__layer *) {
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: none !important;
+  text-decoration-color: transparent !important;
+}
+
+/*
+ * Each copy takes the text's padding box and padding, so it wraps its text exactly as the text does (a label laid out
+ * as a row, About's, as a row too). The layer around them reaches past the text on every side, room for the swell,
+ * and clips there: a copy is the whole text scaled, and without the clip its unseen rest would make the page wider or
+ * longer while the text is hovered. The titles' layer reaches 2em past their start and 1em below, and to the right
+ * as far as the viewport's edge; other text's just past the room its lines may take (--dock-out-*, dockLetters.ts).
  */
 .dock-title__layer {
   position: absolute;
-  inset: -2em calc(-1 * var(--dock-out-right, 0px)) -1em -2em;
+  inset: calc(-1 * var(--dock-out-top, 2em)) calc(-1 * var(--dock-out-right, 0px)) calc(-1 * var(--dock-out-bottom, 1em))
+    calc(-1 * var(--dock-out-left, 2em));
   overflow: clip;
   padding: inherit;
   pointer-events: none;
@@ -35,10 +50,30 @@
 
 .dock-title__copy {
   position: absolute;
-  inset: 2em var(--dock-out-right, 0px) 1em 2em;
+  inset: var(--dock-out-top, 2em) var(--dock-out-right, 0px) var(--dock-out-bottom, 1em) var(--dock-out-left, 2em);
   margin: 0;
   padding: inherit;
+  transform-origin: 0 0;
   transition: none;
+}
+
+.dock-title__layer[data-flex],
+.dock-title__layer[data-flex] > .dock-title__copy {
+  display: flex;
+  flex-flow: inherit;
+  place-content: inherit;
+  align-items: inherit;
+  gap: inherit;
+}
+
+/* The copies' words take their own colour again, and never replay the text's own animations (TypeLine's typing). */
+.dock-title__layer,
+.dock-title__layer * {
+  -webkit-text-fill-color: currentcolor;
+}
+
+.dock-title__copy * {
+  animation: none !important;
 }
 
 /* Finds the letters' baseline (an empty box sits on it). */

@@ -1,54 +1,62 @@
 import './dock-title.css'
 import { useEffect, type RefObject } from 'react'
+import { motionReduced, subscribeMotion } from '../../hooks/useMotionPreference'
 
 /**
- * Dock-style magnification on a title's letters (Harlie's request: "use the
- * hover aspect of this effect on title letters", pointing at Aceternity's
- * Floating Dock). As the pointer moves along a title, each letter grows with
- * its closeness to the pointer: largest right under it, easing back to its
- * normal size about one and a half letters' height either side. The reach is
- * in ems, so the huge PORTFOLIO and a smaller case title feel alike. The
- * letters after a grown one step along so nothing overlaps, and everything
- * moves on the dock's own spring (mass 0.1, stiffness 150, damping 12),
- * settling back to rest when the pointer leaves.
+ * Dock-style magnification on text (Harlie's request: "use the hover aspect of this effect on title letters",
+ * pointing at Aceternity's Floating Dock; since 2026-09-30 on every text on the site: "Is there any way to do the cool
+ * effect that's on the titles? on all of the text", "Like instead of it growing bigger, it would do that", then "For
+ * the titles, do letter by letter, though. Like, including titles in the sections"). As the pointer moves along a
+ * line, what is under it grows with its closeness to the pointer: largest right under it, easing back to its normal
+ * size about one and a half letters' height either side. Titles and headings grow letter by letter; running text
+ * (paragraphs, details lines, the footer) grows whole words, the word under the pointer the most and its neighbours
+ * less as they get further (Harlie: "you dont have to do every letter if thats easier"), so it reads as the same dock
+ * at a word's scale. The reach is in ems, so the huge PORTFOLIO, a case title and a paragraph feel alike. What comes
+ * after a grown letter or word steps along so nothing overlaps, and everything moves on the dock's own spring (mass
+ * 0.1, stiffness 150, damping 12), settling back to rest when the pointer leaves.
  *
- * Transforms only: letters grow from their baseline and slide sideways by the
- * extra width of the letters before them, so nothing reflows and the lines
- * wrap exactly as before. The site's titles are left-aligned, so each line
- * keeps its start on the column and widens to the right (giving way leftwards
- * only where it would pass the viewport's edge). A wrapped title swells on
- * the line under the pointer, and its other lines give way vertically the
- * same way: the lines above rise by as much as the swell's ascenders grow and
- * the lines below drop by as much as its descenders grow, so a swell never
- * runs into another line. The swell also stops short of whatever sits just
- * above or below the title (the homepage's HARLIE KATZ label, a case study's
- * details, the site's header): where the room is tight, the peak is a little
- * lower.
+ * Transforms only: letters and words grow from their baseline and slide sideways by the extra width of those before
+ * them, so nothing reflows and the lines wrap exactly as before. A line keeps its start on the column (the end for a
+ * line set from the right) and widens away from it, giving way the other way only where it would run into something:
+ * for the titles, the viewport's edge; for the rest, whatever stands beside its block (the held picture beside a case
+ * study's steps, the moving line on their left, the portrait beside About's opening), a box that clips or masks it
+ * (a case study's fading window, which WebKit clips to its box) or the viewport's edge. Where even that leaves too
+ * little room (a full line of running text), that line's swell is lower. The swell swells on the line under the
+ * pointer; the other lines give way vertically only as much as it needs: a title's lines, set close, by as much as
+ * its ascenders and descenders grow; running text, with room between its lines, only by what the grown letters would
+ * overlap (usually nothing, so a paragraph never lurches). The swell also stops short of whatever sits just above or
+ * below the block (the homepage's HARLIE KATZ label, a case study's details, a step's heading, the site's header):
+ * where the room is tight, the peak is a little lower.
  *
- * At rest the title is untouched: same markup, same layout, no transforms.
- * A title made of plain text (a case study's, About's name) keeps its text,
- * with its kerning, selection, find-in-page and screen-reader name. Only
- * while it is hovered is it drawn by a layer laid exactly over it, hidden
- * from screen readers: copies of its text, each clipped to one letter's cell,
- * so at rest the copies add up to the text pixel for pixel in every engine
- * (a lone letter drawn by itself lands a pixel off in WebKit, and loses the
- * kerning with its neighbours). Neighbouring letters that sit the same way
- * share one copy, so a frame draws a copy per letter in the swell and about
- * two more per line. A title already made of letters (PORTFOLIO, TypeLine's
- * data-dock-letter spans) has those letters moved directly.
+ * At rest the text is untouched: same markup, same layout, no transforms, no frames. Text made of plain text keeps
+ * it, with its kerning, selection, find-in-page, links and screen-reader name. Only while it is hovered is it drawn
+ * by a layer laid exactly over it, inert and hidden from screen readers: copies of its text, each clipped to the
+ * cells of the letters or words it draws, so at rest the copies add up to the text pixel for pixel in every engine (a
+ * lone letter drawn by itself lands a pixel off in WebKit, and loses the kerning with its neighbours). Neighbours that
+ * sit the same way share a copy: the lines above and below the pointer's line are one copy each, the words before
+ * and after the swell on its line one each, so a frame draws a copy per letter or word in the swell and about four
+ * more, however long the text. Copies are made as the swell first needs them and reused frame to frame. The text's
+ * own words keep their place underneath, drawn in no ink (dock-title.css), so its links stay where they were and
+ * still take the click. A copy must lay out exactly as the text (checked on each first move); if one does not, the
+ * text keeps still for that hover. A title already made of letters (PORTFOLIO, TypeLine's data-dock-letter spans)
+ * has those letters moved directly.
  *
- * One animation frame loop per title, only while it is hovered or settling;
- * nothing re-renders. Mouse and trackpad only: nothing on touch screens and
- * nothing under reduced motion. While a selection is on the title, or
- * PORTFOLIO is still typing itself in, the letters stay at rest (a pointer
- * already resting on PORTFOLIO starts the swell as the typing ends).
+ * The colour and the glow under the pointer are the site's (lift.css): the glow is a filter on the words' element,
+ * so it lights the swollen copies as one, with no seam where two copies meet.
+ *
+ * One animation frame loop per element, only while it is hovered or settling; nothing re-renders. Mouse and trackpad
+ * only: nothing on touch screens and nothing under reduced motion (the colour and the glow still come). While a
+ * selection is on the text, or PORTFOLIO is still typing itself in, the letters stay at rest (a pointer already
+ * resting on PORTFOLIO starts the swell as the typing ends).
  */
 
-/** Size of the letter right under the pointer (the brief: up to about 1.5×), where there is room for it. */
+/** Size of the letter or word right under the pointer (the brief: up to about 1.5×), where there is room for it. */
 const PEAK_SCALE = 1.45
-/** Space the grown letters keep from the content above and below the title, in ems of its font size. */
+/** Space the grown letters keep from the content above and below the text, in ems of its font size. */
 const CLEARANCE_EM = 0.03
-/** How far the swell reaches either side of the pointer, in ems of the title's font size. */
+/** Space a line giving way sideways keeps from the content beside its block, in ems of its font size. */
+const SIDE_CLEARANCE_EM = 0.5
+/** How far the swell reaches either side of the pointer, in ems of the text's font size. */
 const REACH_EM = 1.45
 /** The Floating Dock's spring (framer-motion's useSpring in the demo). */
 const SPRING = { mass: 0.1, stiffness: 150, damping: 12 }
@@ -57,135 +65,287 @@ const STEP = 1 / 240
 /** Close enough to rest to stop the loop. */
 const REST_SCALE = 0.0005
 const REST_SPEED = 0.01
-/** Space kept clear at the viewport's right edge when a line grows towards it, in pixels. */
+/** Space kept clear at the viewport's edges when a line grows towards them, in pixels. */
 const VIEWPORT_GUTTER = 16
 /** Far enough to stand for "no limit" on a cell's outer edges. */
 const FAR = 1e5
 
-interface Cell {
-  left: number
-  right: number
-  top: number
-  bottom: number
+/** Letters (titles and headings) or whole words (running text). */
+export type DockMode = 'letters' | 'words'
+
+export interface DockOptions {
+  mode: DockMode
+  /**
+   * One of the titles the dock was made for (PORTFOLIO, a case study's title, About's name): its lines give way by the
+   * whole growth of the swell and may run on to the viewport's edge, as they have since the dock arrived.
+   */
+  title?: boolean
 }
 
-interface Letter {
-  el: HTMLElement
-  /** The character it stands for (a drawn copy's letter). */
-  ch: string
-  /** The letter's rest box across its line, in the title's own (unscaled) pixels. */
+export interface Dock {
+  /** A mouse or trackpad pointer at (x, y) over the element, with these buttons pressed. */
+  move(x: number, y: number, buttons: number): void
+  /** The pointer has left the element: the letters settle back to rest. */
+  leave(): void
+  /** PORTFOLIO has typed itself in: a pointer already resting on it starts the swell. */
+  typed(): void
+  /** Straight back to rest. */
+  snap(): void
+}
+
+type Box = { left: number; top: number; width: number; height: number }
+
+interface Cell {
+  /** One of the title's own letters (TypeLine's), moved directly; null for a letter or word drawn by the copies. */
+  el: HTMLElement | null
+  /** The letter or word it stands for, and the element whose font draws it. */
+  text: string
+  host: Element
+  /** Its rest box, in the element's own (unscaled) pixels, and where the baseline sits in it (its font's ascent). */
   left: number
+  top: number
   width: number
+  fontAscent: number
   centre: number
   line: number
-  /** How far the letter's ink reaches above and below its baseline at rest, in the title's pixels. */
+  /** How far its ink reaches above and below the baseline, and left and right of where its box starts. */
   ascent: number
   descent: number
+  inkLeft: number
+  inkRight: number
   /** The style attribute one of the title's own letters had before (restored exactly at rest). */
   style: string | null
   scale: number
   speed: number
-  /** A drawn copy's cell (its letter's share of the title), in the copy's own pixels. */
-  cell: Cell | null
-  /** What was last written, so a frame only touches what changed. */
+  /** How strongly it swells for the pointer's place this frame (0 to 1), and its slide along its line. */
+  hill: number
+  shift: number
+  /** Its share of the text (its clip) and its centre on the baseline, in the copies' own pixels. */
+  clipLeft: number
+  clipRight: number
+  ox: number
+  oy: number
+  /** Its transform this frame (what was last written, for one of the title's own letters). */
+  transform: string
+}
+
+interface Line {
+  cells: Cell[]
+  top: number
+  bottom: number
+  left: number
+  right: number
+  baseline: number
+  inkTop: number
+  inkBottom: number
+  /** Where its cells end above and below, in the copies' own pixels. */
+  clipTop: number
+  clipBottom: number
+}
+
+interface Copy {
+  el: HTMLElement
   transform: string
   clip: string
   shown: boolean
 }
 
-interface Line {
-  letters: Letter[]
+/** A stretch of neighbouring cells drawn by one copy this frame. */
+interface Run {
+  transform: string
+  left: number
+  right: number
   top: number
   bottom: number
-  right: number
-  baseline: number
+  band: boolean
 }
 
-type Box = { left: number; top: number; width: number; height: number }
+type Ink = { left: number; right: number; ascent: number; descent: number; fontAscent: number }
+
+let inkContext: CanvasRenderingContext2D | null | undefined
+let inkFont = ''
 
 /**
- * Gives the title in `ref` the dock's letter magnification under a mouse or
- * trackpad. Letters the title already renders are marked data-dock-letter
- * (TypeLine's); otherwise its text is drawn by per-letter copies while hovered.
+ * Each text's ink around its origin in the font of `host`, from the canvas's glyph metrics, in CSS pixels: how far it
+ * reaches left and right of where it starts, above and below the baseline, and the font's ascent (where the baseline
+ * sits in a text box).
  */
-export function useDockTitle(ref: RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const title = ref.current
-    if (!title) return
-    return attachDock(title)
-  }, [ref])
+function inkMeasurer(host: Element) {
+  const style = getComputedStyle(host)
+  const font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+  const fontSize = parseFloat(style.fontSize) || 16
+  const upper = style.textTransform === 'uppercase'
+  // PORTFOLIO is thickened by a fine outline (home.css), which adds half its width to the ink on every side.
+  const stroke = (parseFloat(style.getPropertyValue('-webkit-text-stroke-width')) || 0) / 2
+  return (text: string): Ink => {
+    inkContext ??= document.createElement('canvas').getContext('2d')
+    if (inkContext && inkFont !== font) {
+      inkContext.font = font
+      inkFont = font
+    }
+    const metrics = inkContext?.measureText(upper ? text.toUpperCase() : text)
+    return {
+      left: (metrics?.actualBoundingBoxLeft ?? 0) + stroke,
+      right: (metrics?.actualBoundingBoxRight ?? fontSize * 0.6 * text.length) + stroke,
+      ascent: (metrics?.actualBoundingBoxAscent ?? fontSize * 0.75) + stroke,
+      descent: Math.max(0, (metrics?.actualBoundingBoxDescent ?? 0) + stroke),
+      fontAscent: metrics?.fontBoundingBoxAscent ?? fontSize * 0.9,
+    }
+  }
 }
 
-function attachDock(title: HTMLElement) {
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+/**
+ * The laid-out letters or words of the text under `root`, each with its box in the element's pixels (a word broken
+ * across two lines is two). Text for screen readers only is left out.
+ */
+function textBoxes(root: Node, mode: DockMode, local: (r: DOMRect) => Box) {
+  const range = document.createRange()
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  const found: { text: string; host: Element; box: Box }[] = []
+  for (let node = walker.nextNode() as Text | null; node; node = walker.nextNode() as Text | null) {
+    const host = node.parentElement
+    const layer = host?.closest('.dock-title__layer')
+    if (!host || host.closest('.visually-hidden') || (layer && root.contains(layer))) continue
+    const data = node.data
+    const add = (start: number, end: number) => {
+      range.setStart(node!, start)
+      range.setEnd(node!, end)
+      for (const r of range.getClientRects()) if (r.width > 0) found.push({ text: data.slice(start, end), host, box: local(r) })
+    }
+    if (mode === 'words') {
+      for (const match of data.matchAll(/\S+/g)) {
+        const at = match.index ?? 0
+        add(at, at + match[0].length)
+      }
+      continue
+    }
+    for (let i = 0; i < data.length; ) {
+      const ch = String.fromCodePoint(data.codePointAt(i) ?? 32)
+      // One box per letter: the first of its rects (a letter never breaks across lines).
+      if (ch.trim()) {
+        range.setStart(node, i)
+        range.setEnd(node, i + ch.length)
+        const r = range.getClientRects()[0]
+        if (r && r.width > 0) found.push({ text: ch, host, box: local(r) })
+      }
+      i += ch.length
+    }
+  }
+  return found
+}
 
-  let letters: Letter[] = []
+/**
+ * Puts back the style attribute an element had (none, or its old text). Read back before removing: Blink writes a
+ * changed inline style to the attribute lazily, and brought back an empty style="" after the removal.
+ */
+function restoreStyle(node: HTMLElement, style: string | null) {
+  node.style.cssText = ''
+  void node.getAttribute('style')
+  if (style === null) node.removeAttribute('style')
+  else node.setAttribute('style', style)
+}
+
+/** The same boxes, within half a pixel (a copy must lay out exactly as the text it stands for). */
+function sameBoxes(a: { box: Box }[], b: { box: Box }[]) {
+  return (
+    a.length === b.length &&
+    a.every(({ box }, i) => Math.abs(box.left - b[i].box.left) <= 0.5 && Math.abs(box.top - b[i].box.top) <= 0.5 && Math.abs(box.width - b[i].box.width) <= 0.5)
+  )
+}
+
+/**
+ * Gives `el` the dock's magnification under a mouse or trackpad: its letters (`mode: 'letters'`) or words swell
+ * around the pointer while `move` reports it over the element, and settle back to rest after `leave`.
+ */
+export function createDock(el: HTMLElement, { mode, title = false }: DockOptions): Dock {
+  let cells: Cell[] = []
   let lines: Line[] = []
+  /** Where the copies repeat the text from (a DockTitle's text span, or the element itself). */
+  let source: HTMLElement = el
   let layer: HTMLElement | null = null
+  let copies: Copy[] = []
+  /** Room a copy leaves before its text, for what the element draws before its words (About's label: its rule). */
+  let copyIndent = 0
   let active = false
   let hovered = false
   let pointerX = 0
   let pointerY = 0
   let reach = 1
-  /** The largest size a letter grows to on this title (PEAK_SCALE, or less where the room around the title is tight). */
+  /** The largest size a letter grows to here (PEAK_SCALE, or less where the room around the text is tight). */
   let peak = PEAK_SCALE
   /** A pointer arrived while PORTFOLIO was still typing: the swell starts when the typing ends. */
   let waiting = false
-  /** How far a line may grow to the right before the viewport's edge, in the title's pixels. */
-  let viewportRight = FAR
+  /** The copies did not lay out as the text on this hover: it stays still until the pointer comes back. */
+  let failed = false
+  /** How far the lines may reach left and right, in the element's pixels, and which end of a line stays put. */
+  let leftLimit = -FAR
+  let rightLimit = FAR
+  let anchor: 'start' | 'end' | 'center' = 'start'
+  /** The ink between each two lines that a swell may take before the lines give way. */
+  let gaps: number[] = []
+  /** TypeLine's typing bar, after the homepage line's last word: it moves along with that line's end. */
+  let follower: { el: HTMLElement; style: string | null; at: string; moved: boolean } | null = null
+  let observer: MutationObserver | null = null
+  let unsubscribeMotion: (() => void) | null = null
   let frame = 0
   let last = 0
 
-  /** The title's box on screen and how much its ancestors scale it (the homepage's opening, a tile opening). */
-  const frameOfTitle = () => {
-    const rect = title.getBoundingClientRect()
-    // offsetWidth is rounded to whole pixels, so within a pixel of it the title is not scaled.
-    const width = title.offsetWidth
+  /** The element's box on screen and how much its ancestors scale it (the homepage's opening, a tile opening). */
+  const frameOf = () => {
+    const rect = el.getBoundingClientRect()
+    // offsetWidth is rounded to whole pixels, so within a pixel of it the element is not scaled.
+    const width = el.offsetWidth
     const zoom = width > 0 && Math.abs(rect.width - width) > 1 ? rect.width / width : 1
     return { rect, zoom: zoom > 0 ? zoom : 1 }
   }
 
-  /** Each visible character's box in the laid-out text under `root`, in the title's pixels. */
-  const characterBoxes = (root: Node, local: (r: DOMRect) => Box) => {
-    const range = document.createRange()
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-    const boxes: { ch: string; box: Box }[] = []
-    for (let node = walker.nextNode() as Text | null; node; node = walker.nextNode() as Text | null) {
-      const text = node.data
-      for (let i = 0; i < text.length; ) {
-        const ch = String.fromCodePoint(text.codePointAt(i) ?? 32)
-        if (ch.trim()) {
-          range.setStart(node, i)
-          range.setEnd(node, i + ch.length)
-          const r = range.getClientRects()[0]
-          if (r && r.width > 0) boxes.push({ ch, box: local(r) })
-        }
-        i += ch.length
-      }
-    }
-    return boxes
-  }
-
-  /** Groups boxes into lines by their vertical middle, top to bottom, each line's letters left to right. */
-  const intoLines = (found: { el: HTMLElement; ch: string; box: Box; style: string | null }[]) => {
+  /** Groups boxes into lines by their vertical middle, top to bottom, each line's cells left to right. */
+  const intoLines = (found: { el: HTMLElement | null; text: string; host: Element; box: Box; style: string | null }[]) => {
     const grouped: Line[] = []
-    const all: Letter[] = []
-    for (const { el, ch, box, style } of found) {
+    const all: Cell[] = []
+    for (const { el: own, text, host, box, style } of found) {
       const middle = box.top + box.height / 2
       let line = grouped.find((l) => Math.abs((l.top + l.bottom) / 2 - middle) < box.height / 2)
       if (!line) {
-        line = { letters: [], top: box.top, bottom: box.top + box.height, right: box.left + box.width, baseline: 0 }
+        line = { cells: [], top: box.top, bottom: box.top + box.height, left: box.left, right: box.left + box.width, baseline: 0, inkTop: 0, inkBottom: 0, clipTop: -FAR, clipBottom: FAR }
         grouped.push(line)
       }
-      const letter: Letter = { el, ch, left: box.left, width: box.width, centre: box.left + box.width / 2, line: 0, ascent: 0, descent: 0, style, scale: 1, speed: 0, cell: null, transform: '', clip: '', shown: true }
-      line.letters.push(letter)
+      const cell: Cell = {
+        el: own,
+        text,
+        host,
+        left: box.left,
+        top: box.top,
+        width: box.width,
+        fontAscent: box.height,
+        centre: box.left + box.width / 2,
+        line: 0,
+        ascent: 0,
+        descent: 0,
+        inkLeft: 0,
+        inkRight: box.width,
+        style,
+        scale: 1,
+        speed: 0,
+        hill: 0,
+        shift: 0,
+        clipLeft: -FAR,
+        clipRight: FAR,
+        ox: 0,
+        oy: 0,
+        transform: 'none',
+      }
+      line.cells.push(cell)
+      line.top = Math.min(line.top, box.top)
+      line.bottom = Math.max(line.bottom, box.top + box.height)
+      line.left = Math.min(line.left, box.left)
       line.right = Math.max(line.right, box.left + box.width)
-      all.push(letter)
+      all.push(cell)
     }
     grouped.sort((a, b) => a.top - b.top)
     grouped.forEach((line, i) => {
-      line.letters.sort((a, b) => a.left - b.left)
-      for (const l of line.letters) l.line = i
+      line.cells.sort((a, b) => a.left - b.left)
+      for (const c of line.cells) c.line = i
     })
     return { grouped, all }
   }
@@ -200,38 +360,32 @@ function attachDock(title: HTMLElement) {
     return y
   }
 
-  /**
-   * Each character's ink around its origin in the title's font, from the canvas's glyph metrics, in the title's
-   * pixels: how far it reaches left and right of where it starts, and above and below the baseline.
-   */
-  const inkMeasurer = (style: CSSStyleDeclaration) => {
-    const context = document.createElement('canvas').getContext('2d')
-    const fontSize = parseFloat(style.fontSize) || 16
-    const upper = style.textTransform === 'uppercase'
-    // PORTFOLIO is thickened by a fine outline (home.css), which adds half its width to the ink on every side.
-    const stroke = (parseFloat(style.getPropertyValue('-webkit-text-stroke-width')) || 0) / 2
-    if (context) context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
-    return (ch: string) => {
-      const metrics = context?.measureText(upper ? ch.toUpperCase() : ch)
-      return {
-        left: (metrics?.actualBoundingBoxLeft ?? 0) + stroke,
-        right: (metrics?.actualBoundingBoxRight ?? fontSize * 0.6) + stroke,
-        ascent: (metrics?.actualBoundingBoxAscent ?? fontSize * 0.75) + stroke,
-        descent: Math.max(0, (metrics?.actualBoundingBoxDescent ?? 0) + stroke),
-      }
-    }
+  /** Each cell's ink, from the font of the element that draws it. */
+  const measureInk = () => {
+    const measurers = new Map<Element, (text: string) => Ink>()
+    return cells.map((c) => {
+      let measurer = measurers.get(c.host)
+      if (!measurer) measurers.set(c.host, (measurer = inkMeasurer(c.host)))
+      const ink = measurer(c.text)
+      c.ascent = ink.ascent
+      c.descent = ink.descent
+      c.inkLeft = ink.left
+      c.inkRight = ink.right
+      c.fontAscent = ink.fontAscent
+    })
   }
 
   /**
-   * The nearest content above and below the title that shares its columns (the homepage's HARLIE KATZ label over
-   * PORTFOLIO, a case study's details under its title, the site's header), as screen edges: found among the
-   * earlier and later elements beside the title and beside each of its ancestors, out to the page's main region.
+   * The nearest content above and below the element that shares its columns (the homepage's HARLIE KATZ label over
+   * PORTFOLIO, a case study's details under its title, a step's heading over its words, the site's header), as screen
+   * edges: found among the earlier and later elements beside the element and beside each of its ancestors, out to the
+   * page's main region.
    */
   const neighbours = (inkTop: number, inkBottom: number, left: number, right: number) => {
     let above = -Infinity
     let below = Infinity
     const shares = (r: DOMRect) => r.width > 0 && r.height > 0 && r.left < right && r.right > left
-    for (let node: Element | null = title; node && node !== document.body && node.tagName !== 'MAIN'; node = node.parentElement) {
+    for (let node: Element | null = el; node && node !== document.body && node.tagName !== 'MAIN'; node = node.parentElement) {
       for (let sibling = node.previousElementSibling; sibling && above === -Infinity; sibling = sibling.previousElementSibling) {
         const r = sibling.getBoundingClientRect()
         if (shares(r) && r.bottom <= inkTop + 1) above = r.bottom
@@ -257,159 +411,266 @@ function attachDock(title: HTMLElement) {
     return { above, below }
   }
 
-  /** The title's peak for the room around it: its tallest ascender and deepest descender, grown, stay clear of its neighbours. */
+  /** The peak for the room around the text: its tallest ascender and deepest descender, grown, stay clear of its neighbours. */
   const peakFor = (rect: DOMRect, zoom: number, fontSize: number) => {
     const first = lines[0]
     const final = lines[lines.length - 1]
-    const tallest = Math.max(...letters.map((l) => l.ascent))
-    const deepest = Math.max(...letters.map((l) => l.descent))
-    const inkTop = first.baseline - Math.max(...first.letters.map((l) => l.ascent))
-    const inkBottom = final.baseline + Math.max(...final.letters.map((l) => l.descent))
-    // The letters' span across the page, with the room a swell takes to the right.
-    const left = rect.left + Math.min(...letters.map((l) => l.left)) * zoom
-    const right = rect.left + (Math.max(...lines.map((line) => line.right)) + reach) * zoom
-    const { above, below } = neighbours(rect.top + inkTop * zoom, rect.top + inkBottom * zoom, left, right)
+    const tallest = Math.max(...cells.map((c) => c.ascent))
+    const deepest = Math.max(...cells.map((c) => c.descent))
+    // The text's span across the page, with the room a swell takes to the right.
+    const left = rect.left + Math.min(...cells.map((c) => c.left)) * zoom
+    const right = rect.left + Math.min(rightLimit, Math.max(...lines.map((line) => line.right)) + reach) * zoom
+    const { above, below } = neighbours(rect.top + first.inkTop * zoom, rect.top + final.inkBottom * zoom, left, right)
     const clearance = CLEARANCE_EM * fontSize
-    const roomAbove = (rect.top - above) / zoom + inkTop - clearance
-    const roomBelow = (below - rect.top) / zoom - inkBottom - clearance
+    const roomAbove = (rect.top - above) / zoom + first.inkTop - clearance
+    const roomBelow = (below - rect.top) / zoom - final.inkBottom - clearance
     let most = PEAK_SCALE
     if (tallest > 0) most = Math.min(most, 1 + roomAbove / tallest)
     if (deepest > 0) most = Math.min(most, 1 + roomBelow / deepest)
     return Math.max(1, most)
   }
 
-  /** Reads the title's letters at rest and sets up what the swell moves. False when there is nothing to move. */
+  /**
+   * How far the text's lines may reach sideways, as screen edges: the viewport less its gutter, inside every box that
+   * clips or masks the text (a case study's fading window: WebKit clips a mask to its box), and clear of what stands
+   * beside the element or beside any of its ancestors on the same rows (the held picture's column, a step's moving
+   * line, About's portrait, the Education paragraph beside the school).
+   */
+  const sideRoom = (rect: DOMRect, clear: number) => {
+    let left = VIEWPORT_GUTTER
+    let right = document.documentElement.clientWidth - VIEWPORT_GUTTER
+    for (let a = el.parentElement; a && a !== document.documentElement; a = a.parentElement) {
+      const s = getComputedStyle(a)
+      const mask = s.maskImage || s.getPropertyValue('-webkit-mask-image')
+      if (s.overflowX !== 'visible' || (mask && mask !== 'none') || s.clipPath !== 'none') {
+        const r = a.getBoundingClientRect()
+        left = Math.max(left, r.left)
+        right = Math.min(right, r.right)
+      }
+    }
+    for (let node: Element | null = el; node && node.parentElement && node !== document.body; node = node.parentElement) {
+      for (const sibling of node.parentElement.children) {
+        if (sibling === node || sibling === follower?.el) continue
+        const r = sibling.getBoundingClientRect()
+        if (!r.width || !r.height || r.bottom <= rect.top || r.top >= rect.bottom) continue
+        if (r.left >= rect.right - 1) right = Math.min(right, r.left - clear)
+        else if (r.right <= rect.left + 1) left = Math.max(left, r.right + clear)
+      }
+    }
+    return { left, right }
+  }
+
+  /** Reads the text at rest and sets up what the swell moves. False when there is nothing to move. */
   const measure = () => {
-    const { rect, zoom } = frameOfTitle()
+    const { rect, zoom } = frameOf()
+    if (!rect.width || !rect.height) return false
     const local = (r: DOMRect): Box => ({ left: (r.left - rect.left) / zoom, top: (r.top - rect.top) / zoom, width: r.width / zoom, height: r.height / zoom })
-    const own = [...title.querySelectorAll<HTMLElement>('[data-dock-letter]')]
-    const style = getComputedStyle(title)
+    const style = getComputedStyle(el)
+    // The layer is placed in the element's own box: an element placed some other way is left still.
+    if (style.position !== 'static' && style.position !== 'relative') return false
     const fontSize = parseFloat(style.fontSize) || 16
     reach = REACH_EM * fontSize
-    viewportRight = (document.documentElement.clientWidth - VIEWPORT_GUTTER - rect.left) / zoom
-    title.setAttribute('data-dock-active', '')
+    const align = style.textAlign
+    anchor = align === 'right' || align === 'end' ? 'end' : align === 'center' ? 'center' : 'start'
+    const viewport = document.documentElement.clientWidth
+    const own = [...el.querySelectorAll<HTMLElement>('[data-dock-letter]')]
 
     if (own.length) {
       // The title's own letters, read with no transform or transition of their own (home.css gives them a hover rise).
-      const saved = own.map((el) => el.getAttribute('style'))
-      for (const el of own) {
-        el.style.transition = 'none'
-        el.style.transform = 'none'
+      el.setAttribute('data-dock-active', '')
+      const saved = own.map((l) => l.getAttribute('style'))
+      for (const l of own) {
+        l.style.transition = 'none'
+        l.style.transform = 'none'
       }
-      const found = own.map((el, i) => ({ el, ch: el.textContent ?? '', box: local(el.getBoundingClientRect()), style: saved[i] })).filter((f) => f.box.width > 0)
+      const found = own.map((l, i) => ({ el: l, text: l.textContent ?? '', host: l, box: local(l.getBoundingClientRect()), style: saved[i] })).filter((f) => f.box.width > 0)
       if (!found.length) {
-        own.forEach((el, i) => (saved[i] === null ? el.removeAttribute('style') : el.setAttribute('style', saved[i]!)))
+        own.forEach((l, i) => restoreStyle(l, saved[i]))
         return false
       }
-      ;({ grouped: lines, all: letters } = intoLines(found))
-      const ink = inkMeasurer(style)
-      for (const l of letters) ({ ascent: l.ascent, descent: l.descent } = ink(l.ch))
+      ;({ grouped: lines, all: cells } = intoLines(found))
+      measureInk()
       // Letters grow from their baseline, found once in the first letter (they all share the font).
       const below = (baselineOf(found[0].el) - found[0].el.getBoundingClientRect().top) / zoom
       for (const line of lines) {
         line.baseline = line.top + below
-        for (const l of line.letters) l.el.style.transformOrigin = `50% ${below.toFixed(3)}px`
+        line.inkTop = line.baseline - Math.max(...line.cells.map((c) => c.ascent))
+        line.inkBottom = line.baseline + Math.max(...line.cells.map((c) => c.descent))
+        for (const c of line.cells) c.el!.style.transformOrigin = `50% ${below.toFixed(3)}px`
       }
+      rightLimit = (viewport - VIEWPORT_GUTTER - rect.left) / zoom
+      gaps = lines.map(() => 0)
       peak = peakFor(rect, zoom, fontSize)
       return true
     }
 
-    // A plain-text title: one copy of its text per letter, laid out exactly as the text itself.
-    const source = title.querySelector<HTMLElement>('.dock-title__text') ?? title
-    const chars = characterBoxes(source, local)
-    if (!chars.length) return false
+    // Plain text: copies of it, laid out exactly as the text itself.
+    source = el.querySelector<HTMLElement>(':scope > .dock-title__text') ?? el
+    const found = textBoxes(source, mode, local)
+    if (!found.length) return false
+    ;({ grouped: lines, all: cells } = intoLines(found.map((f) => ({ ...f, el: null, style: null }))))
+    measureInk()
+
+    // Each line's baseline (a text box starts its font's ascent above it), and its ink above and below.
+    for (const line of lines) {
+      line.baseline = line.cells[0].top + line.cells[0].fontAscent
+      line.inkTop = line.baseline - Math.max(...line.cells.map((c) => c.ascent))
+      line.inkBottom = line.baseline + Math.max(...line.cells.map((c) => c.descent))
+    }
+
+    // Where the lines may reach, and the layer that draws them: the titles as since the dock arrived (a line may run on
+    // to the viewport's edge; the layer reaches 2em past the title's start and clips at the viewport's edge), the rest
+    // within the room beside them, the layer clipping just outside it.
+    const lefts = Math.min(...lines.map((l) => l.left))
+    const rights = Math.max(...lines.map((l) => l.right))
     layer = document.createElement('span')
     layer.className = 'dock-title__layer'
     layer.setAttribute('aria-hidden', 'true')
-    // The layer clips what the copies spill (each is the whole title, scaled), out to the viewport's right edge, so the page never grows wider.
-    layer.style.setProperty('--dock-out-right', `${Math.max(0, (document.documentElement.clientWidth - rect.right) / zoom).toFixed(2)}px`)
-    const found = chars.map(({ ch, box }) => {
-      const el = document.createElement('span')
-      el.className = 'dock-title__copy'
-      for (const node of source.childNodes) el.append(node.cloneNode(true))
-      layer!.append(el)
-      return { el, ch, box, style: null }
-    })
-    title.append(layer)
-    ;({ grouped: lines, all: letters } = intoLines(found))
-
-    // The copies must lay out exactly as the text (same lines, same places); if not, no effect this time.
-    const copy = characterBoxes(found[0].el, local)
-    if (copy.length !== chars.length || copy.some((c, i) => Math.abs(c.box.left - chars[i].box.left) > 0.5 || Math.abs(c.box.top - chars[i].box.top) > 0.5)) return false
-
-    // Each line's baseline: an empty box at the end of a copy sits on the last line's, and every line has the same metrics.
-    const below = (baselineOf(found[0].el) - rect.top) / zoom - lines[lines.length - 1].top
-    for (const line of lines) line.baseline = line.top + below
-
-    // Each letter's own ink (read from the font), for where the cells meet and how far a swell reaches up and down.
-    const ink = inkMeasurer(style)
-    const inks = letters.map((l) => ink(l.ch))
-    letters.forEach((l, i) => ({ ascent: l.ascent, descent: l.descent } = inks[i]))
-    const inkOf = new Map(letters.map((l, i) => [l, inks[i]]))
+    layer.inert = true
+    if (/flex/.test(style.display)) layer.setAttribute('data-flex', '')
+    const box = { left: el.clientLeft, top: el.clientTop, right: el.clientLeft + el.clientWidth, bottom: el.clientTop + el.clientHeight }
+    // TypeLine's bar stands just after the homepage line's last word, and moves along with it (so it is not in the way).
+    const bar = el.nextElementSibling
+    if (el.classList.contains('type-line__text') && bar instanceof HTMLElement && bar.classList.contains('type-line__cursor')) {
+      follower = { el: bar, style: bar.getAttribute('style'), at: '', moved: false }
+    }
+    if (title) {
+      leftLimit = -FAR
+      rightLimit = (viewport - VIEWPORT_GUTTER - rect.left) / zoom
+      gaps = lines.map(() => 0)
+      layer.style.setProperty('--dock-out-right', `${Math.max(0, (viewport - rect.right) / zoom).toFixed(2)}px`)
+    } else {
+      const room = sideRoom(rect, SIDE_CLEARANCE_EM * fontSize * zoom)
+      // Never inside the text's own rest place.
+      leftLimit = Math.min(lefts, (room.left - rect.left) / zoom)
+      rightLimit = Math.max(rights, (room.right - rect.left) / zoom)
+      // Running text keeps its leading: the lines give way only by what the grown letters would overlap.
+      gaps = lines.slice(1).map((line, i) => Math.max(0, line.inkTop - lines[i].inkBottom - CLEARANCE_EM * fontSize))
+    }
     peak = peakFor(rect, zoom, fontSize)
+    if (!title) {
+      // The layer holds the swell (the ink's overhang on either side included) and nothing more: it clips there, so the
+      // copies, each the whole text, never widen or lengthen the page.
+      const tallest = Math.max(...cells.map((c) => c.ascent))
+      const deepest = Math.max(...cells.map((c) => c.descent))
+      const spare = 0.25 * fontSize
+      const top = Math.min(0, lines[0].inkTop - (peak - 1) * tallest) - spare
+      const bottom = Math.max(rect.height / zoom, lines[lines.length - 1].inkBottom + (peak - 1) * deepest) + spare
+      const outRight = Math.min(rightLimit + spare, (viewport - rect.left) / zoom)
+      layer.style.setProperty('--dock-out-top', `${(box.top - top).toFixed(2)}px`)
+      layer.style.setProperty('--dock-out-bottom', `${(bottom - box.bottom).toFixed(2)}px`)
+      layer.style.setProperty('--dock-out-left', `${(box.left - (leftLimit - spare)).toFixed(2)}px`)
+      layer.style.setProperty('--dock-out-right', `${(outRight - box.right).toFixed(2)}px`)
+    }
+    // The text's own shadow (the homepage's lines keep a soft dark one over the film) goes to the copies.
+    if (source === el) {
+      const shadow = style.textShadow
+      if (shadow && shadow !== 'none') layer.style.textShadow = shadow
+    }
+    copyIndent = 0
+    const first = addCopy()
+    el.append(layer)
+    // From now the text's own words are drawn in no ink (dock-title.css); a DockTitle's text span is hidden instead.
+    el.setAttribute('data-dock-active', '')
+    if (source === el) el.setAttribute('data-dock-copies', '')
 
-    // Where one line's letters end and the next line's begin: halfway between the lower ink of the one and the
-    // upper ink of the other, so descenders and ascenders keep their own line.
-    const lineInk = lines.map((line) => ({
-      top: line.baseline - Math.max(...line.letters.map((l) => l.ascent)),
-      bottom: line.baseline + Math.max(...line.letters.map((l) => l.descent)),
-    }))
-    const between = lines.slice(1).map((_, i) => (lineInk[i].bottom + lineInk[i + 1].top) / 2)
+    // The copies must lay out exactly as the text (same lines, same places); if not, no effect this time. Something
+    // the element draws before its words (About's label: its rule, a ::before) is not in a copy, which then starts its
+    // words that much earlier: the copies leave the same room first.
+    let copied = textBoxes(first.el, mode, local)
+    const indent = copied.length ? found[0].box.left - copied[0].box.left : 0
+    if (Math.abs(indent) > 0.5 && Math.abs(found[0].box.top - copied[0].box.top) <= 0.5) {
+      copyIndent = indent
+      first.el.style.marginLeft = `${indent.toFixed(3)}px`
+      copied = textBoxes(first.el, mode, local)
+    }
+    if (!sameBoxes(found, copied)) return false
 
-    // Where two letters on a line meet: halfway across the gap between the ink of the one and the ink of the other
-    // (not halfway between their boxes), so a serif reaching past its letter's box stays whole in its letter's cell
-    // when the two sit at different sizes (the reviewer saw HARLIE's A lose the tip of its foot beside the R).
-    const meeting = (a: Letter, b: Letter) => {
-      const at = (a.left + inkOf.get(a)!.right + (b.left - inkOf.get(b)!.left)) / 2
+    // Where one line's cells end and the next line's begin: halfway between the lower ink of the one and the upper ink
+    // of the other, so descenders and ascenders keep their own line.
+    const between = lines.slice(1).map((line, i) => (lines[i].inkBottom + line.inkTop) / 2)
+
+    // Where two cells on a line meet. Letters: halfway across the gap between the ink of the one and the ink of the
+    // other (not halfway between their boxes), so a serif reaching past its letter's box stays whole in its letter's
+    // cell when the two sit at different sizes (the reviewer saw HARLIE's A lose the tip of its foot beside the R).
+    // Words: halfway across the space between them.
+    const meeting = (a: Cell, b: Cell) => {
+      const at = mode === 'words' ? (a.left + a.width + b.left) / 2 : (a.left + a.inkRight + (b.left - b.inkLeft)) / 2
       return Math.min(b.centre, Math.max(a.centre, at))
     }
 
     // The cells: out to those meeting points with the neighbours on the line and to the boundaries with the lines
-    // above and below, without limit at the title's outer edges, so together they tile the title. Their edges sit
-    // on whole device pixels, so neighbouring cells meet without a faint anti-aliased seam.
-    const edgeX = title.clientLeft
-    const edgeY = title.clientTop
+    // above and below, without limit at the text's outer edges, so together they tile the text. Their edges sit on
+    // whole device pixels, so neighbouring cells meet without a faint anti-aliased seam. In the copies' own pixels:
+    // a copy fills the element's padding box, and starts its words later by as much as the element does.
+    const originX = box.left + copyIndent
+    const originY = box.top
     const dpr = window.devicePixelRatio || 1
     const onPixel = (value: number, origin: number) => (Math.round((origin + value * zoom) * dpr) / dpr - origin) / zoom
     lines.forEach((line, i) => {
-      const top = i === 0 ? -FAR : onPixel(between[i - 1], rect.top) - edgeY
-      const bottom = i === lines.length - 1 ? FAR : onPixel(between[i], rect.top) - edgeY
-      line.letters.forEach((l, j) => {
-        const before = line.letters[j - 1]
-        const after = line.letters[j + 1]
-        const left = before ? onPixel(meeting(before, l), rect.left) - edgeX : -FAR
-        const right = after ? onPixel(meeting(l, after), rect.left) - edgeX : FAR
-        l.cell = { left, right, top, bottom }
-        l.el.style.transformOrigin = `${(l.centre - edgeX).toFixed(3)}px ${(line.baseline - edgeY).toFixed(3)}px`
+      line.clipTop = i === 0 ? -FAR : onPixel(between[i - 1], rect.top) - originY
+      line.clipBottom = i === lines.length - 1 ? FAR : onPixel(between[i], rect.top) - originY
+      line.cells.forEach((c, j) => {
+        const before = line.cells[j - 1]
+        const after = line.cells[j + 1]
+        c.clipLeft = before ? onPixel(meeting(before, c), rect.left) - originX : -FAR
+        c.clipRight = after ? onPixel(meeting(c, after), rect.left) - originX : FAR
+        c.ox = c.centre - originX
+        c.oy = line.baseline - originY
       })
-      // From the first frame, each line is drawn by one copy.
-      drawCopies(line, line.letters.map(() => 'none'))
     })
+
+    // New words in the text (the contact form's sent line) would leave the copies behind: back to rest at once.
+    observer = new MutationObserver((records) => {
+      if (records.some((r) => !layer?.contains(r.target))) snap()
+    })
+    observer.observe(source, { childList: true, characterData: true, subtree: true })
     return true
+  }
+
+  /** One more copy of the text, hidden until a run of cells needs it. */
+  function addCopy() {
+    const node = document.createElement('span')
+    node.className = 'dock-title__copy'
+    for (const child of source.childNodes) if (child !== layer) node.append(child.cloneNode(true))
+    for (const named of node.querySelectorAll('[id]')) named.removeAttribute('id')
+    if (copyIndent) node.style.marginLeft = `${copyIndent.toFixed(3)}px`
+    layer!.append(node)
+    const copy: Copy = { el: node, transform: 'none', clip: '', shown: true }
+    copies.push(copy)
+    return copy
   }
 
   /** Back to exactly the rest state: the title's own letters as they were, the layer gone. */
   const rest = () => {
     cancelAnimationFrame(frame)
     frame = 0
-    if (!layer) {
-      for (const letter of letters) {
-        // Cleared through the CSSOM first, so no empty style="" is left behind.
-        letter.el.style.cssText = ''
-        if (letter.style === null) letter.el.removeAttribute('style')
-        else letter.el.setAttribute('style', letter.style)
-      }
-    }
+    observer?.disconnect()
+    observer = null
+    for (const c of cells) if (c.el) restoreStyle(c.el, c.style)
+    if (follower?.moved) restoreStyle(follower.el, follower.style)
+    follower = null
     layer?.remove()
     layer = null
-    letters = []
+    copies = []
+    cells = []
     lines = []
-    title.removeAttribute('data-dock-active')
-    active = false
-    window.removeEventListener('scroll', wake, true)
+    source = el
+    el.removeAttribute('data-dock-active')
+    el.removeAttribute('data-dock-copies')
+    if (active) {
+      active = false
+      window.removeEventListener('scroll', wake, true)
+      window.removeEventListener('resize', snap)
+      window.removeEventListener('blur', leave)
+      document.removeEventListener('selectionchange', onSelectionChange)
+      document.fonts?.removeEventListener?.('loadingdone', snap)
+      unsubscribeMotion?.()
+      unsubscribeMotion = null
+    }
   }
 
-  /** The line under the pointer (the nearest one), or -1 when the pointer is off the title. */
+  /** The line under the pointer (the nearest one), or -1 when the pointer is off the text. */
   const lineAt = (y: number) => {
     if (!hovered) return -1
     let best = -1
@@ -424,101 +685,156 @@ function attachDock(title: HTMLElement) {
     return best
   }
 
-  /** The size a letter is heading for: a smooth hill centred on the pointer, on the pointer's line only. */
-  const targetOf = (letter: Letter, x: number, line: number) => {
-    if (letter.line !== line) return 1
-    const distance = Math.abs(x - letter.centre) / reach
-    if (distance >= 1) return 1
-    return 1 + (peak - 1) * (0.5 + 0.5 * Math.cos(Math.PI * distance))
-  }
-
-  const write = (letter: Letter, transform: string) => {
-    if (letter.transform !== transform) letter.el.style.transform = letter.transform = transform
+  /**
+   * How strongly a cell swells for the pointer at `x` on its line, 0 to 1: a smooth hill centred on the pointer. A
+   * letter by its distance from its centre; a word by its distance from its nearest edge, so the word under the
+   * pointer is the largest wherever the pointer is on it, and its neighbours grow as the pointer nears them.
+   */
+  const hillOf = (c: Cell, x: number) => {
+    const d = mode === 'words' ? Math.max(0, Math.abs(x - c.centre) - c.width / 2) : Math.abs(x - c.centre)
+    const distance = d / reach
+    return distance >= 1 ? 0 : 0.5 + 0.5 * Math.cos(Math.PI * distance)
   }
 
   /*
-   * Neighbouring letters that sit the same way (those still at rest before
-   * the swell, those slid along after it) are drawn by one copy clipped to
-   * their cells together; the other copies are hidden.
+   * Neighbouring cells that sit the same way (those still at rest before the swell, those slid along after it, whole
+   * lines above and below it) are drawn by one copy clipped to their cells together; spare copies are hidden. A copy
+   * is made when a frame first needs more of them than there are.
    */
-  function drawCopies(line: Line, transforms: string[]) {
-    const row = line.letters
-    for (let start = 0; start < row.length; ) {
-      let end = start
-      while (end + 1 < row.length && transforms[end + 1] === transforms[start]) end++
-      const lead = row[start]
-      const first = row[start].cell!
-      const final = row[end].cell!
-      const [l, r, t, b] = [first.left, final.right, first.top, first.bottom].map((v) => v.toFixed(3))
-      const clip = `polygon(${l}px ${t}px, ${r}px ${t}px, ${r}px ${b}px, ${l}px ${b}px)`
-      if (lead.clip !== clip) lead.el.style.clipPath = lead.clip = clip
-      write(lead, transforms[start])
-      for (let j = start; j <= end; j++) {
-        const shown = j === start
-        if (row[j].shown !== shown) {
-          row[j].el.style.visibility = shown ? '' : 'hidden'
-          row[j].shown = shown
-        }
+  const drawCopies = () => {
+    const runs: Run[] = []
+    for (const line of lines) {
+      const row = line.cells
+      if (row.every((c) => c.transform === row[0].transform)) {
+        const previous = runs[runs.length - 1]
+        if (previous?.band && previous.transform === row[0].transform) previous.bottom = line.clipBottom
+        else runs.push({ transform: row[0].transform, left: -FAR, right: FAR, top: line.clipTop, bottom: line.clipBottom, band: true })
+        continue
       }
-      start = end + 1
+      for (let start = 0; start < row.length; ) {
+        let end = start
+        while (end + 1 < row.length && row[end + 1].transform === row[start].transform) end++
+        runs.push({ transform: row[start].transform, left: row[start].clipLeft, right: row[end].clipRight, top: line.clipTop, bottom: line.clipBottom, band: false })
+        start = end + 1
+      }
+    }
+    runs.forEach((run, i) => {
+      const copy = copies[i] ?? addCopy()
+      const whole = run.left === -FAR && run.right === FAR && run.top === -FAR && run.bottom === FAR
+      const [l, r, t, b] = [run.left, run.right, run.top, run.bottom].map((v) => v.toFixed(3))
+      const clip = whole ? '' : `polygon(${l}px ${t}px, ${r}px ${t}px, ${r}px ${b}px, ${l}px ${b}px)`
+      if (copy.clip !== clip) copy.el.style.clipPath = copy.clip = clip
+      if (copy.transform !== run.transform) {
+        copy.el.style.transform = run.transform === 'none' ? '' : run.transform
+        copy.transform = run.transform
+      }
+      if (!copy.shown) {
+        copy.el.style.visibility = ''
+        copy.shown = true
+      }
+    })
+    for (let i = runs.length; i < copies.length; i++) {
+      if (!copies[i].shown) continue
+      copies[i].el.style.visibility = 'hidden'
+      copies[i].shown = false
     }
   }
 
   const tick = (now: number) => {
     frame = 0
+    // A page change took the text away.
+    if (!el.isConnected) {
+      rest()
+      return
+    }
     const seconds = Math.min(0.05, last ? (now - last) / 1000 : 1 / 60)
     last = now
-    const { rect, zoom } = frameOfTitle()
-    // A scroll can carry the title out from under a still pointer.
+    const { rect, zoom } = frameOf()
+    // A scroll can carry the text out from under a still pointer.
     if (hovered && (pointerX < rect.left || pointerX > rect.right || pointerY < rect.top || pointerY > rect.bottom)) hovered = false
     const x = (pointerX - rect.left) / zoom
-    const line = lineAt((pointerY - rect.top) / zoom)
+    const at = lineAt((pointerY - rect.top) / zoom)
+
+    // Where the swell is heading: the hill on the pointer's line, lower where that line has too little room sideways.
+    let height = peak - 1
+    if (at >= 0) {
+      const row = lines[at]
+      let need = 0
+      for (const c of row.cells) {
+        c.hill = hillOf(c, x)
+        need += c.width * c.hill
+      }
+      const room = row.left - Math.min(leftLimit, row.left) + Math.max(rightLimit, row.right) - row.right
+      if (!title && need * height > room) height = room / need
+    }
 
     let moving = false
-    for (const letter of letters) {
-      const target = targetOf(letter, x, line)
+    for (const c of cells) {
+      const target = c.line === at ? 1 + height * c.hill : 1
+      if (c.scale === target && c.speed === 0) continue
       for (let t = 0; t < seconds; t += STEP) {
         const h = Math.min(STEP, seconds - t)
-        const force = -SPRING.stiffness * (letter.scale - target) - SPRING.damping * letter.speed
-        letter.speed += (force / SPRING.mass) * h
-        letter.scale += letter.speed * h
+        const force = -SPRING.stiffness * (c.scale - target) - SPRING.damping * c.speed
+        c.speed += (force / SPRING.mass) * h
+        c.scale += c.speed * h
       }
-      if (Math.abs(letter.scale - target) > REST_SCALE || Math.abs(letter.speed) > REST_SPEED) moving = true
+      if (Math.abs(c.scale - target) > REST_SCALE || Math.abs(c.speed) > REST_SPEED) moving = true
       else {
-        letter.scale = target
-        letter.speed = 0
+        c.scale = target
+        c.speed = 0
       }
     }
 
-    // The other lines give way: each rises by as much as the ascenders on the lines below it have grown, and drops
-    // by as much as the descenders on the lines above it have grown (Harlie's wrapped titles set their lines close).
-    const rise = lines.map((row) => Math.max(0, ...row.letters.map((l) => (l.scale - 1) * l.ascent)))
-    const drop = lines.map((row) => Math.max(0, ...row.letters.map((l) => (l.scale - 1) * l.descent)))
-    const offsets = lines.map((_, k) => {
-      let offset = 0
-      for (let j = 0; j < lines.length; j++) offset += j < k ? drop[j] : j > k ? -rise[j] : 0
-      return offset
-    })
-
-    for (const [index, row] of lines.entries()) {
-      const dy = offsets[index]
-      // Each letter slides along by the extra width of the letters before it, and half its own (it grows from its centre).
-      let before = 0
-      const shifts = row.letters.map((l) => {
-        const extra = l.width * (l.scale - 1)
-        const shift = before + extra / 2
-        before += extra
-        return shift
-      })
-      // The line keeps its start on the column; only a line that would pass the viewport's edge gives way leftwards.
-      const held = Math.max(0, row.right + before - Math.max(viewportRight, row.right))
-      const transforms = row.letters.map((l, i) => {
-        const shift = shifts[i] - held
-        return l.scale === 1 && Math.abs(shift) < 0.01 && Math.abs(dy) < 0.01 ? 'none' : `translate(${shift.toFixed(2)}px, ${dy.toFixed(2)}px) scale(${l.scale.toFixed(4)})`
-      })
-      if (layer) drawCopies(row, transforms)
-      else row.letters.forEach((l, i) => write(l, transforms[i]))
+    // The other lines give way: those above rise by what the grown ascenders below them would overlap, those below
+    // drop by what the grown descenders above them would (a title's lines, set close, by the whole growth).
+    const rise = lines.map((row) => Math.max(0, ...row.cells.map((c) => (c.scale - 1) * c.ascent)))
+    const drop = lines.map((row) => Math.max(0, ...row.cells.map((c) => (c.scale - 1) * c.descent)))
+    const up: number[] = []
+    const down: number[] = []
+    for (let p = 0; p < lines.length - 1; p++) {
+      const need = Math.max(0, rise[p + 1] + drop[p] - gaps[p])
+      up[p] = need > 0 ? (need * rise[p + 1]) / (rise[p + 1] + drop[p]) : 0
+      down[p] = need - up[p]
     }
+
+    lines.forEach((line, k) => {
+      let dy = 0
+      for (let p = 0; p < lines.length - 1; p++) dy += p < k ? down[p] : -up[p]
+      // Each cell slides along by the extra width of those before it, and half its own (it grows from its centre).
+      let before = 0
+      for (const c of line.cells) {
+        const extra = c.width * (c.scale - 1)
+        c.shift = before + extra / 2
+        before += extra
+      }
+      // The line keeps its start (its end, set from the right) and gives way the other way only where it would pass
+      // what is beside it; its start stays in bounds first.
+      let offset = anchor === 'end' ? -before : anchor === 'center' ? -before / 2 : 0
+      const over = line.right + before + offset - Math.max(rightLimit, line.right)
+      if (over > 0) offset -= over
+      const under = Math.min(leftLimit, line.left) - (line.left + offset)
+      if (under > 0) offset += under
+      for (const c of line.cells) {
+        const shift = c.shift + offset
+        let transform: string
+        if (c.scale === 1 && Math.abs(shift) < 0.01 && Math.abs(dy) < 0.01) transform = 'none'
+        else if (c.el) transform = `translate(${shift.toFixed(2)}px, ${dy.toFixed(2)}px) scale(${c.scale.toFixed(4)})`
+        else if (c.scale === 1) transform = `translate(${shift.toFixed(2)}px, ${dy.toFixed(2)}px)`
+        // A copy grows about the cell's centre on the baseline (its transform-origin is its corner).
+        else transform = `translate(${(shift + c.ox).toFixed(2)}px, ${(dy + c.oy).toFixed(2)}px) scale(${c.scale.toFixed(4)}) translate(${(-c.ox).toFixed(2)}px, ${(-c.oy).toFixed(2)}px)`
+        if (c.el) {
+          if (c.transform !== transform) c.el.style.transform = c.transform = transform
+        } else c.transform = transform
+      }
+      if (follower && k === lines.length - 1) {
+        const move = Math.abs(before + offset) < 0.01 && Math.abs(dy) < 0.01 ? '' : `${(before + offset).toFixed(2)}px ${dy.toFixed(2)}px`
+        if (follower.at !== move) {
+          follower.el.style.translate = follower.at = move
+          follower.moved = true
+        }
+      }
+    })
+    if (layer) drawCopies()
 
     if (moving) frame = requestAnimationFrame(tick)
     else if (!hovered) rest()
@@ -530,87 +846,108 @@ function attachDock(title: HTMLElement) {
     frame = requestAnimationFrame(tick)
   }
 
-  const selectionOnTitle = () => {
+  const selectionOnEl = () => {
     const selection = document.getSelection()
-    return !!selection && !selection.isCollapsed && selection.containsNode(title, true)
+    return !!selection && !selection.isCollapsed && selection.containsNode(el, true)
   }
 
   // PORTFOLIO types itself in behind a clip (home.css type-reveal), which would cut the grown letters.
-  const typing = () => title.getAnimations({ subtree: true }).some((a) => a.playState === 'running' && (a as CSSAnimation).animationName === 'type-reveal')
+  const typing = () => el.getAnimations({ subtree: true }).some((a) => a.playState === 'running' && (a as CSSAnimation).animationName === 'type-reveal')
 
-  function onLeave() {
+  function leave() {
     hovered = false
     waiting = false
+    failed = false
     wake()
   }
 
-  const onMove = (e: PointerEvent) => {
-    if (e.pointerType !== 'mouse' || reducedMotion.matches) return
-    // Pressing to select, or a selection already on the title: the letters settle, so the selection shows on the text itself.
-    if (e.buttons !== 0 || selectionOnTitle()) {
-      onLeave()
-      return
-    }
-    pointerX = e.clientX
-    pointerY = e.clientY
-    hovered = true
-    begin()
+  // A selection on the text: the letters settle, so the selection shows on the text itself.
+  function onSelectionChange() {
+    if (hovered && selectionOnEl()) leave()
+  }
+
+  // A new window size, a font arriving or reduced motion turned on: straight back to rest (measured afresh on the next move).
+  function snap() {
+    hovered = false
+    waiting = false
+    rest()
   }
 
   function begin() {
     if (!active) {
+      if (failed) return
       waiting = typing()
       if (waiting) return
       if (!measure()) {
+        failed = true
         rest()
         return
       }
       active = true
       window.addEventListener('scroll', wake, { capture: true, passive: true })
+      window.addEventListener('resize', snap)
+      window.addEventListener('blur', leave)
+      document.addEventListener('selectionchange', onSelectionChange)
+      document.fonts?.addEventListener?.('loadingdone', snap)
+      unsubscribeMotion = subscribeMotion(snap)
     }
     wake()
   }
 
-  // A pointer that came to rest on PORTFOLIO while it typed starts the swell as soon as the typing ends.
-  const onTyped = (e: AnimationEvent) => {
-    if (e.animationName !== 'type-reveal' || !waiting) return
-    waiting = false
-    if (hovered && title.matches(':hover') && !reducedMotion.matches && !selectionOnTitle()) begin()
+  return {
+    move(x, y, buttons) {
+      if (motionReduced()) return
+      // Pressing to select, or a selection already on the text: the letters settle.
+      if (buttons !== 0 || selectionOnEl()) {
+        leave()
+        return
+      }
+      pointerX = x
+      pointerY = y
+      hovered = true
+      begin()
+    },
+    leave,
+    typed() {
+      if (!waiting) return
+      waiting = false
+      if (hovered && el.matches(':hover') && !motionReduced() && !selectionOnEl()) begin()
+    },
+    snap,
   }
+}
 
-  const onSelectionChange = () => {
-    if (active && hovered && selectionOnTitle()) onLeave()
-  }
-
-  // A new window size, a font arriving or reduced motion turned on: straight back to rest (measured afresh on the next move).
-  const snap = () => {
-    hovered = false
-    if (active) rest()
-  }
-
-  // Marks the title for dock-title.css (PORTFOLIO's own letter rise gives way to the dock).
-  title.setAttribute('data-dock-title', '')
-  title.addEventListener('pointermove', onMove)
-  title.addEventListener('pointerdown', onLeave)
-  title.addEventListener('pointerleave', onLeave)
-  title.addEventListener('animationend', onTyped)
-  window.addEventListener('blur', onLeave)
-  window.addEventListener('resize', snap)
-  document.addEventListener('selectionchange', onSelectionChange)
-  reducedMotion.addEventListener('change', snap)
-  document.fonts?.addEventListener?.('loadingdone', snap)
-
-  return () => {
-    title.removeEventListener('pointermove', onMove)
-    title.removeEventListener('pointerdown', onLeave)
-    title.removeEventListener('pointerleave', onLeave)
-    title.removeEventListener('animationend', onTyped)
-    window.removeEventListener('blur', onLeave)
-    window.removeEventListener('resize', snap)
-    document.removeEventListener('selectionchange', onSelectionChange)
-    reducedMotion.removeEventListener('change', snap)
-    document.fonts?.removeEventListener?.('loadingdone', snap)
-    rest()
-    title.removeAttribute('data-dock-title')
-  }
+/**
+ * Gives the title in `ref` the dock's letter magnification under a mouse or trackpad (DockTitle, TypeLine). Letters
+ * the title already renders are marked data-dock-letter (TypeLine's); otherwise its text is drawn by copies while
+ * hovered. The site's other text gets the same from dockText.ts.
+ */
+export function useDockTitle(ref: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const title = ref.current
+    if (!title) return
+    const dock = createDock(title, { mode: 'letters', title: true })
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') dock.move(e.clientX, e.clientY, e.buttons)
+    }
+    const onLeave = () => dock.leave()
+    // A pointer that came to rest on PORTFOLIO while it typed starts the swell as soon as the typing ends.
+    const onTyped = (e: AnimationEvent) => {
+      if (e.animationName === 'type-reveal') dock.typed()
+    }
+    // Marks the title for dock-title.css (PORTFOLIO's own letter rise gives way to the dock) and for dockText.ts.
+    title.setAttribute('data-dock-title', '')
+    title.addEventListener('pointermove', onMove)
+    title.addEventListener('pointerdown', onLeave)
+    title.addEventListener('pointerleave', onLeave)
+    title.addEventListener('animationend', onTyped)
+    return () => {
+      title.removeEventListener('pointermove', onMove)
+      title.removeEventListener('pointerdown', onLeave)
+      title.removeEventListener('pointerleave', onLeave)
+      title.removeEventListener('animationend', onTyped)
+      dock.snap()
+      title.removeAttribute('data-dock-title')
+    }
+  }, [ref])
 }

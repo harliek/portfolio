@@ -9,6 +9,8 @@ import './styles/layout.css'
 import './styles/components.css'
 import './styles/stage.css'
 import './styles/cursor.css'
+import './styles/lift.css'
+import './components/ui/dockText'
 import App from './App'
 
 createRoot(document.getElementById('root')!).render(

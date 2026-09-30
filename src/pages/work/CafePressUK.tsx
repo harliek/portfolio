@@ -6,9 +6,12 @@ import { projectById } from '../../content/projects'
 const project = projectById('cafepress-uk')
 
 /**
- * CafePress UK (brief v19): the research question and three findings on the
- * left (localization, assortment, operations); a stable stage on the right
- * (the storefront prototype, whole), no pan or zoom.
+ * CafePress UK (brief v19): the introduction and four sections on the right
+ * (market challenge, market analysis, launch strategy, recommendation;
+ * Harlie's text of 2026-09-30); on the left the storefront concept's three
+ * pages in a card-hover gallery, each whole, no pan or zoom. The sides are
+ * swapped because the project's order is odd (caseSide.ts; Harlie's request,
+ * 2026-09-30: every other told page has its words on the right).
  * Recommendations are kept distinct from what was launched (nothing was).
  */
 export default function CafePressUK() {
@@ -35,7 +38,9 @@ export default function CafePressUK() {
             { image: 'cp-drinkware' },
             { image: 'cp-assistant' },
           ],
-          show: [0, 1, 2],
+          // Four sections (2026-09-30): the storefront concept (market challenge), the drinkware page (market analysis), the
+          // assistant page (launch strategy), then the concept again for the recommendation.
+          show: [0, 1, 2, 0],
           // Harlie's brief, 2026-09-28: the storefront pictures carry the real CafePress brand and could be taken for
           // the live UK site; nothing was launched.
         }}

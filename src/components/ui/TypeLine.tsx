@@ -13,8 +13,10 @@ const NO_DOCK = { current: null }
  * stays and keeps blinking, as in the demo. With `letters`, each letter is
  * its own element (for the hover in home.css); screen readers and copying
  * still get the word once, and the letters magnify under the pointer like
- * Aceternity's Floating Dock (Harlie's request; dockLetters.ts). Reduced
- * motion: the text at once, no bar.
+ * Aceternity's Floating Dock (Harlie's request; dockLetters.ts). Without,
+ * the text magnifies the same way through the site-wide dock (dockText.ts,
+ * 2026-09-30: the homepage's name and line). Reduced motion: the text at
+ * once, no bar.
  */
 export function TypeLine({ text, delay, duration, hideAt, letters }: { text: string; delay: number; duration: number; hideAt?: number; letters?: boolean }) {
   const ref = useRef<HTMLSpanElement>(null)

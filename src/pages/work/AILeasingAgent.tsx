@@ -6,9 +6,9 @@ import { projectById } from '../../content/projects'
 const project = projectById('ai-leasing-agent')
 
 /**
- * AI Leasing Agent (brief v19; route /work/valiance): the introduction and three sections on the left; Harlie's three
- * images on the right as a gallery (the listing with the assistant, the inbox, the dashboard), each growing in turn as
- * its section becomes the current one.
+ * AI Leasing Agent (brief v19; route /work/valiance): the introduction and four sections on the left (Harlie's text of
+ * 2026-09-30); Harlie's three images on the right as a card-hover gallery (the listing with the assistant, the inbox,
+ * the dashboard), the current section's picture large (the inbox for the two middle sections).
  */
 export default function AILeasingAgent() {
   return (
@@ -29,7 +29,9 @@ export default function AILeasingAgent() {
           // and rollout across 18 properties). The sections follow the same order, so the larger view's Previous and
           // Next follow them too. No caption (Harlie's request).
           layers: [{ image: 'valiance-listing' }, { image: 'valiance-inbox' }, { image: 'valiance-dashboard' }],
-          show: [0, 1, 2],
+          // Four sections (2026-09-30): the listing, the inbox for the automation boundary and the assistant's design, the
+          // dashboard for the testing and adoption.
+          show: [0, 1, 1, 2],
           // The imagery is synthetic (invented figures); no label beside the pictures or in the meta line says so
           // (Harlie's requests, 2026-09-28 and 2026-09-29).
         }}

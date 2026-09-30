@@ -1,5 +1,6 @@
 import '../../styles/case.css'
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { CASE_BAR } from '../../config/stage'
 import { getImage, type ImageId } from '../../content/media'
 import { PHONE_SIZES, STAGE_SIZES } from '../../content/projects'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
@@ -7,12 +8,15 @@ import { ScrollProgress } from '../../lib/scrollProgress'
 import { DemoControls } from '../media/DemoControls'
 import { ResponsiveImage } from '../media/ResponsiveImage'
 import { useImageDialog } from '../media/ImageDialog'
+import { pillWidth } from '../layout/pill'
 import { closeOnCancel, closeWithFade } from '../media/dialogExit'
 import { CloseIcon } from '../media/ExpandIcon'
 import { enterFullscreen } from '../media/fullscreen'
 import { onFramePresented } from '../media/videoFrame'
 import { CardHover } from '../ui/card-hover'
+import { MiniControls } from '../media/MiniControls'
 import { CaseTitle } from './CasePage'
+import { useStageOnLeft } from './caseSide'
 
 export interface StoryStep {
   title: string
@@ -37,7 +41,7 @@ export type Segment = readonly [number, number] | readonly [number, number, 'hol
  * - video: a real recording; it plays each step's segment (`play`: on a loop, or once and held, and faster while the
  *   page scrolls), or (`free`) the whole recording loops by itself;
  * - layers: distinct artifacts in a card-hover gallery, the step's own picture in a large card and every picture as a
- *   small circle on its right (`show` picks the layer per step; hovering, focusing or clicking a circle shows it);
+ *   small circle in a row under it (`show` picks the layer per step; hovering, focusing or clicking a circle shows it);
  * - phones: the app's screens as cutouts in one row, the step's own screen brought forward (`step` on each phone).
  * Layers and phones may carry one short neutral `label` beside the pictures (Harlie's copy brief, 2026-09-29:
  * "Illustrative concept screen", "Screens reconstructed from the original prototype"); nothing else is written on or
@@ -88,84 +92,95 @@ type Bind = (fn: Follow | null) => void
 const PHONE = '(max-width: 899.98px) and (orientation: portrait), (max-width: 899.98px) and (min-height: 541px)'
 
 /**
- * How far the phones' band scrolls with the page before it is held under the header (px): from where the page places
- * it, under the introduction, to its sticky top. Read from the introduction, since the band's own box reports where
- * it is held.
+ * The words' fading window (Harlie's request, 2026-09-30: "a soft mask so text fades as it approaches the top and
+ * bottom edges"): the introduction and the steps fade out towards the window's edges through a mask held to the
+ * window, not to the words (case-v16.css). At the top the fade runs from transparent (down to the floating pill's
+ * lower edge, 6px below the window's top and 48px tall, layout.css: FADE_PILL; to the header's black bar's edge; or,
+ * for the steps on phones, to the held band's) to solid a ramp below the header or the band (about 8% of the window's
+ * height, 40 to 88px), so the lines passing under the navigation fade out and none shows under the pill. It grows in
+ * over the page's first scroll, at most FADE_IN px, and is whole by the time the title's first line reaches what
+ * covers the window's top (the pill's lower edge, or the black bar's): on arrival the title reads whole, and it never
+ * shows under the pill half faded (2026-09-30: at 900 to 1200px wide the pill's edge cut across the title's letters,
+ * at 15 to 55%, between 54 and 108px of scroll).
+ *
+ * At the page's end the steps' top fade gives way over the last FADE_IN px of scroll, as far as the last step's heading
+ * needs to read whole where the room is short (on phones and landscape phones, between the band or the bar and the
+ * footer's links), never closer than END_EDGE to what covers the top: the band's own soft lower edge is as tall
+ * (case-v16.css .cs__media::after).
  */
-function bandTravel(band: HTMLElement) {
-  const intro = band.previousElementSibling
-  const style = getComputedStyle(band)
-  const flowTop = (intro ? intro.getBoundingClientRect().bottom + window.scrollY : 0) + (parseFloat(style.marginTop) || 0)
-  return Math.max(0, flowTop - (parseFloat(style.top) || 0))
-}
+const FADE_PILL = 50
+const FADE_IN = 120
+const END_EDGE = 20
+const fadeRamp = (vh: number) => Math.round(Math.min(88, Math.max(40, 0.08 * vh)))
 
-/** The reading line (a share of the window's height from the top): a step becomes current when its top reaches it. */
-const line = () => (window.matchMedia(PHONE).matches ? 0.66 : 0.5)
+/**
+ * Where the browser draws scroll-driven animations (Chrome 115, Safari 26 and later), the fading window is held to the
+ * window by the compositor, in the same frame as each scroll (case-v16.css, fade-hold; 2026-09-30, the verifier's
+ * flicker: written here at each scroll event, it ran a frame behind the scrolling Chrome and WebKit do off the main
+ * thread). Here it is then only placed in its boxes when the page is measured. Elsewhere it is written as the page
+ * scrolls, as before. Keep the question in step with case-v16.css's @supports.
+ */
+const HELD = typeof CSS !== 'undefined' && CSS.supports('animation-timeline', 'scroll()')
 
-/** A heading's place on the page (px from the document's top) and the highest it may rest in the window (px). */
-interface HeadingBand {
-  top: number
-  bottom: number
-  safe: number
+/**
+ * How far the held boxes reach past the window (px): room for a line's antialiasing at the edges, and on phones for
+ * the window growing as the toolbar goes (the boxes reach the screen's height).
+ */
+const HOLD_ROOM = 16
+
+/**
+ * A box's top in the window as laid out, less what the fading window's held translate and the introduction's slide
+ * move it by (case-v16.css), and that slide (px, 0 or less). Both are read from the same style, so they agree with the
+ * box's own position whenever this is read.
+ */
+function laidOut(box: HTMLElement) {
+  const style = getComputedStyle(box)
+  const held = parseFloat(style.translate.split(' ')[1] ?? '') || 0
+  const slide = style.transform && style.transform !== 'none' ? new DOMMatrixReadOnly(style.transform).m42 : 0
+  return { top: box.getBoundingClientRect().top - held - slide, slide }
 }
 
 /**
- * The headings that must never be left under the navigation (Harlie's brief, 2026-09-28): the title with its details
- * (they go together), and each step's heading. Each one's safe line is the navigation's safe area, the same offset a
- * link to it scrolls by: the heading's own scroll margin (the header's safe area, base.css, and on phones the band held
- * under the header; case-v16.css), with any scroll padding on the root.
+ * How far the introduction's top fade stands above its place (px) at scroll s of the page's first fadeIn px, where the
+ * compositor holds it (case-v16.css, fade-slide), with `clear` px of the fade's ramp over the title's letters on
+ * arrival: the fade clears the title on arrival (s = 0), reaches its place at fadeIn, and in between matches, as
+ * closely as a whole fade can, the fade growing in that the page drew before (2026-09-30): over the title's rows in the
+ * ramp, its brightest and dimmest differences from that strength balanced (at most about 10 to 14% of full strength, at
+ * one row, halfway).
  */
-function headingBands(root: HTMLElement, y: number): HeadingBand[] {
-  const padTop = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0
-  const band = (first: HTMLElement | null, last: HTMLElement | null = first): HeadingBand[] => {
-    if (!first || !last) return []
-    const safe = padTop + (parseFloat(getComputedStyle(first).scrollMarginTop) || 0)
-    return [{ top: first.getBoundingClientRect().top + y, bottom: last.getBoundingClientRect().bottom + y, safe }]
-  }
-  const steps = [...root.querySelectorAll<HTMLElement>('.cs__body .story__title')].flatMap((el) => band(el))
-  return [...band(root.querySelector('.cx-title'), root.querySelector('.cs__intro .cx-meta')), ...steps]
+const slideAt = (s: number, fadeIn: number, clear: number) => {
+  const k = Math.min(1, Math.max(0, s / fadeIn))
+  return Math.max(0, ((1 - k) * (clear + s)) / (1 + k))
 }
 
-/** A line of the words (px: from the document's top, and from the window's left). */
-interface TextLine {
-  top: number
-  bottom: number
-  left: number
-  right: number
-  /** The step it belongs to (-1: the introduction), and whether it is that step's heading. */
-  step: number
-  head: boolean
-  /** The details under the title: their glow reaches a few pixels past the letters. */
-  glow: boolean
+/** Names the keyframes each page's introduction slides by (case-v16.css, --fade-slide). */
+let slides = 0
+
+/**
+ * The introduction's slide as keyframes over its first fadeIn px of scroll (fade-slide for the introduction, upwards,
+ * and its words' own, back down): whole pixels, each held until the scroll where the next pixel falls, so the words,
+ * drawn through the introduction's mask, are never resampled at a fraction of a pixel.
+ */
+function slideKeyframes(name: string, fadeIn: number, clear: number) {
+  const at: [number, number][] = []
+  for (let s = 0; s <= fadeIn; s++) {
+    const d = s === fadeIn ? 0 : Math.round(slideAt(s, fadeIn, clear))
+    if (!at.length || at[at.length - 1][1] !== d) at.push([(s / fadeIn) * 100, d])
+  }
+  const frames = (sign: number) => at.map(([p, d]) => `${p.toFixed(3)}% { transform: translateY(${sign * d}px); animation-timing-function: step-end; }`).join(' ')
+  return `@keyframes ${name} { ${frames(-1)} } @keyframes ${name}-back { ${frames(1)} }`
 }
 
-/** Every line of the words (the introduction and the steps), each text line once, however it is split. */
-function textLines(root: HTMLElement, y: number): TextLine[] {
-  const lines: TextLine[] = []
-  const range = document.createRange()
-  const steps = [...root.querySelectorAll('.cs__body .story__step')]
-  for (const block of root.querySelectorAll(':scope > .cs__intro, :scope > .cs__body')) {
-    const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT)
-    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      const parent = node.parentElement
-      if (!node.textContent?.trim() || !parent || parent.closest('[aria-hidden="true"]')) continue
-      const stepEl = parent.closest('.story__step')
-      const step = stepEl ? steps.indexOf(stepEl) : -1
-      const head = Boolean(parent.closest('.story__title, .cx-title'))
-      const glow = Boolean(parent.closest('.cx-meta'))
-      range.selectNodeContents(node)
-      for (const r of range.getClientRects()) {
-        if (r.width < 1 || r.height < 1) continue
-        const top = r.top + y
-        const bottom = r.bottom + y
-        const same = lines.find((l) => l.step === step && l.head === head && Math.abs(l.top + l.bottom - top - bottom) < 8)
-        if (!same) lines.push({ top, bottom, left: r.left, right: r.right, step, head, glow })
-        else Object.assign(same, { top: Math.min(same.top, top), bottom: Math.max(same.bottom, bottom), left: Math.min(same.left, r.left), right: Math.max(same.right, r.right) })
-      }
-    }
-  }
-  return lines
-}
+/**
+ * How close the words may come to the footer's links at the page's end (px, from the words' last line to the top of
+ * the footer's first row, Previous project): the words may end inside the footer's own top padding (as before the
+ * reading effect), at least END_LINKS above the links, and where the last step's heading would otherwise stay in the
+ * top fade, as close as END_LINKS_MIN (2026-09-30: measured from the footer's box, which adds its own 56 to 120px of
+ * top padding, the words ended 104 to 112px above the links on phones, and the last heading stayed under the band or
+ * the bar).
+ */
+const END_LINKS = 40
+const END_LINKS_MIN = 24
 
 /** The floating navigation pill (px, in the window), with a few pixels of room around it. */
 interface Shade {
@@ -178,228 +193,85 @@ interface Shade {
 /**
  * The pill once the page is scrolled (Header.tsx sizes it to --pill-w; layout.css centres it 6px below the top, 48px
  * tall, at most the window less 32px). Derived rather than read, since the page may be measured before the header
- * floats or while it gathers into the pill.
+ * floats or while it gathers into the pill; its width from the header's contents, as Header.tsx takes it (pill.ts),
+ * since the page is measured before the header has measured itself (on a first load, and as a page change adds Back).
  */
 function navShade(): Shade {
   const header = document.querySelector<HTMLElement>('.site-header')
   const width = document.documentElement.clientWidth
-  const pill = Math.min(parseFloat(header ? getComputedStyle(header).getPropertyValue('--pill-w') : '') || 720, width - 32)
+  const pill = Math.min((header && pillWidth(header)) || parseFloat(header ? getComputedStyle(header).getPropertyValue('--pill-w') : '') || 720, width - 32)
   // A few pixels of room around the pill, where a line would still read as running under it.
   return { top: 3, bottom: 57, left: (width - pill) / 2 - 3, right: (width + pill) / 2 + 3 }
 }
 
-/** The header's bar is opaque (below 900px on the case studies, layout.css): nothing shows through it. */
-function barOpaque() {
-  const header = document.querySelector<HTMLElement>('.site-header')
-  if (!header) return false
-  const bar = getComputedStyle(header, '::before')
-  const alpha = /rgba?\([^)]*[,/]\s*([\d.]+)\s*\)/.exec(bar.backgroundColor)
-  const opaque = bar.backgroundColor.startsWith('rgb(') || (alpha !== null && Number(alpha[1]) > 0.9)
-  return opaque && (parseFloat(bar.opacity) || 0) > 0.9
-}
-
-/** What covers the words once the page is scrolled by some amount (px, in the window). */
-interface Cover {
-  /**
-   * Ranges of the window's height where none of the words show: above its top edge, or under the header's bar, and on
-   * phones under the held band.
-   */
-  hidden: readonly (readonly [number, number])[]
-  /** A line within this many px below a covered range crowds its edge (on phones, the band's fade). */
-  near: number
-  /** The floating pill, over the words' top on wide screens (lines under it are charged by their area), if any. */
-  pill: Shade | null
-}
+/**
+ * The header's bar is opaque (black on the case studies below 900px and in windows at most 540px tall, layout.css;
+ * CASE_BAR): nothing shows through it. Taken from the same query as the bar, not read from the bar's colour, which
+ * eases in over a page change while the new page is first measured.
+ */
+const barOpaque = () => window.matchMedia(CASE_BAR).matches
 
 /**
- * The scroll each step keeps (px; Harlie's QA pass, 2026-09-28, the short told pages): about 18% of the window's
- * height, 140 to 220px, more than one notch of a mouse wheel (40 to 100px), so a notch never passes over a step.
- * A page whose words and picture fit the window still scrolls this far for each step after the first. At 12px a step
- * (the previous value) one notch went from the first step to the last and the middle picture was never shown.
+ * Where a flipped page's words keep clear of the floating pill (pillClear): from 1200px wide, in windows taller than
+ * 540px. Below 1200px the pill reaches so far over the words' column that keeping clear of it would leave the words
+ * under 300px wide: there the words' top fade takes the lines passing under it (Harlie's request, 2026-09-30).
  */
-const stepScroll = () => Math.round(Math.min(220, Math.max(140, 0.18 * window.innerHeight)))
-
-/** What settleEnd weighs, in px: in the window once the page is scrolled to its end, unless said otherwise. */
-interface EndRoom {
-  /** Where the words would end: level with the held picture (Harlie's request). */
-  rest: number
-  /** The lowest the words may end: clear of the footer's links. */
-  lowest: number
-  /** Where the words end on the page (from the document's top); at or below it, the page does not scroll at all. */
-  last: number
-  /** The least the page scrolls (stepScroll for each step after the first, and on phones the band's travel). */
-  least: number
-  /** Above this a heading is wholly out of view: the window's top, or the header's bar, or on phones the held band. */
-  covered: number
-  /** The footer's links (the top of its first row, the bottom of its last). */
-  row: { top: number; bottom: number }
-  /** The window's height. */
-  vh: number
-  bands: readonly HeadingBand[]
-  lines: readonly TextLine[]
-  /** What covers the words at a given scroll. */
-  cover: (scroll: number) => Cover
-  /** Phones: the last step's whole block, kept below the band at the end where the room allows. */
-  tail?: HeadingBand
-}
+const PILL_CLEAR = '(min-width: 1200px) and (min-height: 541px)'
 
 /**
- * Where the words end in the window once the page is scrolled to its end (Harlie's brief, 2026-09-28: headings "fully
- * visible at settled states", and no text left behind the navigation). The page rests by itself at its top and at its
- * end, and on a short page it scrolls only a little, so a title could stop half under the floating navigation there.
- * From `rest`, first downwards (less scroll, never less than `least`): each heading left across its safe line comes
- * down to it, and the footer's links are whole on opening (not cut by the window's bottom), as long as the words stay
- * clear of them; failing that, the headings alone come down. Otherwise upwards (more scroll), until each heading in the
- * way is wholly out of view, and the footer's links wholly below the window on opening.
- *
- * Then, near that end, the end where the words are cut least is chosen, the headings' rule still kept (cost): a line
- * of words is the unit, not a whole block, since blocks are closer together than the safe area is tall. Harlie's QA
- * pass, 2026-09-28: at 1024 to 1536px a line rested half across the window's top edge (only lines under the pill were
- * counted), on tablets the introduction was sliced by the header's black bar, and on phones a step's words showed under
- * the band with its heading hidden. A cut line is never chosen where a whole one can be. Where the words are taller
- * than the window and the pill spans their column (about 900 to 1150px wide), the window's top always holds a line of
- * the introduction or a step, since a heading may not rest in the safe area; that line is then whole, reaching under
- * the pill's end as little as it can.
+ * How far in from its left edge the words' column starts its lines where the words stand on the right (a flipped page)
+ * and the floating pill's right end reaches over the column (px; 0 where it does not): 8px clear of the pill (navShade
+ * keeps 3px of them), so no line's first letters rest under it at the page's end (2026-09-30, with the flip:
+ * "afePress's opportunity" at 1440px), and at 1280px CafePress UK's role still keeps to one line. The column's own
+ * inset gives way first (case-v16.css, --pill-clear). Words on the left need none: only the lines' uneven ends meet the
+ * pill there, and the top fade takes them.
  */
-function settleEnd({ rest, lowest, last, least, covered, row, vh, bands, lines, cover, tail }: EndRoom) {
-  // The page's scroll once the words end at `end`, and a heading's place then.
-  const scroll = (end: number) => Math.max(0, last - end)
-  const at = (end: number, h: HeadingBand) => ({ top: h.top - scroll(end), bottom: h.bottom - scroll(end) })
-  const across = (end: number) =>
-    bands.find((h) => {
-      const p = at(end, h)
-      return p.bottom > covered && p.top < h.safe
-    })
-  // On opening (the page at its top), the footer's links are cut by the window's bottom.
-  const cut = (end: number) => row.bottom + scroll(end) > vh && row.top + scroll(end) < vh
-  // The lowest the words may end and still leave the story its least scroll.
-  const most = Math.min(lowest, last - least)
-  // Phones: low enough for the last block to be whole below the band, where the footer leaves room for it.
-  const start = Math.min(tail ? Math.max(rest, tail.safe + tail.bottom - tail.top + 1) : rest, most)
-  // A pixel or two to spare either way, so rounding the space to whole pixels never leaves a sliver across.
-  const down = (links: boolean) => {
-    let end = start
-    for (let k = 0; k <= bands.length + 2; k++) {
-      const h = across(end)
-      if (h) end += h.safe - at(end, h).top + 1
-      else if (links && cut(end)) end = last - Math.max(0, vh - row.bottom - 1)
-      else return end
-      if (end > most) return null
-    }
-    return null
-  }
-  const up = () => {
-    let end = start
-    for (let k = 0; k <= bands.length + 2; k++) {
-      const h = across(end)
-      if (h) end -= at(end, h).bottom - covered + 2
-      else if (cut(end)) end = last - (vh - row.top + 1)
-      else break
-    }
-    return end
-  }
-  const found = down(true) ?? down(false) ?? up()
-  // How much of the words is cut at `end`: 1000 for each line cut across the edge of what covers it (the window's top,
-  // the header's bar, the band's edges), 200 for a line crowding such an edge, 300 for each step whose words show
-  // while its heading is hidden, and on wide screens the area (px²) of the lines under the pill, a capsule.
-  const cost = (end: number) => {
-    const s = scroll(end)
-    const { hidden, near, pill } = cover(s)
-    // The covered ranges joined where they meet (the band held right under the header's bar), and their edges.
-    const merged: [number, number][] = []
-    for (const [a, b] of [...hidden].sort((p, q) => p[0] - q[0])) {
-      const prev = merged[merged.length - 1]
-      if (prev && a <= prev[1] + 0.5) prev[1] = Math.max(prev[1], b)
-      else merged.push([a, b])
-    }
-    const edges = merged.flatMap(([a, b]) => [a, b]).filter(Number.isFinite)
-    const headHidden = new Map<number, boolean>()
-    const bodyShown = new Map<number, boolean>()
-    let sum = 0
-    for (const l of lines) {
-      const top = l.top - s
-      const bottom = l.bottom - s + (l.glow ? 6 : 0)
-      // Cut: across an edge, with a pixel to spare either side (the space under the words is rounded to whole pixels).
-      const across = edges.some((e) => top < e + 1 && bottom > e - 1)
-      const shown = !across && !merged.some(([a, b]) => top >= a - 1 && bottom <= b + 1)
-      if (across) sum += 1000
-      else if (shown && merged.some(([, b]) => top >= b - 1 && top < b + near)) sum += 200
-      if (l.step >= 0) {
-        if (l.head) headHidden.set(l.step, (headHidden.get(l.step) ?? true) && !shown)
-        else if (shown) bodyShown.set(l.step, true)
-      }
-      if (!pill || !shown || bottom <= pill.top + 1 || top >= pill.bottom - 1) continue
-      // Under the pill (a capsule): a line its lower edge cuts counts as cut; a whole line under it, by how far it
-      // reaches in (px, on average), since at some widths the words' column always runs under the pill's end.
-      const r = (pill.bottom - pill.top) / 2
-      const mid = pill.top + r
-      let area = 0
-      for (let y = Math.max(top, pill.top) + 0.5; y < Math.min(bottom, pill.bottom); y++) {
-        const half = Math.sqrt(Math.max(0, r * r - (y - mid) ** 2))
-        area += Math.max(0, Math.min(l.right, pill.right - r + half) - Math.max(l.left, pill.left + r - half))
-      }
-      if (area < 1) continue
-      sum += bottom > pill.bottom - 1 ? 1000 : 150 + (2 * area) / (bottom - top)
-    }
-    for (const [step, gone] of headHidden) if (gone && bodyShown.get(step)) sum += 300
-    // Never an end with none of the steps' words in view (Harlie's QA pass, 2026-09-28: on landscape phones and short
-    // phones the steps had all gone up under the header or the band, and the page ended on an empty space).
-    if (![...headHidden.values()].some((gone) => !gone) && !bodyShown.size) sum += 5000
-    return sum
-  }
-  // Least cut first, then the footer's links whole on opening, then the least change from `found` (moving up, more
-  // scroll, leaves a larger space under the words, so it counts a little more, and goes at most a third of the window:
-  // further, the window would show little but that space).
-  const score = (end: number) => cost(end) + (cut(end) ? 50 : 0) + (end < found ? 1.5 : 1) * Math.abs(end - found)
-  let best = found
-  let bestScore = score(found)
-  for (let end = Math.floor(found - vh / 3); end <= most; end++) {
-    if (across(end)) continue
-    const s = score(end)
-    if (s < bestScore) {
-      best = end
-      bestScore = s
-    }
-  }
-  return best
-}
+const pillClear = (column: HTMLElement) => Math.max(0, Math.ceil(navShade().right + 5 - column.getBoundingClientRect().left))
 
 /**
  * The picture itself, directly on the page (Harlie's request, 2026-09-26: no device or frame PNG): a box in the
  * media's own proportions with rounded corners and a soft glow (case-v16.css), the recording or screenshot filling it
  * whole (never cropped).
  */
-function MediaBox({ aspect, onZoom, zoomLabel, children }: { aspect: number; onZoom?: (trigger: HTMLElement) => void; zoomLabel?: string; children: ReactNode }) {
+function MediaBox({ aspect, onZoom, zoomLabel, below, children }: { aspect: number; onZoom?: (trigger: HTMLElement) => void; zoomLabel?: string; below?: ReactNode; children: ReactNode }) {
   return (
-    <div className="story__stage story__box" style={{ '--aspect': aspect } as CSSProperties}>
+    <div className={below ? 'story__stage story__box story__box--ctl' : 'story__stage story__box'} style={{ '--aspect': aspect } as CSSProperties}>
       <div className="story__screen">{children}</div>
       {onZoom && <ZoomButton onZoom={onZoom} label={zoomLabel} />}
+      {/* Under the picture, inside the stage's room (the recording's control line; case-v16.css --ctl-room). */}
+      {below}
     </div>
   )
 }
 
 /**
- * A case study told in a few compact steps (brief v21). The introduction and three short groups (a heading and one
- * explanation) run down the left; the stage stays in place on the right (recordings and screenshots directly on the
+ * A case study told in a few compact steps (brief v21). The introduction and a few short groups (a heading and one
+ * explanation) run down one column; the stage stays in place in the other (recordings and screenshots directly on the
  * page with rounded corners and a soft glow, whole; Jumpstart's phones stand free), below the header, centred in its
  * column and never taller than 72% of the window, so the whole composition sits inside the window with a gutter on
- * each side. Its opening state is level with the introduction.
+ * each side. Its opening state is level with the introduction. The words are on the left and the stage on the right,
+ * or, on every other told page, the other way round (data-flip, from the project's order: caseSide.ts; Harlie's
+ * request, 2026-09-30); everything here is measured from the page as laid out, so it follows either side.
  *
- * A step becomes the current one when its top reaches the reading line, and the stage changes with it at that moment:
- * a recording plays that step's segment (or, playing by itself, the whole recording loops whatever the step),
+ * The words read like a film (Harlie's request, 2026-09-30, with normal page scrolling kept): they fade towards the
+ * window's top and bottom edges (the fading window, FADE_PILL; case-v16.css), and the current step is the one nearest
+ * the reading line, the middle of the window below what covers its top (the header's black bar, on phones the held
+ * band). It is bright, with the one pink line beside it (moving to each new current step), and the other steps are
+ * dimmed; the introduction stays bright. The first step is current from the start; the steps start low enough for it
+ * to reach the reading line, and the page ends with the last step's middle on it (or higher, where the footer needs
+ * the room, though never so high that its heading rests in the top fade where there is room below it: END_LINKS), so
+ * the first and the last are each read there in turn. The stage changes with the current step: a
+ * recording plays that step's segment (or, playing by itself, the whole recording loops whatever the step),
  * Jumpstart's phones stand in a row with the current section's brought forward, and artifacts are all shown at once,
  * the step's own large and the others small: the next step's picture grows where it stands as the large one shrinks,
  * following the scroll (over the last part of a step, done as the next step becomes current). Only the steps' own
- * positions drive this; the length of the rest of the page never does. Where the page is too short for the steps to
- * reach the line in turn, each step after the first still keeps its own scroll (stepScroll; on phones once the band is
- * held), the changes spaced evenly: the words come to their end and are held there, like the picture, while the
- * steps change, then the footer rises beneath them (Harlie's QA pass, 2026-09-28). The current step takes a glowing
- * rule and a glowing heading; the others stay fully readable.
+ * positions drive this.
  *
  * Phones and tablets held upright (PHONE): the introduction, then a compact stage held under the header (about 30% of
  * the screen), with the steps below it.
  *
- * Reduced motion: no easing or movement (the gallery changes at once), and a recording shows one still per step.
+ * Reduced motion: no easing or movement (the gallery changes at once, the line and the dimming at once), and a
+ * recording shows one still per step.
  */
 export function CaseStory({ title, meta, lede, steps, stage }: { title: string; meta: readonly string[]; lede: ReactNode; steps: readonly StoryStep[]; stage: Stage }) {
   const listRef = useRef<HTMLOListElement>(null)
@@ -411,162 +283,257 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
     const list = listRef.current
     if (!list) return
     const n = steps.length
-    /** Scroll positions where each step becomes current, the page's last scroll position, and the space added under the steps. */
-    const m = { t: [0], end: 1, pad: 0 }
+    /**
+     * Scroll positions where each step becomes current, the page's last scroll position, the space added under the
+     * steps and above them (lead), the words' room kept clear of the pill (pillClear), the boxes that carry the fading
+     * window (the introduction, the list of steps), the scroll over which the top fade grows in (fadeIn), its strength
+     * last set, and the steps' top fade's lower edge (px in the window): as measured (b), at the page's end (endB),
+     * last set (listB). Where the compositor holds the fading window (HELD), where each box's mask is placed in it (at:
+     * the box's top in the page).
+     */
+    const m = { t: [0], end: 1, pad: 0, lead: 0, clear: 0, fade: [] as HTMLElement[], fadeIn: FADE_IN, strength: -1, b: 0, endB: 0, listB: -1 }
+    const holds = new Map<HTMLElement, { at: number }>()
     const cs = list.closest<HTMLElement>('.cs')
     const intro = cs?.querySelector<HTMLElement>(':scope > .cs__intro')
+    const body = list.parentElement ?? list
     // A refresh queued below is dropped once the page has gone (the next page's triggers refresh themselves).
     let live = true
+    // The introduction's slide, written as the page is measured (slideKeyframes), where the compositor holds the fading
+    // window; removed with the page.
+    const slideName = ++slides
+    const slideSheet = HELD ? document.head.appendChild(document.createElement('style')) : null
+    // The last scroll position fade() had, and when (its lead at the page's end, below), and the exact place written once
+    // the scrolling stops.
+    let lastY = -1
+    let lastAt = 0
+    let settleEnd = 0
     const measure = () => {
-      // The words where the page places them: a hold (below) is let go while they are measured, in the same frame.
-      if (cs) cs.dataset.measuring = ''
-      const y = window.scrollY
+      // With the words on the right beside the floating pill (a flipped page from 1200px, PILL_CLEAR), their lines
+      // start clear of the pill's right end (pillClear). Set before anything is read, since it moves the words' line
+      // breaks. A change is measured again two frames on, once the title has been fitted to the column's new width:
+      // CaseTitle's observer reports after the next frame's callbacks, and a title still fitted to the old width left
+      // the words' end where they no longer were (a first clearance taken from a pill not yet measured: lines cut by
+      // the window's top at 1920px).
+      if (cs && intro) {
+        const clear = cs.hasAttribute('data-flip') && window.matchMedia(PILL_CLEAR).matches ? pillClear(intro) : 0
+        cs.style.setProperty('--pill-clear', `${clear}px`)
+        if (clear !== m.clear) {
+          m.clear = clear
+          requestAnimationFrame(() => requestAnimationFrame(() => live && ScrollProgress.refresh()))
+        }
+      }
       const vh = window.innerHeight
-      const items = [...list.children] as HTMLElement[]
-      const tops = items.map((el) => el.getBoundingClientRect().top + y)
-      const body = list.parentElement ?? list
-      const lastBottom = items[n - 1].getBoundingClientRect().bottom + y
+      const wide = !window.matchMedia(PHONE).matches
+      // Phones: the band held under the header (the stage) covers what passes beneath it; its height is part of the
+      // navigation's safe area there (--story-band, case-v16.css).
+      const band = !wide ? cs?.querySelector<HTMLElement>('.cs__media') : null
+      cs?.style.setProperty('--story-band', band ? `${band.offsetHeight}px` : '0px')
+      const header = document.querySelector<HTMLElement>('.site-header')?.offsetHeight ?? 0
+      const bar = barOpaque() ? header : 0
+      // What covers the window's top once the page is scrolled: nothing where the header floats as the translucent
+      // pill, else the header's black bar, and on phones the band held under it (from where it is held).
+      const covered = band ? (parseFloat(getComputedStyle(band).top) || 0) + band.offsetHeight : bar
+      // The reading line (px from the window's top): the middle of the window below what covers its top.
+      const read = (covered + vh) / 2
+      // The fading window's top edge (FADE_PILL): the introduction's from the header, the steps' (on phones) from the
+      // band; the page's first step never reaches the band's fade while the band still travels, being below it.
+      const ramp = fadeRamp(vh)
+      const edge = (el: HTMLElement | null | undefined, from: number) => {
+        el?.style.setProperty('--fade-a', `${from || FADE_PILL}px`)
+        el?.style.setProperty('--fade-b', `${(from || header) + ramp}px`)
+      }
+      edge(intro, bar)
+      edge(list, covered)
+      // The steps' --fade-b as measured (fade() eases it at the page's end, below), written again by the next fade().
+      m.b = (covered || header) + ramp
+      m.listB = -1
+      // The page is scrolled to its top and back as it is measured (ScrollProgress): no lead from that.
+      lastY = -1
+      // The top fade is whole by the time the title's first line (its letters' box) reaches what covers the window's
+      // top: the black bar's edge, or the floating pill's lower edge (FADE_IN).
+      const titleEl = intro?.querySelector<HTMLElement>(':scope > .cs__words > .cx-title')
+      let lift = 0
+      if (titleEl) {
+        const range = document.createRange()
+        range.selectNodeContents(titleEl)
+        const top = Math.min(titleEl.getBoundingClientRect().top, range.getBoundingClientRect().top) + window.scrollY
+        m.fadeIn = Math.max(1, Math.min(FADE_IN, Math.floor(top - (bar || navShade().bottom))))
+        // Held by the compositor (HELD, 2026-09-30), the introduction's fade slides into place over the same scroll
+        // instead (case-v16.css, fade-slide): how far it stands above its place at each quarter of it, from clearing
+        // the title's letters on arrival (the fade's lower edge, px in the window, less their top in the page, the
+        // window's at arrival). Its bottom fade sits as far lower in its mask (--fade-lift), so on arrival it stands
+        // where it always did. Whole pixels, a pixel at a time (slideKeyframes).
+        if (HELD && intro && slideSheet) {
+          const clear = (bar || header) + ramp - top
+          const name = `fade-slide-${slideName}`
+          slideSheet.textContent = slideKeyframes(name, m.fadeIn, clear)
+          intro.style.setProperty('--fade-slide', name)
+          intro.style.setProperty('--fade-slide-back', `${name}-back`)
+          intro.style.setProperty('--fade-in', `${m.fadeIn}px`)
+          lift = Math.round(slideAt(0, m.fadeIn, clear))
+          intro.style.setProperty('--fade-lift', `${lift}px`)
+        }
+      }
+      /*
+       * Room before the first step (Harlie's request, 2026-09-30: "add substantial internal padding ... so the first
+       * and last ideas can actually reach the centered, fully visible position"): the introduction is already above it,
+       * so the steps start lower only where the page opens with the first step's middle above the reading line, just
+       * enough for it to start there.
+       */
+      const first = list.firstElementChild?.getBoundingClientRect()
+      const lead = first ? Math.max(0, Math.ceil(read - (first.top + window.scrollY + first.height / 2 - m.lead))) : 0
+      if (lead !== m.lead) {
+        m.lead = lead
+        cs?.style.setProperty('--story-lead', `${lead}px`)
+      }
+      const y = window.scrollY
+      const boxes = [...list.children].map((el) => el.getBoundingClientRect())
+      const tops = boxes.map((b) => b.top + y)
+      const bottoms = boxes.map((b) => b.bottom + y)
+      const lastBottom = bottoms[n - 1]
       const footer = document.querySelector<HTMLElement>('.site-end')
       const footerBox = footer?.getBoundingClientRect()
       const footerTop = footerBox ? footerBox.top + y : document.documentElement.scrollHeight
       const footerH = footerBox?.height ?? 0
-      // At the end of the page the words end level with the bottom of the held picture (Harlie's request), so the
-      // footer follows close under both; on phones (the picture is not held beside the words) a short gap.
-      const stage = cs?.querySelector<HTMLElement>('.story__hold > .story__stage')
-      const wide = !window.matchMedia(PHONE).matches
-      // The picture's visible bottom: its lowest image (the screenshot, or the largest phone), never below the stage's
-      // own box, and not the phones' padded box.
-      const box = stage?.getBoundingClientRect().bottom ?? 0
-      const shown = stage ? [...stage.querySelectorAll('img')].map((el) => el.getBoundingClientRect().bottom).filter((b) => b > 0) : []
-      const stageBottom = shown.length ? Math.min(box, Math.max(...shown)) : box
       // The footer's top once the page is scrolled to its end, the space between the words and the footer that does
       // not change (all but the space added here), and the footer's links then (its own top padding above them).
       const footerAtEnd = vh - footerH
       const between = footerTop - lastBottom - m.pad
       const links = [...(footer?.querySelectorAll<HTMLElement>('.site-end__inner > *') ?? [])].map((el) => el.getBoundingClientRect())
-      const row = {
-        top: footerAtEnd + (links.length ? Math.min(...links.map((r) => r.top + y)) - footerTop : 0),
-        bottom: footerAtEnd + (links.length ? Math.max(...links.map((r) => r.bottom + y)) - footerTop : footerH),
-      }
+      const rowTop = footerAtEnd + (links.length ? Math.min(...links.map((r) => r.top + y)) - footerTop : 0)
       // The footer's rows once it has risen (from its first row to the window's bottom): the held picture keeps above
       // them (case-v16.css --stage-h; Harlie's QA pass, 2026-09-28: on landscape phones and short windows "Next
       // project" came up over the picture).
-      cs?.style.setProperty('--end-rows', `${Math.ceil(vh - row.top)}px`)
-      // Phones: the band held under the header (the stage) covers what passes beneath it; its height is part of the
-      // navigation's safe area there (--story-band, case-v16.css). It first scrolls with the page (`travel`).
-      const band = !wide ? cs?.querySelector<HTMLElement>('.cs__media') : null
-      cs?.style.setProperty('--story-band', band ? `${band.offsetHeight}px` : '0px')
-      const header = document.querySelector<HTMLElement>('.site-header')?.offsetHeight ?? 0
-      const bar = barOpaque() ? header : 0
-      const stickyTop = band ? parseFloat(getComputedStyle(band).top) || 0 : 0
-      const bandH = band?.offsetHeight ?? 0
-      const travel = band ? bandTravel(band) : 0
-      const covered = band ? stickyTop + bandH : bar
-      const step = stepScroll()
-      // What covers the words at a given scroll: the window's top (or the header's opaque bar), the floating pill on
-      // wide screens, and on phones the band, held once it has travelled (a fade of 20px under it).
-      const pill = !bar ? navShade() : null
-      const cover = (s: number): Cover => {
-        const hidden: [number, number][] = [[-Infinity, bar]]
-        if (band) {
-          const top = Math.max(stickyTop, stickyTop + travel - s)
-          hidden.push([top, top + bandH])
-        }
-        return { hidden, near: band ? 20 : 8, pill }
-      }
-      // Where the words end at the bottom of the page (in the window), then moved so that no heading rests across the
-      // navigation's safe area, the fewest lines are cut, and the footer's links are not cut on opening (Harlie's
-      // brief, 2026-09-28; settleEnd). Coming down, the words may end inside the footer's own top padding, as far as
-      // 40px above its links.
-      const rest = Math.min(wide && stage ? Math.min(stageBottom, footerAtEnd - 24) : footerAtEnd - 56, footerAtEnd - between)
-      const lowest = Math.max(footerAtEnd - between, row.top - 40)
-      // The page's least scroll: each step after the first keeps its own (and on phones the band first travels).
-      const least = travel + step * (n - 1)
-      const bands = cs ? headingBands(cs, y) : []
-      // Phones: the last step with its heading's safe line.
-      const tailBand = !wide && bands.length ? { top: tops[n - 1], bottom: lastBottom, safe: bands[bands.length - 1].safe } : undefined
-      // The words' end is chosen for the words alone (on phones with the band held), since they can be held (below).
-      const lines = cs ? textLines(cs, y) : []
-      const room = { lowest, last: lastBottom, least: travel, covered, row, vh, bands, lines, cover, tail: tailBand }
-      let settled = cs ? settleEnd({ ...room, rest }) : rest
-      // On phones, words to be held come to rest as low as they may, the steps whole under the band where they fit
-      // (the gap kept above the footer is for a page whose own length ends it).
-      if (cs && !wide && lastBottom - settled < least - 0.5) settled = settleEnd({ ...room, rest: lowest })
-      // Keep the introduction and reading blocks on the same scroll trajectory.
-      // Holding only the steps caused the title to slide away independently at the page end.
-      // The page's scroll once the complete text column reaches its resting position.
-      const moved = Math.max(0, lastBottom - settled)
+      cs?.style.setProperty('--end-rows', `${Math.ceil(vh - rowTop)}px`)
       /*
-       * Where the words reach their end before the steps have had their scroll (a short page; Harlie's QA pass,
-       * 2026-09-28), they stop there and are held, like the picture beside them (on phones, the steps under the held
-       * band), while the rest of the scroll moves through the steps; then the footer rises beneath them. The page ends
-       * on the composition chosen for the words (on wide screens the title, introduction and every step whole, level
-       * with the picture), not with the words pushed up under the navigation or the band. The held words stay in the
-       * story's grid: a last row makes the room they are held through (--hold-rest), and where they end inside the
-       * footer's top padding the footer comes up over that row (--hold-under). Elsewhere the page's own length does the
-       * work: the space under the words (the body's padding, or a negative margin for space taken back).
+       * The page's end (Harlie's request, 2026-09-30): the words end with the last step's middle on the reading line,
+       * where it is current, or higher where the footer needs the room: at least END_LINKS above the footer's links
+       * (inside the footer's own top padding). Where the last step's heading would then rest in the top fade (short
+       * phones, landscape phones), the words come down, as far as END_LINKS_MIN above the links, and the steps' top
+       * fade gives way at the end just enough for the heading (endB, fade()), never closer than END_EDGE to what covers
+       * the window's top. Where even that leaves too little room (a last step taller than the room between the band
+       * or the bar and the links), the heading rests as low as it can. The page's own length does it: the space under
+       * the words (the body's padding, or a negative margin for space taken back), at least enough for the footer to
+       * meet the window's bottom (the page has no minimum height of its own here, case-v16.css).
        */
-      const holding = wide && Boolean(cs && intro) && moved < least - 0.5
-      let pad: number
-      if (holding && cs && intro) {
-        // Hold the complete text column while the remaining media steps finish.
-        const scrollTo = least
-        pad = Math.round(scrollTo + vh - footerH - lastBottom - between)
-        const under = Math.max(0, Math.ceil(settled - footerAtEnd + between))
-        cs.style.setProperty('--hold-rest', `${pad + under}px`)
-        cs.style.setProperty('--hold-under', `${-under}px`)
-        cs.style.setProperty('--hold-intro', `${(intro.getBoundingClientRect().top + y - moved).toFixed(1)}px`)
-        cs.style.setProperty('--hold-body', `${(body.getBoundingClientRect().top + y - moved).toFixed(1)}px`)
-        // The introduction and steps always remain together.
-        cs.dataset.hold = 'words'
-        body.style.paddingBottom = ''
-        body.style.marginBottom = ''
-      } else {
-        // The page has no minimum height of its own here (case-v16.css), so on a short page the words can come down to
-        // the picture; the space still reaches far enough for the footer to meet the window's bottom.
-        const fill = m.pad + vh - footerH - footerTop
-        pad = Math.round(Math.max(footerAtEnd - settled - between, fill))
-        if (cs) delete cs.dataset.hold
-        body.style.paddingBottom = pad > 0 ? `${pad}px` : ''
-        body.style.marginBottom = pad < 0 ? `${pad}px` : ''
-      }
-      if (cs) delete cs.dataset.measuring
+      const lastH = lastBottom - tops[n - 1]
+      let settled = Math.min(read + lastH / 2, rowTop - END_LINKS)
+      if (settled - lastH < m.b) settled = Math.max(settled, Math.min(m.b + lastH, rowTop - END_LINKS_MIN))
+      m.endB = Math.min(m.b, Math.max((covered || FADE_PILL) + END_EDGE, settled - lastH))
+      const fill = m.pad + vh - footerH - footerTop
+      const pad = Math.round(Math.max(footerAtEnd - settled - between, fill))
+      body.style.paddingBottom = pad > 0 ? `${pad}px` : ''
+      body.style.marginBottom = pad < 0 ? `${pad}px` : ''
       if (pad !== m.pad) {
         m.pad = pad
         requestAnimationFrame(() => live && ScrollProgress.refresh())
       }
-      // Each step becomes current when its top reaches the reading line.
-      const end = Math.max(1, document.documentElement.scrollHeight - vh)
-      const raw = tops.map((top) => top - line() * vh)
-      const lim = end - Math.min(0.35 * vh, 260)
-      // Crowded (a short page: the last step could not reach the line with room to spare, a step would get less than
-      // its scroll, the first less than half of it, or on phones one would change before the band is held): the steps
-      // after the first change at even intervals over the scroll there is once the band is held, the first and the last
-      // keeping half an interval, so every step (and its picture) is current in turn, whatever the wheel's notch.
-      // Held words never reach the line: their steps change evenly too. On phones whose words scroll under the band
-      // (not held), a step only counts as crowded when a notch could pass over it: spread evenly over a long page, a
-      // step changed long after its words had gone under the band (Harlie's QA pass, 2026-09-28: on short phones the
-      // last step lit up only once its heading was hidden).
-      const scrolling = Boolean(band) && !holding
-      const gapLeast = scrolling ? 0.75 * step : Math.max(0.6 * (end / n), 0.75 * step)
-      const crowded = n > 1 && (holding || raw[n - 1] > lim || raw[1] < travel + 0.5 * step || raw.some((r, k) => k > 0 && r - raw[k - 1] < gapLeast))
-      const even = (end - travel) / Math.max(1, n - 1)
-      m.t = crowded ? raw.map((_, k) => (k === 0 ? 0 : travel + (k - 0.5) * even)) : raw
-      // There, each step is current by the time its heading is 24px from going under the band, at the latest.
-      if (scrolling) m.t = m.t.map((t, k) => (k === 0 ? t : Math.min(t, tops[k] - covered - 24)))
-      m.end = end
+      // The current step is the one nearest the reading line: each after the first becomes current as the line passes
+      // the middle of the space between it and the step before. The first is current from the start (Harlie's request).
+      m.t = tops.map((top, k) => (k === 0 ? 0 : Math.max(0, (bottoms[k - 1] + top) / 2 - read)))
+      m.end = Math.max(1, document.documentElement.scrollHeight - vh)
+      // The boxes that carry the fading window, and the offset in its box of each piece a page change carries
+      // (transition/pieces.ts: the title, the details, the lede, each step), which takes the mask itself while the
+      // change pictures the page (case-v16.css). The boxes' own positions are read as laid out (laidOut): where the
+      // compositor holds them, they are drawn elsewhere.
+      m.fade = intro ? [intro, list] : [list]
+      // Held (HELD, 2026-09-30): each box reaches from above the page's top to below the window's bottom, as far as the
+      // screen's height where that is more (a phone's toolbar going), so it covers the whole window wherever it is held
+      // (case-v16.css), the introduction as much further as its slide lifts it; and its mask is placed at the page's
+      // top in it, where the window is while it is held.
+      const reach = Math.max(vh, window.screen?.width || 0, window.screen?.height || 0) + HOLD_ROOM
+      for (const box of m.fade) {
+        if (HELD) {
+          // The reach it has now (from an earlier measure, or an earlier run of this effect), taken off first.
+          const wasUp = parseFloat(box.style.getPropertyValue('--hold-up')) || 0
+          const wasDown = parseFloat(box.style.getPropertyValue('--hold-down')) || 0
+          const at = laidOut(box).top + y
+          const up = Math.max(0, Math.ceil(at + wasUp)) + HOLD_ROOM
+          const down = Math.max(0, Math.ceil(reach + (box === intro ? lift : 0) - (at + box.offsetHeight - wasDown)))
+          if (up !== wasUp) box.style.setProperty('--hold-up', `${up}px`)
+          if (down !== wasDown) box.style.setProperty('--hold-down', `${down}px`)
+          const placed = laidOut(box).top + y
+          box.style.setProperty('--fade-hold', `${(-placed).toFixed(2)}px`)
+          holds.set(box, { at: placed })
+        }
+        const top = laidOut(box).top
+        for (const piece of box.querySelectorAll<HTMLElement>(':scope > .story__step, :scope > .cs__words > :is(.cx-title, .cx-meta, .cx-lede)')) {
+          piece.style.setProperty('--fade-o', `${(piece.getBoundingClientRect().top - top).toFixed(1)}px`)
+        }
+      }
     }
-    const update = () => {
-      const y = window.scrollY
-      // The first step is current from the start (Harlie's request), before it reaches the reading line.
-      if (y < m.t[0]) {
-        setActive(0)
-        follow.current?.(0, 0, Math.max(1, m.t[1] ?? m.end))
+    /*
+     * The fading window follows the window, not the words (case-v16.css): the offset of each box from the window's
+     * top, read at every scroll (the boxes move with the page, and the title is refitted to its column as the fonts
+     * arrive), the top fade's strength, grown in over the page's first scroll (fadeIn) so the title reads whole on
+     * arrival, and the steps' top fade, giving way over the last FADE_IN px to the page's end (endB). Written only as
+     * the page scrolls or is measured.
+     *
+     * Where the compositor holds the fading window (HELD, 2026-09-30), the boxes' offsets here only place the pieces'
+     * own masks for a page change (with the introduction's slide), the top fade is always whole (its slide does the
+     * growing in), and a box whose place in the page has moved since it was measured has its mask placed again.
+     */
+    const fade = (y: number) => {
+      if (!cs) return
+      if (!HELD) {
+        const strength = Math.min(1, Math.max(0, y / m.fadeIn))
+        if (strength !== m.strength) {
+          m.strength = strength
+          cs.style.setProperty('--fade-top', (1 - strength).toFixed(3))
+        }
+      }
+      /*
+       * Scrolling back up out of the page's end, the compositor draws the page about a frame further up than this
+       * position (HELD): the steps' top fade is written for there, so it never shows lighter than it should (2026-09-30:
+       * a frame at up to 29% over its strength in 360x640 phones' flicks), and at its exact place once the scrolling
+       * stops. Only a steady scroll leads: an isolated jump is drawn where it lands.
+       */
+      const now = performance.now()
+      const lead = HELD && lastY >= 0 && y < lastY ? (lastY - y) * Math.min(1, 20 / Math.max(1, now - lastAt)) : 0
+      lastY = y
+      lastAt = now
+      const endB = (at: number) => Math.round((m.endB + (m.b - m.endB) * Math.min(1, Math.max(0, (m.end - at) / FADE_IN))) * 10) / 10
+      const listB = endB(y - lead)
+      if (m.b > 0 && listB !== m.listB) {
+        m.listB = listB
+        list.style.setProperty('--fade-b', `${listB}px`)
+      }
+      window.clearTimeout(settleEnd)
+      if (listB !== endB(y)) settleEnd = window.setTimeout(() => live && fade(window.scrollY), 150)
+      if (!HELD) {
+        place()
         return
       }
+      for (const box of m.fade) {
+        const hold = holds.get(box)
+        const at = laidOut(box).top + y
+        if (hold && Math.abs(at - hold.at) > 0.05) {
+          hold.at = at
+          box.style.setProperty('--fade-hold', `${(-at).toFixed(2)}px`)
+        }
+      }
+    }
+    // Each box's offset from the window's top (and the introduction's slide), where its mask stands in the window: the
+    // mask's place as the page scrolls where CaseStory writes it (not HELD), and the pieces' own masks for a page change.
+    const place = () => {
+      for (const box of m.fade) {
+        const { top, slide } = laidOut(box)
+        box.style.setProperty('--fade-y', `${(slide - top).toFixed(1)}px`)
+      }
+    }
+    // Held, the pieces' masks are placed only as a page change begins to picture the page (:root[data-shuffle],
+    // transition/pieces.ts), before it is pictured: written at every scroll, it restyled the boxes all through the
+    // scroll, and WebKit drew a frame now and then without the mask (2026-09-30).
+    const shuffleWatch = new MutationObserver(() => {
+      if (document.documentElement.hasAttribute('data-shuffle')) place()
+    })
+    if (HELD) shuffleWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-shuffle'] })
+    const update = () => {
+      const y = window.scrollY
+      fade(y)
       let k = 0
       while (k < n - 1 && y >= m.t[k + 1]) k++
-      const span = k < n - 1 ? m.t[k + 1] - m.t[k] : Math.max(1, m.end - m.t[k])
+      const span = Math.max(1, (k < n - 1 ? m.t[k + 1] : m.end) - m.t[k])
       setActive(k)
       follow.current?.(k, Math.min(1, Math.max(0, (y - m.t[k]) / span)), span)
     }
@@ -579,23 +546,72 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
       },
       onUpdate: update,
     })
+    // The header measures the pill's width again (Header.tsx, --pill-w on it) when its contents change size, as the
+    // fonts arrive: the words' clearance (pillClear) is measured again then, with the page's end. Nothing runs
+    // otherwise.
+    const header = document.querySelector<HTMLElement>('.site-header')
+    let pillW = header?.style.getPropertyValue('--pill-w') ?? ''
+    const pillWatch = new MutationObserver(() => {
+      const w = header?.style.getPropertyValue('--pill-w') ?? ''
+      if (w === pillW) return
+      pillW = w
+      ScrollProgress.refresh()
+    })
+    if (header) pillWatch.observe(header, { attributes: true, attributeFilter: ['style'] })
     return () => {
       live = false
+      slideSheet?.remove()
+      window.clearTimeout(settleEnd)
+      shuffleWatch.disconnect()
+      pillWatch.disconnect()
       trigger.kill()
-      const body = list.parentElement ?? list
       body.style.paddingBottom = ''
       body.style.marginBottom = ''
-      if (cs) delete cs.dataset.hold
+      cs?.style.removeProperty('--story-lead')
     }
   }, [steps.length])
+
+  /*
+   * The one moving line (Harlie's request, 2026-09-30: "make the active pink vertical line move with the active text
+   * section rather than having multiple permanent rules"): each step holds a line, shown only while the step is
+   * current (case-v16.css), so it goes with its step in a page change (transition/pieces.ts). As the current step
+   * changes, the new step's line starts where the last one stands (part way along its own move, if that has not
+   * finished), at its length, and moves and stretches into place beside its step over 0.35s, as the site's
+   * --ease-standard eases (tokens.css). At once under reduced motion.
+   */
+  const reduced = useReducedMotion()
+  const lineAt = useRef(-1)
+  useLayoutEffect(() => {
+    const prev = lineAt.current
+    lineAt.current = active
+    const list = listRef.current
+    if (!list || prev < 0 || prev === active) return
+    const lines = [...list.querySelectorAll<HTMLElement>(':scope > .story__step > .story__line')]
+    const from = lines[prev]
+    const to = lines[active]
+    if (!from || !to) return
+    const was = from.getBoundingClientRect()
+    for (const line of [from, to]) line.getAnimations().forEach((a) => a.cancel())
+    if (reduced) return
+    const now = to.getBoundingClientRect()
+    to.animate(
+      [
+        { transform: `translateY(${(was.top - now.top).toFixed(1)}px)`, height: `${was.height.toFixed(1)}px` },
+        { transform: 'none', height: `${now.height.toFixed(1)}px` },
+      ],
+      { duration: 350, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' },
+    )
+  }, [active, reduced])
 
   const bind = useCallback<Bind>((fn) => {
     follow.current = fn
   }, [])
 
   // Wide windows: the stage is fixed in the window for the whole page (Harlie's request), so the footer rises
-  // beneath it at the end. Its holder takes the right column's place and width, measured from the column.
+  // beneath it at the end. Its holder takes the stage column's place and width (the right column, or the left on a
+  // flipped page), measured from the column itself, so it follows whichever side the column is on.
   const mediaRef = useRef<HTMLDivElement>(null)
+  const flip = useStageOnLeft()
   useLayoutEffect(() => {
     const col = mediaRef.current
     if (!col) return
@@ -615,10 +631,14 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
   }, [])
 
   return (
-    <div className="cs story">
+    <div className="cs story" data-flip={flip || undefined}>
       <header className="cs__intro">
-        <CaseTitle title={title} meta={meta} />
-        <div className="cx-lede">{lede}</div>
+        {/* The introduction's words, as one: where the compositor holds the fading window, this is what moves back by
+            as much as the introduction's fade slides (case-v16.css, 2026-09-30), so its words keep their own transforms. */}
+        <div className="cs__words">
+          <CaseTitle title={title} meta={meta} />
+          <div className="cx-lede">{lede}</div>
+        </div>
       </header>
       <div ref={mediaRef} className="cs__media story__media">
         <div className="story__hold">
@@ -629,8 +649,10 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
         <ol ref={listRef} className="story__steps" role="list">
           {steps.map((s, k) => (
             <li key={s.title} className="story__step" data-current={k === active || undefined}>
+              <span className="story__line" aria-hidden="true" />
               <h2 className="story__title">{s.title}</h2>
-              <p className="story__text">{s.text}</p>
+              {/* A step with two paragraphs (Harlie's text of 2026-09-30) passes them as an array. */}
+              {Array.isArray(s.text) ? s.text.map((t, i) => <p key={i} className="story__text">{t}</p>) : <p className="story__text">{s.text}</p>}
             </li>
           ))}
         </ol>
@@ -782,7 +804,8 @@ function StageView({ stage, active, bind, name }: { stage: Stage; active: number
  * The screenshots of CafePress UK and the AI Leasing Agent in a card-hover gallery (Harlie's request, 2026-09-29: "Try
  * with the pages with multiple photos try something like this but with three small circles on the right side", with
  * 21st.dev's Card Hover; CardHover in src/components/ui; it replaced the image accordion of 2026-09-28). The current
- * step's picture fills the card and every picture stands as a small circle on its right; hovering, focusing or clicking
+ * step's picture fills the card and every picture stands as a small circle in a row centred under it (on its right
+ * until Harlie's request of 2026-09-30); hovering, focusing or clicking
  * a circle shows its picture for as long as that step is current, and scrolling to another step shows that step's.
  * Clicking the card enlarges the picture. A picture's own `label`, or the stage's, stands under the card.
  */
@@ -877,6 +900,15 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
   const reduced = useReducedMotion()
   const ref = useRef<HTMLVideoElement>(null)
   const [zoom, setZoom] = useState<{ from: HTMLElement; at: number } | null>(null)
+  /*
+   * The control line under the recording (MiniControls; Harlie's request, 2026-09-30). A skip or a seek takes over
+   * (`manual`): the recording is no longer brought back into the current step's part until the step changes, when it
+   * follows the steps again. A pause the visitor made (`userPaused`) lasts, across step changes too, until they press
+   * play. `ctl` is how the controls reach the playback logic of the effect below that is running.
+   */
+  const manual = useRef(false)
+  const userPaused = useRef(false)
+  const ctl = useRef<{ use: () => void; play: () => void; pause: () => void } | null>(null)
 
   // Play mode: the recording plays at its own pace while on screen, within the current step's segment so the picture
   // always supports the step being read (the step changes, the recording moves to that step's part): on a loop, or
@@ -891,9 +923,11 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
     let held = false
     const range = () => stage.segments[Math.min(seg, last)]
     const reducedNow = reduced
-    const playing = reducedNow ? null : playWhenVisible(video, () => !held)
+    const playing = reducedNow ? null : playWhenVisible(video, () => !held && !userPaused.current)
     const show = (i: number) => {
       seg = Math.max(0, Math.min(i, last))
+      // Under reduced motion a recording the visitor played stops on the new step's still.
+      if (reducedNow) video.pause()
       video.currentTime = reducedNow ? stage.stills[seg] : range()[0]
       if (held) {
         held = false
@@ -902,13 +936,32 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
     }
     bind((k) => {
       const i = Math.max(0, Math.min(k, last))
-      if (i !== seg) show(i)
+      if (i === seg) return
+      // A new step: the recording follows the steps again (a visitor's pause still holds).
+      manual.current = false
+      show(i)
     })
+    ctl.current = {
+      use: () => {
+        manual.current = true
+        held = false
+      },
+      play: () => {
+        userPaused.current = false
+        if (playing) playing.sync()
+        else void video.play().catch(() => {})
+      },
+      pause: () => {
+        userPaused.current = true
+        video.pause()
+      },
+    }
     // Keep playback inside the current segment: checked on every presented frame (timeupdate comes only every quarter
     // second, late enough for the next section's frames, or the file's first, to flash), going back to the start (or
     // holding) two frames before the end, sooner while playback is sped up. The file itself never loops.
     const lead = (1 / 24) * 2
     const keep = (t: number) => {
+      if (manual.current) return
       const [a, b, hold] = range()
       if (t < a - 0.3) video.currentTime = a
       else if (t + lead * video.playbackRate < b) return
@@ -923,6 +976,7 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
     }
     const onEnded = () => {
       if (reducedNow) return
+      manual.current = false
       video.currentTime = range()[0]
       held = false
       playing?.sync()
@@ -954,6 +1008,7 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
     if (!playing) {
       return () => {
         bind(null)
+        ctl.current = null
         stopWatch()
         video.removeEventListener('timeupdate', onTime)
         video.removeEventListener('ended', onEnded)
@@ -990,6 +1045,7 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       bind(null)
+      ctl.current = null
       playing.stop()
       window.removeEventListener('scroll', onScroll)
       stopWatch()
@@ -1009,6 +1065,7 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
     if (reduced) {
       let seg = 0
       const still = () => {
+        video.pause()
         video.currentTime = stage.stills[Math.min(seg, stage.stills.length - 1)]
       }
       bind((k) => {
@@ -1017,16 +1074,37 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
         seg = i
         if (video.readyState >= 1) still()
       })
+      ctl.current = {
+        use: () => {},
+        play: () => void video.play().catch(() => {}),
+        pause: () => video.pause(),
+      }
       if (video.readyState >= 1) still()
       else video.addEventListener('loadedmetadata', still, { once: true })
       return () => {
         bind(null)
+        ctl.current = null
         video.removeEventListener('loadedmetadata', still)
       }
     }
     video.defaultPlaybackRate = stage.rate ?? 1
     video.playbackRate = stage.rate ?? 1
-    return playWhenVisible(video).stop
+    const playing = playWhenVisible(video, () => !userPaused.current)
+    ctl.current = {
+      use: () => {},
+      play: () => {
+        userPaused.current = false
+        playing.sync()
+      },
+      pause: () => {
+        userPaused.current = true
+        video.pause()
+      },
+    }
+    return () => {
+      ctl.current = null
+      playing.stop()
+    }
   }, [stage, bind, reduced])
 
   return (
@@ -1035,6 +1113,16 @@ function VideoStage({ stage, bind, name }: { stage: Extract<Stage, { kind: 'vide
         aspect={stage.width / stage.height}
         zoomLabel={stage.action ?? 'Enlarge recording'}
         onZoom={(trigger) => setZoom({ from: trigger, at: ref.current?.currentTime ?? 0 })}
+        below={
+          <MiniControls
+            video={ref}
+            label={`${name} recording`}
+            marks={stage.segments.map(([start]) => start)}
+            onUse={() => ctl.current?.use()}
+            onPlay={() => ctl.current?.play()}
+            onPause={() => ctl.current?.pause()}
+          />
+        }
       >
         <video
           ref={ref}

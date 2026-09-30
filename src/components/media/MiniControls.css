@@ -1,0 +1,193 @@
+/*
+ * The recording's little player (MiniControls.tsx; Harlie's requests, 2026-09-30, after two music players' layouts,
+ * "more cute and glowy"): on the dark page with no panel behind it, a thin glowing line with a glowing knob, and under
+ * it previous, play or pause in a glowing ring, and next. Its height is reserved by the recording above it
+ * (case-v16.css --ctl-room), so the stage never grows past its room.
+ */
+.mini-ctl {
+  --mini-play: 40px;
+  --mini-btn: 32px;
+  position: relative;
+  z-index: 4;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(100%, 280px);
+  margin: 12px auto 0;
+}
+
+/* The line: its row (12px) is its target, with more above and below; the track is 3px, rounded. */
+.mini-ctl__line {
+  --p: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  touch-action: none;
+}
+
+/* A taller invisible target for a finger or a pointer. */
+.mini-ctl__line::before {
+  content: '';
+  position: absolute;
+  inset: -8px 0;
+}
+
+/*
+ * The parts glow themselves, with no outline around them (Harlie's requests, 2026-09-30: "the other parts too", then
+ * "not a circle around them just make them glow themselves"): a softly glowing line, bright glowing light up to where
+ * the recording is, and a glowing dot for the knob.
+ */
+.mini-ctl__track {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  border-radius: 999px;
+  background: rgb(214 219 255 / 0.22);
+  box-shadow: 0 0 8px 1px rgb(var(--pointer-rgb) / 0.35);
+}
+
+.mini-ctl__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--p) * 100%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgb(var(--pointer-rgb) / 0.95), rgb(226 230 255));
+  box-shadow:
+    0 0 6px 1px rgb(var(--pointer-rgb) / 0.95),
+    0 0 18px 3px rgb(var(--pointer-rgb) / 0.45);
+}
+
+.mini-ctl__knob {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--p) * 100%);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 8px 2px rgb(var(--pointer-rgb) / 0.95),
+    0 0 20px 5px rgb(var(--pointer-rgb) / 0.5);
+  transform: translate(-50%, -50%);
+  transition: transform 160ms ease;
+}
+
+.mini-ctl__line:hover .mini-ctl__knob,
+.mini-ctl__line:active .mini-ctl__knob {
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+.mini-ctl__buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.mini-ctl__btn {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--mini-btn);
+  height: var(--mini-btn);
+  padding: 0;
+  /* The glowing ring appears only on hover (and while pressed, or with keyboard focus); its room is kept. */
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+/* A larger target than it looks. */
+.mini-ctl__btn::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+}
+
+/*
+ * Hovering play, previous or next brings up the glowing ring round it (Harlie's request, 2026-09-30: "get rid of this
+ * circle and it should just pop up when you hover over any of those buttons"); on a touch screen it shows while pressed.
+ */
+@media (hover: hover) {
+  .mini-ctl__btn:hover {
+    border-color: rgb(214 219 255 / 0.9);
+    box-shadow:
+      0 0 8px 1px rgb(var(--pointer-rgb) / 0.7),
+      0 0 20px 3px rgb(var(--pointer-rgb) / 0.3),
+      inset 0 0 7px rgb(var(--pointer-rgb) / 0.45);
+    transform: scale(1.06);
+  }
+}
+
+.mini-ctl__btn:active,
+.mini-ctl__btn:focus-visible {
+  border-color: rgb(214 219 255 / 0.9);
+  box-shadow:
+    0 0 8px 1px rgb(var(--pointer-rgb) / 0.7),
+    0 0 20px 3px rgb(var(--pointer-rgb) / 0.3),
+    inset 0 0 7px rgb(var(--pointer-rgb) / 0.45);
+}
+
+.mini-ctl__btn:active {
+  transform: scale(0.94);
+}
+
+/* The play button: larger, its icon glowing like the others'; its ring, too, only on hover (above). */
+.mini-ctl__btn--play {
+  width: var(--mini-play);
+  height: var(--mini-play);
+}
+
+/* The icons glow themselves. */
+.mini-ctl__btn svg {
+  filter: drop-shadow(0 0 2px rgb(var(--pointer-rgb))) drop-shadow(0 0 7px rgb(var(--pointer-rgb) / 0.75));
+}
+
+.mini-ctl__btn:focus-visible,
+.mini-ctl__line:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+/* Phones and tablets upright (the recording in the short band above the steps), and phones held sideways: compact. */
+@media (max-width: 899.98px), (orientation: landscape) and (max-height: 540.98px) {
+  .mini-ctl {
+    --mini-play: 32px;
+    --mini-btn: 28px;
+    gap: 8px;
+    width: min(100%, 240px);
+    margin-top: 8px;
+  }
+
+  .mini-ctl__line {
+    height: 10px;
+  }
+
+  .mini-ctl__buttons {
+    gap: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mini-ctl__btn:hover,
+  .mini-ctl__btn:active {
+    transform: none;
+  }
+
+  .mini-ctl__btn,
+  .mini-ctl__knob {
+    transition: none;
+  }
+}

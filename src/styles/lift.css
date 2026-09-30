@@ -1,0 +1,175 @@
+/*
+ * Words and sections light up under the pointer (Harlie's requests, 2026-09-30: "When you hover over any section or
+ * words, the section should grow a little bit ... And maybe brighter", "I want it to be on every word and every section
+ * on the website", "have it glow more", "the ones already bright should glow more", "It should also kind of turn the
+ * slight bluish glow color", then "actually turn that like pinkish color that's on the line"). One stylesheet for every
+ * page, so each block of words answers the pointer the same way over 260ms: its words turn the case pages' moving
+ * line's pale pink (--lift-color, the line's pale rose core) in a rose glow (the line's rose), which brings text resting
+ * dimmed or grey most of the way up. Words already white, which cannot come up any further, take the stronger glow
+ * (--lift-glow-strong); dimmed and grey words take the softer one (--lift-glow). Which glow a unit takes is decided by
+ * its colour at rest (below), never measured. The rose words (About's descriptor, the section labels' numbers) keep
+ * their rose. The tokens are in tokens.css, tuned there. The colour and the glow are for the pointer only: at rest the
+ * words have neither, as Harlie asked on 2026-09-28.
+ *
+ * The blocks no longer grow as a whole (they grew by 7% until 2026-09-30): in its place the titles' dock runs on all of
+ * the text (Harlie, 2026-09-30: "Is there any way to do the cool effect that's on the titles? on all of the text ...
+ * Like instead of it growing bigger, it would do that ... But also you can do the like light pink glow on the titles
+ * too. So it all has the same effect"). Letters or words swell under the pointer (dockLetters.ts, dockText.ts), and the
+ * titles (PORTFOLIO with the name above it, the case studies' and Creative Production's titles, About's name) take this
+ * colour and glow as well.
+ *
+ * The units, one per block of words, never a section and a paragraph inside it (so nothing lights twice). Letters swell
+ * in the titles and headings; whole words in running text (dockText.ts keeps the same lists):
+ *   Homepage       PORTFOLIO and the name above it (letters); the line under it (words)
+ *   Case studies   the title (letters), the details line, the introduction, each step (its heading, letters, with its
+ *                  text, words, as the page treats it)
+ *   Creative       the title, each film's name (letters); the details line, each film's text (words)
+ *   About          the name, the "About" label, the numbered section labels, the school's name line, each card's title
+ *                  (letters); the descriptor, each opening paragraph, the rest of the school block, the Education
+ *                  paragraph, the "Get in touch" invitation, the sent line (words)
+ *   Not found      the heading (letters); the route error's sentence (words)
+ *   Footer         the copyright (words)
+ * Left out, each with its own hover or its own part to play: links and buttons, the header and navigation, the homepage
+ * tiles and their captions, the card-hover galleries and circles, the recordings' control line and the held pictures
+ * (with their label), the contact form's labels and fields, About's creative cards and the film viewer. A link inside a
+ * unit (the sent line's address) keeps its own colour and still takes the click.
+ *
+ * The glow is a filter (drop-shadow) on the words' own element, not a text-shadow: while letters swell, the words are
+ * drawn by clipped copies (dockLetters.ts), and a filter lights them as one, with no seam where two copies meet. A
+ * case study's step lights its heading and its text, not the step (its moving line keeps its own light); the school its
+ * lines; PORTFOLIO and the name above it their words, not the name's rule. About's "About" label lights with its short
+ * rule. The easing and the glow have no specificity (:where), so any page's own rules still win; the colour has to win
+ * over each page's own ink, so its rules name their units (the colour, below).
+ *
+ * A mouse only (touch screens have no hover). Under reduced motion (the OS setting, which html[data-motion] mirrors) the
+ * words still turn pink and glow, at once, with nothing swelling.
+ */
+
+@media (hover: hover) and (pointer: fine) {
+  /* Every unit's words: their easing (no unit has a transition of its own to keep, but those named after this). */
+  :where(
+    .home .hero__line,
+    .home :is(.hero__name, .hero__word) > .type-line,
+    .cx .cx-title,
+    .cx .cx-meta,
+    .cx .cx-lede,
+    .cw-text > .cw-name,
+    .cw-text > .cx-body,
+    .about-content :is(.about-name, .about-label, .about-descriptor, .about-section-label, .about-work__title, .about-contact__status),
+    .about-content .about-school > *,
+    .about-content .about-school__dates,
+    .about-content .about-hero__copy > p,
+    .about-content .about-school__text > p,
+    .not-found > :is(h1, p),
+    .site-end__copy
+  ) {
+    transition:
+      color 260ms var(--ease-standard),
+      filter 260ms var(--ease-standard);
+  }
+
+  /* The softer glow, for every unit under the pointer (the stronger one below, for the bright ones). */
+  :where(
+    .home .hero__line,
+    .home :is(.hero__name, .hero__word) > .type-line,
+    .cx .cx-title,
+    .cx .cx-meta,
+    .cx .cx-lede,
+    .cw-text > .cw-name,
+    .cw-text > .cx-body,
+    .about-content :is(.about-name, .about-label, .about-descriptor, .about-section-label, .about-work__title, .about-contact__status),
+    .about-content .about-hero__copy > p,
+    .about-content .about-school__text > p,
+    .not-found > :is(h1, p),
+    .site-end__copy
+  ):hover,
+  :where(.cx .story__step):hover > :where(.story__title, .story__text),
+  :where(.about-content .about-school):hover > :where(.about-school__coursework) {
+    filter: var(--lift-glow);
+  }
+
+  /*
+   * The stronger glow, for the units whose words rest white or nearly (Harlie, 2026-09-30: "the ones already bright
+   * should glow more"): the titles (PORTFOLIO #fff, the name above it at 95%, the case titles #f3eee7, About's name
+   * #f3f0fb), the homepage's line (90%), the case studies' introduction and current step (#fff heading, #f3eee7
+   * words), Creative Production's film names (#fff) and texts, About's paragraphs, card titles and sent line (#e4e0ef to
+   * #f3f0fb), the school's name and degree lines, the not-found heading (#f4f5fa). The grey and dimmed ones keep the
+   * softer glow above: the details lines, the dimmed steps (50%), About's labels and its rose descriptor, the school's
+   * coursework, the route error's sentence, the copyright.
+   */
+  :where(
+    .home .hero__line,
+    .home :is(.hero__name, .hero__word) > .type-line,
+    .cx .cx-title,
+    .cx .cx-lede,
+    .cw-text > .cw-name,
+    .cw-text > .cx-body,
+    .about-content :is(.about-name, .about-work__title, .about-contact__status),
+    .about-content .about-hero__copy > p,
+    .about-content .about-school__text > p,
+    .not-found > h1
+  ):hover,
+  :where(.cx .story__step[data-current]):hover > :where(.story__title, .story__text),
+  :where(.about-content .about-school):hover > :where(.about-school__name, .about-school__credentials) {
+    filter: var(--lift-glow-strong);
+  }
+
+  /*
+   * The colour (Harlie, 2026-09-30: "actually turn that like pinkish color that's on the line"): the words of the unit
+   * under the pointer turn the pale pink, titles, headings and paragraphs alike, easing with the glow. Each page sets
+   * its own ink on these (and on a step's heading and text, a school line), so the rules name them: one step more
+   * specific than the page's own, whichever stylesheet loads last. From grey (the details #aaa49c, About's labels
+   * #b6b1c6, the route error's sentence, the copyright at 64%) it comes most of the way up; from the reading whites it
+   * is a tint, under the stronger glow. The rose words set their own colour and keep it (About's descriptor is left out
+   * here; the section labels' numbers are their own span). PORTFOLIO's fine outline takes the pink with its letters.
+   */
+  .home .hero__line:hover,
+  .home :is(.hero__name, .hero__word) > .type-line:hover,
+  .cx .cx-title:hover,
+  .cx .cx-meta:hover,
+  .cx .cx-lede:hover,
+  .cx .story__step:hover > :is(.story__title, .story__text),
+  .cw-text > .cw-name:hover,
+  .cw-text > .cx-body:hover,
+  .about-content :is(.about-name, .about-label, .about-section-label, .about-work__title, .about-contact__status):hover,
+  .about-content .about-hero__copy > p:hover,
+  .about-content .about-school__text > p:hover,
+  .about-content .about-school:hover :is(.about-school__name, .about-school__dates, .about-school__credentials, .about-school__coursework),
+  .not-found > :is(h1, p):hover,
+  .site-end .site-end__copy:hover {
+    color: var(--lift-color);
+  }
+
+  .home .hero__word > .type-line:hover {
+    -webkit-text-stroke-color: var(--lift-color);
+  }
+
+  /*
+   * A dimmed case-study step (at 50%, case-v16.css) comes most of the way up, to 85%, under the pointer; the current
+   * step is at full brightness already.
+   */
+  .story__step:not([data-current]):hover > :is(.story__title, .story__text) {
+    opacity: 0.85;
+  }
+}
+
+/*
+ * The words with transitions of their own ease the colour and the glow with them: a step's heading and text (their
+ * dimming, case-v16.css, 350ms), PORTFOLIO's outline. Not under reduced motion, where case-v16.css turns the steps'
+ * off.
+ */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .cx .story__step > :is(.story__title, .story__text) {
+    transition:
+      opacity 350ms var(--ease-standard),
+      color 260ms var(--ease-standard),
+      filter 260ms var(--ease-standard);
+  }
+
+  .home .hero__word > .type-line {
+    transition:
+      color 260ms var(--ease-standard),
+      -webkit-text-stroke-color 260ms var(--ease-standard),
+      filter 260ms var(--ease-standard);
+  }
+}

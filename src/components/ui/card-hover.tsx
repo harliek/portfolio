@@ -6,7 +6,8 @@ import './card-hover.css'
 /**
  * A card-hover gallery (21st.dev's "Card Hover", adapted; Harlie's request, 2026-09-29: "Try with the pages with
  * multiple photos try something like this but with three small circles on the right side"). The current picture fills
- * one large card with a distinct glowing border; the pictures stand as small circles in a column on its right. Hovering,
+ * one large card with a distinct glowing border; the pictures stand as small circles in a row under it (Harlie's
+ * request, 2026-09-30; they were a column on its right). Hovering,
  * focusing or clicking a circle brings its picture into the card, which grows in over about half a second as the
  * original's cards do. Clicking the card enlarges the picture. A short neutral label can stand under the card (the
  * current picture's, or the gallery's), for the pictures whose provenance needs one.

@@ -3,12 +3,16 @@ import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import type { Project } from '../../content/projects'
 import { DockTitle } from '../ui/DockTitle'
 import { usePageMeta } from '../../hooks/usePageMeta'
+import { StageOnLeftContext, stageOnLeft } from './caseSide'
 
 /**
  * A case study (brief v16): consistency comes from the page margins, the spacing scale, the type, the metadata
  * treatment and the motion language (src/styles/case-v16.css), never from one repeated layout. The told cases compose
  * their introduction, steps and held stage with CaseStory; Creative Production composes its films itself
  * (ClientWork.tsx); the footer carries the Previous and Next project buttons.
+ *
+ * Every other told case puts its stage on the left and its words on the right, by the project's order (caseSide.ts;
+ * Harlie's request, 2026-09-30): the page passes that on to CaseStory.
  */
 export function CasePage({ project, className, children }: { project: Project; className?: string; children: ReactNode }) {
   usePageMeta(project.seo.title, project.seo.description)
@@ -33,7 +37,7 @@ export function CasePage({ project, className, children }: { project: Project; c
 
   return (
     <article ref={ref} className={['cx', className].filter(Boolean).join(' ')} data-project={project.id}>
-      {children}
+      <StageOnLeftContext value={stageOnLeft(project.order)}>{children}</StageOnLeftContext>
     </article>
   )
 }
@@ -89,7 +93,8 @@ export function CaseTitle({ title, meta }: { title: string; meta: readonly strin
 
   // A details line breaks only between its " · " parts, and a "·" left at a line's end is hidden (kept in place, so
   // nothing reflows): on a phone "Student venture · 2024 · Reconstructed screen" ended its first line on a stray dot
-  // (2026-09-29). Measured again only when the details' width changes.
+  // (2026-09-29). Measured again only when the details' width changes. A part wider than the column wraps within
+  // itself (case-v16.css, 2026-09-30), so the next part is on a new line only when it starts below the part's last line.
   useLayoutEffect(() => {
     const list = metaRef.current
     if (!list) return
@@ -100,7 +105,7 @@ export function CaseTitle({ title, meta }: { title: string; meta: readonly strin
         const parts = [...li.querySelectorAll<HTMLElement>('.cx-meta__part')]
         parts.forEach((part, i) => {
           const next = parts[i + 1]
-          if (next && next.offsetTop > part.offsetTop) part.dataset.lineEnd = ''
+          if (next && next.offsetTop >= part.offsetTop + part.offsetHeight - 1) part.dataset.lineEnd = ''
           else delete part.dataset.lineEnd
         })
       }

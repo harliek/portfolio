@@ -6,11 +6,10 @@ import { projectById } from '../../content/projects'
 const project = projectById('merchandising-platform')
 
 /**
- * Merchandising Dashboard (brief v19; route /work/merchandising-platform kept): the introduction and three decisions
- * on the left, the recording fixed on the right; while a decision is the
- * current one, the recording plays that decision's segment on a loop (faster
- * while the page scrolls), so the highlighted decision and the product state
- * always agree.
+ * Merchandising Dashboard (brief v19; route /work/merchandising-platform kept): the introduction and four sections
+ * (Harlie's text of 2026-09-30) on the left, the recording fixed on the right; while a section is the current one, the
+ * recording plays that section's segment on a loop (faster while the page scrolls), so the highlighted section and the
+ * product state always agree.
  */
 export default function MerchandisingPlatform() {
   return (

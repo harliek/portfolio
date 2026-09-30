@@ -28,23 +28,26 @@ export const MERCH = {
   // the security feedback stay out: no project document records them.
   lede: (
     <p>
-      I joined PlanetArt as a merchandising intern, where reviewing a product meant reconciling catalog, supplier, sales, and promotion data across separate tools. I proposed connecting those records through each product’s SKU in a centralized platform and presented the concept to the engineering and product teams.
+      At PlanetArt, product decisions required information spread across catalog, supplier, inventory, sales, and promotion systems.
     </p>
   ),
   /** The recording's segment for each decision (seconds), and one still per step for reduced motion. */
-  // The catalog's product records to 11.42s, the calculation panel opening at 11.46s, the reorder page from 20.42s
-  // (its replenishment view held at 21.5s, the pointer still above the filters). Each segment starts on its own first
-  // frame and ends before the next one's.
+  // Four sections (Harlie's text of 2026-09-30): the overview and its "Needs a decision" list to 5.95s (Operational
+  // problem), the catalog's product records from 6.0s, where the catalog opens, to 11.42s (Data model), the calculation
+  // panel opening at 11.46s (Decision logic), the reorder page from 20.42s (its replenishment view held at 21.5s, the
+  // pointer still above the filters; Prioritization). Each segment starts on its own first frame and ends before the
+  // next one's.
   segments: [
-    [0, 11.45],
+    [0, 5.95],
+    [6.0, 11.45],
     [11.46, 20.4],
     [20.44, 21.5, 'hold'],
   ] as const,
-  stills: [0.5, 15.2, 21.6],
+  stills: [0.5, 8.0, 15.2, 21.6],
   /**
-   * Harlie's copy brief of 2026-09-29 (Product information; Replenishment), its Replenishment paragraph divided across
-   * the page's existing second and third steps so each keeps its recording segment (the calculation panel, then the
-   * ranked inventory). Checked against the prototype's source (~/Documents/merch-console):
+   * Harlie's revised text of 2026-09-30, verbatim, in four sections (it supersedes the copy brief of 2026-09-29: Product
+   * information; Replenishment), each with its own recording segment. Checked against the prototype's source
+   * (~/Documents/merch-console):
    * - the record (ProductDrawer.tsx): list price, landed cost, fulfilment, channel fee, contribution, stock position,
    *   28-day sales and the vendor's lead time and minimum order in one panel;
    * - the calculation (src/lib/inventory.ts assess()): 28-day sales velocity and its variation, available stock (on
@@ -58,16 +61,20 @@ export const MERCH = {
    */
   decisions: [
     {
-      title: 'Product information',
-      text: 'I built the prototype around the SKU, connecting each product with supplier information, inventory, sales history, and promotional performance.',
+      title: 'Operational problem',
+      text: 'SKU-level information was fragmented across tools and spreadsheets, making it difficult to see product status or identify where action was needed.',
     },
     {
-      title: 'Order calculations',
-      text: 'I developed order recommendations from sales patterns, stock levels, and supplier requirements, with the underlying calculations visible for review.',
+      title: 'Data model',
+      text: 'I proposed using the SKU as the common identifier across systems and built a centralized React prototype connecting product data, supplier requirements, inventory, sales history, and promotional performance.',
     },
     {
-      title: 'Product priorities',
-      text: 'I ranked products by estimated contribution margin at risk, connecting the likelihood of a shortage with its potential financial impact.',
+      title: 'Decision logic',
+      text: 'I developed order recommendations using sales patterns, stock levels, and supplier requirements, with the underlying calculations visible for review.',
+    },
+    {
+      title: 'Prioritization',
+      text: 'Products were ranked by estimated contribution margin at risk, combining shortage likelihood with potential financial impact. I presented the prototype to PlanetArt’s product and engineering teams.',
     },
   ],
 }

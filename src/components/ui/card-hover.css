@@ -1,13 +1,16 @@
 /*
  * The card-hover gallery (card-hover.tsx; Harlie's request, 2026-09-29). The card: the current picture in its own
  * proportions, as wide as the room allows and never taller than --card-max-h (the page sets it), with the site's
- * distinct glowing border (tokens.css --glow-media). The circles: a column on the card's right, the current one larger
- * and ringed with the pointer's blue violet. The picture changes by growing in over 0.5s, as the original's cards do.
+ * distinct glowing border (tokens.css --glow-media). The circles: a row under the card (Harlie's request, 2026-09-30;
+ * they were a column on its right), the current one larger and ringed with the pointer's blue violet. The card and the
+ * row together stay within --card-max-h, so the card gives the row its height. The picture changes by growing in over
+ * 0.5s, as the original's cards do.
  */
 .card-hover {
   --card-dot: 52px;
   --card-gap: 18px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: var(--card-gap);
   width: 100%;
@@ -15,16 +18,17 @@
 
 .card-hover__main {
   display: grid;
-  flex: 1 1 auto;
   justify-items: center;
   gap: 10px;
+  width: 100%;
   min-width: 0;
 }
 
 .card-hover__card {
   position: relative;
   display: block;
-  width: min(100%, calc(var(--card-max-h, 70svh) * var(--card-aspect, 1.6)));
+  /* The row of circles below (its height, the gap and the current circle's 12% growth) comes out of the height. */
+  width: min(100%, calc((var(--card-max-h, 70svh) - var(--card-dot) * 1.12 - var(--card-gap)) * var(--card-aspect, 1.6)));
   aspect-ratio: var(--card-aspect, 1.6);
   padding: 0;
   overflow: hidden;
@@ -73,7 +77,7 @@
 .card-hover__dots {
   display: flex;
   flex: none;
-  flex-direction: column;
+  justify-content: center;
   gap: 14px;
 }
 
@@ -126,16 +130,23 @@
   outline-offset: 3px;
 }
 
-@media (max-width: 599.98px) {
+/*
+ * Where the gallery sits in the short band above the steps (phones and tablets upright, landscape phones), the row of
+ * circles takes its height from the picture: smaller circles, closer together, keep the picture as large as possible
+ * (still comfortably tappable).
+ */
+@media (max-width: 899.98px), (orientation: landscape) and (max-height: 540.98px) {
   .card-hover {
-    --card-dot: 38px;
-    --card-gap: 12px;
+    --card-dot: 34px;
+    --card-gap: 10px;
   }
 
   .card-hover__dots {
     gap: 10px;
   }
+}
 
+@media (max-width: 599.98px) {
   .card-hover__card {
     border-radius: 10px;
   }
@@ -144,4 +155,27 @@
 html[data-motion='reduce'] .card-hover__slide,
 html[data-motion='reduce'] .card-hover__dot {
   transition: none;
+}
+
+/*
+ * Phones held sideways: the stage is too short to give the row of circles its height (the picture came out about 107px
+ * tall), so there the circles stand in a column on the card's right, as they first did (2026-09-30).
+ */
+@media (orientation: landscape) and (max-height: 540.98px) {
+  .card-hover {
+    flex-direction: row;
+  }
+
+  .card-hover__main {
+    flex: 1 1 auto;
+    width: auto;
+  }
+
+  .card-hover__card {
+    width: min(100%, calc(var(--card-max-h, 70svh) * var(--card-aspect, 1.6)));
+  }
+
+  .card-hover__dots {
+    flex-direction: column;
+  }
 }

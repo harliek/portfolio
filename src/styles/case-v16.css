@@ -4,8 +4,10 @@
  * system as it now is).
  *
  *   Grid     a told case (CaseStory): one centred composition at most 1300px wide, the words in 36% and the held
- *            stage in 64% (42/58 below 1100px); below 900px (portrait, or at least 541px tall) the words, then a
- *            compact band held under the header. Creative Production (client-work.css) keeps its own layout.
+ *            stage in 64% (44/56 below 1100px, half each on a phone on its side), the words on the left, or on every
+ *            other told page on the right (data-flip; 2026-09-30); below 900px (portrait, or at least 541px tall) the
+ *            words, then a compact band held under the header. Creative Production (client-work.css) keeps its own
+ *            layout.
  *   Type     title: the editorial serif, 36 to 72px (fitted to its column); step heading: serif, 20 to 24px;
  *            body: 16px on a 1.6 line, at most about 60 characters; labels 12px in small capitals
  *   Colour   near-black ground, warm white text, a readable grey, and the blue violet statement accent
@@ -71,9 +73,26 @@
    */
   --stage-h: min(72svh, calc(100svh - 140px), calc(100svh - var(--header-height) - (var(--end-rows, 0px) + 12px) / 0.62));
   --text-inset: clamp(0px, 3.4vw, 56px);
+  /*
+   * The two columns' shares, the words' and the stage's, named rather than placed, so a flipped page (below) sets the
+   * same shares in the other order at every width.
+   */
+  --words-fr: 36fr;
+  --stage-fr: 64fr;
+  /*
+   * The space between the steps, and above the first: about 4% of the window, 28 to 40px (Harlie's request,
+   * 2026-09-30: "the different sections should be closer together"; it was 44 to 72px after the reading window). Each
+   * step still keeps more scroll than a mouse wheel's notch (40 to 100px): its own height plus this gap.
+   */
+  --steps-gap: clamp(28px, 4svh, 40px);
+  /*
+   * How far the boxes of the introduction and of the list of steps reach past their words (the fading window, below):
+   * room for the moving line's glow (26px) and the title's magnified letters, never past the gutter.
+   */
+  --fade-bleed: min(32px, var(--story-gutter));
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: minmax(0, 36fr) minmax(0, 64fr);
+  grid-template-columns: minmax(0, var(--words-fr)) minmax(0, var(--stage-fr));
   column-gap: var(--story-gap);
   align-items: start;
   width: 100%;
@@ -83,29 +102,14 @@
 }
 
 /*
- * A short page's words held in place (CaseStory; Harlie's QA pass, 2026-09-28): once they have come to their end they
- * stay, like the picture beside them, while the rest of the scroll moves through the steps, and the footer rises
- * beneath them. A last row of the grid is the room they are held through (--hold-rest); where they end inside the
- * footer's top padding, the footer comes up over that row (--hold-under). On wide layouts the introduction and the
- * steps are held together ('words'), or, where the words are taller than the room at the end, the steps alone
- * ('steps'), the introduction going on up out of view (Harlie's QA pass, 2026-09-28); on phones the steps, under the
- * held band (the phones' layout below adds its row). CaseStory lets go of the hold while it measures the words
- * (data-measuring).
+ * Wide layouts: the pictures and recordings sit a little further out, towards the window's edge beside them (right, or
+ * left on a flipped page: .story__hold below; Harlie's request, 2026-09-30), up to 40px into the space beside the
+ * composition, always leaving at least 24px to the window's edge (so less on a small laptop). The room is the same on
+ * either side, since the composition is centred.
  */
-.cs[data-hold] {
-  grid-template-rows: auto auto var(--hold-rest, 0px);
-  margin-bottom: var(--hold-under, 0px);
-}
-
-.cs[data-hold]:not([data-measuring]) > .cs__body {
-  position: sticky;
-  top: var(--hold-body, 0px);
-}
-
-@media (min-width: 900px), (orientation: landscape) and (max-height: 540.98px) {
-  .cs[data-hold='words']:not([data-measuring]) > .cs__intro {
-    position: sticky;
-    top: var(--hold-intro, 0px);
+@media (min-width: 900px) {
+  .cs {
+    --stage-shift: max(0px, min(40px, calc(var(--story-gutter) - 24px + max(0px, (100vw - 1300px - 2 * var(--story-gutter)) / 2))));
   }
 }
 
@@ -119,7 +123,8 @@
 @media (max-width: 1099.98px) {
   .cs {
     --text-inset: 0px;
-    grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+    --words-fr: 44fr;
+    --stage-fr: 56fr;
   }
 }
 
@@ -138,7 +143,8 @@
 @media (max-width: 899.98px) and (orientation: landscape) and (max-height: 540.98px) {
   .cs {
     --stage-h: calc(100svh - var(--header-height) - var(--end-rows, 0px) - 44px);
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    --words-fr: 1fr;
+    --stage-fr: 1fr;
   }
 
   .cs .story__hold {
@@ -159,14 +165,31 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 14px;
   min-width: 0;
-  /* The words sit further in from the page's left edge. */
-  padding-left: var(--text-inset);
+  /*
+   * The words sit further in from the page's edge beside them (the left; the right on a flipped page, below). The box
+   * reaches --fade-bleed above them and to their right, room for the title's magnified letters in the fading window.
+   */
+  margin: calc(-1 * var(--fade-bleed)) calc(-1 * var(--fade-bleed)) 0 0;
+  padding: var(--fade-bleed) var(--fade-bleed) 0 var(--text-inset);
 }
 
 .cs__intro .cx-meta {
   margin-top: 2px;
 }
 
+/* The introduction's words as one, laid out as the introduction lays them (the fading window, below; 2026-09-30). */
+.cs__words {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+}
+
+/*
+ * The steps start the steps' own gap below the introduction, and lower still where the page would open with the first
+ * step's middle above the reading line (--story-lead, measured by CaseStory; Harlie's request, 2026-09-30: the first
+ * step "can actually reach the centered, fully visible position").
+ */
 .cs__body {
   grid-column: 1;
   grid-row: 2;
@@ -174,7 +197,7 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 28px;
   min-width: 0;
-  margin-top: 30px;
+  margin-top: calc(var(--steps-gap) + var(--story-lead, 0px));
   padding-left: var(--text-inset);
 }
 
@@ -183,8 +206,7 @@
  * under the floating navigation), one offset for every told case: the header's safe area (--header-safe, the scroll
  * margin base.css gives everything on the page) is the highest a heading may rest, and on phones the band held under
  * the header adds its own height (--story-band, measured by CaseStory) for the steps that pass beneath it. A link or
- * focus scrolls a step to that line, and CaseStory ends each page so that no heading is left across it (it reads this
- * margin, with any scroll padding on the root).
+ * focus scrolls a step to that line.
  */
 .cs :is(.story__step, .story__title) {
   scroll-margin-top: calc(var(--header-safe) + var(--story-band, 0px));
@@ -201,11 +223,15 @@
   min-width: 0;
 }
 
-/* The holder: fixed in the window under the header, over the right column (CaseStory measures --hold-left and --hold-width). */
+/*
+ * The holder: fixed in the window under the header, over the stage's column (CaseStory measures --hold-left and
+ * --hold-width from the column, whichever side it is on), and on wide layouts a little further out (--stage-shift,
+ * above: to the right here, to the left on a flipped page).
+ */
 .story__hold {
   position: fixed;
   top: var(--header-height);
-  left: var(--hold-left, 50%);
+  left: calc(var(--hold-left, 50%) + var(--stage-shift, 0px));
   z-index: 1;
   display: grid;
   /* The stage sits a little above the middle (Harlie's request); a caption, if any, hangs below it. */
@@ -215,6 +241,49 @@
   height: calc(100svh - var(--header-height));
 }
 
+/*
+ * Every other told page the other way round (Harlie's request, 2026-09-30: "sometimes the text should be on the right
+ * and video/image on the left do every other one"; CaseStory sets data-flip from the project's order, caseSide.ts):
+ * wherever the words and the stage stand side by side, the stage takes the left column and the words the right, each
+ * with its own share at every width (--stage-fr, --words-fr: 64/36, 56/44 below 1100px, half each on a phone on its
+ * side), the words' inset on their outer side, the right, and the stage shifted outwards, to the left. The document
+ * keeps its order (the introduction, the stage, the steps), so keyboard focus and screen readers go through the page as
+ * on every other told case. The words stay set from the left, the moving line beside the current step on their left
+ * edge, where each line starts: here the side facing the stage, the column gap and the stage's shift apart from it.
+ * Phones and tablets held upright keep their one column (the band layout below), untouched.
+ *
+ * Their left edge is also where the floating pill's right end reaches: from 1200px the lines start 8px clear of it
+ * (--pill-clear, measured by CaseStory, PILL_CLEAR; 0 where the pill does not reach the column), taken from the inset
+ * on the right first, so the words keep their measure where they can (2026-09-30: at the page's end the first letters
+ * of the top lines rested under the pill, "afePress's opportunity" at 1440px). At 1200 to 1280px the column gives up to
+ * about 18px of its width for it. Below 1200px keeping clear would leave the words under 300px wide: the words' top
+ * fade takes the lines passing under the pill there.
+ */
+@media (min-width: 900px), (orientation: landscape) and (max-height: 540.98px) {
+  .cs[data-flip] {
+    grid-template-columns: minmax(0, var(--stage-fr)) minmax(0, var(--words-fr));
+  }
+
+  .cs[data-flip] > :is(.cs__intro, .cs__body) {
+    grid-column: 2;
+    padding-right: max(0px, var(--text-inset) - var(--pill-clear, 0px));
+    padding-left: var(--pill-clear, 0px);
+  }
+
+  /* The introduction's box still reaches --fade-bleed past its words on the right (the fading window). */
+  .cs[data-flip] > .cs__intro {
+    padding-right: calc(max(0px, var(--text-inset) - var(--pill-clear, 0px)) + var(--fade-bleed));
+  }
+
+  .cs[data-flip] > .cs__media {
+    grid-column: 1;
+  }
+
+  .cs[data-flip] .story__hold {
+    left: calc(var(--hold-left, 50%) - var(--stage-shift, 0px));
+  }
+}
+
 .story__hold > .story__stage {
   grid-row: 2;
   /* As wide as its column allows (Harlie's request: bigger), at most the stage height tall. */
@@ -222,15 +291,14 @@
 }
 
 /* A told page sets its own length (CaseStory adds the space under the words, at least enough for the footer to meet
-   the window's bottom), so on a short page the words can end level with the picture. */
+   the window's bottom), so it ends where the last step's middle is on the reading line. */
 .site-main:has(.story__hold) {
   min-height: 0;
 }
 
 /*
- * So that the title can rest clear of the navigation at the end of a page (CaseStory), the words may end inside the
- * footer's empty top padding (never closer than 40px to its links). That padding lets the pointer through to
- * them; the footer's own buttons and links take it as before.
+ * The footer's empty top padding lets the pointer through to what it rises over at the page's end (the held picture's
+ * lower edge beside the words); the footer's own buttons and links take it as before.
  */
 .site-main:has(.story__hold) + .site-end {
   pointer-events: none;
@@ -242,9 +310,9 @@
 
 /*
  * The footer's row follows the story's composition (Harlie's QA pass, 2026-09-28: Previous and Next sat about 10px
- * inside it): the same 1300px of content and the same gutters, so Previous starts at the words' left edge and Next
- * ends at the stage's right edge. The clamp repeats --story-gutter (set on .cx, which the footer is outside of); keep
- * the two in step.
+ * inside it): the same 1300px of content and the same gutters, so Previous starts at the composition's left edge (the
+ * words' column, or the stage's on a flipped page) and Next ends at its right edge, whichever side each column is on.
+ * The clamp repeats --story-gutter (set on .cx, which the footer is outside of); keep the two in step.
  */
 .site-main:has(.story__hold) + .site-end .site-end__inner {
   max-width: 1300px;
@@ -397,41 +465,50 @@
   }
 }
 
-/* The steps: compact groups; the current one takes the accent rule and a brighter heading, the others stay readable. */
+/*
+ * The steps (Harlie's request, 2026-09-30): the current one, the step nearest the reading line (CaseStory), at full
+ * brightness with a white heading and the one pink line beside it; the others dimmed, easing over 0.35s as the current
+ * step changes. The introduction is never dimmed. Dimmed to 50%, not the 35% chosen (2026-09-30): 50% is the dimmest
+ * that keeps the dimmed headings and words at WCAG AA's 4.5:1 on the dark ground (4.7:1, #f3eee7 at 50% on black; at
+ * 35% they measured 2.2 to 2.9:1 and the site's accessibility checks failed on every told page), so a dimmed heading
+ * rests in the words' own colour, not the grey it had.
+ */
+/* Its box reaches --fade-bleed past the steps on the left, above and below (the fading window, below). */
 .story__steps {
   display: grid;
-  gap: 32px;
-  margin: 0;
-  padding: 0;
+  gap: var(--steps-gap);
+  margin: calc(-1 * var(--fade-bleed)) 0 calc(-1 * var(--fade-bleed)) calc(-1 * var(--fade-bleed));
+  padding: var(--fade-bleed) 0 var(--fade-bleed) var(--fade-bleed);
   list-style: none;
 }
 
+/* The words 20px in from the line's place (the 2px line and 18px). */
 .story__step {
   position: relative;
-  padding: 2px 0 2px 18px;
-  border-left: 2px solid var(--cx-hair);
+  padding: 2px 0 2px 20px;
 }
 
 /*
- * The current step's rule: a glowing line over the hairline, as the pointer glows (Harlie's request, 2026-09-28: "a
- * glowing line"; tokens.css --statement-line). It fades in and out with the step.
+ * The one moving line (Harlie's request, 2026-09-30: "make the active pink vertical line move with the active text
+ * section rather than having multiple permanent rules"): the glowing rose line (tokens.css --statement-line, as the
+ * current step's rule glowed since 2026-09-28), beside the current step only; the steps have no rule of their own.
+ * Each step holds one, and CaseStory moves the new step's line from where the last one stood, and stretches it to its
+ * step's length, as the current step changes.
  */
-.story__step::before {
-  content: '';
+.story__line {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: -2px;
+  left: 0;
   width: 2px;
   border-radius: 1px;
   background: var(--statement-line);
   box-shadow: var(--statement-line-glow);
   opacity: 0;
-  transition: opacity 200ms var(--ease-standard);
   pointer-events: none;
 }
 
-.story__step[data-current]::before {
+.story__step[data-current] > .story__line {
   opacity: 1;
 }
 
@@ -441,8 +518,10 @@
   font-size: clamp(1.25rem, 1.1rem + 0.4vw, 1.5rem);
   font-weight: 400;
   line-height: 1.2;
-  color: #cfc9c1;
-  transition: color 200ms var(--ease-standard);
+  color: var(--cx-text);
+  transition:
+    color 200ms var(--ease-standard),
+    opacity 350ms var(--ease-standard);
 }
 
 .story__step[data-current] .story__title {
@@ -456,7 +535,163 @@
   font-size: 1rem;
   line-height: 1.6;
   color: var(--cx-text);
+  transition: opacity 350ms var(--ease-standard);
 }
+
+.story__step:not([data-current]) > :is(.story__title, .story__text) {
+  opacity: 0.5;
+}
+
+/*
+ * The fading window (Harlie's request, 2026-09-30: "a soft mask so text fades as it approaches the top and bottom
+ * edges"): the introduction and the steps fade out towards the window's edges. The mask is one window tall and held to
+ * the window, not to the words: where the browser draws scroll-driven animations, by the browser's own scrolling (held
+ * by the compositor, below); elsewhere CaseStory writes the introduction's and the steps' own offset from the window's
+ * top (--fade-y) as the page scrolls. Solid through the middle; at the bottom it fades to transparent over the last 12%
+ * of the window (dvh, so it follows a phone's toolbar); at the top from transparent (--fade-a: down to the floating
+ * pill's lower edge, or the header's black bar's edge or, for the steps on phones, the held band's) to solid a ramp
+ * further down (--fade-b), so the lines passing under the navigation fade out. On arrival the top is not faded at all
+ * (--fade-top, 1), and its fade grows in over the first scroll (at most 120px, whole before the title's first line
+ * reaches the pill or the bar), so the title reads whole. At the page's end the steps' --fade-b comes up where the last
+ * step's heading needs the room (CaseStory, END_EDGE).
+ *
+ * The introduction and the list of steps each carry one mask, and their boxes reach past the words (--fade-bleed,
+ * below), so what spills from the words is inside them: the moving line's glow and its way from step to step, the
+ * title's magnified letters (DockTitle). WebKit clips a mask to its box, whatever mask-clip says; the mask is also
+ * a little wider than the box and not clipped to it (mask-clip), for the browsers that follow that.
+ *
+ * While a page change pictures the page (transition/pieces.ts, :root[data-shuffle]), the pieces it carries (the
+ * title, the details, the lede, each step) take the mask themselves, at their own offset in their box (--fade-o,
+ * written by CaseStory), so each travels as it was seen: the change pictures a piece without its parents' mask.
+ */
+.cs > .cs__intro,
+.cs .story__steps,
+:root[data-shuffle] .cs > .cs__intro > .cs__words > :is(.cx-title, .cx-meta, .cx-lede),
+:root[data-shuffle] .cs .story__step {
+  mask-image: linear-gradient(
+    rgb(0 0 0 / var(--fade-top, 1)) var(--fade-a, 0px),
+    #000 var(--fade-b, 0px),
+    #000 calc(88dvh + var(--fade-lift, 0px)),
+    transparent calc(100dvh + var(--fade-lift, 0px))
+  );
+  mask-size: calc(100% + 160px) calc(100dvh + var(--fade-lift, 0px));
+  mask-position: -80px var(--fade-y, 0px);
+  mask-repeat: no-repeat;
+  mask-clip: no-clip;
+}
+
+:root[data-shuffle] .cs > .cs__intro,
+:root[data-shuffle] .cs .story__steps {
+  mask-image: none;
+}
+
+:root[data-shuffle] .cs > .cs__intro > .cs__words > :is(.cx-title, .cx-meta, .cx-lede),
+:root[data-shuffle] .cs .story__step {
+  mask-position: -80px calc(var(--fade-y, 0px) - var(--fade-o, 0px));
+}
+
+/*
+ * The fading window held by the compositor (2026-09-30, the verifier's flicker: positioned from CaseStory at each
+ * scroll event, the window ran a frame behind the scrolling that Chrome and WebKit do off the page's main thread, so at
+ * each mouse-wheel notch, and for 4 or 5 frames of a Space or Page Down, lines that should have been faded out showed
+ * at full brightness at the window's top edge, then snapped to faded). Where scroll-driven animations run (Chrome 115,
+ * Safari 26 and later; CaseStory's HELD asks the same question), the introduction and the list of steps are held still
+ * in the window by a translate as long as the page's scroll (fade-hold: a range longer than any page, so the translate
+ * is the scroll itself, whatever the page's length), drawn by the compositor in the same frame as the scroll, and their
+ * pieces are moved back by as much (fade-hold-back): the words scroll exactly as before, and the mask, placed once in
+ * its box (--fade-hold, the box's own top in the page, CaseStory), stays with the window in every frame.
+ *
+ * - The boxes reach over the whole window wherever they are held (--hold-up above their words, --hold-down below,
+ *   CaseStory, the margins taking back what the padding adds): the compositor applies a mask only within its box as it
+ *   last laid it out (Chrome showed the words unmasked for a few frames where they had moved past it; WebKit hides
+ *   them). Only the pieces take the pointer, so the boxes' reach covers nothing.
+ * - The page clips below its own end (#root: the header, the page and the footer; overflow-y: clip, no scroll
+ *   container, so the header and the phones' band still stick): a held box reaches below the page's end as the page
+ *   scrolls, and both engines made the page longer at each layout (WebKit then drew the mask out of place at the page's
+ *   end). Not the composition itself: the words may end inside the footer's top padding, below it.
+ * - The top fade is always whole here (--fade-top 0). Its strength, grown in over the page's first scroll (CaseStory,
+ *   fadeIn), cannot be drawn by the compositor, and its lag flashed the title's first line for a frame on the first
+ *   wheel notch or Space from the top. Instead the introduction's fade stands above the title on arrival and slides
+ *   down into place over the same first scroll (fade-slide, 24 to 50px of scroll; its words, as one, .cs__words, moved
+ *   back by as much): the title clear of it on arrival and the fade whole by the time its first line reaches the pill
+ *   or the bar, as before, and in between within about 10 to 14% of the strength it had at each row (CaseStory,
+ *   slideAt). The introduction's bottom fade sits as far lower in its mask (--fade-lift), so it stands where it did on
+ *   arrival.
+ * - The pieces take the mask themselves while a page change pictures the page (above), at --fade-y, which CaseStory
+ *   still writes as the page scrolls.
+ */
+@supports (animation-timeline: scroll()) {
+  .cs {
+    --fade-top: 0;
+  }
+
+  #root:has(.story__hold) {
+    overflow-y: clip;
+  }
+
+  .cs > .cs__intro,
+  .cs .story__steps {
+    margin-top: calc(-1 * var(--fade-bleed) - var(--hold-up, 0px));
+    padding-top: calc(var(--fade-bleed) + var(--hold-up, 0px));
+    mask-position: -80px var(--fade-hold, 0px);
+    pointer-events: none;
+    animation: fade-hold linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0px 100000px;
+  }
+
+  .cs > .cs__intro {
+    margin-bottom: calc(-1 * var(--hold-down, 0px));
+    padding-bottom: var(--hold-down, 0px);
+    animation:
+      fade-hold linear both,
+      var(--fade-slide, none) linear both;
+    animation-timeline: scroll(root block), scroll(root block);
+    animation-range:
+      0px 100000px,
+      0px var(--fade-in, 1px);
+  }
+
+  .cs .story__steps {
+    margin-bottom: calc(-1 * var(--fade-bleed) - var(--hold-down, 0px));
+    padding-bottom: calc(var(--fade-bleed) + var(--hold-down, 0px));
+  }
+
+  /* The introduction's words as one move back by as much as its fade slides, so no word's own transform is taken. */
+  .cs > .cs__intro > .cs__words {
+    pointer-events: none;
+    animation: var(--fade-slide-back, none) linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0px var(--fade-in, 1px);
+  }
+
+  .cs > .cs__intro > .cs__words > *,
+  .cs .story__steps > * {
+    pointer-events: auto;
+    animation: fade-hold-back linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0px 100000px;
+  }
+}
+
+@keyframes fade-hold {
+  to {
+    translate: 0 100000px;
+  }
+}
+
+@keyframes fade-hold-back {
+  to {
+    translate: 0 -100000px;
+  }
+}
+
+/*
+ * The introduction's slide itself (fade-slide, and fade-slide-back for its words) is written by CaseStory for each page,
+ * as keyframes over the first scroll in whole pixels, a pixel at a time, where they fall (--fade-slide names them): at
+ * a fraction of a pixel the introduction, drawn through its mask, was resampled and its words looked a little soft
+ * until the fade was in place, and steps can only be counted per keyframe where the keyframes are written out.
+ */
 
 /*
  * Phones and tablets held upright, and any window below 900px at least 541px tall: the introduction, then a compact
@@ -521,15 +756,11 @@
 
   .cs__body {
     grid-row: 3;
-    margin-top: 20px;
+    margin-top: calc(20px + var(--story-lead, 0px));
   }
 
-  .cs[data-hold] {
-    grid-template-rows: auto auto auto var(--hold-rest, 0px);
-  }
-
-  .story__steps {
-    gap: 28px;
+  .cs {
+    --steps-gap: clamp(24px, 3.5svh, 32px);
   }
 }
 
@@ -554,14 +785,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .story__phone,
-  .story__step::before,
-  .story__title {
+  .story__title,
+  .story__text {
     transition: none;
   }
 }
 
 /*
- * What CaseStory measures and sets (the space under the words, the held words' room and places) changes at once,
+ * What CaseStory measures and sets (the space under the words and above the steps) changes at once,
  * never eased: under reduced motion the site's 1ms transition on everything (base.css, 0s since 2026-09-28) left the
  * old value in place while the page was measured, so the page's length swung between two values on every measure
  * (Harlie's QA pass, 2026-09-28: on phones the Spreadsheet Agent's steps and stills stopped changing). Kept as a guard.
@@ -572,8 +803,22 @@
 
 /* Labels ------------------------------------------------------------------------------ */
 
-/* A details line breaks only between its parts; a "·" left at a line's end is hidden (CaseTitle marks it). */
+/*
+ * A details line breaks only between its parts; a "·" left at a line's end is hidden (CaseTitle marks it). Each part is
+ * kept whole on one line as long as it fits the column at all: set as one inline block, it goes to the next line whole,
+ * and only a part wider than the whole column wraps within itself, evenly (2026-09-30, with the flip: it was one
+ * unbreakable line, so the role "Product Operations and Merchandising Intern" ran past its column, under the held
+ * picture beside it on a phone on its side, 667 to 812px wide, or off the window's edge with the words on the right;
+ * past its column at 1100 to 1250px too, and on a phone held upright below 390px). The "·" stays with the part it
+ * follows.
+ */
 .cx-meta__part {
+  display: inline-block;
+  max-width: 100%;
+  text-wrap: balance;
+}
+
+.cx-meta__sep {
   white-space: nowrap;
 }
 
@@ -693,7 +938,7 @@
 /*
  * The narrowest phones: the details' tracking eased a little, so a long role (CafePress UK's) stays on one line at
  * 390px and wider and the details keep their two lines, the role and the organisation (Harlie's QA pass, 2026-09-28).
- * Below about 400px it still wraps rather than go under the 12px floor.
+ * Below 390px the role wraps within itself, evenly (.cx-meta__part), rather than go under the 12px floor.
  */
 @media (max-width: 419.98px) {
   .cx-meta {
@@ -724,7 +969,7 @@
     transition: transform 420ms var(--ease-arrive);
   }
 
-  .story__hold > .story__stage:not(.story__cards):hover {
+  .story__hold > .story__stage:not(.story__cards):not(:has(.mini-ctl:hover)):hover {
     transform: scale(1.03);
   }
 }
@@ -752,3 +997,44 @@
   box-shadow: var(--focus-inner-line);
 }
 
+/*
+ * A recording with its control line under it (MiniControls; Harlie's request, 2026-09-30): the picture keeps its own
+ * proportions and the line stands below it, inside the stage. The picture gives up the line's height (--ctl-room: the
+ * line and the space above it), so the stage never grows past its room; the click-to-enlarge surface keeps to the
+ * picture, and the stage does not grow on hover while the pointer is on the controls (above).
+ */
+.story__box--ctl {
+  /* The player: 12px above it, the line's row (12px), 10px, the buttons (40px). */
+  --ctl-room: 74px;
+  aspect-ratio: auto;
+}
+
+.story__hold > .story__stage.story__box--ctl,
+.story__stage.story__box--ctl {
+  width: min(100%, calc((var(--stage-h) - var(--ctl-room)) * var(--aspect, 1.6)));
+}
+
+.story__box--ctl > .story__screen {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  aspect-ratio: var(--aspect);
+}
+
+.story__box--ctl > .story__zoom {
+  bottom: var(--ctl-room);
+}
+
+@media (max-width: 899.98px), (orientation: landscape) and (max-height: 540.98px) {
+  .story__box--ctl {
+    /* Compact: 8px, 10px, 8px, 32px. */
+    --ctl-room: 58px;
+  }
+}
+
+/*
+ * Hovering a step, the introduction's words or the details line lights it in the line's pink and rose glow, and its
+ * letters or words swell under the pointer: the site-wide hover for words and sections, src/styles/lift.css and
+ * src/components/ui/dockText.ts (moved there 2026-09-30, when Harlie asked for it on every page; the blocks no longer
+ * grow as a whole).
+ */

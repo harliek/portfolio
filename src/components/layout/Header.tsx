@@ -7,6 +7,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { PageLink } from '../transition/PageLink'
 import { changePage, leaveSite, type Direction } from '../transition/pageChange'
 import { isPlainClick } from '../transition/warm'
+import { pillWidth } from './pill'
 import { ExternalMark, MobileMenu } from './WorkShelf'
 
 /** Scroll (px) past which the bar gathers into the floating pill: early, so nothing passes under the transparent bar. */
@@ -74,10 +75,8 @@ export function Header() {
     const header = headerRef.current
     if (!header) return
     const measure = () => {
-      const start = header.querySelector<HTMLElement>('.site-header__start')
-      const end = header.querySelector<HTMLElement>('.site-nav, .menu-button')
-      if (!start || !end) return
-      header.style.setProperty('--pill-w', `${Math.ceil(start.scrollWidth + end.scrollWidth + 40 + 16)}px`)
+      const width = pillWidth(header)
+      if (width !== null) header.style.setProperty('--pill-w', `${width}px`)
     }
     measure()
     const ro = new ResizeObserver(measure)

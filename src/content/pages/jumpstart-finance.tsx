@@ -35,21 +35,21 @@ export const JUMPSTART = {
   /** Harlie's copy brief of 2026-09-29, verbatim. */
   lede: (
     <p>
-      At the European Innovation Academy in Porto, I led a five&#8209;person international team developing Jumpstart Finance to make practical financial education more accessible to students.
+      At the European Innovation Academy in Porto, I led a five&#8209;person international team developing a mobile financial education product.
     </p>
   ),
   /**
-   * Harlie's three phones, left to right as on the homepage tile (Profile, Home, Community); `step` is the one section
-   * each belongs to, one phone at a time, the middle first: Home with the topics, then the Community forum, then the
-   * Profile.
+   * Harlie's three phones, left to right as on the homepage tile (Profile, Home, Community); `step` is the sections
+   * each belongs to, one phone at a time, the middle first: Home with the topics for the first two sections (User
+   * problem, Product direction), then the Community forum (Experience design), then the Profile (Validation).
    */
   phones: [
-    { image: 'jf-tile-profile' as ImageId, name: 'Profile', step: 2 },
-    { image: 'jf-tile-home' as ImageId, name: 'Home', step: 0 },
-    { image: 'jf-tile-third' as ImageId, name: 'Community', step: 1 },
+    { image: 'jf-tile-profile' as ImageId, name: 'Profile', step: 3 },
+    { image: 'jf-tile-home' as ImageId, name: 'Home', step: [0, 1] },
+    { image: 'jf-tile-third' as ImageId, name: 'Community', step: 2 },
   ],
   /**
-   * Harlie's wording, verbatim (copy brief of 2026-09-29). The audience change is Harlie's account (no project file
+   * Harlie's wording, verbatim (Harlie's revised text of 2026-09-30, four sections; before, the copy brief of 2026-09-29). The audience change is Harlie's account (no project file
    * records the ages or the interview findings). The prototype's lessons, level path and forum are the 2024 screens
    * (pitch pp.5–6; proto 2 to 4); "short" lessons stays out (no screen shows a length). The 150 sign-ups are attributed
    * to the program pitch (p.10), where what was counted is not stated; no outcome is drawn from them. The landing page:
@@ -57,16 +57,20 @@ export const JUMPSTART = {
    */
   features: [
     {
-      title: 'The opportunity',
-      text: 'Financial knowledge is essential to independence and deserves a stronger place in education. We focused on spending, saving, and investing as skills students should develop before taking responsibility for their own finances.',
+      title: 'User problem',
+      text: 'We initially targeted young adults broadly, but interviews showed that younger users with less financial experience had a clearer need for structured guidance.',
     },
     {
-      title: 'Learning experience',
-      text: 'We designed the concept around lessons tailored to users’ experience and goals, combining gamified learning levels with a forum for financial questions. The aim was to make learning engaging, give progress a visible structure, and encourage discussion beyond individual lessons.',
+      title: 'Product direction',
+      text: 'We shifted the concept toward foundational skills in spending, saving, and investing, organized around progressive learning levels.',
     },
     {
-      title: 'Investor presentation',
-      text: 'I presented our research, mobile prototype, and proposed business model to investors at the program’s close. We attracted 150 sign-ups in 24 hours.',
+      title: 'Experience design',
+      text: 'The prototype combined lessons, visible progress, financial tools, and a community forum for questions and discussion.',
+    },
+    {
+      title: 'Validation',
+      text: 'I led the product direction, research, prototype, and business model, then presented the concept to investors. Jumpstart attracted 150 sign-ups within 24 hours.',
     },
   ],
 }

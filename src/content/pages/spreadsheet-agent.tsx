@@ -23,10 +23,10 @@
 export const SHEET = {
   title: 'Spreadsheet Assistant',
   meta: ['Independent project · 2026'],
-  /** Harlie's copy brief of 2026-09-29, verbatim (README: nothing reaches a sheet until the plan is approved). */
+  /** Harlie's revised text of 2026-09-30, verbatim (README: nothing reaches a sheet until the plan is approved). */
   lede: (
     <p>
-      I designed and built a spreadsheet assistant that translates written requests into editable sheets through a reviewable plan.
+      I designed and built a spreadsheet assistant that turns written requests into structured, editable sheets.
     </p>
   ),
   /**
@@ -35,13 +35,18 @@ export const SHEET = {
    * 13.2s; the sheet is complete at 15.47s; Atlas Goods is selected at 19.77s and its detail opens at 21.23s. The
    * earlier recordings (request "Compare vendor prices across B2B products") are not used.
    */
-  // Review before generation: the request sent, the plan reviewed, the sheet built (8.5s to 19.3s); data provenance:
-  // the pointer moving to a cell, the cell selected and its source detail opened (19.3s to the end). Never the empty sheet.
+  // Four sections (Harlie's text of 2026-09-30): the workspace of saved sheets, held on its last frame before New sheet
+  // at 2.23s (Product problem); the request sent and the plan reviewed, to just before Build sheet at 13.2s
+  // (Interpretation layer); the sheet built (Review and editing); the pointer moving to a cell, the cell selected and
+  // its source detail opened (19.3s to the end; Product principle). Never the empty sheet. The recording itself plays
+  // on its own loop (SpreadsheetAgent.tsx, `free`), so these apply under reduced motion (the stills).
   segments: [
-    [8.5, 19.3],
+    [0, 2.2, 'hold'],
+    [8.5, 13.17],
+    [13.2, 19.3],
     [19.3, 24.73],
   ] as const,
-  stills: [11.5, 23.5],
+  stills: [1.0, 11.5, 17.0, 23.5],
   /**
    * Harlie's copy brief of 2026-09-29, checked against the prototype's source (~/Desktop/monty-sheets 11/
    * spreadsheet-agent), not the recordings: query.ts reads fields, filters, sorting and row limits; PlanReview.tsx
@@ -53,12 +58,20 @@ export const SHEET = {
    */
   steps: [
     {
-      title: 'Review the plan',
-      text: 'The interpreter identifies the requested fields, filters, sorting, and row limits. Users can adjust the proposed plan and see which instructions were not recognized before creating the sheet.',
+      title: 'Product problem',
+      text: 'Natural-language tools can generate results quickly, but users often cannot see what the system understood, missed, or used to produce an answer.',
     },
     {
-      title: 'Inspect and edit',
-      text: 'Cell details trace values to their source records and formulas. Users can edit the sheet, undo changes, and save it to a folder.',
+      title: 'Interpretation layer',
+      text: 'Before creating the sheet, the assistant identifies fields, filters, sorting, and row limits, then flags instructions it could not interpret.',
+    },
+    {
+      title: 'Review and editing',
+      text: 'Users can adjust the plan before generation, then inspect source records and formulas, edit cells, undo changes, and save the sheet.',
+    },
+    {
+      title: 'Product principle',
+      text: 'The workflow gives users visibility into the assistant’s reasoning before and after generation while preserving the speed of automation.',
     },
   ],
 }

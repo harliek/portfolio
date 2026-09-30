@@ -29,8 +29,11 @@
     0 0 6px 1px rgb(var(--pointer-rgb) / 0.9),
     0 0 26px 4px rgb(var(--pointer-rgb) / 0.55),
     0 0 80px 12px rgb(var(--pointer-rgb) / 0.26);
-  --glow-media-drop: drop-shadow(0 0 1.5px rgb(196 204 255 / 0.95)) drop-shadow(0 0 8px rgb(var(--pointer-rgb) / 0.85))
-    drop-shadow(0 0 30px rgb(var(--pointer-rgb) / 0.4));
+  /* Bright but held close to the phones, and a little bluer than the boxes' light (Harlie's requests, 2026-09-30: the
+     phones' glow "less bright ... like the rest of the images", then "still be bright, just less expanded. And like a
+     little bluer"): drop-shadows follow each cutout and pile up between neighbours, so the wide haze is left out. */
+  --glow-media-drop: drop-shadow(0 0 1.5px rgb(188 208 255 / 0.95)) drop-shadow(0 0 5px rgb(88 128 255 / 0.9))
+    drop-shadow(0 0 12px rgb(88 128 255 / 0.42));
 
   color-scheme: dark;
 
@@ -85,6 +88,25 @@
   --trail-halo: rgb(118 132 255);
   --pointer-rgb: 118 132 255;
   --pointer-light-rgb: 118 104 255;
+
+  /*
+   * Words and sections under the pointer (src/styles/lift.css; Harlie's requests, 2026-09-30: "maybe brighter", then
+   * "have it glow more"): the colour the words turn and the glow they take while the pointer is on them (hover only: the
+   * words rest without a glow, as Harlie asked on 2026-09-28), both the case pages' moving line's (Harlie, 2026-09-30:
+   * "actually turn that like pinkish color that's on the line", in place of the pale blue violet of "It should also kind
+   * of turn the slight bluish glow color"): its pale rose core (--statement-line) in a rose glow (--statement-rgb, as
+   * --statement-line-glow). Words already white, which cannot come up any further, take the stronger glow
+   * (--lift-glow-strong; Harlie, 2026-09-30: "the ones already bright should glow more"); dimmed and grey words come up
+   * under the softer one (--lift-glow). The titles take them too, and nothing grows as a whole any more: the letters or
+   * words under the pointer swell instead (dockLetters.ts; Harlie, 2026-09-30: "instead of it growing bigger, it would do
+   * that", after the 7% growth). The glows are filters, drawn around the words' element as a whole (so the swelling
+   * letters' clipped copies light without seams): each is the first layer of the text-shadow glow it replaced (10px at
+   * 55%, 12px at 80%), a drop-shadow's length being half a text-shadow's blur, measured closest to the old glows on the
+   * site's own text (the old wide haze, 24px and 30px, adds no more than a filter chain compounds). Tune all three here.
+   */
+  --lift-color: var(--statement-line);
+  --lift-glow: drop-shadow(0 0 5px rgb(var(--statement-rgb) / 0.55));
+  --lift-glow-strong: drop-shadow(0 0 6px rgb(var(--statement-rgb) / 0.8));
 
   /*
    * Interactive accent: the statement blue violet on every page (Harlie's QA pass, 2026-09-28: the per-project

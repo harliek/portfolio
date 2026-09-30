@@ -673,6 +673,11 @@
   gap: 16px;
 }
 
+/* The invitation above the fields runs the form's full width (Harlie's request, 2026-09-30), not Education's measure. */
+.about-content .about-contact__form .about-school__text p {
+  max-width: none;
+}
+
 @media (min-width: 560px) {
   .about-content .about-contact__row {
     grid-template-columns: repeat(2, minmax(0, 1fr));

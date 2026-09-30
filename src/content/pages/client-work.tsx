@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import type { VideoId } from '../media'
 
 /**
- * Latest copy approved by Harlie on 2026-09-29, including her clarification of
- * client management and campaign coordination on Aristocracy.
+ * Latest copy: Harlie's three film texts of 2026-09-30, verbatim (they supersede the 2026-09-29 copy, which had
+ * Harlie's clarification of client management and campaign coordination on Aristocracy).
  *
  * Creative Production (route /work/creative-production; the files keep the
  * older client-work name). Three stacked project sections, each pairing its
@@ -18,8 +18,8 @@ import type { VideoId } from '../media'
  * Earlier copy (brief of 2026-09-28, superseded above): each film's two sentences named the agency's production, then
  * Harlie's part. No opening paragraph (the
  * page's meta names the internship) and no captions (none of the films has a caption slot, and the first sentence of
- * each text already names the agency as producer). The Night Club sentence no longer names Gymshark (branding, not
- * a documented role). The non-breaking hyphens keep the compound words (B-roll, on-set) whole at a line end.
+ * each text already names the agency as producer). The Night Club sentence then left out Gymshark; Harlie's text of
+ * 2026-09-30 names the tour as The Night Club x Gymshark Global Tour, with HECK! as an official partner.
  *
  * Evidence (docs/content-provenance.md, Shift Content)
  * - Harlie's weekly journals and Data 197 report (Shift Content/Shift
@@ -92,7 +92,7 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/nickleby-loop-trim-1138.mp4', poster: '/media/img/nickleby-loop-poster.webp', width: 1138, height: 640 },
       work: (
         <p>
-          We produced testimonial, FAQ, and social films in a single day, using a question-card format to capture unscripted responses. I handled lighting, equipment setup, and B-roll filming.
+          We produced testimonial, FAQ, and social films for Nickleby Capital in a single-day shoot. I worked across client coordination, production planning, and on-set execution, helping structure the question-card format, prepare the setup, manage lighting and equipment, and capture supporting B-roll.
         </p>
       ),
     },
@@ -104,7 +104,7 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/aristocracy-loop-854.mp4', poster: '/media/img/aristocracy-loop-poster.webp', width: 854, height: 640, fill: true },
       work: (
         <p>
-          I worked across client management, campaign coordination, and production for Aristocracy London’s spring/summer campaign ahead of its Manchester store launch, creating behind-the-scenes photography alongside the film, e-commerce, and social deliverables.
+          I worked across client management, campaign coordination, and production for Aristocracy London’s spring/summer campaign ahead of its Manchester store launch, creating behind-the-scenes photography alongside film and social content.
         </p>
       ),
     },
@@ -116,7 +116,7 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/heck-loop-1138.mp4', poster: '/media/img/heck-loop-poster.webp', width: 1138, height: 640 },
       work: (
         <p>
-          I filmed The Night Club Global Tour’s nighttime run for Shift Content, capturing its participants and atmosphere.
+          I filmed The Night Club x Gymshark Global Tour for Shift Content, capturing a women-only nighttime 5K created to raise awareness around women’s safety while running after dark, with HECK! supporting the event as an official partner.
         </p>
       ),
     },

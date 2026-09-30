@@ -42,15 +42,18 @@ export const ABOUT = {
   label: 'About',
   name: 'Harlie Katz',
   /**
-   * Harlie's professional descriptor from the brief of 2026-09-28 ("AI Product Strategy & Implementation", the
-   * homepage line), in this page's sentence case; it was the résumé header, AI IMPLEMENTATION | PRODUCT STRATEGY &
-   * OPERATIONS.
+   * Harlie's professional descriptor, the homepage line in this page's sentence case: "AI Product Strategy,
+   * Deployment & Implementation" (Harlie's request, 2026-09-29; it was "AI Product Strategy & Implementation" from the
+   * brief of 2026-09-28, and before that the résumé header, AI IMPLEMENTATION | PRODUCT STRATEGY & OPERATIONS).
    */
-  descriptor: 'AI product strategy and implementation',
-  /** Harlie's editorial pass (v23): the name heading introduces Harlie, and the education detail is not repeated from Education. */
+  descriptor: 'AI product strategy, deployment, and implementation',
+  /**
+   * Harlie's editorial pass (v23): the name heading introduces Harlie, and the education detail is not repeated from
+   * Education. Harlie's text of 2026-09-30, verbatim, in the page's two paragraphs (split where the first used to end).
+   */
   intro: [
-    'I’m deeply invested in the future of applied AI and its potential to expand what people can learn, create, and pursue independently. Making specialized knowledge more accessible opens opportunities for people to develop ideas and take on work that once required resources beyond their reach. I’m driven to turn that potential into products that people can put to use.',
-    'My focus is on identifying where new capabilities can make a meaningful difference and developing the ideas into working applications. I bring research, technical curiosity, and hands-on prototyping to that process, with a commitment to understanding the problem and carrying the work through. As AI advances, I’m motivated by the opportunity to take on greater responsibility for what gets built and how it serves the people using it.',
+    'I’m invested in the future of applied AI and its ability to expand what people can learn, create, and build independently. As specialized knowledge becomes more accessible, more people can pursue ideas that once required resources or expertise beyond their reach. My goal is to turn that potential into products people can use.',
+    'Technology is advancing rapidly, and I’m determined to help shape what gets built and how it is adopted. I have consistently identified areas of greater potential, expanded my responsibilities, and developed better solutions. I bring intellectual curiosity, technical fluency, and the discipline to turn ambitious ideas into working products.',
   ],
   portraitLabel: 'Portrait of Harlie Katz',
 
@@ -64,21 +67,20 @@ export const ABOUT = {
     /** Under the three lines, Harlie's wording (v26), without the colon (copy brief of 2026-09-29: no colons in authored copy). */
     coursework: 'Coursework in machine learning, data science, user experience, computer science, psychology, and human cognition',
     /**
-     * Harlie's sentence, verbatim (copy brief of 2026-09-29): the three-year degree (registrar record: Fall 2023 to May
-     * 2026) and what it combined. No further explanation of cognition and AI.
+     * Harlie's text, verbatim (2026-09-30; the three-year degree is the registrar record: Fall 2023 to May 2026).
      */
-    text: ['I completed my Berkeley degree in three years, studying intelligence from human and computational perspectives. Cognitive science and data science gave me a foundation for examining how minds and machines represent information, learn from experience, and draw conclusions. That understanding informs how I evaluate AI’s capacity to extend human reasoning and the judgment required to apply it effectively.'],
+    text: ['I completed my Berkeley degree in three years, studying intelligence from human and computational perspectives. Cognitive science and data science taught me how minds and machines process information and learn from patterns. That foundation shapes how I evaluate AI’s ability to extend human reasoning and expand human capability.'],
   },
 
   /** Get in touch (Harlie's request, 2026-09-27): a name, an email address and a message (ContactForm.tsx). */
   contactTitle: 'Get in touch',
   contact: {
     /**
-     * Harlie's one-line invitation, verbatim (copy brief of 2026-09-29), above the form in the section's own grid
-     * (ContactForm.tsx), in the Education paragraph's existing text style. Stated here only: not in the About
+     * Harlie's invitation, verbatim (2026-09-30), above the form in the section's own grid (ContactForm.tsx), in the
+     * Education paragraph's text style but as wide as the form (Harlie's request). Stated here only: not in the About
      * paragraphs, the page endings or the footer.
      */
-    intro: 'I bring experience translating research and workflow requirements into interactive prototypes, with the initiative to carry ideas into execution. I’m looking for a company developing useful AI products where I can take responsibility, contribute to its direction, and grow with the team.',
+    intro: 'I’m looking to join a team building ambitious AI products, where I can take on meaningful responsibility, solve important problems, and contribute beyond the boundaries of my role. I’m most motivated by environments where I can grow with the company while helping shape its products, direction, and future.',
     name: 'Name',
     email: 'Email',
     message: 'Message',

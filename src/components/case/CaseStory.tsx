@@ -3,7 +3,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type 
 import { CASE_BAR } from '../../config/stage'
 import { getImage, type ImageId } from '../../content/media'
 import { PHONE_SIZES, STAGE_SIZES } from '../../content/projects'
-import { useReducedMotion } from '../../hooks/useReducedMotion'
+import { prefersReducedMotion, useReducedMotion } from '../../hooks/useReducedMotion'
 import { ScrollProgress } from '../../lib/scrollProgress'
 import { DemoControls } from '../media/DemoControls'
 import { ResponsiveImage } from '../media/ResponsiveImage'
@@ -182,6 +182,58 @@ function slideKeyframes(name: string, fadeIn: number, clear: number) {
 const END_LINKS = 40
 const END_LINKS_MIN = 24
 
+/**
+ * One scroll, one section (Harlie's request, 2026-09-30, verbatim: "After just one scroll, it should switch to the
+ * next section"). A told page's scroll snaps (case-v16.css, :root[data-case-snap], on while a told page is open): its
+ * places are the page's top (the introduction), each step with its middle on the reading line, where it is current,
+ * and the page's end (the footer), and each is a stop no scroll passes (scroll-snap-stop), so a touch flick goes to
+ * the next place or the one before by the browser's own scrolling. The mouse wheel and the trackpad are taken here
+ * instead (onWheel): browsers let them pass places or stop at the wrong one (2026-09-30, measured on the snapping
+ * alone: a trackpad's burst of small steps went from the top to the end in Chromium and WebKit, and WebKit's wheel
+ * passed a place 8px away). So are the keys (onKey): Space and Shift+Space, Page Down and Up and the arrow keys each go
+ * one place, Home and End to the top and the end (2026-09-30, the review: left to Chromium's snapping, a second press
+ * while the first was still moving, or a held key, stopped the page between two places, and it stayed there; a page
+ * with the same places and no script did the same).
+ *
+ * A wheel gesture is the run of wheel events in one direction, however many (a notch; a trackpad's swipe with its
+ * momentum), until WHEEL_GAP ms pass without one, the direction turns, or, once the gesture has eased to half its
+ * strength, a new push rises in it (a second swipe during the first one's momentum). Once it has moved WHEEL_MIN px it
+ * goes one place, from the place a move under way is going to, so a second gesture goes one further. The move is the
+ * browser's smooth scroll, drawn by the compositor like the page's own (the fading window stays held), and at once
+ * under reduced motion. A move is under way until the page arrives (or its scrolling ends), not for a set time after
+ * its last scroll (2026-09-30, the review: in Firefox a move whose scrolling paused for 200ms on a busy page was taken
+ * as done, and the next notch only went on to where it was already going); AIM_WAIT is the longest it waits for that.
+ */
+const WHEEL_GAP = 200
+const WHEEL_MIN = 4
+/** Wheel events this close together (ms) are one, their sizes summed: what the browser had queued, delivered at once. */
+const WHEEL_MERGE = 4
+/** The longest a move made here counts as under way after the page last scrolled (ms), where no scrollend comes. */
+const AIM_WAIT = 1000
+/** How far from a place the page may rest and still be there (px): the browsers' own snapping rounds. */
+const AT_PLACE = 3
+
+/** Told pages open (a page change mounts the next before the last has gone): the page's scroll snaps while any is. */
+let snapPages = 0
+
+/**
+ * Whether something under the pointer scrolls by itself that way (a list or a panel with its own scroll): the wheel
+ * is left to it. The dialogs and the phone menu lock the page (is-dialog-open, is-menu-open) and keep theirs too.
+ */
+function scrollsItself(target: EventTarget | null, dir: number) {
+  for (let el = target instanceof Element ? target : null; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+    if (el.scrollHeight <= el.clientHeight + 1) continue
+    const overflow = getComputedStyle(el).overflowY
+    if (overflow !== 'auto' && overflow !== 'scroll' && overflow !== 'overlay') continue
+    if (dir > 0 ? el.scrollTop + el.clientHeight < el.scrollHeight - 1 : el.scrollTop > 0) return true
+  }
+  return false
+}
+
+/** What keeps the keys for itself, for typing (a field), or Space too, for pressing (a button, a box to tick). */
+const KEEPS_KEYS = 'input, textarea, select, video, audio, [contenteditable]:not([contenteditable="false"])'
+const KEEPS_SPACE = 'button, summary, [role="button"], [role="checkbox"], [role="switch"], [role="radio"], [role="tab"], [role="menuitem"], [role="option"]'
+
 /** The floating navigation pill (px, in the window), with a few pixels of room around it. */
 interface Shade {
   top: number
@@ -289,15 +341,19 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
      * window (the introduction, the list of steps), the scroll over which the top fade grows in (fadeIn), its strength
      * last set, and the steps' top fade's lower edge (px in the window): as measured (b), at the page's end (endB),
      * last set (listB). Where the compositor holds the fading window (HELD), where each box's mask is placed in it (at:
-     * the box's top in the page).
+     * the box's top in the page). For the snapping (WHEEL_GAP): what covers the window's top (covered), and how far a
+     * step snapped by its heading keeps below it (room) and its end above the window's bottom (roomEnd).
      */
-    const m = { t: [0], end: 1, pad: 0, lead: 0, clear: 0, fade: [] as HTMLElement[], fadeIn: FADE_IN, strength: -1, b: 0, endB: 0, listB: -1 }
+    const m = { t: [0], end: 1, pad: 0, lead: 0, clear: 0, fade: [] as HTMLElement[], fadeIn: FADE_IN, strength: -1, b: 0, endB: 0, listB: -1, covered: 0, room: 0, roomEnd: 0 }
     const holds = new Map<HTMLElement, { at: number }>()
     const cs = list.closest<HTMLElement>('.cs')
     const intro = cs?.querySelector<HTMLElement>(':scope > .cs__intro')
     const body = list.parentElement ?? list
     // A refresh queued below is dropped once the page has gone (the next page's triggers refresh themselves).
     let live = true
+    // The page's scroll snaps while it is open (WHEEL_GAP; case-v16.css).
+    const root = document.documentElement
+    if (!snapPages++) root.setAttribute('data-case-snap', '')
     // The introduction's slide, written as the page is measured (slideKeyframes), where the compositor holds the fading
     // window; removed with the page.
     const slideName = ++slides
@@ -432,6 +488,56 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
       // the middle of the space between it and the step before. The first is current from the start (Harlie's request).
       m.t = tops.map((top, k) => (k === 0 ? 0 : Math.max(0, (bottoms[k - 1] + top) / 2 - read)))
       m.end = Math.max(1, document.documentElement.scrollHeight - vh)
+      /*
+       * Where the page's scroll snaps (one scroll, one section: WHEEL_GAP, case-v16.css). The places are counted below
+       * what covers the window's top (--snap-top, the root's scroll padding), so a step snapped by its middle has it on
+       * the reading line, where it is current. A step too tall to stand whole there, between the steps' top fade and
+       * the bottom fade (a small phone, a very short window), snaps by its heading instead, just below the top fade
+       * (--snap-room, data-snap "start"); one taller than that room by as much as the steps' usual spacing apart for a
+       * flick (near, below) has a second place, its end, with its last line above the bottom fade (--snap-room-end,
+       * data-snap "through"), so it is read through before the next step (2026-09-30: the browsers' own free scrolling
+       * within a place taller than the window was not to be had, Chromium stopping part way at 320x568 and WebKit not
+       * at all; a second place only 9 to 35px on was passed by every flick).
+       *
+       * The introduction is a place of its own (the page's top, .cs__top, placed where what covers the window's top
+       * ends, so its place is exactly the top: WebKit dropped a place held there by a margin once the scroll padding
+       * was a phone band's, and its arrow keys stopped at the first step) only where the first step's place shows
+       * something new and is not too close: where the first step is already whole in view at the top, above the bottom
+       * fade (wide windows), the top is its place too, since it is current there from the start, and a first scroll
+       * that only brought it the 9 to 69px onto the reading line would switch nothing; and where the two are less than
+       * 0.6 of the steps' usual spacing apart (near), since a flick passes a place close to where the finger lets go
+       * (2026-09-30, Chromium: a stop within one frame of the glide, 20 to 50px, is passed; 90px flicks passed first
+       * steps 88 and 94px from the top at 390x844). Likewise the page's end (the footer): a place of its own only where
+       * the footer's rows are not whole in view with the last step on the reading line and it is at least that far
+       * beyond the last step (small phones; 58 to 83px beyond at 390x844, and a flick up from the end passed the last
+       * step).
+       */
+      m.covered = covered
+      m.room = Math.max(0, Math.round(m.b - covered))
+      m.roomEnd = Math.round(0.12 * vh)
+      root.style.setProperty('--snap-top', `${covered}px`)
+      cs?.style.setProperty('--snap-room', `${m.room}px`)
+      cs?.style.setProperty('--snap-room-end', `${m.roomEnd}px`)
+      const topMark = cs?.querySelector<HTMLElement>(':scope > .cs__top')
+      if (topMark) {
+        const at = topMark.getBoundingClientRect().top + y
+        topMark.style.top = `${(parseFloat(topMark.style.top) || 0) + covered - at}px`
+      }
+      const fits = boxes.map((b) => b.height / 2 <= Math.min(read - m.b, 0.88 * vh - read))
+      const stepPlaces = boxes.map((_, k) => (fits[k] ? (tops[k] + bottoms[k]) / 2 - read : tops[k] - covered - m.room))
+      const gaps = stepPlaces.slice(1).map((p, k) => p - stepPlaces[k]).sort((a, b) => a - b)
+      const near = 0.6 * (gaps[Math.floor(gaps.length / 2)] ?? 0)
+      const rowBottom = footerAtEnd + (links.length ? Math.max(...links.map((r) => r.bottom + y)) - footerTop : footerH)
+      for (const [k, el] of [...list.children].entries()) {
+        if (!(el instanceof HTMLElement)) continue
+        const last = el.lastElementChild?.getBoundingClientRect()
+        const through = !fits[k] && last !== undefined && last.bottom + y + m.roomEnd - vh >= stepPlaces[k] + Math.max(1, near)
+        let snap = fits[k] ? '' : through ? 'through' : 'start'
+        if (k === 0 && (bottoms[k] <= 0.88 * vh || (fits[k] && stepPlaces[k] < near))) snap = 'none'
+        else if (k === n - 1 && fits[k] && (rowBottom + (m.end - stepPlaces[k]) <= vh + 0.5 || m.end - stepPlaces[k] < near)) snap = 'none'
+        if (snap) el.dataset.snap = snap
+        else delete el.dataset.snap
+      }
       // The boxes that carry the fading window, and the offset in its box of each piece a page change carries
       // (transition/pieces.ts: the title, the details, the lede, each step), which takes the mask itself while the
       // change pictures the page (case-v16.css). The boxes' own positions are read as laid out (laidOut): where the
@@ -558,16 +664,316 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
       ScrollProgress.refresh()
     })
     if (header) pillWatch.observe(header, { attributes: true, attributeFilter: ['style'] })
+
+    /*
+     * The places the page's scroll snaps to, as laid out now (px of scroll, in order from the top). Read from the page
+     * as the browser reads it for the snapping (the steps' boxes and their data-snap, measure()), so a move lands where
+     * the snapping would; places within a pixel of each other are one (a step whose place is the page's top or end).
+     * snapAreas: each box that makes a place (case-v16.css), with its place.
+     */
+    const snapAreas = () => {
+      const y = window.scrollY
+      const vh = window.innerHeight
+      const end = Math.max(0, document.documentElement.scrollHeight - vh)
+      const read = (m.covered + vh) / 2
+      const areas: { el: Element; at: number }[] = []
+      const top = cs?.querySelector(':scope > .cs__top')
+      if (top) areas.push({ el: top, at: 0 })
+      for (const el of list.children) {
+        const snap = el instanceof HTMLElement ? el.dataset.snap : 'none'
+        if (snap === 'none') continue
+        const box = el.getBoundingClientRect()
+        if (snap === 'start' || snap === 'through') areas.push({ el, at: box.top + y - m.covered - m.room })
+        else areas.push({ el, at: (box.top + box.bottom) / 2 + y - read })
+        const last = el.lastElementChild
+        if (snap === 'through' && last) areas.push({ el: last, at: last.getBoundingClientRect().bottom + y + m.roomEnd - vh })
+      }
+      const footer = document.querySelector('.site-end')
+      if (footer) areas.push({ el: footer, at: end })
+      return { end, areas: areas.map((a) => ({ el: a.el, at: Math.min(end, Math.max(0, a.at)) })) }
+    }
+    const places = () => {
+      const { end, areas } = snapAreas()
+      const at = [0, end, ...areas.map((a) => a.at)].sort((a, b) => a - b)
+      const one: number[] = []
+      for (const p of at) if (!one.length || p - one[one.length - 1] > 1) one.push(p)
+      return one
+    }
+    // Where a move made here is going, until the page arrives there or its scrolling ends (AIM_WAIT the longest after
+    // its last scroll, for a browser without scrollend).
+    let aim: number | null = null
+    let aimEnd = 0
+    const aimed = () => {
+      window.clearTimeout(aimEnd)
+      aimEnd = window.setTimeout(() => (aim = null), AIM_WAIT)
+    }
+    // The page cannot scroll (the phone menu or a dialog open) and keeps its own keys and wheel then.
+    const locked = () => root.classList.contains('is-dialog-open') || root.classList.contains('is-menu-open')
+    /*
+     * The places a touch may end at (onTouchStart): every box beyond them gives up its place for the time being
+     * (data-snap-off, case-v16.css), so there is no place for a fling to pass to; all are back once the page is still
+     * again, or for a move made here.
+     */
+    let narrowed = false
+    const widen = () => {
+      if (!narrowed) return
+      narrowed = false
+      for (const el of document.querySelectorAll('[data-snap-off]')) el.removeAttribute('data-snap-off')
+    }
+    // A move made here: to a place, the browser's smooth scroll (at once under reduced motion).
+    const move = (to: number) => {
+      widen()
+      aim = to
+      aimed()
+      window.scrollTo({ top: to, behavior: prefersReducedMotion() ? 'instant' : 'smooth' })
+    }
+    /*
+     * A focus in what is held in view (2026-09-30): below 900px wide the header's bar, and on phones the band holding
+     * the stage, are sticky, and a focus there that brings its target into view (Tab or Shift+Tab to Menu, a header
+     * link, the recording's controls or the gallery's circles; a circle's arrow keys) was resolved by the snapping to
+     * the place nearest the sticky box's own place in the page, near the top, though it was in view all along: from the
+     * third section at 390x844 and 800x900 the page went to 0 in Chromium (at once, before the focusin) and to 0 or
+     * 122 in WebKit (at the next frame). The page stays where it was, as before the snapping: put back at the focusin
+     * (Chromium), and for WebKit the snapping is set aside for two frames (data-snap-hold, case-v16.css), so there is
+     * nothing to move to, with any move in the meantime put back. A tap or a click there never moved it.
+     */
+    let seenY = window.scrollY
+    let keep: number | null = null
+    let keepFrame = 0
+    const hold = () => {
+      if (keep !== null && Math.abs(window.scrollY - keep) > 0.5) window.scrollTo({ top: keep, behavior: 'instant' })
+    }
+    const onFocusIn = (e: FocusEvent) => {
+      if (!(e.target instanceof Element) || !e.target.closest('.site-header, .cs__media')) return
+      keep = seenY
+      hold()
+      root.setAttribute('data-snap-hold', '')
+      cancelAnimationFrame(keepFrame)
+      keepFrame = requestAnimationFrame(() => {
+        keepFrame = requestAnimationFrame(() => {
+          hold()
+          keep = null
+          root.removeAttribute('data-snap-hold')
+        })
+      })
+    }
+    // The way the page last scrolled, and whether the safety net (onScrollEnd) has put it right since the last input.
+    let lastDir = 0
+    let righted = false
+    /*
+     * A touch goes one place at most, as the wheel does (2026-09-30, the review: at 390x844 Chromium's fling passed the
+     * next place about half the time, the finger letting go 20 to 40px before it, the places there being about a
+     * flick's length apart; scroll-snap-stop did not hold it, and neither did putting the page at the place as the fling
+     * passed it, which Chromium's fling went on from). As a touch begins, only the place the page is at and the one on
+     * each side of it (or, caught between two, those two) keep their boxes' places (narrowed, widen), before the
+     * browser has taken up the fling and chosen where it ends: so the finger may go on or back one place, or stay. The
+     * page is at rest at a place then, so nothing moves as the others give theirs up. Not for a pinch, nor with the
+     * page locked (the phone menu, a dialog). The fingers down: touches.
+     */
+    let touches = 0
+    let touchY = 0
+    const onTouchStart = (e: TouchEvent) => {
+      touches = e.touches.length
+      touchY = window.scrollY
+      // The finger has the page: a move made here is over.
+      aim = null
+      righted = false
+      if (touches > 1 || locked()) {
+        widen()
+        return
+      }
+      const y = window.scrollY
+      const { areas } = snapAreas()
+      const at = places()
+      const i = at.findIndex((p) => Math.abs(p - y) <= AT_PLACE)
+      const lo = i >= 0 ? at[Math.max(0, i - 1)] : (at.filter((p) => p < y).pop() ?? 0)
+      const hi = i >= 0 ? at[Math.min(at.length - 1, i + 1)] : (at.find((p) => p > y) ?? at[at.length - 1])
+      narrowed = true
+      for (const a of areas) a.el.toggleAttribute('data-snap-off', a.at < lo - 1 || a.at > hi + 1)
+    }
+    const onTouchEnd = (e: TouchEvent) => {
+      touches = e.touches.length
+      // A tap (the page has not moved): every place back at once, for whatever it does next.
+      if (!touches && Math.abs(window.scrollY - touchY) < 1) widen()
+    }
+    // A mouse or a pen (the scroll bar, say) after a touch: every place back.
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') widen()
+    }
+    /*
+     * The safety net (2026-09-30, the review): wherever the page's scrolling ends away from every place (a browser's
+     * snapping stopping between two, as Chromium's did for keys pressed in quick succession), it goes on to the place it
+     * was going to, or else the next place the way it was going. Once only until the next wheel, key or touch, so a
+     * place the browser rounds differently can never set it going back and forth.
+     */
+    const onScrollEnd = () => {
+      const y = window.scrollY
+      // The places a touch kept, where they are now (a phone's toolbar may have gone meanwhile, moving them).
+      const kept = narrowed && !touches ? snapAreas().areas.filter((a) => !a.el.hasAttribute('data-snap-off')).map((a) => a.at) : []
+      if (!touches) widen()
+      // A touch dragged further than one place (to the page's top or end, where the browser had no place to snap
+      // to): back to the one place on.
+      const lo = Math.min(...kept)
+      const hi = Math.max(...kept)
+      if (kept.length && !locked() && (y < lo - AT_PLACE || y > hi + AT_PLACE)) {
+        move(y < lo ? lo : hi)
+        return
+      }
+      // Arrived. A move not yet arrived stays under way: Firefox ended the scrolling at the place a move was going to
+      // before it took up the next one, made meanwhile, on a busy page (2026-09-30).
+      if (aim !== null && Math.abs(y - aim) <= AT_PLACE) {
+        aim = null
+        window.clearTimeout(aimEnd)
+      }
+      if (touches || righted || locked() || !root.hasAttribute('data-case-snap') || root.hasAttribute('data-snap-hold')) return
+      const at = places()
+      if (at.some((p) => Math.abs(p - y) <= AT_PLACE)) return
+      const to = aim ?? (lastDir > 0 ? at.find((p) => p > y) : lastDir < 0 ? at.filter((p) => p < y).pop() : undefined) ?? at.reduce((a, b) => (Math.abs(b - y) < Math.abs(a - y) ? b : a))
+      righted = true
+      move(to)
+    }
+    const onScroll = () => {
+      hold()
+      const y = window.scrollY
+      const step = y - seenY
+      if (step) lastDir = Math.sign(step)
+      seenY = y
+      if (aim !== null) {
+        if (Math.abs(y - aim) <= 1) {
+          aim = null
+          window.clearTimeout(aimEnd)
+        } else aimed()
+      }
+    }
+    /*
+     * The keys (2026-09-30): Space and Shift+Space, Page Down and Up, and the arrow keys go one place on or back, from
+     * where a move under way is going, so each press goes one further; a key held down goes on one place each time the
+     * page has arrived, a step at a time. Home and End, and on a Mac Cmd+Up and Cmd+Down, go to the page's top and its
+     * end, as before the snapping (WebKit's snapping stopped them at the next place like Page Down: at 1440x900 End
+     * from the top went to the second step and Home from the end to the third). Left to whatever takes the key itself
+     * (a field; Space on a button; the recording's seek line and the gallery's circles prevent theirs; a panel with its
+     * own scroll, that way), and while a dialog or the phone menu is open.
+     */
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || locked()) return
+      const k = e.key
+      const far = e.metaKey ? k === 'ArrowUp' || k === 'ArrowDown' : !e.shiftKey && (k === 'Home' || k === 'End')
+      const dir =
+        k === 'Home' || k === 'PageUp' || k === 'ArrowUp' ? -1
+        : k === 'End' || k === 'PageDown' || k === 'ArrowDown' ? 1
+        : k === ' ' ? (e.shiftKey ? -1 : 1)
+        : 0
+      if (!dir || (!far && (e.metaKey || (e.shiftKey && k !== ' ')))) return
+      const t = e.target instanceof Element ? e.target : null
+      if (t?.closest(KEEPS_KEYS) || (k === ' ' && t?.closest(KEEPS_SPACE)) || (!far && scrollsItself(t, dir))) return
+      e.preventDefault()
+      righted = false
+      if (far) move(dir > 0 ? Math.max(0, document.documentElement.scrollHeight - window.innerHeight) : 0)
+      else if (!e.repeat || aim === null) go(dir)
+    }
+    /** One place on (dir 1) or back (dir -1), from where the page is, or is going. */
+    const go = (dir: number) => {
+      const at = places()
+      const y = aim ?? window.scrollY
+      const i = at.findIndex((p) => Math.abs(p - y) <= AT_PLACE)
+      // The next place that way (from between two: a touch's scroll still under way, the next one on).
+      const to = i >= 0 ? at[i + dir] : dir > 0 ? at.find((p) => p > y) : at.filter((p) => p < y).pop()
+      if (to !== undefined) move(to)
+    }
+    /*
+     * The wheel gesture under way: its direction, its last event's time, the sample being gathered (its size, px, and
+     * the time since the sample before, ms: events WHEEL_MERGE apart are one), its largest sample, whether it has eased
+     * to half that, the smallest sample and speed (px/ms) since, how many samples in a row have risen well above them,
+     * how far it has gone, whether it has moved the page, and whether it is the page's (not something under the pointer
+     * that scrolls by itself). A new push is a rise to 1.5 times the eased low, in both size and speed, held over two
+     * samples: the browsers deliver wheel events unevenly and merge those queued while the page is busy into one of
+     * their summed size (2026-09-30: in Chromium a trackpad's momentum easing from 23 to 19px, then 27px for two merged;
+     * in WebKit 62px, then 110px stamped 1ms later, as the move began; and in the review, WebKit's momentum tail of 4
+     * and 5px, then 5px after 59ms and 12px 0ms later, taken for a second swipe and moving the page a second place), so
+     * a single jump is not one. A speed is counted over at least a frame (16ms).
+     */
+    let wheel: { dir: number; at: number; size: number; dt: number; peak: number; eased: boolean; low: number; lowSpeed: number; rises: number; sum: number; moved: boolean; own: boolean } | null = null
+    // Weighs the sample just gathered: whether it makes a new push.
+    const weigh = (g: NonNullable<typeof wheel>) => {
+      const speed = g.size / Math.max(16, g.dt)
+      if (!g.eased) {
+        g.peak = Math.max(g.peak, g.size)
+        if (g.size > g.peak / 2) return false
+        g.eased = true
+      }
+      if (g.size >= 6 && g.size > 1.5 * g.low && speed > 1.5 * g.lowSpeed) return ++g.rises >= 2
+      g.rises = 0
+      g.low = Math.min(g.low, g.size)
+      g.lowSpeed = Math.min(g.lowSpeed, speed)
+      return false
+    }
+    const onWheel = (e: WheelEvent) => {
+      // Zooming (a pinch, or Ctrl and the wheel), a wheel event the browser will not let go of, a dialog or the phone
+      // menu open: as before.
+      if (e.defaultPrevented || !e.cancelable || e.ctrlKey || locked()) return
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1
+      const dy = e.deltaY * unit
+      if (!dy || Math.abs(e.deltaX * unit) > Math.abs(dy)) return
+      const dir = Math.sign(dy)
+      const size = Math.abs(dy)
+      const t = e.timeStamp
+      let g = wheel
+      const fresh = (peak: number) => ({ dir, at: t, size, dt: 16, peak, eased: false, low: Infinity, lowSpeed: Infinity, rises: 0, sum: 0, moved: false, own: !scrollsItself(e.target, dir) })
+      if (!g || dir !== g.dir || t - g.at > WHEEL_GAP) g = wheel = fresh(0)
+      else if (t - g.at < WHEEL_MERGE) {
+        g.size += size
+        g.at = t
+      } else if (weigh(g)) g = wheel = fresh(g.size)
+      else {
+        g.dt = t - g.at
+        g.size = size
+        g.at = t
+      }
+      if (!g.own) return
+      e.preventDefault()
+      g.sum += size
+      if (!g.moved && g.sum >= WHEEL_MIN) {
+        g.moved = true
+        righted = false
+        go(dir)
+      }
+    }
+    window.addEventListener('wheel', onWheel, { passive: false })
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('scrollend', onScrollEnd)
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
+    window.addEventListener('touchcancel', onTouchEnd, { passive: true })
+    window.addEventListener('pointerdown', onPointerDown, { passive: true })
+    window.addEventListener('keydown', onKey)
+    document.addEventListener('focusin', onFocusIn)
     return () => {
       live = false
       slideSheet?.remove()
       window.clearTimeout(settleEnd)
+      window.clearTimeout(aimEnd)
+      cancelAnimationFrame(keepFrame)
+      root.removeAttribute('data-snap-hold')
+      window.removeEventListener('wheel', onWheel)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('scrollend', onScrollEnd)
+      window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchend', onTouchEnd)
+      window.removeEventListener('touchcancel', onTouchEnd)
+      window.removeEventListener('pointerdown', onPointerDown)
+      widen()
+      window.removeEventListener('keydown', onKey)
+      document.removeEventListener('focusin', onFocusIn)
       shuffleWatch.disconnect()
       pillWatch.disconnect()
       trigger.kill()
       body.style.paddingBottom = ''
       body.style.marginBottom = ''
       cs?.style.removeProperty('--story-lead')
+      if (!--snapPages) {
+        root.removeAttribute('data-case-snap')
+        root.style.removeProperty('--snap-top')
+      }
     }
   }, [steps.length])
 
@@ -632,6 +1038,8 @@ export function CaseStory({ title, meta, lede, steps, stage }: { title: string; 
 
   return (
     <div className="cs story" data-flip={flip || undefined}>
+      {/* The page's top as a place the scroll snaps to (WHEEL_GAP), placed where what covers the window's top ends. */}
+      <span className="cs__top" aria-hidden="true" />
       <header className="cs__intro">
         {/* The introduction's words, as one: where the compositor holds the fading window, this is what moves back by
             as much as the introduction's fade slides (case-v16.css, 2026-09-30), so its words keep their own transforms. */}

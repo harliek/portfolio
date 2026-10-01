@@ -213,6 +213,81 @@
 }
 
 /*
+ * One scroll, one section (Harlie's request, 2026-09-30: "After just one scroll, it should switch to the next
+ * section"). While a told page is open the page's scroll snaps (CaseStory sets data-case-snap on the root, and
+ * --snap-top: what covers the window's top, nothing under the floating pill, the header's black bar, on phones the held
+ * band), and every place is a stop no scroll passes. The places: the page's top (.cs__top, an empty mark CaseStory
+ * places at --snap-top, so its place is exactly the top), each step with its middle on the reading line (the middle of
+ * the window below --snap-top, where the step is current), and the page's end (the footer). A step too tall to stand
+ * whole there snaps by its heading, just below the top fade (data-snap="start", --snap-room); one taller than the room
+ * has its end as a second place, its last line above the bottom fade (data-snap="through", --snap-room-end), so it is
+ * read through. A first or last step whose place would show nothing new, or lie too close to the top's or the end's
+ * for a flick, shares theirs (data-snap="none"). CaseStory measures all of these. Here
+ * the snapping takes the place of the navigation's safe area above: a link or focus scrolls a step to its place. The
+ * wheel and the trackpad move one place per gesture, the scrolling keys one per press, Home and End to the top and the
+ * end (CaseStory, WHEEL_GAP); a touch flick by the browser's own scrolling, stopped at the next place, with only the
+ * places either side left to it ([data-snap-off], below), and a rest between two put right (CaseStory). Under
+ * reduced motion too: it is where the page rests, not an animation. Not while the page is locked behind the phone menu
+ * or a dialog (it cannot scroll then anyway), nor for two frames after a focus in the sticky header or the phones' held
+ * band (data-snap-hold, CaseStory): brought into view, a focused control there took the page to a place near the top
+ * (2026-09-30), though it was in view all along.
+ */
+:root[data-case-snap]:not(.is-menu-open, .is-dialog-open, [data-snap-hold]) {
+  scroll-snap-type: y mandatory;
+  scroll-padding-top: var(--snap-top, 0px);
+}
+
+.cs__top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+:root[data-case-snap] .cs__top {
+  scroll-margin: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+:root[data-case-snap] .cs .story__step {
+  scroll-margin: 0;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+
+:root[data-case-snap] .cs .story__step:is([data-snap='start'], [data-snap='through']) {
+  scroll-margin-top: var(--snap-room, 0px);
+  scroll-snap-align: start;
+}
+
+:root[data-case-snap] .cs .story__step[data-snap='through'] > :last-child {
+  scroll-margin-bottom: var(--snap-room-end, 0px);
+  scroll-snap-align: end;
+  scroll-snap-stop: always;
+}
+
+:root[data-case-snap] .cs .story__step[data-snap='none'] {
+  scroll-snap-align: none;
+}
+
+:root[data-case-snap] .site-end {
+  scroll-snap-align: end;
+  scroll-snap-stop: always;
+}
+
+/*
+ * During a touch, only the place the page is at and the one on each side keep theirs (CaseStory, onTouchStart,
+ * 2026-09-30): Chromium's fling passed the next place about half the time on phones, scroll-snap-stop or not, and
+ * with no place beyond it, there is none to pass to. Above the rules before, whatever they set.
+ */
+:root[data-case-snap] [data-snap-off] {
+  scroll-snap-align: none !important;
+}
+
+/*
  * The stage is held in place for the whole story and centred vertically in
  * the window under the header (Harlie's request): the held box is the room
  * under the header, and the stage sits in its middle.
@@ -473,12 +548,16 @@
  * 35% they measured 2.2 to 2.9:1 and the site's accessibility checks failed on every told page), so a dimmed heading
  * rests in the words' own colour, not the grey it had.
  */
-/* Its box reaches --fade-bleed past the steps on the left, above and below (the fading window, below). */
+/*
+ * Its box reaches --fade-bleed past the steps on every side (the fading window, below). On the right too since
+ * 2026-09-30, as the introduction's does: room for a line's words swelling under the pointer (dockLetters.ts), which
+ * WebKit would clip at the box; the steps' own width is unchanged (the margin takes back the padding).
+ */
 .story__steps {
   display: grid;
   gap: var(--steps-gap);
-  margin: calc(-1 * var(--fade-bleed)) 0 calc(-1 * var(--fade-bleed)) calc(-1 * var(--fade-bleed));
-  padding: var(--fade-bleed) 0 var(--fade-bleed) var(--fade-bleed);
+  margin: calc(-1 * var(--fade-bleed));
+  padding: var(--fade-bleed);
   list-style: none;
 }
 

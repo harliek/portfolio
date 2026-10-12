@@ -4,9 +4,8 @@ import type { ImageId } from '../media'
  * Copy of the /about page (src/components/about/AboutContent.tsx).
  *
  * Sources (see docs/content-provenance.md):
- * - Introduction (brief v21): the label, name, descriptor and two short
- *   paragraphs (ABOUT.intro), Harlie's own text from the copy brief of
- *   2026-09-29 (perspective and direction; no project recap, no employers).
+ * - Introduction (brief v21): the label, name, descriptor and four short
+ *   paragraphs (ABOUT.intro), Harlie's own text of 2026-10-12.
  * - Education: the résumé (public/resume/harlie-katz-resume.pdf). School,
  *   degree, minor, certificate and Sutardja Center, "Aug 2023 - May 2026"
  *   (years only on the site). GPA is left out on purpose. The three lines and
@@ -42,18 +41,17 @@ export const ABOUT = {
   label: 'About',
   name: 'Harlie Katz',
   /**
-   * Harlie's professional descriptor, the homepage line in this page's sentence case: "AI Product Strategy,
-   * Deployment & Implementation" (Harlie's request, 2026-09-29; it was "AI Product Strategy & Implementation" from the
-   * brief of 2026-09-28, and before that the résumé header, AI IMPLEMENTATION | PRODUCT STRATEGY & OPERATIONS).
+   * Harlie's professional descriptor, the homepage line in this page's sentence case: "AI Product Development &
+   * Creative Strategy" (2026-10-12; it was "AI Product Strategy, Deployment & Implementation", which read as enterprise
+   * implementation only).
    */
-  descriptor: 'AI product strategy, deployment, and implementation',
-  /**
-   * Harlie's editorial pass (v23): the name heading introduces Harlie, and the education detail is not repeated from
-   * Education. Harlie's text of 2026-09-30, verbatim, in the page's two paragraphs (split where the first used to end).
-   */
+  descriptor: 'AI product development and creative strategy',
+  /** Harlie's text of 2026-10-12, verbatim, in four paragraphs. */
   intro: [
-    'I’m invested in the future of applied AI and its ability to expand what people can learn, create, and build independently. As specialized knowledge becomes more accessible, more people can pursue ideas that once required resources or expertise beyond their reach. My goal is to turn that potential into products people can use.',
-    'Technology is advancing rapidly, and I’m determined to help shape what gets built and how it is adopted. I have consistently identified areas of greater potential, expanded my responsibilities, and developed better solutions. I bring intellectual curiosity, technical fluency, and the discipline to turn ambitious ideas into working products.',
+    'I recently graduated from UC Berkeley in three years, where I studied cognitive science and data science. I entered college fascinated by how people think and perceive the world, and became increasingly interested in the computational side of intelligence, particularly AI.',
+    'Across several industries, I’ve consistently identified opportunities for improvement and taken the initiative to develop new solutions.',
+    'Recognizing how quickly AI was advancing and its potential to fundamentally transform industries, I chose to graduate early to help shape how the technology is developed and applied.',
+    'I’m driven to help shape the next generation of AI products, identifying new opportunities, developing ambitious ideas, and turning them into working products.',
   ],
   portraitLabel: 'Portrait of Harlie Katz',
 
@@ -66,21 +64,19 @@ export const ABOUT = {
     lines: ['B.A. in Cognitive Science – Data Science minor', 'Certificate in Entrepreneurship and Technology – Berkeley’s Sutardja Center'],
     /** Under the three lines, Harlie's wording (v26), without the colon (copy brief of 2026-09-29: no colons in authored copy). */
     coursework: 'Coursework in machine learning, data science, user experience, computer science, psychology, and human cognition',
-    /**
-     * Harlie's text, verbatim (2026-09-30; the three-year degree is the registrar record: Fall 2023 to May 2026).
-     */
-    text: ['I completed my Berkeley degree in three years, studying intelligence from human and computational perspectives. Cognitive science and data science taught me how minds and machines process information and learn from patterns. That foundation shapes how I evaluate AI’s ability to extend human reasoning and expand human capability.'],
+    /** Harlie's text of 2026-10-12, verbatim (the three-year degree is the registrar record: Fall 2023 to May 2026). */
+    text: ['I completed my Berkeley degree in three years, where I developed an interdisciplinary foundation for understanding how people think, how intelligent systems are built, and how technology can be designed around human behavior.'],
   },
 
   /** Get in touch (Harlie's request, 2026-09-27): a name, an email address and a message (ContactForm.tsx). */
   contactTitle: 'Get in touch',
   contact: {
     /**
-     * Harlie's invitation, verbatim (2026-09-30), above the form in the section's own grid (ContactForm.tsx), in the
-     * Education paragraph's text style but as wide as the form (Harlie's request). Stated here only: not in the About
-     * paragraphs, the page endings or the footer.
+     * The invitation (Harlie's brief of 2026-10-12: the products and the responsibilities, no growth statements), above
+     * the form in the section's own grid (ContactForm.tsx), in the Education paragraph's text style but as wide as the
+     * form (Harlie's request). Stated here only: not in the page endings or the footer.
      */
-    intro: 'I’m looking to join a team building ambitious AI products, where I can take on meaningful responsibility, solve important problems, and contribute beyond the boundaries of my role. I’m most motivated by environments where I can grow with the company while helping shape its products, direction, and future.',
+    intro: 'I’m looking to join a team building consumer or creative AI products. I want real responsibility for what gets built, from deciding what to prioritize and defining requirements to building prototypes, testing with users, and managing the rollout. If that sounds like your team, I’d like to talk.',
     name: 'Name',
     email: 'Email',
     message: 'Message',

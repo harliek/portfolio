@@ -1,11 +1,12 @@
 import type { ImageId } from './media'
 
 /**
- * The six work entries, in the homepage field's order (field.ts, Harlie's order of 2026-09-29, with Spreadsheet
- * Assistant moved after Creative Production at their later request that day; About me and Creative Portfolio, tiles
- * there, are not case studies): Creative Production, Spreadsheet Assistant, CafePress UK, Merchandising Dashboard,
- * Jumpstart Finance, AI Leasing Agent. The array's order is the Work menu's (WorkShelf.tsx); `order` numbers it,
- * and `next` makes the Previous and Next loop (AI Leasing Agent loops back to Creative Production).
+ * The six work entries, in the homepage's order (field.ts, Harlie's order of 2026-10-12; About me and Creative
+ * Portfolio, tiles there, are not case studies): Creative Production, AI Spreadsheet Agent, CafePress UK Market
+ * Strategy, Merchandising Platform, AI Leasing Agent, Jumpstart Finance. The array's order is the phone menu's
+ * (WorkShelf.tsx). `order` numbers it and `next` makes the Previous and Next loop in the same order (Jumpstart Finance
+ * loops back to Creative Production; Harlie's approval, 2026-10-12); `order` also sets which side each told page's
+ * stage stands on (caseSide.ts), alternating along the loop.
  * Page copy lives in src/content/pages/<id>.ts(x).
  *
  * Verified facts only (résumé and project sources; see
@@ -127,8 +128,8 @@ export const PROJECTS: Project[] = [
     id: 'spreadsheet-agent',
     slug: 'spreadsheet-agent',
     order: 2,
-    name: 'Spreadsheet Assistant',
-    displayName: 'Spreadsheet Assistant',
+    name: 'AI Spreadsheet Agent',
+    displayName: 'AI Spreadsheet Agent',
     displaySubtitle: 'A rule-based prototype for generating editable spreadsheets from written requests',
     label: 'Request-to-spreadsheet prototype',
     summary: 'A rule-based prototype for generating editable spreadsheets from written requests, using synthetic data.',
@@ -144,16 +145,16 @@ export const PROJECTS: Project[] = [
     hero: [],
     next: 'cafepress-uk',
     seo: {
-      title: 'Spreadsheet Assistant',
-      description: 'A rule-based spreadsheet assistant that turns written requests into editable sheets, with a review step before generation and cell details that trace values to their source.',
+      title: 'AI Spreadsheet Agent',
+      description: 'An AI spreadsheet agent that turns written instructions into structured, editable spreadsheets, with a planning step before generation and cell details that trace values to their source.',
     },
   },
   {
     id: 'cafepress-uk',
     slug: 'cafepress-uk',
     order: 3,
-    name: 'CafePress UK',
-    displayName: 'CafePress UK',
+    name: 'CafePress UK Market Strategy',
+    displayName: 'CafePress UK Market Strategy',
     displaySubtitle: 'Market research, supplier evaluation, and a localized UK storefront concept',
     label: 'UK market research and storefront concept',
     category: 'PlanetArt internship',
@@ -170,7 +171,7 @@ export const PROJECTS: Project[] = [
     hero: [{ image: 'cp-storefront', sizes: STAGE_SIZES }],
     next: 'merchandising-platform',
     seo: {
-      title: 'CafePress UK',
+      title: 'CafePress UK Market Strategy',
       description: 'UK market research and recommendations for adapting CafePress’s business offer, with a storefront concept, from a PlanetArt internship.',
     },
   },
@@ -178,31 +179,58 @@ export const PROJECTS: Project[] = [
     id: 'merchandising-platform',
     slug: 'merchandising-platform',
     order: 4,
-    name: 'Merchandising Dashboard',
-    displayName: 'Merchandising Dashboard',
-    displaySubtitle: 'An independent prototype for product analysis and replenishment planning',
-    label: 'Independent merchandising prototype',
-    summary: 'An independent application prototype for reviewing product, pricing, inventory, and vendor information with synthetic data.',
+    name: 'Merchandising Platform',
+    displayName: 'Merchandising Platform',
+    displaySubtitle: 'A centralized merchandising platform prototype from a PlanetArt internship',
+    label: 'Merchandising platform prototype',
+    category: 'PlanetArt internship',
+    summary: 'A centralized merchandising platform prototype for reviewing product, pricing, inventory, and vendor information, from a PlanetArt internship.',
     year: '2026',
     dateRange: '2026',
-    role: 'Independent project',
-    org: 'Independent',
-    status: 'Independent prototype',
+    role: 'Product Development',
+    org: 'PlanetArt',
+    status: 'Prototype',
     description: 'Product, inventory, and replenishment information in one prototype.',
-    meta: { company: 'Independent project', role: 'Designed and built the prototype', dates: '2026', status: 'Working prototype' },
+    meta: { company: 'PlanetArt', role: 'Designed and built the prototype', dates: '2026', status: 'Working prototype' },
     cover: 'obj-merchandising-platform',
     // The walkthrough's poster is a plain video poster URL (not a registered image): nothing to warm.
     hero: [],
+    next: 'ai-leasing-agent',
+    seo: {
+      title: 'Merchandising Platform',
+      description: 'A merchandising platform prototype from a PlanetArt internship that connects product information with reorder calculations and ranks replenishment by estimated contribution margin at risk.',
+    },
+  },
+  {
+    id: 'ai-leasing-agent',
+    slug: 'valiance',
+    order: 5,
+    name: 'AI Leasing Agent',
+    displayName: 'AI Leasing Agent',
+    displaySubtitle: 'Requirements, workflow design, and testing for an AI leasing assistant',
+    label: 'Workflow requirements and testing',
+    category: 'Valiance Capital',
+    summary: 'Workflow requirements and testing for a third-party leasing assistant adopted across 18 properties.',
+    year: '2024–2025',
+    dateRange: 'Oct 2024–Jun 2025',
+    role: 'Leasing & Operations Associate',
+    org: 'Valiance Capital',
+    status: 'Adopted across 18 properties',
+    description: 'Requirements and testing for recurring leasing questions.',
+    meta: { company: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'October 2024 to June 2025', status: 'Adopted across 18 properties' },
+    cover: 'obj-ai-leasing-agent',
+    // The listing with its assistant, the first of the three pictures beside the introduction.
+    hero: [{ image: 'valiance-listing', sizes: STAGE_SIZES }],
     next: 'jumpstart-finance',
     seo: {
-      title: 'Merchandising Dashboard',
-      description: 'An independent merchandising prototype on synthetic data that connects product information with reorder calculations and ranks replenishment by estimated contribution margin at risk.',
+      title: 'AI Leasing Agent',
+      description: 'A proposed AI leasing assistant at Valiance Capital, with workflow requirements and response testing, adopted across 18 properties.',
     },
   },
   {
     id: 'jumpstart-finance',
     slug: 'jumpstart',
-    order: 5,
+    order: 6,
     name: 'Jumpstart Finance',
     displayName: 'Jumpstart Finance',
     displaySubtitle: 'Product development for a financial education app concept',
@@ -223,36 +251,10 @@ export const PROJECTS: Project[] = [
       { image: 'jf-tile-home', sizes: PHONE_SIZES },
       { image: 'jf-tile-third', sizes: PHONE_SIZES },
     ],
-    next: 'ai-leasing-agent',
+    next: 'client-work',
     seo: {
       title: 'Jumpstart Finance',
       description: 'A five-person student venture at the European Innovation Academy in Porto, from customer interviews to a financial education app prototype and investor pitch.',
-    },
-  },
-  {
-    id: 'ai-leasing-agent',
-    slug: 'valiance',
-    order: 6,
-    name: 'AI Leasing Agent',
-    displayName: 'AI Leasing Agent',
-    displaySubtitle: 'Requirements, workflow design, and testing for an AI leasing assistant',
-    label: 'Workflow requirements and testing',
-    category: 'Valiance Capital',
-    summary: 'Workflow requirements and testing for a third-party leasing assistant adopted across 18 properties.',
-    year: '2024–2025',
-    dateRange: 'Oct 2024–Jun 2025',
-    role: 'Leasing & Operations Associate',
-    org: 'Valiance Capital',
-    status: 'Adopted across 18 properties',
-    description: 'Requirements and testing for recurring leasing questions.',
-    meta: { company: 'Valiance Capital', role: 'Leasing & Operations Associate', dates: 'October 2024 to June 2025', status: 'Adopted across 18 properties' },
-    cover: 'obj-ai-leasing-agent',
-    // The listing with its assistant, the first of the three pictures beside the introduction.
-    hero: [{ image: 'valiance-listing', sizes: STAGE_SIZES }],
-    next: 'client-work',
-    seo: {
-      title: 'AI Leasing Agent',
-      description: 'A proposed AI leasing assistant at Valiance Capital, with workflow requirements and response testing, adopted across 18 properties.',
     },
   },
 ]

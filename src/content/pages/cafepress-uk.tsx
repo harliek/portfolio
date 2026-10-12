@@ -1,34 +1,34 @@
 /**
- * Copy: Harlie's revised text of 2026-09-30, verbatim (four sections; supersedes the copy approved on 2026-09-29).
+ * Copy: Harlie's text of 2026-10-12, verbatim (four sections; supersedes the text of 2026-09-30).
  * Source: PlanetArt/planetart presentation.pdf, pages 3–9.
  * Market assessment, UK vendor assortment, and localized storefront prototype.
  * The meta is the role, then "PlanetArt · 2026" (Harlie's request, 2026-09-29: the "Storefront concept and later
  * illustrations" line removed).
  */
 export const CAFEPRESS = {
-  title: 'CafePress UK',
+  title: 'CafePress UK Market Strategy',
   meta: ['Product Operations and Merchandising Intern', 'PlanetArt · 2026'],
   lede: (
     <p>
-      During my PlanetArt internship, I evaluated CafePress’s opportunity in the UK promotional-products market.
+      During my internship at PlanetArt, I researched opportunities for CafePress to expand into the UK promotional-products market and developed a strategy for its initial product offering.
     </p>
   ),
   findings: [
     {
       title: 'Market challenge',
-      text: 'CafePress had an established US model, but entering the UK required determining what could transfer and what needed to change across assortment, pricing, positioning, and merchandising.',
+      text: 'Entering the UK required evaluating how CafePress’s established US model would translate across product assortment, pricing, suppliers, and positioning.',
     },
     {
-      title: 'Market analysis',
-      text: 'I reviewed UK vendors and product categories to identify an initial assortment, prioritizing recognizable brands and environmentally focused ranges.',
+      title: 'Market research',
+      text: 'I analyzed UK competitors, suppliers, and product categories to identify a competitive initial assortment, prioritizing established brands and environmentally focused products.',
     },
     {
       title: 'Launch strategy',
-      text: 'I translated those findings into a localized storefront with UK-specific category structure, product presentation, and GBP pricing.',
+      text: 'I developed recommendations for UK-specific merchandising, category structure, and pricing, then translated the research into storefront concepts after my internship.',
     },
     {
       title: 'Recommendation',
-      text: 'The proposal defined where CafePress could preserve its existing model and where the UK market required targeted changes.',
+      text: 'I identified where CafePress could retain its existing model and where changes would strengthen its position in the UK market.',
     },
   ],
 }

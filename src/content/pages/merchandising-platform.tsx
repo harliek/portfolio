@@ -19,16 +19,18 @@
  * says the data is synthetic.
  */
 export const MERCH = {
-  title: 'Merchandising Dashboard',
-  /** The role, then the company and the year, as on CafePress UK (Harlie's request, 2026-09-29: "PlanetArt 2026"; the
-   * "Independent prototype · Synthetic data" labels removed). */
-  meta: ['Product Operations and Merchandising Intern', 'PlanetArt · 2026'],
+  title: 'Merchandising Platform',
+  /**
+   * The work, then the company and the year (Harlie's request, 2026-10-12: PlanetArt, not independent; earlier the same
+   * day "Independent Product Development · 2026", and before that the internship role, then "PlanetArt · 2026").
+   */
+  meta: ['Product Development', 'PlanetArt · 2026'],
   // Harlie's copy brief of 2026-09-29, verbatim. The internship half: deck pp.10–12 (workflows "fragmented across
   // multiple disconnected tools"; the centralized workspace concept). "Eight tools and hundreds of spreadsheets" and
   // the security feedback stay out: no project document records them.
   lede: (
     <p>
-      At PlanetArt, product decisions required information spread across catalog, supplier, inventory, sales, and promotion systems.
+      During my internship at PlanetArt, I identified an opportunity to improve how merchandising teams access product information and make inventory decisions. I subsequently designed and built a centralized merchandising platform prototype in React.
     </p>
   ),
   /** The recording's segment for each decision (seconds), and one still per step for reduced motion. */
@@ -45,7 +47,7 @@ export const MERCH = {
   ] as const,
   stills: [0.5, 8.0, 15.2, 21.6],
   /**
-   * Harlie's revised text of 2026-09-30, verbatim, in four sections (it supersedes the copy brief of 2026-09-29: Product
+   * Harlie's text of 2026-10-12, verbatim, in four sections (before, the text of 2026-09-30 (it supersedes the copy brief of 2026-09-29: Product
    * information; Replenishment), each with its own recording segment. Checked against the prototype's source
    * (~/Documents/merch-console):
    * - the record (ProductDrawer.tsx): list price, landed cost, fulfilment, channel fee, contribution, stock position,
@@ -62,19 +64,19 @@ export const MERCH = {
   decisions: [
     {
       title: 'Operational problem',
-      text: 'SKU-level information was fragmented across tools and spreadsheets, making it difficult to see product status or identify where action was needed.',
+      text: 'Product information was fragmented across catalog, supplier, inventory, and sales systems, making it difficult to evaluate product status and prioritize decisions.',
     },
     {
       title: 'Data model',
-      text: 'I proposed using the SKU as the common identifier across systems and built a centralized React prototype connecting product data, supplier requirements, inventory, sales history, and promotional performance.',
+      text: 'I designed a centralized system connecting product information, supplier requirements, inventory, sales history, and promotional performance through a shared SKU identifier.',
     },
     {
       title: 'Decision logic',
-      text: 'I developed order recommendations using sales patterns, stock levels, and supplier requirements, with the underlying calculations visible for review.',
+      text: 'I developed inventory recommendations based on sales patterns, stock levels, and supplier constraints, with calculations visible for review.',
     },
     {
       title: 'Prioritization',
-      text: 'Products were ranked by estimated contribution margin at risk, combining shortage likelihood with potential financial impact. I presented the prototype to PlanetArt’s product and engineering teams.',
+      text: 'I designed a ranking system based on estimated contribution margin at risk, identifying products with the greatest potential financial impact from inventory shortages. I presented the prototype to PlanetArt’s product and engineering teams.',
     },
   ],
 }

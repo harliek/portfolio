@@ -21,12 +21,13 @@
  * "Product design and build" and "Rule-based prototype · Synthetic data" removed).
  */
 export const SHEET = {
-  title: 'Spreadsheet Assistant',
-  meta: ['Independent project · 2026'],
-  /** Harlie's revised text of 2026-09-30, verbatim (README: nothing reaches a sheet until the plan is approved). */
+  title: 'AI Spreadsheet Agent',
+  /** Harlie's request, 2026-10-12 (it was "Independent project · 2026"). */
+  meta: ['Independent Product Development · 2026'],
+  /** Harlie's text of 2026-10-12, verbatim, with the four sections below. */
   lede: (
     <p>
-      I designed and built a spreadsheet assistant that turns written requests into structured, editable sheets.
+      I independently designed and built an AI spreadsheet agent that turns written instructions into structured, editable spreadsheets.
     </p>
   ),
   /**
@@ -59,19 +60,19 @@ export const SHEET = {
   steps: [
     {
       title: 'Product problem',
-      text: 'Natural-language tools can generate results quickly, but users often cannot see what the system understood, missed, or used to produce an answer.',
+      text: 'AI tools can generate results quickly, but users often have limited visibility into how their instructions were interpreted or where errors occurred.',
     },
     {
       title: 'Interpretation layer',
-      text: 'Before creating the sheet, the assistant identifies fields, filters, sorting, and row limits, then flags instructions it could not interpret.',
+      text: 'I developed a planning step that identifies fields, filters, sorting, and row limits before generation, while flagging instructions the system cannot interpret.',
     },
     {
       title: 'Review and editing',
-      text: 'Users can adjust the plan before generation, then inspect source records and formulas, edit cells, undo changes, and save the sheet.',
+      text: 'Users can revise the plan before generation, then inspect source records and formulas, edit cells, undo changes, and save their work.',
     },
     {
-      title: 'Product principle',
-      text: 'The workflow gives users visibility into the assistant’s reasoning before and after generation while preserving the speed of automation.',
+      title: 'Design principle',
+      text: 'I designed the workflow to give users greater visibility and control over AI-generated results while preserving the speed of automation.',
     },
   ],
 }

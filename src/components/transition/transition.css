@@ -130,8 +130,8 @@
 }
 
 /* Back to front: the backgrounds (root), the pointer's trail, the leaving pieces, a phone's held band (black, over
- * the steps scrolled under it, pageChange.ts), the arriving pieces, the carried picture and title (the old under the
- * new) with the picture's status label, the header and the pointer. The trail stays under the pieces, as it stays
+ * the steps scrolled under it, pageChange.ts), the arriving pieces, the pages' main pictures and titles (the old under
+ * the new), the header and the pointer. The trail stays under the pieces, as it stays
  * under the page's words and controls (stage.css; Harlie's brief, 2026-09-28, item 6: decorative light under
  * functional UI). */
 :root[data-shuffle='move']::view-transition-group(.tx-out) {
@@ -146,11 +146,11 @@
   z-index: 3;
 }
 
-:root[data-shuffle='move']::view-transition-group(.tx-carry-out) {
+:root[data-shuffle='move']::view-transition-group(.tx-main-out) {
   z-index: 4;
 }
 
-:root[data-shuffle='move']::view-transition-group(.tx-carry-in) {
+:root[data-shuffle='move']::view-transition-group(.tx-main-in) {
   z-index: 5;
 }
 

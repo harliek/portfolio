@@ -7,19 +7,28 @@ test('all eight tiles have unique working destinations and captions',async({page
   await expect(page.locator('.plane__line')).toHaveCount(8)
   await noOverflow(page)
 })
-test('moving tiles wait for the first movement and reduced motion stops movement',async({page,isMobile})=>{
-  test.skip(isMobile,'fine pointer motion')
+test('the grid: rows in order, centred, footage in view and posters under reduced motion',async({page,isMobile})=>{
   await page.emulateMedia({reducedMotion:'no-preference'});await open(page,'/')
-  const tile=page.locator('.plane').nth(2)
-  const transform=()=>tile.evaluate(e=>(e as HTMLElement).style.transform)
-  // No scroll and no pointer movement yet: the strip rests where it starts (Harlie's request, 2026-09-29).
-  const resting=await transform();expect(resting).toContain('translate3d')
-  await page.waitForTimeout(1200);expect(await transform()).toBe(resting)
-  // The first pointer movement sets it drifting (it eases up from rest).
-  await page.mouse.move(40,300);await page.mouse.move(90,330)
-  await page.waitForTimeout(600);const before=await transform();await page.waitForTimeout(600);expect(await transform()).not.toBe(before)
-  await page.emulateMedia({reducedMotion:'reduce'});await expect(page.locator('.field')).toHaveAttribute('data-reduced','true')
-  // Reduced motion holds the drift: it eases to a stop (EASE_V, about 2.6s from full speed), then stays still.
-  await expect.poll(async()=>{const a=await transform();await page.waitForTimeout(400);return await transform()===a}).toBe(true)
-  const still=await transform();await page.waitForTimeout(400);expect(await transform()).toBe(still)
+  const items=page.locator('.work-grid__item')
+  expect(await items.evaluateAll(es=>es.map(e=>(e as HTMLElement).dataset.id))).toEqual(['creative','about','client-work','spreadsheet-agent','cafepress-uk','merchandising-platform','ai-leasing-agent','jumpstart-finance'])
+  if(!isMobile){
+    // Three, three and two to a row, each row centred.
+    const rows=await items.evaluateAll(es=>{
+      const by=new Map<number,DOMRect[]>()
+      for(const e of es){const r=e.getBoundingClientRect();const k=Math.round(r.top);by.set(k,[...(by.get(k)??[]),r])}
+      const w=document.documentElement.clientWidth
+      return [...by.values()].map(rs=>({n:rs.length,off:Math.abs(rs[0].left-(w-rs[rs.length-1].right))}))
+    })
+    expect(rows.map(r=>r.n)).toEqual([3,3,2])
+    for(const r of rows)expect(r.off).toBeLessThan(2)
+  }
+  // Footage is loaded for a tile once it is in view, and an ordinary scroll ends with the footer after the last row.
+  await page.locator('.work-grid__item[data-id="merchandising-platform"]').scrollIntoViewIfNeeded()
+  await expect.poll(()=>page.locator('.work-grid__item[data-id="merchandising-platform"] video').evaluate(v=>v.hasAttribute('src'))).toBe(true)
+  await page.locator('.site-end').scrollIntoViewIfNeeded()
+  await expect.poll(()=>page.evaluate(()=>Math.round(scrollY+innerHeight)>=document.documentElement.scrollHeight-1)).toBe(true)
+  await noOverflow(page)
+  // Reduced motion: posters only.
+  await page.emulateMedia({reducedMotion:'reduce'});await page.reload();await page.locator('.site-end').scrollIntoViewIfNeeded();await page.waitForTimeout(500)
+  expect(await page.locator('.work-grid video[src]').count()).toBe(0)
 })

@@ -43,7 +43,7 @@ const PIECES = [
 
 /**
  * A page's main picture: a case study's held picture, About's portrait, and on Creative Production the film most in
- * view (not the first in the page: from its end, the first film is far above the window and no picture was carried).
+ * view (not the first in the page: from its end, the first film is far above the window).
  */
 const PAGE_HERO = 'main .story__stage, main .cw-frame, main .about-portrait'
 
@@ -115,7 +115,7 @@ const SLIVER = 16
  * The page's pieces that show only as a sliver (at most SLIVER px seen, at the window's edge or under the band): they
  * are hidden while the page being left is pictured, so they are neither left standing in its background picture while
  * everything else moves (Harlie's brief, 2026-09-28: the bottom edge of a "Watch the film" pill at the top of the
- * window, the edges of the homepage's tiles in its corners) nor carried whole as a piece. pageChange.ts shows them again.
+ * window, the edges of the homepage's tiles in its corners) nor moved whole as a piece. pageChange.ts shows them again.
  */
 export function sliversInView(): HTMLElement[] {
   const { bottom } = coverOf()
@@ -133,26 +133,18 @@ function sliver(rect: DOMRect, top: number) {
   return onScreen && rect.width > 0 && seen <= SLIVER && seen < rect.height - 1
 }
 
-/** The homepage tile whose link goes to `path`, when one is in view. */
-export function tileFor(path: string | null): HTMLElement | null {
-  if (!path || !document.querySelector('.home')) return null
-  const plane = [...document.querySelectorAll<HTMLAnchorElement>('.home .plane')].find((a) => a.pathname === path && inView(a.getBoundingClientRect()) > 0.35)
-  return plane?.querySelector<HTMLElement>('.plane__frame') ?? null
-}
-
 /**
  * The page's pieces in view, measured once: only the outermost of nested pieces (a piece inside another travels with
  * it), not those still waiting to rise in by themselves as they enter the view (data-reveal, no data-in yet), hidden
  * ones or slivers, and at most MOST (the picture and the title first, then the largest), in reading order. On a phone,
- * what is under the header's bar or the held band counts as out of view (coverOf). `hero` names the piece that carries
- * the page's main picture (a homepage tile), when the page's own main picture (the one most in view) is not the one.
- * `leaving`: the page being left, where a piece only partly in view goes as a piece too (thrown out past the edge it
+ * what is under the header's bar or the held band counts as out of view (coverOf). The page's main picture is the one
+ * most in view (the homepage has none: its tiles go like any other piece). `leaving`: the page being left, where a piece only partly in view goes as a piece too (thrown out past the edge it
  * stands at): left in the page's picture, it stood still while everything else moved (Harlie's brief, 2026-09-28: the
  * homepage's tile at the bottom corner, for about 250ms). `stay`, when given, collects the boxes of the arriving page's
  * pieces that come with the page's own picture instead (mostly out of view at the window's edge), so the pieces moving
  * in keep clear of them (pageChange.ts).
  */
-export function piecesInView(hero?: HTMLElement | null, leaving = false, stay?: DOMRect[]): Piece[] {
+export function piecesInView(leaving = false, stay?: DOMRect[]): Piece[] {
   const cover = coverOf().bottom
   const found = [...document.querySelectorAll<HTMLElement>(PIECES)].flatMap((el) => {
     const rect = el.getBoundingClientRect()
@@ -178,7 +170,7 @@ export function piecesInView(hero?: HTMLElement | null, leaving = false, stay?: 
   // The page's main picture is the one most in view (Creative Production has one for each film).
   const seen = (p: Piece) => p.rect.width * p.rect.height * inView(p.rect)
   const own = document.querySelector('.home') ? [] : outer.filter((p) => p.el.matches(PAGE_HERO) && seen(p) > 0)
-  const main = hero ?? own.sort((a, b) => seen(b) - seen(a))[0]?.el ?? null
+  const main = own.sort((a, b) => seen(b) - seen(a))[0]?.el ?? null
   const title = document.querySelector<HTMLElement>(TITLE)
   for (const p of outer) {
     if (main && p.el === main) p.role = 'hero'
@@ -189,12 +181,4 @@ export function piecesInView(hero?: HTMLElement | null, leaving = false, stay?: 
     .sort((a, b) => rank(b) - rank(a))
     .slice(0, MOST)
     .sort((a, b) => a.rect.top - b.rect.top || a.rect.left - b.rect.left)
-}
-
-/** A unit vector from (fx, fy) to (tx, ty) and the distance; straight up when they coincide. */
-export function away(fx: number, fy: number, tx: number, ty: number) {
-  const dx = tx - fx
-  const dy = ty - fy
-  const d = Math.hypot(dx, dy)
-  return d < 1 ? { x: 0, y: -1, d: 0 } : { x: dx / d, y: dy / d, d }
 }

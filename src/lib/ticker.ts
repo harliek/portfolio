@@ -1,7 +1,6 @@
 /**
- * The site's one clock for the few timed things that are not CSS: the homepage tiles' glide to a project
- * (ProjectField, `tweenTo`) and the pause the scroll measurements wait after a resize (scrollProgress.ts,
- * `delayedCall`). Until 2026-09-29 GSAP's ticker timed both; it went with the rest of GSAP (Harlie's approval, audit
+ * The site's one clock for the timed things that are not CSS: the pause the scroll measurements wait after a resize
+ * (scrollProgress.ts, `delayedCall`). The homepage tiles' glide (`tweenTo`) went with the moving strip (2026-10-12). Until 2026-09-29 GSAP's ticker timed both; it went with the rest of GSAP (Harlie's approval, audit
  * D1/E4/G1: ScrollTrigger kept an empty frame loop and a 250ms timer running on every page for the whole visit, and
  * GSAP was about 44 KB gzip of every first load for three scroll measurements and this one glide). This is GSAP's
  * clock, kept step for step so a glide or a resize's pause starts, moves and ends on the same frames as before
@@ -126,55 +125,6 @@ export function delayedCall(delay: number, fn: () => void): DelayedCall {
       c.active = false
     },
   }
-}
-
-export interface Tween {
-  kill(): void
-}
-
-/** Each object's running tween: a new one replaces it (GSAP's overwrite: true). */
-const running = new WeakMap<object, Tween>()
-
-/** GSAP's power2.inOut (Power2.easeInOut, the cubic): slow to start, quick through the middle, slow to arrive. */
-const power2InOut = (p: number) => (p < 0.5 ? Math.pow(p * 2, 3) / 2 : 1 - Math.pow((1 - p) * 2, 3) / 2)
-
-/**
- * Moves `target[key]` to `to` over `duration` seconds, easing in and out (power2.inOut), then calls `onComplete`
- * (after the last value is written, in that frame). Like gsap.to(): the starting value is read on its first frame,
- * values are rounded to 6 decimals, and kill() stops it where it is, without onComplete.
- */
-export function tweenTo<K extends string>(target: Record<K, number>, key: K, to: number, duration: number, onComplete: () => void): Tween {
-  wake()
-  const start = time
-  let from = NaN
-  let change = 0
-  const c: Child = {
-    start,
-    active: true,
-    render(t) {
-      const elapsed = t - start
-      const done = elapsed > duration - 1e-8
-      const at = done ? duration : elapsed < 1e-8 ? 0 : elapsed
-      if (Number.isNaN(from)) {
-        from = +target[key] || 0
-        change = to - from
-      }
-      target[key] = Math.round((from + change * power2InOut(at / duration)) * 1e6) / 1e6
-      if (!done) return
-      tween.kill()
-      onComplete()
-    },
-  }
-  const tween: Tween = {
-    kill() {
-      remove(c)
-      if (running.get(target) === tween) running.delete(target)
-    },
-  }
-  children.push(c)
-  running.get(target)?.kill()
-  running.set(target, tween)
-  return tween
 }
 
 wake()

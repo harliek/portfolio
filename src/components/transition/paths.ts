@@ -53,8 +53,6 @@ export interface Plan {
   poses: Pose[]
   timing: Timing
   fades: Fade[]
-  /** Added to wherever the browser pictures it each frame (a drifting homepage tile). */
-  tracked?: boolean
 }
 
 /** Perspective for the turning pieces (px). */

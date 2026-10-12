@@ -33,7 +33,7 @@ export default function MerchandisingPlatform() {
           height: 646,
           segments: C.segments,
           stills: C.stills,
-          label: 'A recording of the Merchandising Dashboard prototype on synthetic data',
+          label: 'A recording of the Merchandising Platform prototype on synthetic data',
           play: true,
           // A little faster than recorded (Harlie's request).
           rate: 1.5,

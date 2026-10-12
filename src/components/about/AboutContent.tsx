@@ -28,8 +28,8 @@ const DESCRIPTOR = ABOUT.descriptor.split(' · ')
  * The /about page (brief v21), in the old creative portfolio's About format:
  *
  * 1. Opening. On the left a small "About" label with its rule, the name
- *    "Harlie Katz", a short descriptor in the blue violet glow, and two short
- *    paragraphs (Harlie's baseline, 2026-09-28); on the right the colour
+ *    "Harlie Katz", a short descriptor in the blue violet glow, and four short
+ *    paragraphs (Harlie's brief, 2026-10-12); on the right the colour
  *    portrait (4:5, 240 to 344px wide). Beside the words from 720px wide
  *    (2026-09-28; it was 820px, which left tablets a lone portrait with
  *    empty space beside it); narrower, the text and then the portrait.

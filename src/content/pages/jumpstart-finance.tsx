@@ -29,9 +29,8 @@ import type { ImageId } from '../media'
  */
 export const JUMPSTART = {
   title: 'Jumpstart Finance',
-  /** The role, then the status and the year (the program and Porto are in the lede; copy brief of 2026-09-29). Role
-   * "Student Founder and CEO" and no "Reconstructed screens" label (Harlie's request, 2026-09-29). */
-  meta: ['Student Founder and CEO', 'Student venture · 2024'],
+  /** The role, then the program (Harlie's text of 2026-10-12; it was "Student Founder and CEO", "Student venture · 2024"). */
+  meta: ['Student CEO', 'European Innovation Academy'],
   /** Harlie's copy brief of 2026-09-29, verbatim. */
   lede: (
     <p>
@@ -49,7 +48,7 @@ export const JUMPSTART = {
     { image: 'jf-tile-third' as ImageId, name: 'Community', step: 2 },
   ],
   /**
-   * Harlie's wording, verbatim (Harlie's revised text of 2026-09-30, four sections; before, the copy brief of 2026-09-29). The audience change is Harlie's account (no project file
+   * Harlie's wording, verbatim (Harlie's text of 2026-10-12, four sections; before, the texts of 2026-09-30 and 2026-09-29). The audience change is Harlie's account (no project file
    * records the ages or the interview findings). The prototype's lessons, level path and forum are the 2024 screens
    * (pitch pp.5–6; proto 2 to 4); "short" lessons stays out (no screen shows a length). The 150 sign-ups are attributed
    * to the program pitch (p.10), where what was counted is not stated; no outcome is drawn from them. The landing page:
@@ -57,20 +56,20 @@ export const JUMPSTART = {
    */
   features: [
     {
-      title: 'User problem',
-      text: 'We initially targeted young adults broadly, but interviews showed that younger users with less financial experience had a clearer need for structured guidance.',
+      title: 'User research',
+      text: 'We initially targeted young adults broadly, but interviews revealed a stronger need among younger users with limited financial experience.',
     },
     {
       title: 'Product direction',
-      text: 'We shifted the concept toward foundational skills in spending, saving, and investing, organized around progressive learning levels.',
+      text: 'I redirected our focus toward foundational financial skills, developing a learning experience organized around spending, saving, and investing.',
     },
     {
       title: 'Experience design',
-      text: 'The prototype combined lessons, visible progress, financial tools, and a community forum for questions and discussion.',
+      text: 'I led the development of a prototype featuring progressive lessons, financial tools, and a community for questions and discussion.',
     },
     {
       title: 'Validation',
-      text: 'I led the product direction, research, prototype, and business model, then presented the concept to investors. Jumpstart attracted 150 sign-ups within 24 hours.',
+      text: 'I developed the business model and presented the concept to investors. Jumpstart attracted 150 sign-ups within 24 hours.',
     },
   ],
 }

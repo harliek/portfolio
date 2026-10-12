@@ -6,19 +6,25 @@ import { headerHeight } from '../components/home/headerHeight'
 import { HomeFilm } from '../components/home/HomeFilm'
 import { TypeLine } from '../components/ui/TypeLine'
 import { useFilmSlot } from '../components/layout/filmSlot'
-import { ProjectField } from '../components/home/ProjectField'
+import { ProjectGrid } from '../components/home/ProjectGrid'
 import { SITE } from '../content/site'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { ScrollProgress } from '../lib/scrollProgress'
 
-/** The page's end, where the collection fills the window with the footer below it. */
-const landAtEnd = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'auto' })
+/**
+ * Back from a case study opened directly (Header.tsx, state `from`: the project just left): that project's tile in the
+ * middle of the window, or the selected work's start.
+ */
+function landAtWork(from: unknown) {
+  const tile = typeof from === 'string' ? document.querySelector<HTMLElement>(`.work-grid__item[data-id="${CSS.escape(from)}"]`) : null
+  ;(tile ?? document.getElementById('selected-work'))?.scrollIntoView({ block: tile ? 'center' : 'start', behavior: 'instant' })
+}
 
 /**
  * The homepage (brief v19; v23): Harlie's original film, clearly visible,
  * with the identity group (name, PORTFOLIO, one line) about 39% down the
- * opening; the selected work already shows beneath it, and the page ends
- * with it (the footer just below), where scrolling moves the projects on.
+ * opening; the selected work already shows beneath it, a grid of tiles
+ * (ProjectGrid) with an ordinary scroll and the footer after it.
  * As the opening scrolls out, the title eases up and fades a little
  * (`--enter`), and the film dims only slightly behind
  * the work (`--settle`). Both are written by lib/scrollProgress.ts (ScrollTrigger's
@@ -33,27 +39,28 @@ export function Home() {
   // The film goes to PageShell's fixed slot (outside the route wrapper, whose animation would capture position: fixed).
   const filmSlot = useFilmSlot()
   const location = useLocation()
-  const toWork = Boolean((location.state as { toWork?: boolean } | null)?.toWork)
+  const arrival = location.state as { toWork?: boolean; from?: unknown } | null
+  const toWork = Boolean(arrival?.toWork)
+  const from = arrival?.from
 
   /*
-   * Back from a case study opened directly (Header.tsx): the page's end, where the collection fills the window, with
-   * the project last looked at centred (ProjectField); again after fonts, so it lands exactly. It lands before the
-   * first paint (the collection has measured by then) and again once the router's own scroll reset for a new entry
-   * has run (ScrollRestoration's, a later layout effect), before the page change pictures the new page, so the case
-   * study folds into that project's tile (Harlie's brief, 2026-09-28: it slid in with the page still at its top).
+   * Back from a case study opened directly (Header.tsx): the project last looked at (landAtWork); again after fonts,
+   * so it lands exactly. It lands before the first paint and again once the router's own scroll reset for a new entry
+   * has run (ScrollRestoration's, a later layout effect), before the page change pictures the new page (Harlie's brief,
+   * 2026-09-28: the page arrived still at its top).
    */
   useLayoutEffect(() => {
-    if (toWork) landAtEnd()
-  }, [toWork])
+    if (toWork) landAtWork(from)
+  }, [toWork, from])
   useEffect(() => {
     if (!toWork) return
-    landAtEnd()
+    landAtWork(from)
     let live = true
-    void document.fonts?.ready.then(() => live && landAtEnd())
+    void document.fonts?.ready.then(() => live && landAtWork(from))
     return () => {
       live = false
     }
-  }, [toWork])
+  }, [toWork, from])
 
   useLayoutEffect(() => {
     const hero = heroRef.current
@@ -76,7 +83,7 @@ export function Home() {
       onRefresh: (self) => setEnter(self.progress),
     })
     const field = ScrollProgress.create({
-      trigger: '.field',
+      trigger: '#selected-work',
       start: 'top bottom',
       end: `top ${under}`,
       onUpdate: (self) => setSettle(self.progress),
@@ -111,13 +118,13 @@ export function Home() {
               </span>
             </h1>
             <p className="hero__line">
-              {/* "&" stays with "Implementation" where the line wraps (phones). */}
-              <TypeLine text={'AI Product Strategy, Deployment &\u00a0Implementation'} delay={1.0} duration={0.8} />
+              {/* "&" stays with "Creative" where the line wraps (phones). */}
+              <TypeLine text={'AI Product Development &\u00a0Creative Strategy'} delay={1.0} duration={0.8} />
             </p>
           </div>
         </div>
       </section>
-      <ProjectField />
+      <ProjectGrid />
     </div>
   )
 }

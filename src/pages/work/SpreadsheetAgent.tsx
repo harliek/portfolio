@@ -24,7 +24,7 @@ export default function SpreadsheetAgent() {
           height: 900,
           segments: C.segments,
           stills: C.stills,
-          label: 'The Spreadsheet Assistant prototype creating a sheet from a written request',
+          label: 'The AI Spreadsheet Agent creating a sheet from a written request',
           free: true,
           // A little faster than recorded (Harlie's request).
           rate: 1.5,

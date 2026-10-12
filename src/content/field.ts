@@ -2,14 +2,13 @@ import type { ImageId } from './media'
 import { projectById, projectPath, type ProjectId } from './projects'
 
 /**
- * The homepage's project field, in Harlie's order: Creative Portfolio (opens /creative/; first, at the far left when
- * the page opens, Harlie's request, 2026-09-29; About me had been first since 2026-09-27), About me (opens the About
- * page), Creative Production, Spreadsheet Assistant, CafePress UK, Merchandising Dashboard, Jumpstart Finance, AI
- * Leasing Agent (Harlie's order of 2026-09-29, with Spreadsheet Assistant moved after Creative Production at their
- * later request that day; the loop brings AI Leasing Agent round just before Creative Portfolio). The films sit in the rounded
+ * The homepage's projects, in Harlie's order of 2026-10-12, which is the grid's three rows (ProjectGrid): Creative
+ * Portfolio (opens /creative/, marked as a link to another site), About me (opens the About page), Creative
+ * Production; AI Spreadsheet Agent, CafePress UK Market Strategy, Merchandising Platform; AI Leasing Agent, Jumpstart
+ * Finance. The films sit in the rounded
  * frame and play muted; the Jumpstart phones grow and shrink a little in turn, and the leasing conversation arrives
- * message by message. The field is one flat strip that loops endlessly and turns by itself. The case studies' order
- * (projects.ts: the Work menu, Previous and Next) is the same without About me and Creative Portfolio.
+ * message by message. The field is one flat strip that loops endlessly and turns by itself. The phone menu lists the
+ * case studies in the same order (projects.ts); Previous and Next keep their own loop.
  *
  * The footage's posters are WebP, the same frames as the JPEGs they replaced and together about a third smaller
  * (Harlie's approval, 2026-09-29; performance audit C4/F7). A poster has no fallback: Safari without WebP (macOS 10.15
@@ -85,17 +84,17 @@ export const FIELD: readonly FieldProject[] = [
   },
   {
     id: 'spreadsheet-agent',
-    title: 'Spreadsheet Assistant',
+    title: 'AI Spreadsheet Agent',
     line: 'Written requests into reviewable plans and editable sheets',
     // Harlie's choice (Spreadsheet Agent/Spreadsheet Video.mov from 24s, the sheet built and scrolled, then All Sheets;
     // ends at 36.6s, before the screen-capture toolbar appears), muted at normal speed; it loops at its end.
     media: { kind: 'video', src: '/media/video/spreadsheet-tile-960.mp4', poster: '/media/img/spreadsheet-tile-poster-960.webp', position: '50% 0%' },
-    alt: 'A recording of the Spreadsheet Assistant prototype: a finished sheet of B2B products with vendor, cost, retail price and margin, then the list of saved sheets',
+    alt: 'A recording of the AI Spreadsheet Agent: a finished sheet of B2B products with vendor, cost, retail price and margin, then the list of saved sheets',
   },
   {
     id: 'cafepress-uk',
-    title: 'CafePress UK',
-    line: 'UK market strategy and localized storefront prototype',
+    title: 'CafePress UK Market Strategy',
+    line: 'UK market strategy and localized storefront concepts',
     // Harlie's video for the tile (cafepress uk tile.mov, 2330x1234, 10.3s): 1.0 to 5.3s at its own speed, then the
     // same in reverse, so the page scrolls down and back up in one seamless loop (8.5s; Harlie's requests). In the
     // rounded frame like Creative Production, muted. Kept to the left so the CafePress logo stays in the frame.
@@ -106,23 +105,12 @@ export const FIELD: readonly FieldProject[] = [
   },
   {
     id: 'merchandising-platform',
-    title: 'Merchandising Dashboard',
+    title: 'Merchandising Platform',
     line: 'Connecting product, supplier, sales, and promotion data',
     // The merchandising dashboard recording (Harlie's request; PlanetArt/Merchandising Dashboard/Dashboard Video.mov
     // through its site encode, merch-console-960.mp4, 56.3s): the whole walkthrough, muted at normal speed, looping.
     media: { kind: 'video', src: '/media/video/merch-console-960.mp4', poster: '/media/img/merch-console-poster-960.webp', position: '30% 50%' },
-    alt: 'A recording of the Merchandising Dashboard prototype: the overview, the product catalog, a product’s reorder calculation, the inventory and the vendors',
-  },
-  {
-    id: 'jumpstart-finance',
-    title: 'Jumpstart Finance',
-    line: 'Financial education for students through interactive learning',
-    media: {
-      kind: 'screens',
-      // Harlie's three phones (PNG Tiles/jumpstart tile 1 to 3), made free-standing.
-      screens: ['jf-tile-profile', 'jf-tile-home', 'jf-tile-third'],
-    },
-    alt: 'Three Jumpstart Finance phone screens, redrawn in 2026 from the 2024 prototype: the learning journey, the home screen, and the community forum',
+    alt: 'A recording of the Merchandising Platform prototype: the overview, the product catalog, a product’s reorder calculation, the inventory and the vendors',
   },
   {
     id: 'ai-leasing-agent',
@@ -143,6 +131,17 @@ export const FIELD: readonly FieldProject[] = [
     },
     alt: 'An illustrative leasing conversation: a renter asks about a two-bedroom, a fee waiver and a unit hold, and the assistant answers the general questions and passes the requests to the leasing staff',
   },
+  {
+    id: 'jumpstart-finance',
+    title: 'Jumpstart Finance',
+    line: 'Financial education for students through interactive learning',
+    media: {
+      kind: 'screens',
+      // Harlie's three phones (PNG Tiles/jumpstart tile 1 to 3), made free-standing.
+      screens: ['jf-tile-profile', 'jf-tile-home', 'jf-tile-third'],
+    },
+    alt: 'Three Jumpstart Finance phone screens, redrawn in 2026 from the 2024 prototype: the learning journey, the home screen, and the community forum',
+  },
 ]
 
 /** Where a tile leads: its case study, or the About page. */
@@ -151,3 +150,15 @@ export const fieldPath = (item: FieldProject) =>
 
 /** The creative portfolio is a separate build outside the router: its tile opens with a full page load. */
 export const isExternalTile = (item: FieldProject) => item.id === 'creative'
+
+/**
+ * What each tile does, at the end of its link's name (a case study's otherwise). The Creative Portfolio tile loads
+ * the separate creative site; it was announced as a case study (Harlie's brief, 2026-09-28, accessibility).
+ */
+const ACTION: Partial<Record<FieldProject['id'], string>> = {
+  about: 'Open the About page',
+  creative: 'Open creative portfolio (a separate site)',
+}
+
+/** A tile link's accessible name: its title, its picture's description and what it opens. */
+export const tileLabel = (item: FieldProject) => `${item.title}. ${item.alt}. ${ACTION[item.id] ?? 'View case study'}`

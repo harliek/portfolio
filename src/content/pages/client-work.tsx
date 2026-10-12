@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import type { VideoId } from '../media'
 
 /**
- * Latest copy: Harlie's three film texts of 2026-09-30, verbatim (they supersede the 2026-09-29 copy, which had
- * Harlie's clarification of client management and campaign coordination on Aristocracy).
+ * Latest copy: Harlie's three film texts of 2026-10-12, verbatim (they supersede the texts of 2026-09-30 and
+ * 2026-09-29).
  *
  * Creative Production (route /work/creative-production; the files keep the
  * older client-work name). Three stacked project sections, each pairing its
@@ -92,7 +92,7 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/nickleby-loop-trim-1138.mp4', poster: '/media/img/nickleby-loop-poster.webp', width: 1138, height: 640 },
       work: (
         <p>
-          We produced testimonial, FAQ, and social films for Nickleby Capital in a single-day shoot. I worked across client coordination, production planning, and on-set execution, helping structure the question-card format, prepare the setup, manage lighting and equipment, and capture supporting B-roll.
+          I worked across client coordination, production planning, and filming for Nickleby Capital’s testimonial, FAQ, and social content. I developed the interview format, coordinated the shoot setup, managed lighting and equipment, and captured supporting footage during a single-day production.
         </p>
       ),
     },
@@ -104,7 +104,7 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/aristocracy-loop-854.mp4', poster: '/media/img/aristocracy-loop-poster.webp', width: 854, height: 640, fill: true },
       work: (
         <p>
-          I worked across client management, campaign coordination, and production for Aristocracy London’s spring/summer campaign ahead of its Manchester store launch, creating behind-the-scenes photography alongside film and social content.
+          I worked across client management, campaign planning, and production for Aristocracy London’s spring/summer campaign ahead of its Manchester store launch, creating behind-the-scenes photography alongside film and social content.
         </p>
       ),
     },
@@ -116,7 +116,7 @@ export const CLIENT_WORK = {
       clip: { src: '/media/video/heck-loop-1138.mp4', poster: '/media/img/heck-loop-poster.webp', width: 1138, height: 640 },
       work: (
         <p>
-          I filmed The Night Club x Gymshark Global Tour for Shift Content, capturing a women-only nighttime 5K created to raise awareness around women’s safety while running after dark, with HECK! supporting the event as an official partner.
+          I filmed The Night Club x Gymshark Global Tour for Shift Content, capturing a women-only nighttime 5K organized to raise awareness around women’s safety while running after dark.
         </p>
       ),
     },

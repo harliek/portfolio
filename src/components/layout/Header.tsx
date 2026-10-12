@@ -197,7 +197,7 @@ export function Header() {
    */
   const goBack = () => {
     const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0
-    // Opened from outside: the collection, centred on the project just left (ProjectField reads `from`).
+    // Opened from outside: the selected work, with the project just left in view (Home.tsx reads `from`).
     const started =
       idx > 0
         ? changePage({ to: -1, navigate, direction: 'back' })

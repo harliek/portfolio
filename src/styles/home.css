@@ -1,7 +1,7 @@
 /*
  * The homepage (brief v16): one dominant film, very large PORTFOLIO,
  * darkness and space; a short hold as scrolling begins; then the selected
- * work as a field of media planes over the faint film.
+ * work as a grid of tiles over the faint film (ProjectGrid).
  *
  * Scroll writes two variables where they are read (Home.tsx, with
  * lib/scrollProgress.ts, which replaced GSAP's ScrollTrigger on 2026-09-29;
@@ -10,7 +10,7 @@
  *   --enter   on the opening (.hero) and the film's slot: 0 to 1 through the
  *             opening's hold (the title rises and scales down, the roles
  *             fade, the film darkens);
- *   --settle  on the film's slot: 0 to 1 as the field rises into place (the
+ *   --settle  on the film's slot: 0 to 1 as the work rises into place (the
  *             film darkens a little further and stays faintly present
  *             behind the work).
  */
@@ -24,17 +24,6 @@
 .home {
   --enter: 0;
   --settle: 0;
-  /*
-   * Where the centred tile sits in the held view (its centre, as a share of
-   * the room under the header). Brief v21: the tiles sit as low as the old
-   * creative portfolio's art tiles, peeking about 66px above the bottom edge
-   * on arrival and centred a little below the middle once held. The tiles'
-   * size, --plane-w and --plane-h, is written here by ProjectField (layoutFor),
-   * before the first paint; the stylesheet keeps no copy of it (Harlie's brief,
-   * 2026-09-28: the copies had drifted from layoutFor, so the tiles peeked
-   * 42 to 54px, not 66px).
-   */
-  --horizon: 51%;
 
   position: relative;
   isolation: isolate;
@@ -92,13 +81,8 @@
 
 .hero {
   position: relative;
-  /*
-   * Sized so the centred tile's top edge arrives about 66px above the bottom
-   * of the window (as the old creative portfolio's art tiles do), whatever
-   * the window: tile top = hero + header + horizon x (window - header - footer) - tile / 2. (The fallback is only for
-   * a render before ProjectField has measured.)
-   */
-  height: calc((100svh - var(--header-height)) * 0.49 - 66px + var(--plane-h, 18.75vw) / 2 + var(--footer-h, 0px) * 0.51);
+  /* The window less the header and 66px: the first row of tiles peeks 66px above the window's bottom on arrival. */
+  height: calc(100svh - var(--header-height) - 66px);
 }
 
 /* The identity group sits about 38 to 40% down the opening, about 64px from the left. */
@@ -363,73 +347,19 @@
 
 /* The selected work ----------------------------------------------------------- */
 
-/*
- * The end of the page (Harlie's request): the collection fills the window
- * between the header and the footer (its height, --footer-h, is measured by
- * ProjectField), so with the footer just below it the page never scrolls
- * further; scrolling on moves the projects instead.
- */
-.field {
-  position: relative;
-  z-index: 1;
-  /* A #selected-work link lands with the collection under the header. */
-  scroll-margin-top: var(--header-height);
-  height: calc(100svh - var(--header-height) - var(--footer-h, 0px));
-  min-height: 360px;
-}
-
-/*
- * A low shade under the captions (Harlie's brief, 2026-09-28, homepage contrast): from just above the captions it
- * deepens and holds on down through the footer, the page's own bottom vignette, so the tiles' words and the footer's
- * links read over any frame of the film (they fell to about 2:1 over its lit parts). Under the tiles; the film stays
- * clearly visible above it and through it.
- */
-.field::before {
-  content: '';
-  position: absolute;
-  top: calc(var(--horizon) + var(--plane-h, 35vw) / 2 - 64px);
-  right: 0;
-  bottom: calc(-1 * var(--footer-h, 0px));
-  left: 0;
-  background: linear-gradient(to bottom, rgb(3 3 5 / 0), rgb(3 3 5 / 0.5) 72px);
-  pointer-events: none;
-}
-
-.field__pin {
-  position: relative;
-  height: 100%;
-  overflow: hidden;
-}
-
-.field__stage {
-  position: absolute;
-  inset: 0;
-  perspective: 1600px;
-  perspective-origin: 50% var(--horizon);
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
 .plane {
-  position: absolute;
-  left: 50%;
-  top: var(--horizon);
+  position: relative;
   display: block;
-  width: var(--plane-w, 57vw);
   color: inherit;
   text-decoration: none;
-  transform-origin: 50% calc(var(--plane-h, 35vw) / 2);
-  will-change: transform;
   -webkit-user-drag: none;
-  transition: opacity 400ms var(--ease-arrive);
 }
 
 /* The 16:10 cover: one hairline, 16px corners. */
 .plane__frame {
   position: relative;
   display: block;
-  height: var(--plane-h, 35vw);
+  aspect-ratio: 16 / 10;
   overflow: hidden;
   /* The site's cool media edge (tokens.css), not the old warm hairline. */
   border: 1px solid var(--color-media-edge);
@@ -441,15 +371,6 @@
 
 .plane:focus-visible {
   outline: none;
-}
-
-/*
- * A tile wholly outside the window (ProjectField.tsx): clipped to nothing and out of the pointer's reach, but still in
- * the accessibility tree and the tab order, where visibility: hidden took it out (Harlie's QA pass, 2026-09-28).
- */
-.plane[data-away] {
-  clip-path: inset(50%);
-  pointer-events: none;
 }
 
 /* Free-standing tiles (phones, the conversation) float over the page: no ground, frame or shadowed card. */
@@ -477,7 +398,7 @@
   box-shadow: var(--focus-inner-line);
 }
 
-/* Every tile at full brightness, wherever it is in the strip (Harlie's request). */
+/* A free-standing tile's phones and messages may reach past its frame. */
 .plane[data-free] .plane__media {
   overflow: visible;
 }
@@ -488,7 +409,7 @@
   padding-top: 16px;
   /*
    * The site's cool text tones and a soft dark shadow (Harlie's brief, 2026-09-28, homepage contrast): the captions
-   * were warm greys (#f3eee7, #b4aea6) straight on the film. With the shade under them (.field::before) they read at
+   * were warm greys (#f3eee7, #b4aea6) straight on the film. With the shade under them (.work-grid::before) they read at
    * 4.5:1 or better over any frame.
    */
   text-shadow:
@@ -524,11 +445,30 @@
 }
 
 /*
+ * The Creative Portfolio tile leaves for another site: its title ends with the header's link arrow, set a little high
+ * after the words, as in the navigation (layout.css); it nudges up and out as the tile is hovered or focused.
+ */
+.plane__title .site-nav__mark {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  margin-left: 0.2em;
+  opacity: 0.8;
+  translate: 0 -0.45em;
+}
+
+.plane:hover .plane__title .site-nav__mark,
+.plane:focus-visible .plane__title .site-nav__mark {
+  opacity: 1;
+  transform: translate(1px, -1px);
+}
+
+/*
  * Hovering a tile (mouse or trackpad): the tile grows a little and lights
  * up slightly, a soft lift in brightness, with no lit edge or glow around it
  * (Harlie's request, 2026-09-27: no light outline on hover except the
  * cursor's, on the navigation and "Watch the film"). The frame scales inside
- * the tile's own placement, so the strip's positioning is untouched.
+ * the tile's own place, so the grid's layout is untouched.
  */
 @media (hover: hover) and (pointer: fine) {
   .plane__frame {
@@ -543,7 +483,7 @@
     /*
      * Clearly larger on hover (Harlie's requests: 1.09 on 2026-09-26, was 1.045; "bigger" on 2026-09-27). It grows
      * mostly upwards and outwards, so it stays clear of its caption; at this size it still stays clear of its
-     * neighbours on the strip.
+     * neighbours in the grid.
      */
     transform: scale(1.15);
     transform-origin: 50% 85%;
@@ -568,7 +508,7 @@
   }
 }
 
-/* Phones: one tile and glimpses of its neighbours, captions directly beneath (ProjectField's layoutFor). */
+/* Phones: the opening's title and line a size smaller. */
 @media (max-width: 699.98px) {
   /* The tagline wraps on phones; the typing bar would stand beside both lines, so it is left out there. */
   .hero__line .type-line__cursor {
@@ -585,40 +525,6 @@
 }
 
 /*
- * Short windows (phones held sideways; ProjectField's SHORT is the same query), Harlie's brief, 2026-09-28: the
- * collection's 360px least height ran it under the navigation and cut the longer captions at its foot. Here the
- * collection is exactly the room between the header and the footer, the tile's top 12px below its top (the tile's
- * size is measured so its caption fits whole beneath it), the opening sized so the tile still peeks 66px on arrival.
- * To leave the tile a useful size, the footer's row is closer to the page's end (its links keep their 44px) and the
- * captions are a size smaller (the titles keep to one line, the lines to about three).
- */
-@media (max-height: 520px) {
-  .home {
-    --horizon: calc(12px + var(--plane-h, 35vw) / 2);
-  }
-
-  .hero {
-    height: calc(100svh - var(--header-height) - 66px - 12px);
-  }
-
-  .field {
-    min-height: 0;
-  }
-
-  .plane__title {
-    font-size: 1.125rem;
-  }
-
-  .plane__line {
-    font-size: 0.8125rem;
-  }
-
-  .site-main:has(.home) + .site-end .site-end__inner {
-    padding-block: 4px;
-  }
-}
-
-/*
  * The footer on the homepage (Harlie's brief, 2026-09-28): the homepage has no 1280px column, so its footer starts on
  * PORTFOLIO's edge (the opening's max(--edge, 8%)) and ends the same distance from the right; it had lined up with
  * neither the header nor the hero. Layout.css keeps the footer everywhere else.
@@ -628,7 +534,7 @@
   padding-inline: max(var(--edge), 8%);
 }
 
-/* Reduced motion: the title stays put; tiles move without easing (ProjectField); the still poster (HomeFilm). */
+/* Reduced motion: the title stays put; the still poster (HomeFilm). */
 @media (prefers-reduced-motion: reduce) {
   .hero__group {
     transform: translate3d(0, -50%, 0);
@@ -636,3 +542,61 @@
   }
 }
 
+
+/* The selected work as a grid ------------------------------------------------- */
+
+/*
+ * The grid (ProjectGrid, Harlie's request, 2026-10-12; it replaced the moving strip): rows of three centred tiles under
+ * the opening, an ordinary scroll, and the footer after the last row.
+ */
+.work-grid {
+  --work-gap: clamp(24px, 3vw, 48px);
+
+  position: relative;
+  z-index: 1;
+  /* A #selected-work link lands with the first row under the header. */
+  scroll-margin-top: var(--header-height);
+  padding: 0 var(--edge) clamp(72px, 8vw, 128px);
+}
+
+/*
+ * A low shade from the first row on down through the footer (Harlie's brief, 2026-09-28, homepage contrast): the
+ * captions and the footer's links read over any frame of the film (they fell to about 2:1 over its lit parts).
+ */
+.work-grid::before {
+  content: '';
+  position: absolute;
+  inset: 120px 0 -160px;
+  background: linear-gradient(to bottom, rgb(3 3 5 / 0), rgb(3 3 5 / 0.5) 160px);
+  pointer-events: none;
+}
+
+.work-grid__list {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(48px, 5vw, 80px) var(--work-gap);
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.work-grid__item {
+  flex: 0 0 calc((100% - 2 * var(--work-gap)) / 3);
+  min-width: 0;
+}
+
+/* Tablets: two to a row; phones: one. */
+@media (max-width: 899.98px) {
+  .work-grid__item {
+    flex-basis: calc((100% - var(--work-gap)) / 2);
+  }
+}
+
+@media (max-width: 599.98px) {
+  .work-grid__item {
+    flex-basis: 100%;
+  }
+}

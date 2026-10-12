@@ -1,8 +1,8 @@
 import type { NavigateFunction } from 'react-router-dom'
 import { TRANSITION } from '../../config/transition'
 import { prefersReducedMotion } from '../../hooks/useReducedMotion'
-import { DEPTH, alphaAt, easing, holdInLane, keepClear, laneOf, obstacle, poseAt, still, type Box, type Fade, type Lane, type Obstacle, type Plan, type Pose, type Timing } from './paths'
-import { NARROW, PICTURES, away, coverOf, piecesInView, sliversInView, tileFor, type Piece } from './pieces'
+import { DEPTH, alphaAt, holdInLane, keepClear, laneOf, obstacle, still, type Box, type Fade, type Lane, type Obstacle, type Plan, type Pose, type Timing } from './paths'
+import { NARROW, PICTURES, coverOf, piecesInView, sliversInView, type Piece } from './pieces'
 import { coverVideos, isWebKit } from './stills'
 import { loadChunk, openingReady, warmProject } from './warm'
 import './transition.css'
@@ -14,21 +14,17 @@ import './transition.css'
  * title, the details, each step, the pictures, the tiles and their captions, the footer's links), they travel, and the
  * new page's pieces travel into their places:
  *
- *   - From a homepage tile, the page UNFOLDS out of it: the tile's picture flies and grows into the new page's
- *     picture, PORTFOLIO turns over into the new title as it travels to it, the other tiles, captions and words
- *     scatter away from the tile, and the new page's pieces come out of the tile and fan out to their places.
- *   - Back to the homepage onto a tile in view, the page FOLDS back into it: the page's picture flies and shrinks into
- *     the tile, its title turns over into PORTFOLIO, its other pieces are drawn into the tile, and the homepage's
- *     pieces arrive from all around.
- *   - Between pages (Previous/Next, About, the menu), the pieces SLIDE through and rearrange: in turn from the leading
- *     edge, they are thrown out to one side on diverging paths (spreading apart as they go, tilting either way, the
- *     footer's row dropping away), and as they go the new pieces arrive from the other side, each on its own
- *     converging path into its place; the picture and the title turn over like a card on the way (the picture about its
- *     upright axis, the title about its level one, a split-flap), the new picture turning in over the old one.
+ * In turn from the leading edge, the pieces are thrown out to one side on diverging paths (spreading apart as they go,
+ * tilting either way, the footer's row dropping away), and as they go the new page's pieces arrive from the other side,
+ * each on its own converging path into its place. Every change moves this way: from a homepage tile, between case
+ * studies, to and from About and back to the homepage. Each page's main picture leaves and arrives by itself in its own
+ * column; it is never flown, grown or turned over into the other page's picture, nor is the title turned into the next
+ * title (Harlie's brief, 2026-10-12: a tile's picture and the page's are often different photographs; until then a
+ * tile's picture flew into the page's, and pictures and titles turned over into the next like a card).
  *
  * Every move is planned, then checked frame by frame before it runs (paths.ts; Harlie's requests, 2026-09-28): a
  * page's main picture keeps to its own column beside the words, turning with its edge towards them turned away; the
- * words keep clear of the pictures and titles moving over them and of the header's items (a piece shortens its way in,
+ * words keep clear of the pictures moving over them and of the header's items (a piece shortens its way in,
  * inside its own column, or waits a few frames); the lines drawn tight against a title (a case study's details, the
  * homepage's name) come in with it as one unit; the two pages' words never sit over each other, nor do a new page's
  * neighbours cross on the way in; and the window is never left without a picture between two projects.
@@ -55,8 +51,6 @@ export interface ChangeOptions {
   navigate: NavigateFunction
   /** Router state for the new entry. */
   state?: unknown
-  /** The homepage tile that was clicked: its picture becomes the new page's. */
-  from?: HTMLElement | null
   direction?: Direction
   /** Runs as the change begins, and `onCancel` if it is stopped before the route changes. */
   onStart?: () => void
@@ -72,32 +66,13 @@ const TIME = {
   out: 420,
   outStep: 36,
   outSpread: 140,
-  /** A carried piece (the picture, the title) turns away over CARRY_OUT and turns back in as the new one over CARRY_IN. */
-  carryOut: 280,
-  carryIn: 520,
   /**
-   * The title turns away quicker (it was CARRY_OUT until 2026-09-28): the new title, and the details under it, turn in
-   * 40ms sooner, so no title can be read for less time between the two pages (Harlie's brief: about 100ms).
+   * Each arriving piece travels this long, the first at IN_AT, the rest in turn over at most IN_SPREAD. They start while
+   * the leaving pieces are still on their way; a piece that would meet a leaving one's words waits a few frames for it
+   * (paths.ts), so the two pages' words never sit over each other and the window is never nearly empty (Harlie's
+   * request, 2026-09-28; it was 250ms, with the page almost black for about 140ms).
    */
-  titleOut: 240,
-  /**
-   * Between pages the new picture starts turning in this long before the old one has turned edge-on, over it (Harlie's
-   * request, 2026-09-28: no near-empty frames between projects, "always something meaningful to look at"). The titles
-   * still change at the edge-on moment: two titles over each other would read as one garbled word.
-   */
-  heroOverlap: 100,
-  /** The title follows the picture this much later. */
-  titleLag: 40,
-  /** A tile's picture flies into the page's picture (or back) in one move this long. */
-  morph: 720,
-  /**
-   * Each arriving piece travels this long, the first at IN_AT, the rest in turn over at most IN_SPREAD. Between pages
-   * they start while the leaving pieces are still on their way (IN_AT_SLIDE); a piece that would meet a leaving one's
-   * words waits a few frames for it (paths.ts), so the two pages' words never sit over each other and the window is
-   * never nearly empty (Harlie's request, 2026-09-28; it was 250ms, with the page almost black for about 140ms).
-   */
-  inAt: 190,
-  inAtSlide: 150,
+  inAt: 150,
   in: 560,
   inStep: 38,
   inSpread: 240,
@@ -135,17 +110,10 @@ const TIME = {
 const EASE = {
   /** Leaving: under way from the first frame (no slow start after the click), accelerating out. */
   out: 'cubic-bezier(0.25, 0.3, 0.7, 0.45)',
-  /** Thrown out between pages: fast from the first frame, so most of the travel is seen before the piece has faded. */
+  /** Thrown out: fast from the first frame, so most of the travel is seen before the piece has faded. */
   throw: 'cubic-bezier(0.3, 0.6, 0.55, 1)',
-  /** Arriving: fast, then a long gentle settle (no overshoot). */
-  in: 'cubic-bezier(0.16, 1, 0.3, 1)',
-  /** Arriving between pages: visible from early on, gliding the whole way into place. */
+  /** Arriving: visible from early on, gliding the whole way into place. */
   glide: 'cubic-bezier(0.2, 0.65, 0.25, 1)',
-  /** A carried piece turning away (accelerating) and turning back in (decelerating): the speed carries through. */
-  carryOut: 'cubic-bezier(0.3, 0.25, 0.8, 0.5)',
-  carryIn: 'cubic-bezier(0.1, 0.55, 0.3, 1)',
-  /** The tile's picture flying to its page: lifting off at once, a long glide into place. */
-  morph: 'cubic-bezier(0.25, 0.1, 0.1, 1)',
   fade: 'cubic-bezier(0.33, 0, 0.25, 1)',
 } as const
 
@@ -549,11 +517,9 @@ function begin(r: Run) {
   const path = typeof r.to === 'string' ? r.to : null
 
   if (!reduced) {
-    // The page's pieces, measured once; on the homepage, the tile that goes to the destination carries its picture.
-    const onHome = Boolean(document.querySelector('.home'))
-    const carrier = onHome ? (r.opts.from ?? tileFor(path)) : null
-    r.old = piecesInView(carrier, true)
-    r.old.forEach((p, i) => name(r, p.el, `tx-o${i}`, p.role === 'piece' ? 'tx-out' : 'tx-carry-out'))
+    // The page's pieces, measured once.
+    r.old = piecesInView(true)
+    r.old.forEach((p, i) => name(r, p.el, `tx-o${i}`, p.role === 'piece' ? 'tx-out' : 'tx-main-out'))
     // A phone's held band (black, over the steps scrolled under it) is pictured over the leaving pieces, so the steps
     // under it stay under it as they go, and it goes once they have (Harlie's brief, 2026-09-28: they popped out above
     // it and around its moving picture, its thumbnails over their words).
@@ -611,9 +577,8 @@ function begin(r: Run) {
     }
     const home = Boolean(document.querySelector('.home'))
     if (home) finishTyping()
-    // (The homepage's tiles at the window's edges drift on, and are not waited for.)
-    r.next = piecesInView(home ? tileFor(r.from) : null, false, home ? undefined : r.stay)
-    r.next.forEach((p, i) => name(r, p.el, `tx-n${i}`, p.role === 'piece' ? 'tx-in' : 'tx-carry-in'))
+    r.next = piecesInView(false, home ? undefined : r.stay)
+    r.next.forEach((p, i) => name(r, p.el, `tx-n${i}`, p.role === 'piece' ? 'tx-in' : 'tx-main-in'))
   }
 
   let vt: ViewTransition
@@ -669,9 +634,7 @@ function animate(pseudoElement: string, frames: Keyframe[], timing: KeyframeAnim
 /**
  * The browser places each piece's picture (its group) with a matrix; a pose is applied on top of it, so a piece leaves
  * from exactly how it looked (a hovered tile keeps its tilt) and arrives exactly where the live element is. The
- * keyframes are absolute (the group's matrix, then the pose), so the compositor runs them. The one exception is a
- * piece of a homepage being arrived at: its tiles drift on while the change runs, so their pose is added to wherever
- * the browser pictures them each frame (composite: add, which runs on the main thread). A viewport offset is turned
+ * keyframes are absolute (the group's matrix, then the pose), so the compositor runs them. A viewport offset is turned
  * into the group's own axes.
  */
 function groupMatrix(vtName: string): DOMMatrix {
@@ -693,18 +656,17 @@ function poseTransform(m: DOMMatrix, p: Pose) {
 }
 
 /** Moves a named piece as planned: its transform on top of where the browser pictures it, and its opacity. */
-function move({ vtName, poses, timing, fades, tracked }: Plan) {
+function move({ vtName, poses, timing, fades }: Plan) {
   const m = groupMatrix(vtName)
-  const base = tracked || m.isIdentity ? '' : `${m.toString()} `
+  const base = m.isIdentity ? '' : `${m.toString()} `
   const pseudoElement = `::view-transition-group(${vtName})`
   const frames = poses.map((p) => ({ transform: base + poseTransform(m, p), ...(p.offset === undefined ? {} : { offset: p.offset }) }))
-  animate(pseudoElement, frames, { ...timing, ...(tracked ? { composite: 'add' as const } : {}) })
+  animate(pseudoElement, frames, timing)
   animate(pseudoElement, fades.map((f) => ({ ...f })), { delay: timing.delay, duration: timing.duration, easing: 'linear' })
 }
 
 /** A piece in place (a new object each time: planned poses are adjusted before they run). */
 const rest = (): Pose => ({})
-const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
 /** How far a piece's lean may lift or drop the ends of its line (px; choreograph). */
 const LEAN_LIFT = 12
@@ -714,7 +676,6 @@ type Named = Piece & { vtName: string }
 function choreograph(r: Run) {
   const vw = window.innerWidth
   const vh = window.innerHeight
-  const vmax = Math.max(vw, vh)
   // How far pieces sweep between pages: a share of the window, but never less than on a 900px one, so on a phone they
   // clearly travel (most of the way across) rather than nudge.
   const span = Math.max(vw, 900)
@@ -726,17 +687,10 @@ function choreograph(r: Run) {
   const next: Named[] = r.next.map((p, i) => ({ ...p, vtName: `tx-n${i}` }))
   const oldHero = old.find((p) => p.role === 'hero')
   const newHero = next.find((p) => p.role === 'hero')
-  const oldTitle = old.find((p) => p.role === 'title')
   const newTitle = next.find((p) => p.role === 'title')
-  const unfold = oldHero?.el.matches('.plane__frame') ? oldHero : undefined
-  const fold = !unfold && newHero?.el.matches('.plane__frame') ? newHero : undefined
-  const mode = unfold ? 'unfold' : fold ? 'fold' : 'slide'
-  // The way the pieces travel between pages.
+  // The way the pieces travel: out towards one side, in from the other.
   const flow = { x: r.opts.direction === 'back' ? 1 : -1 }
-  const O = unfold ?? fold
-  // Arriving at the homepage: its tiles (and their captions) drift on while the change runs, so they are followed.
-  const drifts = (el: HTMLElement) => Boolean(el.closest('.home .plane'))
-  trace('mode', `${mode} ${old.length}->${next.length}`)
+  trace('mode', `slide ${old.length}->${next.length}`)
 
   // The backgrounds: leaving or reaching the homepage's film, the old one fades out as its pieces leave (TIME.rootOut,
   // TIME.filmOut); the new one comes in under the arrivals. Between pages with the same black ground behind them, the
@@ -782,208 +736,105 @@ function choreograph(r: Run) {
 
   // Every move is planned first, checked against the others (paths.ts), then run.
   const plans: Plan[] = []
-  const plan = (p: Named, poses: Pose[], timing: Timing, fades: Fade[], tracked = false): Plan => {
-    const planned = { vtName: p.vtName, rect: p.rect, poses, timing, fades, tracked }
+  const plan = (p: Named, poses: Pose[], timing: Timing, fades: Fade[]): Plan => {
+    const planned = { vtName: p.vtName, rect: p.rect, poses, timing, fades }
     plans.push(planned)
     return planned
   }
 
   // The columns (Harlie's request, 2026-09-28: each column animates "within its own area"). A page's main picture
-  // beside its words keeps to its own column; not while a page folds back into its homepage tile, drawn into it by
-  // design.
+  // beside its words keeps to its own column.
   const wordsOf = (list: Named[], hero?: Named) => list.filter((p) => p !== hero && !p.el.closest('.site-end')).map((p) => p.rect)
-  const newLane: Lane | null = newHero && !fold ? laneOf(newHero.rect, wordsOf(next, newHero)) : null
-  const oldLane: Lane | null = oldHero && mode === 'slide' ? laneOf(oldHero.rect, wordsOf(old, oldHero)) : null
-  // Which way a picture turns over (the sign of the new one's turn as it starts): the new picture's edge facing its
-  // words is the one turned away, so it never reaches over them, and the old one turns on the same way, like a card.
-  const spin = newLane ? -newLane.side : oldLane ? oldLane.side : flow.x < 0 ? -1 : 1
+  const newLane: Lane | null = newHero ? laneOf(newHero.rect, wordsOf(next, newHero)) : null
+  const oldLane: Lane | null = oldHero ? laneOf(oldHero.rect, wordsOf(old, oldHero)) : null
 
-  // --- Carried: the picture and the title travel from the old page's place to the new page's, turning over.
+  // --- The pictures. Each page's main picture leaves and arrives by itself, inside its own column, like the other
+  // pieces: it is never flown, grown or turned over into the other page's picture (Harlie's brief, 2026-10-12: a tile's
+  // picture and the page's are often different photographs). The edge facing the words is the one turned away.
   const heroes: { out?: Plan; in?: Plan } = {}
-  const titles: { out?: Plan; in?: Plan } = {}
   const carried = new Set<string>()
-  const carry = (a: Named | undefined, b: Named | undefined, lag: number, axis: 'x' | 'y') => {
-    if (!a || !b) return
-    carried.add(a.vtName).add(b.vtName)
-    if (axis === 'y' && mode !== 'slide') {
-      // A tile's picture and the page's are the same work: one flight. The new picture takes over in a quick cut at
-      // mid-flight, where the picture moves fastest: it comes in over one frame (14ms) above the tile's, which then
-      // goes under it, so the two are never seen doubled (Harlie's QA pass, 2026-09-28: the cut took about 70ms and
-      // the Jumpstart phones showed twice, a few pixels apart).
-      const s = clamp(Math.sqrt((b.rect.width * b.rect.height) / (a.rect.width * a.rect.height)), 0.2, 5)
-      const from: Pose = { dx: a.x - b.x, dy: a.y - b.y, s: 1 / s }
-      // Beside its page's words, the tile's picture ends inside the page's picture (contained, not the same area): a
-      // wide tile growing into a tall stage reached over the words, and pushing it back into its lane flung it past the
-      // window's edge while the page's picture was not yet shown, leaving the window almost black (QA, 2026-09-28:
-      // a tile opened from the middle of the strip).
-      const fits = newLane ? clamp(Math.min(b.rect.width / a.rect.width, b.rect.height / a.rect.height), 0.2, 5) : s
-      const outward: Pose[] = [rest(), { dx: b.x - a.x, dy: b.y - a.y, s: fits }]
-      const inward = plan(b, [from, rest()], { delay: lag, duration: TIME.morph, easing: EASE.morph }, [{ opacity: 0 }, { opacity: 0, offset: 0.45 }, { opacity: 1, offset: 0.47 }, { opacity: 1 }], drifts(b.el))
-      if (newLane) {
-        // Opening a page whose words stand beside its picture: the picture is in its own column by the time the words
-        // come out of the tile, and grows into its place there, never across them. The tile's picture flies with it.
-        const at = easing(EASE.morph)(clamp((TIME.inAt - lag) / TIME.morph, 0.1, 0.7))
-        inward.poses = [from, { ...poseAt(inward.poses, at), offset: at }, rest()]
-        holdInLane(inward, newLane, 1, TIME.inAt)
-        const mid = inward.poses[1]
-        outward.splice(1, 0, { dx: b.x - a.x + (mid.dx ?? 0), dy: b.y - a.y + (mid.dy ?? 0), s: fits * (mid.s ?? 1), offset: at })
-      }
-      heroes.out = plan(a, outward, { delay: lag, duration: TIME.morph, easing: EASE.morph }, [{ opacity: 1 }, { opacity: 1, offset: 0.47 }, { opacity: 0, offset: 0.49 }, { opacity: 0 }])
-      heroes.in = inward
-      // The tile's picture keeps to the lane too until it is cut away (its shape can be wider than the page's picture).
-      if (newLane) {
-        holdInLane(heroes.out, newLane, 2, TIME.inAt)
-        holdInLane(heroes.out, newLane, 1, TIME.inAt)
-      }
-      return
-    }
-    // Different work: the old piece turns edge-on on its way, the new one turns face-on from there, like a card.
-    // Between pages the new one starts turning in just before the old one is edge-on, so the place is never empty.
-    const swing = mode === 'slide' ? 0.07 * vw : 0
-    const mx = (a.x + b.x) / 2
-    const my = (a.y + b.y) / 2
-    const k = Math.sqrt(b.rect.width / a.rect.width)
-    const turn = (sign: number) => (axis === 'y' ? { ry: sign * spin * 88 } : { rx: -sign * 88 })
-    const overlap = mode === 'slide' && axis === 'y' ? TIME.heroOverlap : 0
-    const turning = axis === 'x' ? TIME.titleOut : TIME.carryOut
-    const outward = plan(
-      a,
-      [rest(), { dx: mx - a.x + flow.x * swing, dy: my - a.y, s: clamp(k, 0.4, 2.5), ...turn(-1) }],
-      { delay: lag, duration: turning, easing: EASE.carryOut },
-      [{ opacity: 1 }, { opacity: 1, offset: 0.78 }, { opacity: 0 }],
-    )
-    const inward = plan(
-      b,
-      [{ dx: mx - b.x - flow.x * swing, dy: my - b.y, s: clamp(1 / k, 0.4, 2.5), ...turn(1) }, rest()],
-      { delay: lag + turning - overlap, duration: TIME.carryIn, easing: EASE.carryIn },
-      // Turning in over the old one, the new picture is whole almost at once (the two never show through each
-      // other); the new title too, as soon as it has turned far enough to be read (it was a sixth of the way in
-      // until 2026-09-28).
-      [{ opacity: 0 }, { opacity: 1, offset: 0.08 }, { opacity: 1 }],
-      drifts(b.el),
-    )
-    if (axis === 'x') {
-      titles.out = outward
-      titles.in = inward
-      return
-    }
-    // Each picture keeps to its own page's column throughout.
-    if (oldLane) holdInLane(outward, oldLane, 1, 0)
-    if (newLane) holdInLane(inward, newLane, 0, 0)
-    heroes.out = outward
-    heroes.in = inward
+  if (oldHero && oldLane) {
+    // Out towards its own side, away from its words.
+    carried.add(oldHero.vtName)
+    const side = oldLane.side
+    heroes.out = plan(oldHero, [rest(), { dx: side * 0.22 * span, dy: (oldHero.y - vh / 2) * 0.2, s: 0.9, ry: -side * 30 }], { delay: 0, duration: TIME.out, easing: EASE.throw }, [
+      { opacity: 1 },
+      { opacity: 1, offset: 0.12 },
+      { opacity: 0, offset: 0.5 },
+      { opacity: 0 },
+    ])
+    holdInLane(heroes.out, oldLane, 1, 0)
   }
-  carry(oldHero, newHero, 0, 'y')
-  carry(oldTitle, newTitle, TIME.titleLag, 'x')
-
-  // Between pages, a new picture with no old one to turn over from (Creative Production's end had none in view until
-  // 2026-09-28) comes in first, into its own column: from the first frame, so the window never shows no picture at
-  // all; leaving the homepage, whose film is its picture until it fades (TIME.rootOut), as the first of the arrivals.
-  const lone = mode === 'slide' && newHero && !carried.has(newHero.vtName) ? newHero : undefined
-  if (lone) {
-    carried.add(lone.vtName)
-    const start: Pose = { dx: -flow.x * 0.3 * span, dy: (lone.y - vh / 2) * 0.45, s: 0.88, ry: spin * 40 }
-    const at = r.from === '/' ? TIME.inAtSlide : 0
-    heroes.in = plan(lone, [start, rest()], { delay: at, duration: TIME.in, easing: EASE.glide }, [{ opacity: 0 }, { opacity: 1, offset: 0.16 }, { opacity: 1 }])
+  if (newHero) {
+    // The new picture comes in first, into its own column: from the first frame where there was no picture to leave
+    // (Creative Production's end has none in view), so the window never shows no picture at all; otherwise as the old
+    // one goes, and leaving the homepage as the first of the arrivals.
+    carried.add(newHero.vtName)
+    const spin = newLane ? -newLane.side : flow.x < 0 ? -1 : 1
+    const start: Pose = { dx: -flow.x * 0.3 * span, dy: (newHero.y - vh / 2) * 0.45, s: 0.88, ry: spin * 40 }
+    const at = oldHero || r.from === '/' ? TIME.inAt : 0
+    heroes.in = plan(newHero, [start, rest()], { delay: at, duration: TIME.in, easing: EASE.glide }, [{ opacity: 0 }, { opacity: 1, offset: 0.16 }, { opacity: 1 }])
     if (newLane) holdInLane(heroes.in, newLane, 0, 0)
   }
 
   // The lines drawn tight against the new title come in with it, as one unit (the details under a case study's title,
-  // the homepage's name over PORTFOLIO, About's label and descriptor): turning over just after it (a split-flap), or
-  // travelling with it (Harlie's brief, 2026-09-28: the details arrived about 130ms before a title turning in, under the
-  // old one still turning away, and slid over a title arriving from the side; HARLIE KATZ crossed PORTFOLIO's letters as
-  // it turned in; opening a tile, the details came about 200ms after their title). Planned once the title's way in is
-  // settled.
+  // the homepage's name over PORTFOLIO, About's label and descriptor; Harlie's brief, 2026-09-28: the details arrived
+  // apart from their title). Planned once the title's way in is settled.
   const riders = newTitle ? next.filter((p) => p.el.matches(RIDERS)) : []
   riders.forEach((p) => carried.add(p.vtName))
 
-  // --- Leaving: in turn, each remaining piece of the page being left travels away and fades.
+  // --- Leaving: in turn from the leading edge, each remaining piece of the page being left is thrown out to one side.
   const leaving = old.filter((p) => !carried.has(p.vtName))
-  const lead = (p: Piece) => (O ? away(O.x, O.y, p.x, p.y).d : -(p.x * flow.x))
-  leaving.sort((a, b) => lead(a) - lead(b))
+  leaving.sort((a, b) => b.x * flow.x - a.x * flow.x)
   const outStep = leaving.length > 1 ? Math.min(TIME.outStep, TIME.outSpread / (leaving.length - 1)) : 0
   // Where in its travel a leaving piece has faded out: well before the arrivals reach its part of the window. Reaching
   // the homepage, whose film shows through whatever is left, the words are gone by TIME.wordsOverFilm at the latest
   // (Harlie's QA pass, 2026-09-28: About's biography stayed at a quarter to a third of its strength over the film's
-  // figure until about 440ms, while PORTFOLIO was still edge-on).
-  const goneAt = mode === 'fold' ? 0.75 : mode === 'unfold' ? 0.55 : 0.5
+  // figure until about 440ms).
+  const goneAt = 0.5
   const toFilm = window.location.pathname === '/'
   const goneBy = (p: Piece, delay: number) => (toFilm && !p.el.matches(PICTURES) ? Math.max(0.2, Math.min(goneAt, (TIME.wordsOverFilm - delay) / TIME.out)) : goneAt)
   // A piece's lean (deg) on its way: at most so much that a wide line's ends rise or fall LEAN_LIFT px, since the
   // words keep clear of each other by their level boxes (paths.ts; the About descriptor, 500px wide at 5°, dipped 22px
-  // at its end, under the name turning above it).
+  // at its end, under the name above it).
   const lean = (p: Piece, deg: number) => Math.min(deg, (Math.asin(Math.min(1, (2 * LEAN_LIFT) / Math.max(1, p.rect.width))) * 180) / Math.PI)
-  // The opened tile's own caption: it goes with its tile, quickly, so it never lingers under the page arriving there.
-  const own = (p: Named) => Boolean(O && p !== O && O.el.closest('.plane')?.contains(p.el))
   const gone = leaving.map((p, i) => {
     const tilt = lean(p, i % 2 ? 5 : 3)
     // Alternate pieces go to either side of their line, so neighbours part rather than travel as one slab.
     const side = i % 2 ? 1 : -1
     let end: Pose
     let delay = i * outStep
-    // Gone within about 170ms, before the new page's first words rise where it stood (Harlie's QA pass, 2026-09-28:
-    // on a phone the caption and the arriving film's name crossed at about 240ms).
-    if (own(p)) return plan(p, [rest(), { dy: 0.06 * vh, s: 0.94 }], { delay: 0, duration: TIME.out * 0.4, easing: EASE.out }, [{ opacity: 1 }, { opacity: 0 }])
-    if (mode === 'unfold' && O) {
-      // Scattered away from the opened tile (the tile itself, with no picture to become, opens out towards the viewer).
-      const v = away(O.x, O.y, p.x, p.y)
-      const d = 0.2 * vmax + 0.3 * v.d
-      end = p === O ? { dx: vw / 2 - p.x, dy: vh / 2 - p.y, s: 1.35 } : { dx: v.x * d, dy: v.y * d, s: 0.86, r: Math.sign(v.x || 1) * tilt }
-    } else if (mode === 'fold' && O) {
-      // Drawn into the tile the page belongs to.
-      end = { dx: O.x - p.x, dy: O.y - p.y, s: 0.3, r: (p.x < O.x ? -1 : 1) * tilt }
-    } else if (p.rect.top > vh * 0.72) {
+    if (p.rect.top > vh * 0.72) {
       // The bottom of the window (the footer's row, the last step) drops away while the rest is thrown to the side,
       // all of it at once (in turn, a piece falling from above would pass through the one below).
       end = { dx: flow.x * 0.06 * span, dy: 0.34 * vh, s: 0.9, r: side * tilt }
       delay = 0
     } else {
       // Thrown out to one side at different distances, spreading apart from the middle as they go, tilting either way.
-      // Their heights keep their order (no longer nudged up and down in turn), so neighbours never cross going out.
+      // Their heights keep their order, so neighbours never cross going out.
       const lane = [0.22, 0.48, 0.34, 0.41][i % 4]
       end = { dx: flow.x * lane * span, dy: (p.y - vh / 2) * 0.45, s: 0.86, r: side * tilt }
     }
     const fadeEnd = goneBy(p, delay)
-    return plan(p, [rest(), end], { delay, duration: TIME.out, easing: mode === 'slide' ? EASE.throw : EASE.out }, [
+    return plan(p, [rest(), end], { delay, duration: TIME.out, easing: EASE.throw }, [
       { opacity: 1 },
-      { opacity: 1, offset: Math.min(mode === 'fold' ? 0.45 : 0.12, fadeEnd - 0.1) },
+      { opacity: 1, offset: Math.min(0.12, fadeEnd - 0.1) },
       { opacity: 0, offset: fadeEnd },
       { opacity: 0 },
     ])
   })
 
-  // --- Arriving: in reading order, each piece of the new page travels into its place.
+  // --- Arriving: in reading order, each piece of the new page comes in from the other side, each from its own distance,
+  // converging into its place. Their heights spread out from the middle of the window, keeping their order, so
+  // neighbours never cross over each other's words on the way.
   const arriving = next.filter((p) => !carried.has(p.vtName))
   const inStep = arriving.length > 1 ? Math.min(TIME.inStep, TIME.inSpread / (arriving.length - 1)) : 0
-  const inAt = mode === 'slide' ? TIME.inAtSlide : TIME.inAt
   const come = arriving.map((p, i) => {
     const tilt = lean(p, i % 2 ? 5 : 3)
     const side = i % 2 ? -1 : 1
-    let start: Pose
-    if (mode === 'unfold' && O) {
-      // Out of the opened tile's rim on the side facing its place (not its middle, under the flying picture),
-      // fanning out to its place.
-      const v = away(O.x, O.y, p.x, p.y)
-      const rim = 0.5 * Math.min(O.rect.width, O.rect.height)
-      start = { dx: O.x + v.x * rim - p.x, dy: O.y + v.y * rim - p.y, s: 0.45, r: (p.x < O.x ? 1 : -1) * tilt }
-    } else if (mode === 'fold' && O) {
-      // From all around, towards the tile the page folded into.
-      const v = away(O.x, O.y, p.x, p.y)
-      const d = 0.18 * vmax + 0.25 * v.d
-      start = { dx: v.x * d, dy: v.y * d, s: 0.9, r: Math.sign(v.x || 1) * tilt }
-    } else {
-      // From the other side, each from its own distance, converging into its place. Their heights spread out from the
-      // middle of the window, keeping their order, so neighbours never cross over each other's words on the way.
-      const lane = [0.3, 0.46, 0.38, 0.52][i % 4]
-      start = { dx: -flow.x * lane * reach(p), dy: (p.y - vh / 2) * 0.45, s: 0.88, r: -side * tilt }
-    }
-    return plan(
-      p,
-      [start, rest()],
-      { delay: inAt + i * inStep, duration: TIME.in, easing: mode === 'slide' ? EASE.glide : EASE.in },
-      [{ opacity: 0 }, { opacity: 1, offset: mode === 'fold' ? 0.4 : mode === 'slide' ? 0.2 : 0.32 }, { opacity: 1 }],
-      drifts(p.el),
-    )
+    const lane = [0.3, 0.46, 0.38, 0.52][i % 4]
+    const start: Pose = { dx: -flow.x * lane * reach(p), dy: (p.y - vh / 2) * 0.45, s: 0.88, r: -side * tilt }
+    return plan(p, [start, rest()], { delay: TIME.inAt + i * inStep, duration: TIME.in, easing: EASE.glide }, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1 }])
   })
 
   // Chosen from the open phone menu: the old page's pieces stay unseen (they were under the menu's panel), and so
@@ -991,40 +842,23 @@ function choreograph(r: Run) {
   if (r.menu) for (const p of plans) if (p.vtName.startsWith('tx-o')) p.fades = unseen.map((f) => ({ ...f }))
 
   // --- The words keep clear (paths.ts; Harlie's requests, 2026-09-28: the product picture "should never cover the
-  // project description", the biography "readable throughout"). Leaving between pages, the old title turns over clear
-  // of its page's words, and each piece keeps clear of the new page's picture and of both titles (the old picture
-  // swings away over its own page as it goes). Opening a tile, the homepage's words keep clear of PORTFOLIO turning over
-  // into the new title (the tagline was thrown up through it). Then the new title keeps clear of the pictures and of
-  // both pages' words; then each arriving piece of all of them and of the new pieces before it. Folding back into the
-  // homepage, the page's pieces and picture are drawn into the tile by design, so there the homepage's arriving pieces
-  // only keep clear of the page's words and of each other. Throughout, the words keep clear of the header's items,
-  // drawn over them (they passed under BACK, HOME and MENU).
+  // project description", the biography "readable throughout"). Each leaving piece keeps clear of both pictures, of the
+  // header's items (drawn over them) and of those that left before it; then each arriving piece of all of them and of
+  // the new pieces before it.
   {
     const started = performance.now()
     // Every move is over by then, however late a piece waited.
     const until = 1300
     const flying = (list: (Plan | undefined)[]) => list.flatMap((p) => (p ? [obstacle(p, until)] : []))
     const header = [...r.header, ...headerBoxes()].map((box, i) => still(`tx-header-${i}`, box, until))
+    const pictures = flying([heroes.out, heroes.in])
     const done: string[] = []
-    if (mode === 'slide') {
-      // The old title turns over without reaching its page's words where they stand (it gives up its travel), then
-      // they keep clear of it as they go.
-      const standing = gone.map((p) => obstacle({ ...p, poses: [{}, {}] }, until, true))
-      if (titles.out) done.push(keepClear(titles.out, 1, [...standing, ...header], until, false, false))
-      // Each keeps clear of those that left before it too: neighbours never cross on the way out.
-      const over = [...flying([heroes.in, titles.out, titles.in]), ...header]
-      for (const p of gone) {
-        done.push(keepClear(p, 1, over, until, false))
-        over.push(obstacle(p, until, true))
-      }
-    } else if (mode === 'unfold') {
-      const over = [...flying([titles.out, titles.in]), ...header]
-      gone.forEach((p, i) => {
-        const piece = leaving[i]
-        if (piece !== unfold && !own(piece) && !piece.el.matches(PICTURES)) done.push(keepClear(p, 1, over, until, false))
-      })
+    const out = [...pictures, ...header]
+    for (const p of gone) {
+      done.push(keepClear(p, 1, out, until, false))
+      out.push(obstacle(p, until, true))
     }
-    const words: Obstacle[] = gone.filter((p) => p.vtName !== unfold?.vtName).map((p) => obstacle(p, until, true))
+    const words: Obstacle[] = gone.map((p) => obstacle(p, until, true))
     // The new page's pieces left in its own picture at the window's edge (a step cut by the window's bottom): they show
     // as that picture comes in, so the pieces rising past them keep clear (Harlie's QA pass, 2026-09-28: at 360 × 740 a
     // step's words rose through the next step's heading at the bottom edge).
@@ -1032,33 +866,23 @@ function choreograph(r: Run) {
     const staying = r.stay.map((box, i) =>
       obstacle({ vtName: `tx-stay-${i}`, rect: boxOf(box), poses: [{}, {}], timing: { delay: 0, duration: until, easing: 'linear' }, fades: [{ opacity: 0 }, { opacity: 0, offset: TIME.rootInAt / until }, { opacity: 1, offset: rootIn }, { opacity: 1 }] }, until, true),
     )
-    const pictures = fold ? [] : flying([heroes.out, heroes.in])
-    // The new title turns in without crossing the new page's words (as first planned): it gives up its travel rather
-    // than make them wait, and the words touching it keep clear of it instead.
-    if (titles.in) done.push(keepClear(titles.in, 0, [...pictures, ...words, ...staying, ...come.map((p) => obstacle(p, until, true)), ...header], until, true, false))
-    const over = [...pictures, ...flying([titles.out, titles.in]), ...words, ...staying, ...header]
-    // The lines against the title: from where the title starts, with it (a row behind it when it turns over), each
-    // one's place turned and scaled about the title's centre as the title is, so they keep their spacing on the way.
-    // Turning over, they keep their own size: grown with a title matching the old one's width (PORTFOLIO's), About's
-    // descriptor swept over the biography below it and held it back.
+    const over = [...pictures, ...words, ...staying, ...header]
+    // The lines against the title: from where the title starts, with it, each one's place turned and scaled about the
+    // title's centre as the title is, so they keep their spacing on the way.
     const withTitle = (t: Plan) => {
       const from = t.poses[0]
-      const flips = from.rx !== undefined
-      const lag = flips ? TIME.titleLag : 0
       const turn = ((from.r ?? 0) * Math.PI) / 180
-      const size = flips ? 1 : (from.s ?? 1)
+      const size = from.s ?? 1
       for (const rider of riders) {
         const ox = rider.x - (t.rect.left + t.rect.right) / 2
         const oy = rider.y - (t.rect.top + t.rect.bottom) / 2
         const dx = (from.dx ?? 0) + (Math.cos(turn) * ox - Math.sin(turn) * oy) * size - ox
         const dy = (from.dy ?? 0) + (Math.sin(turn) * ox + Math.cos(turn) * oy) * size - oy
-        const poses = [{ dx, dy, s: size, rx: from.rx, r: from.r }, rest()]
-        const line = plan(rider, poses, { ...t.timing, delay: t.timing.delay + lag }, t.fades.map((f) => ({ ...f })), t.tracked)
+        const line = plan(rider, [{ dx, dy, s: size, r: from.r }, rest()], { ...t.timing }, t.fades.map((f) => ({ ...f })))
         done.push(keepClear(line, 0, over, until, true))
         over.push(obstacle(line, until, true))
       }
     }
-    if (titles.in) withTitle(titles.in)
     // Each arriving piece keeps clear of those before it in reading order too: neighbours never cross on the way in.
     come.forEach((p, i) => {
       done.push(keepClear(p, 0, over, until, true))
@@ -1070,7 +894,7 @@ function choreograph(r: Run) {
 
   // A phone's held band goes once the pieces passing under it have gone (or faded enough not to be read).
   if (r.band) {
-    let clear: number = TIME.inAtSlide
+    let clear: number = TIME.inAt
     for (const p of plans) {
       if (!p.vtName.startsWith('tx-o') || carried.has(p.vtName)) continue
       for (let T = p.timing.delay; T <= p.timing.delay + p.timing.duration; T += 12) {
@@ -1097,28 +921,19 @@ let leaving = false
 
 /**
  * The creative portfolio is a separate site with its own full page load (Harlie's request: keep it). Its outgoing half
- * runs first: the page's pieces scatter (away from the clicked tile, or sweep out to the left) while the page goes
+ * runs first: the page's pieces sweep out to the left, as they do for a change inside the site, while the page goes
  * dark, then the other site loads. Back to this page from the browser's cache undoes it at once. Reduced motion: the
  * page fades.
  */
-export function leaveSite(href: string, from?: HTMLElement | null) {
+export function leaveSite(href: string) {
   if (leaving) return
   leaving = true
   const reduced = prefersReducedMotion()
   const running: Animation[] = []
   const vw = window.innerWidth
-  const vmax = Math.max(vw, window.innerHeight)
-  const O = from ? piecesInView(from).find((p) => p.el === from) : undefined
-  const pieces = reduced ? [] : piecesInView(from, true)
+  const pieces = reduced ? [] : piecesInView(true)
   pieces.forEach((p, i) => {
-    let end: Keyframe
-    if (O) {
-      const v = away(O.x, O.y, p.x, p.y)
-      const d = 0.2 * vmax + 0.3 * v.d
-      end = p.el === from ? { transform: 'scale(1.3)', opacity: 0 } : { transform: `translate(${(v.x * d).toFixed(1)}px, ${(v.y * d).toFixed(1)}px) rotate(${Math.sign(v.x || 1) * 4}deg) scale(0.86)`, opacity: 0 }
-    } else {
-      end = { transform: `translate(${(-[0.26, 0.4, 0.33][i % 3] * vw).toFixed(1)}px, 0) rotate(-4deg) scale(0.9)`, opacity: 0 }
-    }
+    const end = { transform: `translate(${(-[0.26, 0.4, 0.33][i % 3] * vw).toFixed(1)}px, 0) rotate(-4deg) scale(0.9)`, opacity: 0 }
     running.push(p.el.animate([{ offset: 0.3, opacity: 1 }, end], { delay: Math.min(i * TIME.outStep, TIME.outSpread), duration: TIME.out, easing: EASE.out, fill: 'forwards' }))
   })
   const fade = { delay: reduced ? 0 : 160, duration: reduced ? 180 : 360, easing: EASE.fade, fill: 'forwards' as const }

@@ -1,10 +1,10 @@
 import { test as base, expect, type Page } from '@playwright/test'
 export const ROUTES = [
   ['/', 'Portfolio'], ['/about', 'Harlie Katz'],
-  ['/work/spreadsheet-agent', 'Spreadsheet Assistant'],
+  ['/work/spreadsheet-agent', 'AI Spreadsheet Agent'],
   ['/work/creative-production', 'Creative Production'],
-  ['/work/cafepress-uk', 'CafePress UK'],
-  ['/work/merchandising-platform', 'Merchandising Dashboard'],
+  ['/work/cafepress-uk', 'CafePress UK Market Strategy'],
+  ['/work/merchandising-platform', 'Merchandising Platform'],
   ['/work/jumpstart', 'Jumpstart Finance'], ['/work/valiance', 'AI Leasing Agent'],
   ['/missing-page', 'Page not found'],
 ] as const

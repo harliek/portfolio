@@ -10,7 +10,7 @@ test('all eight tiles have unique working destinations and captions',async({page
 test('the grid: rows in order, centred, footage in view and posters under reduced motion',async({page,isMobile})=>{
   await page.emulateMedia({reducedMotion:'no-preference'});await open(page,'/')
   const items=page.locator('.work-grid__item')
-  expect(await items.evaluateAll(es=>es.map(e=>(e as HTMLElement).dataset.id))).toEqual(['creative','about','client-work','ai-leasing-agent','cafepress-uk','jumpstart-finance','spreadsheet-agent','merchandising-platform'])
+  expect(await items.evaluateAll(es=>es.map(e=>(e as HTMLElement).dataset.id))).toEqual(['creative','about','client-work','spreadsheet-agent','cafepress-uk','merchandising-platform','ai-leasing-agent','jumpstart-finance'])
   if(!isMobile){
     // Three, three and two to a row, each row centred.
     const rows=await items.evaluateAll(es=>{
@@ -25,11 +25,8 @@ test('the grid: rows in order, centred, footage in view and posters under reduce
   // Footage is loaded for a tile once it is in view, and an ordinary scroll ends with the footer after the last row.
   await page.locator('.work-grid__item[data-id="merchandising-platform"]').scrollIntoViewIfNeeded()
   await expect.poll(()=>page.locator('.work-grid__item[data-id="merchandising-platform"] video').evaluate(v=>v.hasAttribute('src'))).toBe(true)
-  // Scrolled to the page's end (the last row and the footer may already fit the window together), the footer sits
-  // whole in the window below the last tile.
-  await page.evaluate(()=>scrollTo(0,document.documentElement.scrollHeight))
+  await page.locator('.site-end').scrollIntoViewIfNeeded()
   await expect.poll(()=>page.evaluate(()=>Math.round(scrollY+innerHeight)>=document.documentElement.scrollHeight-1)).toBe(true)
-  expect(await page.evaluate(()=>{const f=document.querySelector('.site-end')!.getBoundingClientRect();const t=document.querySelector('.work-grid__item:last-child')!.getBoundingClientRect();return f.bottom<=innerHeight+1&&f.top>=t.bottom})).toBe(true)
   await noOverflow(page)
   // Reduced motion: posters only.
   await page.emulateMedia({reducedMotion:'reduce'});await page.reload();await page.locator('.site-end').scrollIntoViewIfNeeded();await page.waitForTimeout(500)

@@ -1,15 +1,14 @@
 import { test, expect, open } from './support'
 // Two bugs fixed on 2026-09-29 (audit H1 and K2), kept fixed.
 test('an enlarged image closes with its page on browser Back',async({page})=>{
-  // Reached through the footer's Next, so Back is a real history entry inside the site (the AI Leasing Agent's
-  // pictures enlarge; from 2026-10-18 it follows Creative Production in the loop).
-  await open(page,'/work/creative-production')
+  // Reached through the footer's Next, so Back is a real history entry inside the site.
+  await open(page,'/work/merchandising-platform')
   await page.getByRole('link',{name:/^Next project/}).click()
   await expect(page).toHaveURL(/\/work\/valiance$/)
   await expect(page.locator('html')).not.toHaveAttribute('data-shuffle')
   await page.getByRole('button',{name:/Enlarge image/}).first().click()
   const dialog=page.locator('dialog.image-dialog[open]');await expect(dialog).toBeVisible()
-  await page.goBack();await expect(page).toHaveURL(/\/work\/creative-production$/)
+  await page.goBack();await expect(page).toHaveURL(/\/work\/merchandising-platform$/)
   await expect(dialog).toHaveCount(0)
   await expect(page.locator('html')).not.toHaveClass(/is-dialog-open/)
   await expect(page.locator('h1')).toBeVisible()

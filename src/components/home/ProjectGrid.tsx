@@ -13,7 +13,7 @@ const NEAR = '200px 0px'
 /**
  * The selected work as a grid with an ordinary page scroll (Harlie's request, 2026-10-12; it replaced the moving
  * strip, whose tiles drifted to the left and which the page ended with): rows of three, centred, in field.ts's order (Creative Portfolio, About me, Creative
- * Production; AI Spreadsheet Agent, CafePress UK, Merchandising Platform; AI Leasing Agent and Jumpstart Finance), two to
+ * Production; AI Leasing Agent, CafePress UK, Jumpstart Finance; AI Spreadsheet Agent and Merchandising Platform), two to
  * a row on tablets and one on phones (home.css). The tiles keep the strip's frame, picture, caption, hover and focus. Footage plays muted on every tile in or near the window and pauses once it has left; reduced motion:
  * posters instead of footage. A tile opens its page with the site's page change; the Creative Portfolio tile leaves
  * for the separate creative site.

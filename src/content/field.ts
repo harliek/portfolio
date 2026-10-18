@@ -2,10 +2,11 @@ import type { ImageId } from './media'
 import { projectById, projectPath, type ProjectId } from './projects'
 
 /**
- * The homepage's projects, in Harlie's order of 2026-10-12, which is the grid's three rows (ProjectGrid): Creative
+ * The homepage's projects, in Harlie's order of 2026-10-18, which is the grid's three rows (ProjectGrid): Creative
  * Portfolio (opens /creative/, marked as a link to another site), About me (opens the About page), Creative
- * Production; AI Spreadsheet Agent, CafePress UK Market Strategy, Merchandising Platform; AI Leasing Agent, Jumpstart
- * Finance. The films sit in the rounded
+ * Production; AI Leasing Agent, CafePress UK Market Strategy, Jumpstart Finance; AI Spreadsheet Agent, Merchandising
+ * Platform (Harlie, 2026-10-18: the AI Leasing Agent and Jumpstart Finance moved up, the AI Spreadsheet Agent and the
+ * Merchandising Platform down to the last row). The films sit in the rounded
  * frame and play muted; the Jumpstart phones grow and shrink a little in turn, and the leasing conversation arrives
  * message by message. The field is one flat strip that loops endlessly and turns by itself. The phone menu lists the
  * case studies in the same order (projects.ts); Previous and Next keep their own loop.
@@ -83,36 +84,6 @@ export const FIELD: readonly FieldProject[] = [
     alt: 'The Nickleby Capital interview film',
   },
   {
-    id: 'spreadsheet-agent',
-    title: 'AI Spreadsheet Agent',
-    line: 'Written requests into reviewable plans and editable sheets',
-    // Harlie's choice (Spreadsheet Agent/Spreadsheet Video.mov from 24s, the sheet built and scrolled, then All Sheets;
-    // ends at 36.6s, before the screen-capture toolbar appears), muted at normal speed; it loops at its end.
-    media: { kind: 'video', src: '/media/video/spreadsheet-tile-960.mp4', poster: '/media/img/spreadsheet-tile-poster-960.webp', position: '50% 0%' },
-    alt: 'A recording of the AI Spreadsheet Agent: a finished sheet of B2B products with vendor, cost, retail price and margin, then the list of saved sheets',
-  },
-  {
-    id: 'cafepress-uk',
-    title: 'CafePress UK Market Strategy',
-    line: 'UK market strategy and localized storefront concepts',
-    // Harlie's video for the tile (cafepress uk tile.mov, 2330x1234, 10.3s): 1.0 to 5.3s at its own speed, then the
-    // same in reverse, so the page scrolls down and back up in one seamless loop (8.5s; Harlie's requests). In the
-    // rounded frame like Creative Production, muted. Kept to the left so the CafePress logo stays in the frame.
-    media: { kind: 'video', src: '/media/video/cafepress-tile-960.mp4', poster: '/media/img/cafepress-tile-poster-960.webp', position: '25% 0%' },
-    // The recording shows the live US site, the model the UK research assessed (the case study's opening); it was
-    // described as if it were Harlie's UK prototype (Harlie's brief, 2026-09-28).
-    alt: 'A recording scrolling through CafePress Business’s US storefront, the model the UK research started from: custom products, categories, featured brands and customer reviews',
-  },
-  {
-    id: 'merchandising-platform',
-    title: 'Merchandising Platform',
-    line: 'Connecting product, supplier, sales, and promotion data',
-    // The merchandising dashboard recording (Harlie's request; PlanetArt/Merchandising Dashboard/Dashboard Video.mov
-    // through its site encode, merch-console-960.mp4, 56.3s): the whole walkthrough, muted at normal speed, looping.
-    media: { kind: 'video', src: '/media/video/merch-console-960.mp4', poster: '/media/img/merch-console-poster-960.webp', position: '30% 50%' },
-    alt: 'A recording of the Merchandising Platform prototype: the overview, the product catalog, a product’s reorder calculation, the inventory and the vendors',
-  },
-  {
     id: 'ai-leasing-agent',
     title: 'AI Leasing Agent',
     line: 'Defining and testing an assistant for recurring leasing questions',
@@ -132,6 +103,18 @@ export const FIELD: readonly FieldProject[] = [
     alt: 'An illustrative leasing conversation: a renter asks about a two-bedroom, a fee waiver and a unit hold, and the assistant answers the general questions and passes the requests to the leasing staff',
   },
   {
+    id: 'cafepress-uk',
+    title: 'CafePress UK Market Strategy',
+    line: 'UK market strategy and localized storefront concepts',
+    // Harlie's video for the tile (cafepress uk tile.mov, 2330x1234, 10.3s): 1.0 to 5.3s at its own speed, then the
+    // same in reverse, so the page scrolls down and back up in one seamless loop (8.5s; Harlie's requests). In the
+    // rounded frame like Creative Production, muted. Kept to the left so the CafePress logo stays in the frame.
+    media: { kind: 'video', src: '/media/video/cafepress-tile-960.mp4', poster: '/media/img/cafepress-tile-poster-960.webp', position: '25% 0%' },
+    // The recording shows the live US site, the model the UK research assessed (the case study's opening); it was
+    // described as if it were Harlie's UK prototype (Harlie's brief, 2026-09-28).
+    alt: 'A recording scrolling through CafePress Business’s US storefront, the model the UK research started from: custom products, categories, featured brands and customer reviews',
+  },
+  {
     id: 'jumpstart-finance',
     title: 'Jumpstart Finance',
     line: 'Financial education for students through interactive learning',
@@ -141,6 +124,24 @@ export const FIELD: readonly FieldProject[] = [
       screens: ['jf-tile-profile', 'jf-tile-home', 'jf-tile-third'],
     },
     alt: 'Three Jumpstart Finance phone screens, redrawn in 2026 from the 2024 prototype: the learning journey, the home screen, and the community forum',
+  },
+  {
+    id: 'spreadsheet-agent',
+    title: 'AI Spreadsheet Agent',
+    line: 'Written requests into reviewable plans and editable sheets',
+    // Harlie's choice (Spreadsheet Agent/Spreadsheet Video.mov from 24s, the sheet built and scrolled, then All Sheets;
+    // ends at 36.6s, before the screen-capture toolbar appears), muted at normal speed; it loops at its end.
+    media: { kind: 'video', src: '/media/video/spreadsheet-tile-960.mp4', poster: '/media/img/spreadsheet-tile-poster-960.webp', position: '50% 0%' },
+    alt: 'A recording of the AI Spreadsheet Agent: a finished sheet of B2B products with vendor, cost, retail price and margin, then the list of saved sheets',
+  },
+  {
+    id: 'merchandising-platform',
+    title: 'Merchandising Platform',
+    line: 'Connecting product, supplier, sales, and promotion data',
+    // The merchandising dashboard recording (Harlie's request; PlanetArt/Merchandising Dashboard/Dashboard Video.mov
+    // through its site encode, merch-console-960.mp4, 56.3s): the whole walkthrough, muted at normal speed, looping.
+    media: { kind: 'video', src: '/media/video/merch-console-960.mp4', poster: '/media/img/merch-console-poster-960.webp', position: '30% 50%' },
+    alt: 'A recording of the Merchandising Platform prototype: the overview, the product catalog, a product’s reorder calculation, the inventory and the vendors',
   },
 ]
 

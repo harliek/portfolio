@@ -118,8 +118,8 @@ export function Home() {
               </span>
             </h1>
             <p className="hero__line">
-              {/* "&" stays with "Creative" where the line wraps (phones). */}
-              <TypeLine text={'AI Product Development &\u00a0Creative Strategy'} delay={1.0} duration={0.8} />
+              {/* Harlie's line of 2026-10-18; "&" stays with "Prototyping" where the line wraps (phones). */}
+              <TypeLine text={'AI Product Development, Strategy, &\u00a0Prototyping'} delay={1.0} duration={0.8} />
             </p>
           </div>
         </div>

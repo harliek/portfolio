@@ -41,11 +41,11 @@ export const ABOUT = {
   label: 'About',
   name: 'Harlie Katz',
   /**
-   * Harlie's professional descriptor, the homepage line in this page's sentence case: "AI Product Development &
-   * Creative Strategy" (2026-10-12; it was "AI Product Strategy, Deployment & Implementation", which read as enterprise
-   * implementation only).
+   * Harlie's professional descriptor, the homepage line in this page's sentence case: "AI Product Development,
+   * Strategy, & Prototyping" (2026-10-18; before that "AI Product Development & Creative Strategy", 2026-10-12, and "AI
+   * Product Strategy, Deployment & Implementation", which read as enterprise implementation only).
    */
-  descriptor: 'AI product development and creative strategy',
+  descriptor: 'AI product development, strategy, and prototyping',
   /** Harlie's text of 2026-10-12, verbatim, in four paragraphs. */
   intro: [
     'I recently graduated from UC Berkeley in three years, where I studied cognitive science and data science. I entered college fascinated by how people think and perceive the world, and became increasingly interested in the computational side of intelligence, particularly AI.',

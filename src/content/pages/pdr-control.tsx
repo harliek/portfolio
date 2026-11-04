@@ -22,6 +22,15 @@ export const PDR = {
   focus: 'Applied AI · Product design · Human-in-the-loop systems',
   prototypeUrl: 'https://pdr-control.netlify.app/',
   repoUrl: 'https://github.com/harliekatz/pdr-control',
+  /**
+   * The walkthrough (2026-11-04: withheld). The recording of the public build showed its stand-in vehicles, so the page
+   * shows the gallery below until a new walkthrough is recorded on licensed models. To bring a recording back, set
+   * this to its encodes (scripts/prepare-media.mjs, task `pdr`) and `segments` and `stills` to its chapters.
+   */
+  walkthrough: null as null | { src: string; dialogSrc: string; poster: string; width: number; height: number },
+  /** The gallery while there is no walkthrough, and one picture per section (indices into it). */
+  gallery: ['pdr-diagnosis', 'pdr-cross-section', 'pdr-eligibility', 'pdr-tool-choice', 'pdr-bridge-setup', 'pdr-telemetry', 'pdr-verification'] as const,
+  show: [0, 3, 1, 2, 4, 5, 6, 6, 6, 0],
   /** One part of the recording per section (seconds; the last two hold on the case record). */
   segments: [
     [0, 8.6],
@@ -72,7 +81,7 @@ export const PDR = {
       title: 'Measured outcomes over inferred success',
       text: [
         'Force and travel describe the instrument, not the panel: the tab, adhesive, frame and metal all flex, and some movement springs back. So after the tool is unloaded and removed and the paint is inspected, a second registered scan measures what actually changed.',
-        'In the walkthrough’s prepared case the panel responds less than planned. The low moved 0.05 mm, less than the ±0.07 mm two scans can resolve, so the app reports no measurable improvement rather than a success.',
+        'In the prototype’s prepared demonstration the panel responds less than planned. The low moved 0.05 mm, less than the ±0.07 mm two scans can resolve, so the app reports no measurable improvement rather than a success.',
       ],
     },
     {

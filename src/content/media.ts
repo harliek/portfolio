@@ -170,6 +170,50 @@ export const IMAGES = {
     timestamp: 50,
     notes: 'Recorded from pdr-control.netlify.app, which uses original stand-in vehicles and synthetic scans.',
   }),
+  // PDR Control's case gallery while the walkthrough is withheld (scripts/prepare-media.mjs, task `pdr-stills`): views
+  // of the live prototype where no vehicle body shows.
+  'pdr-diagnosis': img({
+    id: 'pdr-diagnosis', file: 'pdr-diagnosis', width: 2880, height: 1800, widths: [640, 960, 1280, 1920, 2880], fallback: 'jpg',
+    alt: 'PDR Control’s diagnosis of a door dent: reflection bands bend around a localized depression, measured at 0.80 ± 0.05 mm, with the region’s readings and a reflection inset.',
+    provenance: 'prototype-recording', synthetic: true,
+    source: 'PDR Control/stills/diagnosis.png (pdr-control.netlify.app, 2× capture, 2026-11-04)', role: 'PDR Control case page gallery',
+  }),
+  'pdr-cross-section': img({
+    id: 'pdr-cross-section', file: 'pdr-cross-section', width: 2880, height: 1800, widths: [640, 960, 1280, 1920, 2880], fallback: 'jpg',
+    alt: 'A cross-section through the dent along line A–A′: the low sits 0.80 mm below the reference shape, with the pull direction marked.',
+    provenance: 'prototype-recording', synthetic: true,
+    source: 'PDR Control/stills/cross-section.png (pdr-control.netlify.app, 2× capture, 2026-11-04)', role: 'PDR Control case page gallery',
+  }),
+  'pdr-eligibility': img({
+    id: 'pdr-eligibility', file: 'pdr-eligibility', width: 2880, height: 1800, widths: [640, 960, 1280, 1920, 2880], fallback: 'jpg',
+    alt: 'Repair eligibility: scan quality, damage geometry, the panel’s material from the Material Matrix and the paint inspection each checked with its evidence, and authorization marked as assumed, not verified.',
+    provenance: 'prototype-recording', synthetic: true,
+    source: 'PDR Control/stills/eligibility.png (pdr-control.netlify.app, 2× capture, 2026-11-04)', role: 'PDR Control case page gallery',
+  }),
+  'pdr-tool-choice': img({
+    id: 'pdr-tool-choice', file: 'pdr-tool-choice', width: 2880, height: 1800, widths: [640, 960, 1280, 1920, 2880], fallback: 'jpg',
+    alt: 'Choosing the instrument: the Precision Bridge concept on the bench, recommended with its function, access, limitations and needs, beside the other methods.',
+    provenance: 'prototype-recording', synthetic: true,
+    source: 'PDR Control/stills/tool-choice.png (pdr-control.netlify.app, 2× capture, 2026-11-04)', role: 'PDR Control case page gallery',
+  }),
+  'pdr-bridge-setup': img({
+    id: 'pdr-bridge-setup', file: 'pdr-bridge-setup', width: 2880, height: 1800, widths: [640, 960, 1280, 1920, 2880], fallback: 'jpg',
+    alt: 'Guided setup: the Precision Bridge’s four feet placed around the tab on the door, registered through R1–R3, with planned, confirmed and measured positions listed separately.',
+    provenance: 'prototype-recording', synthetic: true,
+    source: 'PDR Control/stills/bridge-setup.png (pdr-control.netlify.app, 2× capture, 2026-11-04)', role: 'PDR Control case page gallery',
+  }),
+  'pdr-telemetry': img({
+    id: 'pdr-telemetry', file: 'pdr-telemetry', width: 2880, height: 1800, widths: [640, 960, 1280, 1920, 2880], fallback: 'jpg',
+    alt: 'Live repair: simulated force and screw travel from the connected bridge as the technician backs the wheel off, with the force-against-travel trace and the stream’s quality.',
+    provenance: 'prototype-recording', synthetic: true,
+    source: 'PDR Control/stills/telemetry.png (pdr-control.netlify.app, 2× capture, 2026-11-04)', role: 'PDR Control case page gallery',
+  }),
+  'pdr-verification': img({
+    id: 'pdr-verification', file: 'pdr-verification', width: 2880, height: 1800, widths: [640, 960, 1280, 1920, 2880], fallback: 'jpg',
+    alt: 'Verification: before and after scans in the same view and a cross-section with the prediction. The low changed 0.05 mm against ±0.07 mm two scans can resolve, so no measurable improvement is established.',
+    provenance: 'prototype-recording', synthetic: true,
+    source: 'PDR Control/stills/verification.png (pdr-control.netlify.app, 2× capture, 2026-11-04)', role: 'PDR Control case page gallery',
+  }),
   'film-bg-poster': img({
     id: 'film-bg-poster', file: 'film-bg-poster', width: 1920, height: 1080, widths: [960, 1280, 1920], fallback: 'jpg',
     alt: '',

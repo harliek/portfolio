@@ -1,6 +1,8 @@
 import { CasePage } from '../../components/case/CasePage'
 import { CaseStory } from '../../components/case/CaseStory'
 import { PDR as C } from '../../content/pages/pdr-control'
+import { getImage } from '../../content/media'
+import type { Stage } from '../../components/case/CaseStory'
 import { projectById } from '../../content/projects'
 
 const project = projectById('pdr-control')
@@ -9,9 +11,30 @@ const project = projectById('pdr-control')
 const openWalkthrough = () => document.querySelector<HTMLButtonElement>('.page-pdr-control .story__zoom')?.click()
 
 /**
- * PDR Control (2026-11-04): a told case like the others, with more sections. The walkthrough of the live prototype is
- * held beside the words and plays the part each section describes; the larger view plays the whole recording with
- * controls and full screen. The introduction carries the links to the live prototype and the repository.
+ * What the stage shows: the walkthrough when there is one (C.walkthrough), else the gallery of the live prototype's
+ * views, each section's own picture large (the site's card-hover gallery, as on CafePress UK).
+ */
+const stage: Stage = C.walkthrough
+  ? {
+      kind: 'video',
+      ...C.walkthrough,
+      segments: C.segments,
+      stills: C.stills,
+      label: 'A walkthrough of the PDR Control prototype, from choosing the damaged door to verifying the repair with a second scan',
+      play: true,
+      action: 'Play PDR Control walkthrough',
+    }
+  : {
+      kind: 'layers',
+      aspect: 1.6,
+      screen: '#0e1418',
+      layers: C.gallery.map((image) => ({ image, alt: getImage(image).alt })),
+      show: C.show,
+    }
+
+/**
+ * PDR Control (2026-11-04): a told case like the others, with more sections, its stage held beside the words. The
+ * introduction carries the links to the live prototype and the repository, and to the walkthrough when there is one.
  */
 export default function PDRControl() {
   return (
@@ -30,9 +53,11 @@ export default function PDRControl() {
                 <span aria-hidden="true">↗</span>
                 <span className="visually-hidden"> (opens in a new tab)</span>
               </a>
-              <button type="button" className="button button--quiet" onClick={openWalkthrough}>
-                Watch the walkthrough
-              </button>
+              {C.walkthrough && (
+                <button type="button" className="button button--quiet" onClick={openWalkthrough}>
+                  Watch the walkthrough
+                </button>
+              )}
               <a className="button button--quiet" href={C.repoUrl} target="_blank" rel="noopener noreferrer">
                 GitHub
                 <span aria-hidden="true">↗</span>
@@ -42,20 +67,7 @@ export default function PDRControl() {
           </>
         }
         steps={C.steps}
-        stage={{
-          kind: 'video',
-          src: '/media/video/pdr-walkthrough-1440.mp4',
-          // The larger view plays a sharper encode of the same recording, fetched only when it opens.
-          dialogSrc: '/media/video/pdr-walkthrough-1920.mp4',
-          poster: '/media/img/pdr-poster-1440.webp',
-          width: 1440,
-          height: 900,
-          segments: C.segments,
-          stills: C.stills,
-          label: 'A walkthrough of the PDR Control prototype, from choosing the damaged door to verifying the repair with a second scan',
-          play: true,
-          action: 'Play PDR Control walkthrough',
-        }}
+        stage={stage}
       />
     </CasePage>
   )

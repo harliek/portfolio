@@ -21,7 +21,8 @@
  *   node scripts/prepare-media.mjs crops [page]  # focused evidence crops from scripts/crops/<page>.json
  *   node scripts/prepare-media.mjs tiles      # carousel tile artwork (final tiles/, 3:4 focal-point crops)
  *   node scripts/prepare-media.mjs objects    # carousel PNG objects (final png tiles/, trimmed, alpha kept)
- *   node scripts/prepare-media.mjs pdr        # PDR Control: walkthrough encodes, tile, posters, shelf object
+ *   node scripts/prepare-media.mjs pdr        # PDR Control: walkthrough encodes, tile, posters, shelf object, stills
+ *   node scripts/prepare-media.mjs pdr-stills # PDR Control: the case page's gallery stills only
  *
  * Removed on 2026-09-29 with the files they made (git history keeps both): the `previews` task (edited 1.5× previews
  * of the two product recordings), the `room` task (the brief v15 homepage room), the Spreadsheet Agent recording and
@@ -869,6 +870,17 @@ async function postersWebp() {
  * - obj-pdr-control: the same frame as an object for the Work shelf and next-project thumbnail, rounded corners on a
  *   transparent canvas (a real screen, not cover artwork).
  */
+/**
+ * PDR Control stills (task `pdr-stills`): the case page's gallery while the walkthrough is withheld (2026-11-04). Clean
+ * 2× captures of the live prototype (pdr-control.netlify.app, 1440×900 at deviceScaleFactor 2, the project's
+ * qa-redesign walkthrough, no cursor), chosen from views where no vehicle body shows: the public build's stand-in
+ * vehicles are placeholders until licensed models are in. Sources in `PDR Control/stills/`.
+ */
+const PDR_STILLS = ['diagnosis', 'cross-section', 'eligibility', 'tool-choice', 'bridge-setup', 'telemetry', 'verification']
+async function pdrStills() {
+  for (const name of PDR_STILLS) await variants(`pdr-${name}`, src(`PDR Control/stills/${name}.png`), [640, 960, 1280, 1920, 2880], { quality: 'ui' })
+}
+
 const PDR = 'PDR Control/pdr-walkthrough-master-2880x1800.mp4'
 async function pdr() {
   const master = src(PDR)
@@ -923,5 +935,6 @@ if (task === 'crops' || task === 'all') await crops()
 if (task === 'tiles' || task === 'all') await tiles()
 if (task === 'objects' || task === 'all') await objects()
 if (task === 'pdr' || task === 'all') await pdr()
+if (task === 'pdr-stills' || task === 'pdr' || task === 'all') await pdrStills()
 console.log(report.join('\n'))
 if (existsSync(join(CACHE, 'dimensions.json'))) console.log('dimensions → .media-cache/dimensions.json')

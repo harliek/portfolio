@@ -21,6 +21,7 @@
  *   node scripts/prepare-media.mjs crops [page]  # focused evidence crops from scripts/crops/<page>.json
  *   node scripts/prepare-media.mjs tiles      # carousel tile artwork (final tiles/, 3:4 focal-point crops)
  *   node scripts/prepare-media.mjs objects    # carousel PNG objects (final png tiles/, trimmed, alpha kept)
+ *   node scripts/prepare-media.mjs pdr        # PDR Control: walkthrough encodes, tile, posters, shelf object
  *
  * Removed on 2026-09-29 with the files they made (git history keeps both): the `previews` task (edited 1.5× previews
  * of the two product recordings), the `room` task (the brief v15 homepage room), the Spreadsheet Agent recording and
@@ -849,6 +850,57 @@ async function postersWebp() {
   }
 }
 
+
+/* ------------------------------------------------------------------ */
+/* PDR Control                                                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * PDR Control (task `pdr`). The source is the walkthrough recorded from the public build at
+ * pdr-control.netlify.app, which uses original stand-in vehicles (the community models of the earlier private
+ * recordings are not cleared for publication): `PDR Control/pdr-walkthrough-master-2880x1800.mp4`, 184s, 2× frames
+ * from Chrome's screencast at 1440×900 CSS px, no audio (pdr-control/scripts/record-walkthrough.mjs). Chapter times are
+ * in `PDR Control/pdr-walkthrough-chapters.json`.
+ * - pdr-walkthrough-1440: the case page's stage (the recording plays each step's part); 1440×900 keeps the UI's
+ *   14px text legible at the stage's size.
+ * - pdr-walkthrough-1920: the larger view (dialogSrc), fetched only when it opens.
+ * - pdr-tile-960: the homepage tile, the diagnosis (34 to 50s: reflection bands, deviation, back to reflection).
+ * - pdr-poster-1440 and pdr-tile-poster-960: the diagnosis at 50s (reflection bands around the low, 0.80 ± 0.05 mm).
+ * - obj-pdr-control: the same frame as an object for the Work shelf and next-project thumbnail, rounded corners on a
+ *   transparent canvas (a real screen, not cover artwork).
+ */
+const PDR = 'PDR Control/pdr-walkthrough-master-2880x1800.mp4'
+async function pdr() {
+  const master = src(PDR)
+  const enc = (out, scale, crf, extra = []) => {
+    const file = join(VID, out)
+    run('ffmpeg', ['-y', '-v', 'error', ...extra, '-i', master, '-map', '0:v:0', '-vf', `scale=${scale}:flags=lanczos,fps=30`,
+      '-c:v', 'libx264', '-preset', 'slow', '-crf', String(crf), '-profile:v', 'high', '-pix_fmt', 'yuv420p',
+      '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-g', '60', '-an', '-movflags', '+faststart', file])
+    report.push(`${file} ${statSync(file).size} bytes`)
+  }
+  enc('pdr-walkthrough-1440.mp4', '1440:900', 26)
+  enc('pdr-walkthrough-1920.mp4', '1920:1200', 24)
+  // The tile: a cut that starts on a keyframe and loops cleanly.
+  run('ffmpeg', ['-y', '-v', 'error', '-ss', '34', '-t', '16', '-i', master, '-map', '0:v:0', '-vf', 'scale=960:600:flags=lanczos,fps=30',
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', '25', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-an', '-movflags', '+faststart', join(VID, 'pdr-tile-960.mp4')])
+  report.push(`${join(VID, 'pdr-tile-960.mp4')} ${statSync(join(VID, 'pdr-tile-960.mp4')).size} bytes`)
+  const frame = join(CACHE, 'pdr-frame-50.png')
+  run('ffmpeg', ['-y', '-v', 'error', '-ss', '50', '-i', master, '-frames:v', '1', frame])
+  for (const [name, w] of [['pdr-poster-1440', 1440], ['pdr-tile-poster-960', 960]]) {
+    await sharp(frame).resize({ width: w }).jpeg({ quality: 86, mozjpeg: true }).toFile(join(IMG, `${name}.jpg`))
+    await sharp(frame).resize({ width: w }).webp({ quality: 84, smartSubsample: true }).toFile(join(IMG, `${name}.webp`))
+    report.push(`${name}: ${w}`)
+  }
+  // The object: the frame with rounded corners (radius 2.2% of the width) on a transparent canvas.
+  const meta = await sharp(frame).metadata()
+  const r = Math.round(meta.width * 0.022)
+  const mask = Buffer.from(`<svg width="${meta.width}" height="${meta.height}"><rect width="100%" height="100%" rx="${r}" ry="${r}" fill="#fff"/></svg>`)
+  const rounded = join(CACHE, 'obj-pdr-control.png')
+  await sharp(frame).ensureAlpha().composite([{ input: mask, blend: 'dest-in' }]).png().toFile(rounded)
+  await variants('obj-pdr-control', rounded, [160, 240, 360, 480, 720, 960], { fallback: 'png', quality: 'ui' })
+}
+
 /* ------------------------------------------------------------------ */
 
 const task = process.argv[2] ?? 'all'
@@ -870,5 +922,6 @@ if (task === 'phones' || task === 'all') await phones()
 if (task === 'crops' || task === 'all') await crops()
 if (task === 'tiles' || task === 'all') await tiles()
 if (task === 'objects' || task === 'all') await objects()
+if (task === 'pdr' || task === 'all') await pdr()
 console.log(report.join('\n'))
 if (existsSync(join(CACHE, 'dimensions.json'))) console.log('dimensions → .media-cache/dimensions.json')

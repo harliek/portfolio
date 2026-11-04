@@ -160,6 +160,16 @@ export const IMAGES = {
     source: 'final png tiles/jumpstart.png', role: 'Carousel object, case opening cover, next-project thumbnail',
     crop: 'Trimmed to visible pixels (alpha ≥ 8) plus 16px of transparent margin.',
   }),
+  // PDR Control (2026-11-04): a real screen of the prototype, not cover artwork. The diagnosis at 50s of the walkthrough
+  // recorded from the public build (scripts/prepare-media.mjs, task `pdr`), with rounded corners on a transparent canvas.
+  'obj-pdr-control': img({
+    id: 'obj-pdr-control', file: 'obj-pdr-control', width: 2880, height: 1800, widths: [160, 240, 360, 480, 720, 960], fallback: 'png', transparent: true,
+    alt: 'PDR Control’s diagnosis view: reflection bands bending around a localized depression on a door, measured at 0.80 ± 0.05 mm.',
+    provenance: 'prototype-recording', synthetic: true,
+    source: 'PDR Control/pdr-walkthrough-master-2880x1800.mp4 (frame at 50s)', role: 'Work shelf and next-project thumbnail',
+    timestamp: 50,
+    notes: 'Recorded from pdr-control.netlify.app, which uses original stand-in vehicles and synthetic scans.',
+  }),
   'film-bg-poster': img({
     id: 'film-bg-poster', file: 'film-bg-poster', width: 1920, height: 1080, widths: [960, 1280, 1920], fallback: 'jpg',
     alt: '',

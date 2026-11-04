@@ -10,7 +10,7 @@ for(const route of ['cafepress-uk','valiance'])test(`${route} image dialog close
   await page.keyboard.press('Escape');await expect(dialog).toHaveCount(0);await expect(trigger).toBeFocused()
   await expect(page.locator('html')).not.toHaveClass(/is-dialog-open/)
 })
-for(const [route,label] of [['spreadsheet-agent','Play spreadsheet demo'],['merchandising-platform','Play dashboard demo']])test(`${route} demo survives scrolling and closes cleanly`,async({page})=>{
+for(const [route,label] of [['spreadsheet-agent','Play spreadsheet demo'],['merchandising-platform','Play dashboard demo'],['pdr-control','Play PDR Control walkthrough']])test(`${route} demo survives scrolling and closes cleanly`,async({page})=>{
   await open(page,'/work/'+route)
   await page.getByRole('button',{name:label,exact:true}).click()
   const dialog=page.locator('dialog[open]');await expect(dialog).toBeVisible()

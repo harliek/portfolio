@@ -23,6 +23,7 @@ export const routeChunks = {
   '/work/valiance': () => import('./pages/work/AILeasingAgent'),
   '/work/jumpstart': () => import('./pages/work/JumpstartFinance'),
   '/work/creative-production': () => import('./pages/work/ClientWork'),
+  '/work/pdr-control': () => import('./pages/work/PDRControl'),
 } as const
 
 type ChunkPath = keyof typeof routeChunks
@@ -98,6 +99,7 @@ export const router = createBrowserRouter([
           { path: 'work/valiance', lazy: lazyPage('/work/valiance') },
           { path: 'work/jumpstart', lazy: lazyPage('/work/jumpstart') },
           { path: 'work/creative-production', lazy: lazyPage('/work/creative-production') },
+          { path: 'work/pdr-control', lazy: lazyPage('/work/pdr-control') },
           // Creative Production was Client Work at /work/shift.
           { path: 'work/shift', element: <Legacy to="/work/creative-production" /> },
           // Legacy links: the PlanetArt case study became CafePress UK; the

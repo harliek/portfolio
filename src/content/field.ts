@@ -71,6 +71,15 @@ export const FIELD: readonly FieldProject[] = [
     alt: 'Harlie Katz speaking to the camera in front of a bookshelf',
   },
   {
+    // Added 2026-11-04, first among the case studies. The walkthrough's diagnosis (34 to 50s of the recording from the
+    // public build: reflection bands, the deviation view, back to reflection), muted, looping.
+    id: 'pdr-control',
+    title: 'PDR Control',
+    line: 'Measured, technician-guided paintless dent repair',
+    media: { kind: 'video', src: '/media/video/pdr-tile-960.mp4', poster: '/media/img/pdr-tile-poster-960.webp', position: '50% 50%' },
+    alt: 'A recording of the PDR Control prototype diagnosing a door dent: reflection bands bend around the low, then a deviation map shows its depth',
+  },
+  {
     id: 'client-work',
     title: 'Creative Production',
     line: 'Client campaigns, film production, and photography',

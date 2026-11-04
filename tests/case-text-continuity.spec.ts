@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-for (const route of ['cafepress-uk', 'merchandising-platform', 'spreadsheet-agent', 'valiance', 'jumpstart']) {
+for (const route of ['cafepress-uk', 'merchandising-platform', 'spreadsheet-agent', 'valiance', 'jumpstart', 'pdr-control']) {
   test(`${route} keeps its introduction attached to its reading column`, async ({ page }) => {
     await page.goto(`/work/${route}`)
     await expect(page.locator('.cs__intro')).toBeVisible()

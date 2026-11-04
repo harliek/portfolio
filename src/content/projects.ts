@@ -22,6 +22,7 @@ export type ProjectId =
   | 'ai-leasing-agent'
   | 'jumpstart-finance'
   | 'client-work'
+  | 'pdr-control'
 
 /**
  * An image a case study shows first beside its heading, with the `sizes` its
@@ -251,10 +252,37 @@ export const PROJECTS: Project[] = [
       { image: 'jf-tile-home', sizes: PHONE_SIZES },
       { image: 'jf-tile-third', sizes: PHONE_SIZES },
     ],
-    next: 'client-work',
+    next: 'pdr-control',
     seo: {
       title: 'Jumpstart Finance',
       description: 'A five-person student venture at the European Innovation Academy in Porto, from customer interviews to a financial education app prototype and investor pitch.',
+    },
+  },
+  {
+    // Added 2026-11-04. Last in the Previous and Next loop (Jumpstart Finance → PDR Control → Creative Production), so
+    // no other page's order, side or neighbours change; first among the case studies on the homepage (field.ts).
+    id: 'pdr-control',
+    slug: 'pdr-control',
+    order: 7,
+    name: 'PDR Control',
+    displayName: 'PDR Control',
+    displaySubtitle: 'Intelligent Paintless Dent Repair',
+    label: 'Technician-guided dent repair prototype',
+    summary: 'An interactive prototype of a technician-guided repair system for paintless dent repair, using synthetic scan data, simulated hardware and rule-based decisions.',
+    year: '2026',
+    dateRange: '2026',
+    role: 'Independent project',
+    org: 'Independent',
+    status: 'Interactive prototype',
+    description: 'Surface measurement, repair rules and connected-tool guidance for paintless dent repair.',
+    meta: { company: 'Independent project', role: 'Concept, product strategy, interaction design and prototype development', dates: '2026', status: 'Interactive prototype with synthetic data and simulated hardware' },
+    cover: 'obj-pdr-control',
+    // The opening is the walkthrough's poster (a plain URL, not a registered image): nothing to warm.
+    hero: [],
+    next: 'client-work',
+    seo: {
+      title: 'PDR Control',
+      description: 'PDR Control: an interactive prototype of technician-guided paintless dent repair, with surface measurement, rule-based planning, a simulated connected instrument and verification by a second scan.',
     },
   },
 ]

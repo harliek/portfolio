@@ -6,6 +6,7 @@ export const ROUTES = [
   ['/work/cafepress-uk', 'CafePress UK Market Strategy'],
   ['/work/merchandising-platform', 'Merchandising Platform'],
   ['/work/jumpstart', 'Jumpstart Finance'], ['/work/valiance', 'AI Leasing Agent'],
+  ['/work/pdr-control', 'PDR Control'],
   ['/missing-page', 'Page not found'],
 ] as const
 export const test = base.extend<{ errorsChecked: void }>({

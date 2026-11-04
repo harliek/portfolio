@@ -9,7 +9,7 @@ test('mobile menu closes with Escape and restores focus',async({page,isMobile})=
   await open(page,'/about')
   const menu=page.locator('.menu-button')
   await menu.click();await expect(menu).toHaveAttribute('aria-expanded','true')
-  await expect(page.locator('.site-menu a[href^="/work/"]')).toHaveCount(6)
+  await expect(page.locator('.site-menu a[href^="/work/"]')).toHaveCount(7)
   await page.keyboard.press('Escape');await expect(menu).toHaveAttribute('aria-expanded','false');await expect(menu).toBeFocused()
 })
 test('About navigation and Back restore the previous page',async({page,isMobile})=>{

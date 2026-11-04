@@ -1,5 +1,5 @@
 import { test, expect } from './support'
-for(const [route,label] of [['spreadsheet-agent','Play spreadsheet demo'],['merchandising-platform','Play dashboard demo']]) {
+for(const [route,label] of [['spreadsheet-agent','Play spreadsheet demo'],['merchandising-platform','Play dashboard demo'],['pdr-control','Play PDR Control walkthrough']]) {
   test(`${route} decodes, plays and respects live reduced motion`,async({page})=>{
     await page.goto('/work/'+route)
     await page.getByRole('button',{name:label,exact:true}).click()

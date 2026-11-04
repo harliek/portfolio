@@ -34,7 +34,7 @@ const stage: Stage = C.walkthrough
 
 /**
  * PDR Control (2026-11-04): a told case like the others, with more sections, its stage held beside the words. The
- * introduction carries the links to the live prototype and the repository, and to the walkthrough when there is one.
+ * introduction carries the link to the repository, and to the live prototype and the walkthrough when there are ones.
  */
 export default function PDRControl() {
   return (
@@ -48,11 +48,13 @@ export default function PDRControl() {
             <p>{C.lede}</p>
             <p className="pdr-focus">{C.focus}</p>
             <div className="pdr-actions">
-              <a className="button" href={C.prototypeUrl} target="_blank" rel="noopener noreferrer">
-                Explore Interactive Prototype
-                <span aria-hidden="true">↗</span>
-                <span className="visually-hidden"> (opens in a new tab)</span>
-              </a>
+              {C.prototypeUrl && (
+                <a className="button" href={C.prototypeUrl} target="_blank" rel="noopener noreferrer">
+                  Explore Interactive Prototype
+                  <span aria-hidden="true">↗</span>
+                  <span className="visually-hidden"> (opens in a new tab)</span>
+                </a>
+              )}
               {C.walkthrough && (
                 <button type="button" className="button button--quiet" onClick={openWalkthrough}>
                   Watch the walkthrough

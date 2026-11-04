@@ -18,9 +18,10 @@ export const PDR = {
   title: 'PDR Control',
   meta: ['Concept, product strategy, interaction design and prototype development', 'Independent product prototype · 2026'],
   subtitle: 'Intelligent Paintless Dent Repair',
-  lede: 'I designed and built an interactive repair system that helps technicians with little paintless dent repair experience work toward an expert’s quality and consistency. It measures the dent, enforces the repair rules, guides the physical setup with a connected tool, and checks the result with a second scan. The technician stays in control of the repair.',
+  lede: 'I designed and built an interactive system that helps technicians with little paintless dent repair experience work toward an expert’s quality. It measures the dent, enforces the repair rules, guides setup with a connected tool and checks the result with a second scan, while the technician stays in control.',
   focus: 'Applied AI · Product design · Human-in-the-loop systems',
-  prototypeUrl: 'https://pdr-control.netlify.app/',
+  /** The live prototype's link (2026-11-04: withheld at Harlie's request; was https://pdr-control.netlify.app/). */
+  prototypeUrl: null as null | string,
   repoUrl: 'https://github.com/harliekatz/pdr-control',
   /**
    * The walkthrough (2026-11-04: withheld). The recording of the public build showed its stand-in vehicles, so the page
@@ -30,70 +31,48 @@ export const PDR = {
   walkthrough: null as null | { src: string; dialogSrc: string; poster: string; width: number; height: number },
   /** The gallery while there is no walkthrough, and one picture per section (indices into it). */
   gallery: ['pdr-diagnosis', 'pdr-cross-section', 'pdr-eligibility', 'pdr-tool-choice', 'pdr-bridge-setup', 'pdr-telemetry', 'pdr-verification'] as const,
-  show: [0, 3, 1, 2, 4, 5, 6, 6, 6, 0],
-  /** One part of the recording per section (seconds; the last two hold on the case record). */
+  show: [0, 3, 1, 2, 5, 6, 6, 0],
+  /** One part of the recording per section (seconds; the last holds on the case record). */
   segments: [
     [0, 8.6],
     [8.7, 33.9],
     [34.0, 56.0],
     [56.1, 76.1],
-    [76.2, 118.8],
-    [118.9, 149.5],
-    [149.6, 168.0],
-    [163.0, 180.3],
+    [76.2, 149.5],
+    [149.6, 180.3],
     [180.4, 184.0, 'hold'],
     [180.4, 184.0, 'hold'],
   ] as const,
   /** One still per section, under reduced motion. */
-  stills: [5, 30, 50, 60, 113, 143, 163, 175, 182, 182],
+  stills: [5, 30, 50, 60, 143, 163, 182, 182],
   steps: [
     {
       title: 'The problem',
-      text: [
-        'Paintless dent repair restores a panel without filler or paint, but it depends on judgment that is hard to teach: reading a shallow low in reflected light, deciding whether it can be repaired, placing a tool precisely, pulling in small controlled steps, and knowing when to stop.',
-        'The goal was to make an expert’s guidance and measurable feedback available during the repair itself, not to put a chatbot beside it.',
-      ],
+      text: 'Paintless dent repair restores a panel without filler or paint, but it depends on judgment that takes years to learn: reading a shallow low, deciding whether it can be repaired, placing a tool and knowing when to stop. The goal was to bring an expert’s guidance and measurable feedback into the repair itself.',
     },
     {
       title: 'Observe, decide, execute, verify',
-      text: [
-        'I broke the repair into four functions. Observe: measure the damage. Decide: check eligibility and choose a method. Execute: set up and pull safely. Verify: measure what changed and decide what happens next.',
-        'I compared instructional software, computer vision, connected tools and robotic repair. Vision makes damage measurable but doesn’t move metal, connected tools measure the tool rather than the panel, and robotics brings hardware, access and validation problems on every panel shape. I chose a human-guided system: surface measurement, coded procedure rules, step-by-step guidance and instrument feedback, with the technician doing the physical work.',
-      ],
+      text: 'I split the repair into four functions: measure the damage, check eligibility and choose a method, set up and pull safely, then measure what changed. After comparing computer vision, connected tools and robotics, I chose a human-guided system: the software measures, applies the rules and guides, and the technician does the physical work.',
     },
     {
       title: 'Surface diagnosis',
-      text: 'A proposed Surface Pod captures the selected region of the door, registered to three reference marks (R1–R3) so later scans line up. The region can be moved and resized, and its edges are checked against the panel. The app shows reflection bands, a deviation map and cross-sections, and reports the deepest point as 0.80 ± 0.05 mm, where ±0.05 mm is scan repeatability, not accuracy.',
+      text: 'A proposed Surface Pod scans the selected region, registered to three reference marks so later scans line up. The app shows reflection bands, a deviation map and cross-sections, and reports the deepest point as 0.80 ± 0.05 mm, where ±0.05 mm is scan repeatability, not accuracy.',
     },
     {
       title: 'Rules before recommendations',
-      text: 'Before any method is suggested, rules check scan quality, the damage’s size and depth, its distance from body lines, the panel’s material from Rivian’s published Material Matrix, a 30× paint inspection and repair authorization. Only then are methods compared, each with its reasons. A dent too close to a body line stops at specialist review instead of offering a tool.',
+      text: 'Before any method is suggested, coded rules check scan quality, size and depth, distance from body lines, panel material, paint condition and repair authorization. A dent too close to a body line goes to specialist review instead of getting a tool.',
     },
     {
-      title: 'Guided execution',
-      text: 'Setup is taught on the panel itself: the pulling tab, an adhesive checklist, a tab outline projected through the registered marks, and each foot of the connected pulling bridge. The app keeps what was planned, what the technician confirmed and what was measured apart, and says when something can’t be measured, such as the tab’s exact placement.',
-    },
-    {
-      title: 'Human control of the tool',
-      text: 'The proposed bridge reports force and screw travel. The app pairs it, checks both sensors and refuses to zero it under load. During the pull the technician turns the wheel, while the software reads the stream, flags stale or inconsistent data, and explains what the readings do and don’t show. It never drives the tool.',
+      title: 'Guided setup, human control',
+      text: 'Setup is taught on the panel: the pulling tab, the adhesive, a projected tab outline and each foot of the connected bridge. During the pull the technician turns the wheel, while the software reads force and travel, flags stale or inconsistent data and never drives the tool.',
     },
     {
       title: 'Measured outcomes over inferred success',
-      text: [
-        'Force and travel describe the instrument, not the panel: the tab, adhesive, frame and metal all flex, and some movement springs back. So after the tool is unloaded and removed and the paint is inspected, a second registered scan measures what actually changed.',
-        'In the prototype’s prepared demonstration the panel responds less than planned. The low moved 0.05 mm, less than the ±0.07 mm two scans can resolve, so the app reports no measurable improvement rather than a success.',
-      ],
-    },
-    {
-      title: 'Uncertainty and escalation',
-      text: 'When a result contradicts the prediction, the app lists what is known and what is uncertain, ranks the likely causes from measurement error to tab behavior, and recommends the next check, a repeat scan or expert review, not another pull. PDR Expert answers questions from the case record and can’t change tools, evidence or eligibility.',
+      text: 'Force and travel describe the instrument, not the panel, so a second registered scan measures what actually changed. In the prepared demonstration the low moved 0.05 mm, less than two scans can resolve (±0.07 mm), so the app reports no measurable improvement and recommends a repeat scan or expert review, not another pull.',
     },
     {
       title: 'Validation and next steps',
-      text: [
-        'These are proposed experiments, not completed ones. Surface measurement comes first: can a portable sensor measure shallow lows on glossy, curved paint repeatably, and find the same patch again after a tool has been bonded and removed? Then experienced technicians, novices using conventional methods, and novices using the system would repair matched panels, compared on repair quality, total time including setup and rework, consistency, and safety.',
-        'Before use in a real shop, the measurement, the rules and their limits, and the procedure would all need validation against reference instruments, OEM procedures and expert review.',
-      ],
+      text: 'These experiments are proposed, not completed. First, can a portable sensor measure shallow lows on glossy, curved paint repeatably? Then experienced technicians, novices using conventional methods and novices using the system would repair matched panels, compared on quality, time, consistency and safety.',
     },
     {
       title: 'Project status',

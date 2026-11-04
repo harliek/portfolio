@@ -8,7 +8,7 @@ A static React site presented as a persistent “presentation frame”: a dark a
 |---|---|
 | `/` | Home: identity, the project stage (auto-advancing under strict rules; `← 01 / 05 → Pause`), “Explore work” index (`/#all-projects`), contact line |
 | `/work/planetart` · `/work/valiance` · `/work/spreadsheet-agent` · `/work/jumpstart` · `/work/shift` | Case studies: 01 Overview · 02 Insight · 03 Decision · 04 Outcome |
-| `/work/pdr-control` | PDR Control: ten sections beside the walkthrough of the live prototype (pdr-control.netlify.app), which plays the part each section describes; links to the prototype and github.com/harliekatz/pdr-control. Media from `node scripts/prepare-media.mjs pdr` |
+| `/work/pdr-control` | PDR Control: eight sections beside a gallery of the prototype's views (the walkthrough when there is one); links to github.com/harliekatz/pdr-control. Media from `node scripts/prepare-media.mjs pdr` |
 | `/art` | Selected drawings (lazy) |
 | `/film` | Featured short film, short films, client and production work (lazy; YouTube loads only after a click, privacy-enhanced) |
 | `/about` | About, contact, and a closing sequence of drawings and film (lazy) |

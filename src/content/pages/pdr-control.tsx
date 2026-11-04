@@ -18,7 +18,7 @@ export const PDR = {
   title: 'PDR Control',
   meta: ['Concept, product strategy, interaction design and prototype development', 'Independent product prototype · 2026'],
   subtitle: 'Intelligent Paintless Dent Repair',
-  lede: 'I designed and built an interactive system that helps technicians with little paintless dent repair experience work toward an expert’s quality. It measures the dent, enforces the repair rules, guides setup with a connected tool and checks the result with a second scan, while the technician stays in control.',
+  lede: 'An interactive system that helps less experienced technicians repair dents to an expert’s standard: it measures the damage, enforces the repair rules, guides the tool setup and verifies the result.',
   focus: 'Applied AI · Product design · Human-in-the-loop systems',
   /** The live prototype's link (2026-11-04: withheld at Harlie's request; was https://pdr-control.netlify.app/). */
   prototypeUrl: null as null | string,
@@ -31,52 +31,42 @@ export const PDR = {
   walkthrough: null as null | { src: string; dialogSrc: string; poster: string; width: number; height: number },
   /** The gallery while there is no walkthrough, and one picture per section (indices into it). */
   gallery: ['pdr-diagnosis', 'pdr-cross-section', 'pdr-eligibility', 'pdr-tool-choice', 'pdr-bridge-setup', 'pdr-telemetry', 'pdr-verification'] as const,
-  show: [0, 3, 1, 2, 5, 6, 6, 0],
-  /** One part of the recording per section (seconds; the last holds on the case record). */
+  show: [0, 3, 1, 5, 6, 0],
+  /** One part of the recording per section (seconds). Set with the walkthrough. */
   segments: [
     [0, 8.6],
     [8.7, 33.9],
-    [34.0, 56.0],
-    [56.1, 76.1],
+    [34.0, 76.1],
     [76.2, 149.5],
     [149.6, 180.3],
     [180.4, 184.0, 'hold'],
-    [180.4, 184.0, 'hold'],
   ] as const,
   /** One still per section, under reduced motion. */
-  stills: [5, 30, 50, 60, 143, 163, 182, 182],
+  stills: [5, 30, 50, 143, 163, 182],
   steps: [
     {
       title: 'The problem',
-      text: 'Paintless dent repair restores a panel without filler or paint, but it depends on judgment that takes years to learn: reading a shallow low, deciding whether it can be repaired, placing a tool and knowing when to stop. The goal was to bring an expert’s guidance and measurable feedback into the repair itself.',
+      text: 'Paintless dent repair depends on judgment that takes years to learn. PDR Control brings an expert’s guidance and measurable feedback into the repair itself.',
     },
     {
       title: 'Observe, decide, execute, verify',
-      text: 'I split the repair into four functions: measure the damage, check eligibility and choose a method, set up and pull safely, then measure what changed. After comparing computer vision, connected tools and robotics, I chose a human-guided system: the software measures, applies the rules and guides, and the technician does the physical work.',
+      text: 'The repair splits into four functions. The software measures, applies the rules and guides; the technician does the physical work.',
     },
     {
-      title: 'Surface diagnosis',
-      text: 'A proposed Surface Pod scans the selected region, registered to three reference marks so later scans line up. The app shows reflection bands, a deviation map and cross-sections, and reports the deepest point as 0.80 ± 0.05 mm, where ±0.05 mm is scan repeatability, not accuracy.',
-    },
-    {
-      title: 'Rules before recommendations',
-      text: 'Before any method is suggested, coded rules check scan quality, size and depth, distance from body lines, panel material, paint condition and repair authorization. A dent too close to a body line goes to specialist review instead of getting a tool.',
+      title: 'Diagnosis and rules',
+      text: 'A registered surface scan measures the dent: 0.80 ± 0.05 mm deep here. Coded rules check eligibility before any method is suggested, and send dents near body lines to specialist review.',
     },
     {
       title: 'Guided setup, human control',
-      text: 'Setup is taught on the panel: the pulling tab, the adhesive, a projected tab outline and each foot of the connected bridge. During the pull the technician turns the wheel, while the software reads force and travel, flags stale or inconsistent data and never drives the tool.',
+      text: 'Setup is taught on the panel, step by step. During the pull the technician turns the wheel; the app reads force and travel and never drives the tool.',
     },
     {
       title: 'Measured outcomes over inferred success',
-      text: 'Force and travel describe the instrument, not the panel, so a second registered scan measures what actually changed. In the prepared demonstration the low moved 0.05 mm, less than two scans can resolve (±0.07 mm), so the app reports no measurable improvement and recommends a repeat scan or expert review, not another pull.',
+      text: 'A second scan measures what actually changed. Here the low moved 0.05 mm, within what two scans can resolve, so the app reports no measurable improvement instead of a success.',
     },
     {
-      title: 'Validation and next steps',
-      text: 'These experiments are proposed, not completed. First, can a portable sensor measure shallow lows on glossy, curved paint repeatably? Then experienced technicians, novices using conventional methods and novices using the system would repair matched panels, compared on quality, time, consistency and safety.',
-    },
-    {
-      title: 'Project status',
-      text: 'Independent interactive prototype built with synthetic surface data, simulated hardware feedback, and rule-based decision logic. Physical sensing, trained AI models, and real-world repair validation remain proposed future development.',
+      title: 'Status and next steps',
+      text: 'An independent prototype with synthetic scans, simulated hardware and rule-based logic. Next: test whether a portable sensor can measure shallow dents repeatably, then compare novices with and without the system on matched panels.',
     },
   ],
 }

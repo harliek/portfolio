@@ -4,8 +4,8 @@ import { projectById, projectPath, type ProjectId } from './projects'
 /**
  * The homepage's projects, in Harlie's order of 2026-10-12, which is the grid's three rows (ProjectGrid): Creative
  * Portfolio (opens /creative/, marked as a link to another site), About me (opens the About page), Creative
- * Production; AI Spreadsheet Agent, CafePress UK Market Strategy, Merchandising Platform; AI Leasing Agent, Jumpstart
- * Finance. The films sit in the rounded
+ * Production; PDR Control (added 2026-11-04), AI Spreadsheet Agent, CafePress UK Market Strategy; Merchandising
+ * Platform, AI Leasing Agent, Jumpstart Finance. The films sit in the rounded
  * frame and play muted; the Jumpstart phones grow and shrink a little in turn, and the leasing conversation arrives
  * message by message. The field is one flat strip that loops endlessly and turns by itself. The phone menu lists the
  * case studies in the same order (projects.ts); Previous and Next keep their own loop.
@@ -71,15 +71,6 @@ export const FIELD: readonly FieldProject[] = [
     alt: 'Harlie Katz speaking to the camera in front of a bookshelf',
   },
   {
-    // Added 2026-11-04, first among the case studies. The walkthrough's diagnosis (34 to 50s of the recording from the
-    // public build: reflection bands, the deviation view, back to reflection), muted, looping.
-    id: 'pdr-control',
-    title: 'PDR Control',
-    line: 'Measured, technician-guided paintless dent repair',
-    media: { kind: 'video', src: '/media/video/pdr-tile-960.mp4', poster: '/media/img/pdr-tile-poster-960.webp', position: '50% 50%' },
-    alt: 'A recording of the PDR Control prototype diagnosing a door dent: reflection bands bend around the low, then a deviation map shows its depth',
-  },
-  {
     id: 'client-work',
     title: 'Creative Production',
     line: 'Client campaigns, film production, and photography',
@@ -90,6 +81,15 @@ export const FIELD: readonly FieldProject[] = [
     // whole film, nickleby-640.mp4, with its sound.
     media: { kind: 'video', src: '/media/video/nickleby-tile-cut-640.mp4', poster: '/media/img/nickleby-poster-1138.webp', position: '40% 45%' },
     alt: 'The Nickleby Capital interview film',
+  },
+  {
+    // Added 2026-11-04; after Creative Production, first in the second row (Harlie, 2026-11-04). The walkthrough's diagnosis (34 to 50s of the recording from the
+    // public build: reflection bands, the deviation view, back to reflection), muted, looping.
+    id: 'pdr-control',
+    title: 'PDR Control',
+    line: 'Measured, technician-guided paintless dent repair',
+    media: { kind: 'video', src: '/media/video/pdr-tile-960.mp4', poster: '/media/img/pdr-tile-poster-960.webp', position: '50% 50%' },
+    alt: 'A recording of the PDR Control prototype diagnosing a door dent: reflection bands bend around the low, then a deviation map shows its depth',
   },
   {
     id: 'spreadsheet-agent',

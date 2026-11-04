@@ -10,7 +10,7 @@ test('all nine tiles have unique working destinations and captions',async({page}
 test('the grid: rows in order, centred, footage in view and posters under reduced motion',async({page,isMobile})=>{
   await page.emulateMedia({reducedMotion:'no-preference'});await open(page,'/')
   const items=page.locator('.work-grid__item')
-  expect(await items.evaluateAll(es=>es.map(e=>(e as HTMLElement).dataset.id))).toEqual(['creative','about','pdr-control','client-work','spreadsheet-agent','cafepress-uk','merchandising-platform','ai-leasing-agent','jumpstart-finance'])
+  expect(await items.evaluateAll(es=>es.map(e=>(e as HTMLElement).dataset.id))).toEqual(['creative','about','client-work','pdr-control','spreadsheet-agent','cafepress-uk','merchandising-platform','ai-leasing-agent','jumpstart-finance'])
   if(!isMobile){
     // Three to a row, each row centred.
     const rows=await items.evaluateAll(es=>{

@@ -3,16 +3,16 @@
  * Intelligence case study. The page follows the site's told cases: the introduction and the sections on one side, the
  * walkthrough held on the other, playing the part of the recording each section describes.
  *
- * Facts are checked against the prototype's source (github.com/harliekatz/pdr-control at 88178e9: docs/REDESIGN.md,
- * docs/SYNTHETIC_AND_UNVERIFIED.md, src/plan, src/devices) and against the recording itself. The recording is of the
- * public build at pdr-control.netlify.app, which uses original stand-in vehicles; scans are synthetic, the hardware
- * and its telemetry are simulated, and decisions come from coded rules. The walkthrough's case uses the prototype's
- * limited-response preset, so verification has a shortfall to catch: the copy says so.
+ * The walkthrough is Harlie's screen recording of the finished prototype (Nov 3, 2026; the one in the final
+ * presentation), published with Harlie's approval: the opening shows the vehicle as recorded, the picker's photos are
+ * blurred, and after 23.6s the door lettering, inset pictures and vehicle thumbnails are masked
+ * (scripts/prepare-media.mjs, task `pdr`). Scans are synthetic, the hardware and its telemetry are simulated, and
+ * decisions come from coded rules; the case uses the prototype's limited-response preset, so verification has a
+ * shortfall to catch.
  *
- * Recording chapters (PDR Control/pdr-walkthrough-chapters.json, seconds): vehicle and panel 0, scan region 8.67,
- * registration 22.45, diagnosis 33.98, eligibility 56.05, tool selection 65.96, guided setup 76.14, connect and
- * calibrate 118.83, live repair 135.48, removal and inspection 149.55, verification 159.41, PDR Expert 172.39, case
- * record 180.38, end 184.03.
+ * Recording chapters (seconds): vehicle and damage 0, scan region 23.6, diagnosis 33, eligibility 42, tool choice 54,
+ * bridge and tab setup 66, bridge on the door 116, connect and calibrate 129, live repair 148, removal and inspection
+ * 167, rescan 180, outcome 185, expert review 194, PDR Expert 203, end 209.8.
  */
 export const PDR = {
   title: 'PDR Control',
@@ -23,26 +23,28 @@ export const PDR = {
   /** The live prototype's link (2026-11-04: withheld at Harlie's request; was https://pdr-control.netlify.app/). */
   prototypeUrl: null as null | string,
   repoUrl: 'https://github.com/harliekatz/pdr-control',
-  /**
-   * The walkthrough (2026-11-04: withheld). The recording of the public build showed its stand-in vehicles, so the page
-   * shows the gallery below until a new walkthrough is recorded on licensed models. To bring a recording back, set
-   * this to its encodes (scripts/prepare-media.mjs, task `pdr`) and `segments` and `stills` to its chapters.
-   */
-  walkthrough: null as null | { src: string; dialogSrc: string; poster: string; width: number; height: number },
+  /** The walkthrough's encodes; null shows the gallery below instead. */
+  walkthrough: {
+    src: '/media/video/pdr-walkthrough-1440.mp4',
+    dialogSrc: '/media/video/pdr-walkthrough-1920.mp4',
+    poster: '/media/img/pdr-poster-1440.webp',
+    width: 1440,
+    height: 784,
+  } as null | { src: string; dialogSrc: string; poster: string; width: number; height: number },
   /** The gallery while there is no walkthrough, and one picture per section (indices into it). */
   gallery: ['pdr-diagnosis', 'pdr-cross-section', 'pdr-eligibility', 'pdr-tool-choice', 'pdr-bridge-setup', 'pdr-telemetry', 'pdr-verification'] as const,
   show: [0, 3, 1, 5, 6, 0],
-  /** One part of the recording per section (seconds). Set with the walkthrough. */
+  /** One part of the recording per section (seconds; the last plays once and holds). */
   segments: [
-    [0, 8.6],
-    [8.7, 33.9],
-    [34.0, 76.1],
-    [76.2, 149.5],
-    [149.6, 180.3],
-    [180.4, 184.0, 'hold'],
+    [0, 23.5],
+    [23.6, 41.5],
+    [41.6, 69.0],
+    [69.1, 167.0],
+    [167.1, 196.0],
+    [196.1, 209.6, 'hold'],
   ] as const,
   /** One still per section, under reduced motion. */
-  stills: [5, 30, 50, 143, 163, 182],
+  stills: [5, 30, 50, 155, 188, 205],
   steps: [
     {
       title: 'The problem',

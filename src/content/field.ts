@@ -83,13 +83,13 @@ export const FIELD: readonly FieldProject[] = [
     alt: 'The Nickleby Capital interview film',
   },
   {
-    // Added 2026-11-04; after Creative Production, first in the second row (Harlie, 2026-11-04). The walkthrough's diagnosis (34 to 50s of the recording from the
-    // public build: reflection bands, the deviation view, back to reflection), muted, looping.
+    // Added 2026-11-04; after Creative Production, first in the second row (Harlie, 2026-11-04). The walkthrough's
+    // beginning on the car (2.4 to 9.4s of Harlie's recording: the R1S turning), muted, looping (Harlie's choice).
     id: 'pdr-control',
     title: 'PDR Control',
     line: 'Measured, technician-guided paintless dent repair',
     media: { kind: 'video', src: '/media/video/pdr-tile-960.mp4', poster: '/media/img/pdr-tile-poster-960.webp', position: '50% 50%' },
-    alt: 'A recording of the PDR Control prototype diagnosing a door dent: reflection bands bend around the low, then a deviation map shows its depth',
+    alt: 'The PDR Control prototype opening on a Rivian R1S, the vehicle turning before the damaged door is chosen',
   },
   {
     id: 'spreadsheet-agent',

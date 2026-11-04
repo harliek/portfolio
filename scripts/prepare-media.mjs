@@ -857,16 +857,15 @@ async function postersWebp() {
 /* ------------------------------------------------------------------ */
 
 /**
- * PDR Control (task `pdr`). The source is the walkthrough recorded from the public build at
- * pdr-control.netlify.app, which uses original stand-in vehicles (the community models of the earlier private
- * recordings are not cleared for publication): `PDR Control/pdr-walkthrough-master-2880x1800.mp4`, 184s, 2× frames
- * from Chrome's screencast at 1440×900 CSS px, no audio (pdr-control/scripts/record-walkthrough.mjs). Chapter times are
- * in `PDR Control/pdr-walkthrough-chapters.json`.
- * - pdr-walkthrough-1440: the case page's stage (the recording plays each step's part); 1440×900 keeps the UI's
- *   14px text legible at the stage's size.
+ * PDR Control (task `pdr`). The source is Harlie's screen recording of the finished prototype (Nov 3, 2026), the one
+ * embedded in the final presentation deck, made public on 2026-11-04 with Harlie's approval: the opening shows the
+ * prototype's vehicle as recorded (Harlie's choice), the vehicle picker's photos are blurred, and from 23.6s the door
+ * lettering, the inset pictures and the vehicle thumbnails are masked. `PDR Control/pdr-walkthrough-master.mp4`,
+ * 2936×1598, 30 fps, 209.8s, no audio (masking: PDR Control/keynote-recording/, git-ignored).
+ * - pdr-walkthrough-1440: the case page's stage (the recording plays each step's part).
  * - pdr-walkthrough-1920: the larger view (dialogSrc), fetched only when it opens.
- * - pdr-tile-960: the homepage tile, the diagnosis (34 to 50s: reflection bands, deviation, back to reflection).
- * - pdr-poster-1440 and pdr-tile-poster-960: the diagnosis at 50s (reflection bands around the low, 0.80 ± 0.05 mm).
+ * - pdr-tile-960: the homepage tile, the beginning on the car (2.4 to 9.4s: the R1S turning, after the picker closes).
+ * - pdr-poster-1440 and pdr-tile-poster-960: the car at 5s.
  * - obj-pdr-control: the same frame as an object for the Work shelf and next-project thumbnail, rounded corners on a
  *   transparent canvas (a real screen, not cover artwork).
  */
@@ -881,7 +880,7 @@ async function pdrStills() {
   for (const name of PDR_STILLS) await variants(`pdr-${name}`, src(`PDR Control/stills/${name}.png`), [640, 960, 1280, 1920, 2880], { quality: 'ui' })
 }
 
-const PDR = 'PDR Control/pdr-walkthrough-master-2880x1800.mp4'
+const PDR = 'PDR Control/pdr-walkthrough-master.mp4'
 async function pdr() {
   const master = src(PDR)
   const enc = (out, scale, crf, extra = []) => {
@@ -891,14 +890,14 @@ async function pdr() {
       '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-g', '60', '-an', '-movflags', '+faststart', file])
     report.push(`${file} ${statSync(file).size} bytes`)
   }
-  enc('pdr-walkthrough-1440.mp4', '1440:900', 26)
-  enc('pdr-walkthrough-1920.mp4', '1920:1200', 24)
+  enc('pdr-walkthrough-1440.mp4', '1440:-2', 24)
+  enc('pdr-walkthrough-1920.mp4', '1920:-2', 22)
   // The tile: a cut that starts on a keyframe and loops cleanly.
-  run('ffmpeg', ['-y', '-v', 'error', '-ss', '34', '-t', '16', '-i', master, '-map', '0:v:0', '-vf', 'scale=960:600:flags=lanczos,fps=30',
+  run('ffmpeg', ['-y', '-v', 'error', '-ss', '2.4', '-t', '7', '-i', master, '-map', '0:v:0', '-vf', 'scale=960:-2:flags=lanczos,fps=30',
     '-c:v', 'libx264', '-preset', 'slow', '-crf', '25', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-an', '-movflags', '+faststart', join(VID, 'pdr-tile-960.mp4')])
   report.push(`${join(VID, 'pdr-tile-960.mp4')} ${statSync(join(VID, 'pdr-tile-960.mp4')).size} bytes`)
-  const frame = join(CACHE, 'pdr-frame-50.png')
-  run('ffmpeg', ['-y', '-v', 'error', '-ss', '50', '-i', master, '-frames:v', '1', frame])
+  const frame = join(CACHE, 'pdr-frame-5.png')
+  run('ffmpeg', ['-y', '-v', 'error', '-ss', '5', '-i', master, '-frames:v', '1', frame])
   for (const [name, w] of [['pdr-poster-1440', 1440], ['pdr-tile-poster-960', 960]]) {
     await sharp(frame).resize({ width: w }).jpeg({ quality: 86, mozjpeg: true }).toFile(join(IMG, `${name}.jpg`))
     await sharp(frame).resize({ width: w }).webp({ quality: 84, smartSubsample: true }).toFile(join(IMG, `${name}.webp`))

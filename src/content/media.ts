@@ -163,12 +163,12 @@ export const IMAGES = {
   // PDR Control (2026-11-04): a real screen of the prototype, not cover artwork. The diagnosis at 50s of the walkthrough
   // recorded from the public build (scripts/prepare-media.mjs, task `pdr`), with rounded corners on a transparent canvas.
   'obj-pdr-control': img({
-    id: 'obj-pdr-control', file: 'obj-pdr-control', width: 2880, height: 1800, widths: [160, 240, 360, 480, 720, 960], fallback: 'png', transparent: true,
-    alt: 'PDR Control’s diagnosis view: reflection bands bending around a localized depression on a door, measured at 0.80 ± 0.05 mm.',
+    id: 'obj-pdr-control', file: 'obj-pdr-control', width: 2936, height: 1598, widths: [160, 240, 360, 480, 720, 960], fallback: 'png', transparent: true,
+    alt: 'PDR Control’s opening view: a Rivian R1S in the prototype’s vehicle stage, with the damage locations panel beside it.',
     provenance: 'prototype-recording', synthetic: true,
-    source: 'PDR Control/pdr-walkthrough-master-2880x1800.mp4 (frame at 50s)', role: 'Work shelf and next-project thumbnail',
-    timestamp: 50,
-    notes: 'Recorded from pdr-control.netlify.app, which uses original stand-in vehicles and synthetic scans.',
+    source: 'PDR Control/pdr-walkthrough-master.mp4 (frame at 5s)', role: 'Work shelf and next-project thumbnail',
+    timestamp: 5,
+    notes: 'Harlie\'s screen recording of the finished prototype (Nov 3, 2026); synthetic scans, simulated hardware.',
   }),
   // PDR Control's case gallery while the walkthrough is withheld (scripts/prepare-media.mjs, task `pdr-stills`): views
   // of the live prototype where no vehicle body shows.

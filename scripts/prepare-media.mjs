@@ -864,7 +864,7 @@ async function postersWebp() {
  * 2936×1598, 30 fps, 209.8s, no audio (masking: PDR Control/keynote-recording/, git-ignored).
  * - pdr-walkthrough-1440: the case page's stage (the recording plays each step's part).
  * - pdr-walkthrough-1920: the larger view (dialogSrc), fetched only when it opens.
- * - pdr-tile-960: the homepage tile, the beginning on the car (2.4 to 9.4s: the R1S turning, after the picker closes).
+ * - pdr-tile-960: the homepage tile, the beginning on the car (0 to 11s: choosing the vehicle, the R1S turning, the door chosen).
  * - pdr-poster-1440 and pdr-tile-poster-960: the car at 5s.
  * - obj-pdr-control: the same frame as an object for the Work shelf and next-project thumbnail, rounded corners on a
  *   transparent canvas (a real screen, not cover artwork).
@@ -893,7 +893,7 @@ async function pdr() {
   enc('pdr-walkthrough-1440.mp4', '1440:-2', 24)
   enc('pdr-walkthrough-1920.mp4', '1920:-2', 22)
   // The tile: a cut that starts on a keyframe and loops cleanly.
-  run('ffmpeg', ['-y', '-v', 'error', '-ss', '2.4', '-t', '7', '-i', master, '-map', '0:v:0', '-vf', 'scale=960:-2:flags=lanczos,fps=30',
+  run('ffmpeg', ['-y', '-v', 'error', '-ss', '0', '-t', '11', '-i', master, '-map', '0:v:0', '-vf', 'scale=960:-2:flags=lanczos,fps=30',
     '-c:v', 'libx264', '-preset', 'slow', '-crf', '25', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-an', '-movflags', '+faststart', join(VID, 'pdr-tile-960.mp4')])
   report.push(`${join(VID, 'pdr-tile-960.mp4')} ${statSync(join(VID, 'pdr-tile-960.mp4')).size} bytes`)
   const frame = join(CACHE, 'pdr-frame-5.png')

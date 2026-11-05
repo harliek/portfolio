@@ -88,7 +88,7 @@ export const FIELD: readonly FieldProject[] = [
     id: 'pdr-control',
     title: 'PDR Control',
     line: 'Measured, technician-guided paintless dent repair',
-    media: { kind: 'video', src: '/media/video/pdr-tile-960.mp4', poster: '/media/img/pdr-tile-poster-960.webp', position: '50% 50%' },
+    media: { kind: 'video', src: '/media/video/pdr-tile-car-960.mp4', poster: '/media/img/pdr-tile-car-poster-960.webp', position: '50% 50%' },
     alt: 'The PDR Control prototype opening on a Rivian R1S, the vehicle turning before the damaged door is chosen',
   },
   {

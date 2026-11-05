@@ -862,10 +862,10 @@ async function postersWebp() {
  * prototype's vehicle as recorded (Harlie's choice), the vehicle picker's photos are blurred, and from 23.6s the door
  * lettering, the inset pictures and the vehicle thumbnails are masked. `PDR Control/pdr-walkthrough-master.mp4`,
  * 2936×1598, 30 fps, 209.8s, no audio (masking: PDR Control/keynote-recording/, git-ignored).
- * - pdr-walkthrough-1440: the case page's stage (the recording plays each step's part).
- * - pdr-walkthrough-1920: the larger view (dialogSrc), fetched only when it opens.
+ * - pdr-recording-1440: the case page's stage (the recording plays each step's part).
+ * - pdr-recording-1920: the larger view (dialogSrc), fetched only when it opens.
  * - pdr-tile-car-960: the homepage tile, the beginning on the car (0 to 11s: choosing the vehicle, the R1S turning, the door chosen).
- * - pdr-poster-1440 and pdr-tile-car-poster-960: the car at 5s.
+ * - pdr-recording-poster-1440 and pdr-tile-car-poster-960: the car at 5s.
  * - obj-pdr-control: the same frame as an object for the Work shelf and next-project thumbnail, rounded corners on a
  *   transparent canvas (a real screen, not cover artwork).
  */
@@ -890,15 +890,15 @@ async function pdr() {
       '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-g', '60', '-an', '-movflags', '+faststart', file])
     report.push(`${file} ${statSync(file).size} bytes`)
   }
-  enc('pdr-walkthrough-1440.mp4', '1440:-2', 24)
-  enc('pdr-walkthrough-1920.mp4', '1920:-2', 22)
+  enc('pdr-recording-1440.mp4', '1440:-2', 24)
+  enc('pdr-recording-1920.mp4', '1920:-2', 22)
   // The tile: a cut that starts on a keyframe and loops cleanly.
   run('ffmpeg', ['-y', '-v', 'error', '-ss', '0', '-t', '11', '-i', master, '-map', '0:v:0', '-vf', 'scale=960:-2:flags=lanczos,fps=30',
     '-c:v', 'libx264', '-preset', 'slow', '-crf', '25', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-an', '-movflags', '+faststart', join(VID, 'pdr-tile-car-960.mp4')])
   report.push(`${join(VID, 'pdr-tile-car-960.mp4')} ${statSync(join(VID, 'pdr-tile-car-960.mp4')).size} bytes`)
   const frame = join(CACHE, 'pdr-frame-5.png')
   run('ffmpeg', ['-y', '-v', 'error', '-ss', '5', '-i', master, '-frames:v', '1', frame])
-  for (const [name, w] of [['pdr-poster-1440', 1440], ['pdr-tile-car-poster-960', 960]]) {
+  for (const [name, w] of [['pdr-recording-poster-1440', 1440], ['pdr-tile-car-poster-960', 960]]) {
     await sharp(frame).resize({ width: w }).jpeg({ quality: 86, mozjpeg: true }).toFile(join(IMG, `${name}.jpg`))
     await sharp(frame).resize({ width: w }).webp({ quality: 84, smartSubsample: true }).toFile(join(IMG, `${name}.webp`))
     report.push(`${name}: ${w}`)

@@ -25,9 +25,9 @@ export const PDR = {
   repoUrl: 'https://github.com/harliekatz/pdr-control',
   /** The walkthrough's encodes; null shows the gallery below instead. */
   walkthrough: {
-    src: '/media/video/pdr-walkthrough-1440.mp4',
-    dialogSrc: '/media/video/pdr-walkthrough-1920.mp4',
-    poster: '/media/img/pdr-poster-1440.webp',
+    src: '/media/video/pdr-recording-1440.mp4',
+    dialogSrc: '/media/video/pdr-recording-1920.mp4',
+    poster: '/media/img/pdr-recording-poster-1440.webp',
     width: 1440,
     height: 784,
   } as null | { src: string; dialogSrc: string; poster: string; width: number; height: number },

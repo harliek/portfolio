@@ -2,10 +2,10 @@ import type { ImageId } from './media'
 import { projectById, projectPath, type ProjectId } from './projects'
 
 /**
- * The homepage's projects, in Harlie's order of 2026-10-12, which is the grid's three rows (ProjectGrid): Creative
+ * The homepage's projects, in Harlie's order of 2026-11-05, which is the grid's three rows (ProjectGrid): Creative
  * Portfolio (opens /creative/, marked as a link to another site), About me (opens the About page), Creative
- * Production; PDR Control (added 2026-11-04), AI Spreadsheet Agent, CafePress UK Market Strategy; Merchandising
- * Platform, AI Leasing Agent, Jumpstart Finance. The films sit in the rounded
+ * Production; CafePress UK Market Strategy, Merchandising Platform, PDR Control (added 2026-11-04); AI Spreadsheet
+ * Agent, Jumpstart Finance, AI Leasing Agent. The films sit in the rounded
  * frame and play muted; the Jumpstart phones grow and shrink a little in turn, and the leasing conversation arrives
  * message by message. The field is one flat strip that loops endlessly and turns by itself. The phone menu lists the
  * case studies in the same order (projects.ts); Previous and Next keep their own loop.
@@ -83,24 +83,6 @@ export const FIELD: readonly FieldProject[] = [
     alt: 'The Nickleby Capital interview film',
   },
   {
-    // Added 2026-11-04; after Creative Production, first in the second row (Harlie, 2026-11-04). The walkthrough's
-    // beginning on the car (the first 11s of Harlie's recording), muted, looping (Harlie's choice).
-    id: 'pdr-control',
-    title: 'PDR Control',
-    line: 'Measured, technician-guided paintless dent repair',
-    media: { kind: 'video', src: '/media/video/pdr-tile-car-960.mp4', poster: '/media/img/pdr-tile-car-poster-960.webp', position: '50% 50%' },
-    alt: 'The PDR Control prototype opening on a Rivian R1S, the vehicle turning before the damaged door is chosen',
-  },
-  {
-    id: 'spreadsheet-agent',
-    title: 'AI Spreadsheet Agent',
-    line: 'Written requests into reviewable plans and editable sheets',
-    // Harlie's choice (Spreadsheet Agent/Spreadsheet Video.mov from 24s, the sheet built and scrolled, then All Sheets;
-    // ends at 36.6s, before the screen-capture toolbar appears), muted at normal speed; it loops at its end.
-    media: { kind: 'video', src: '/media/video/spreadsheet-tile-960.mp4', poster: '/media/img/spreadsheet-tile-poster-960.webp', position: '50% 0%' },
-    alt: 'A recording of the AI Spreadsheet Agent: a finished sheet of B2B products with vendor, cost, retail price and margin, then the list of saved sheets',
-  },
-  {
     id: 'cafepress-uk',
     title: 'CafePress UK Market Strategy',
     line: 'UK market strategy and localized storefront concepts',
@@ -122,6 +104,35 @@ export const FIELD: readonly FieldProject[] = [
     alt: 'A recording of the Merchandising Platform prototype: the overview, the product catalog, a product’s reorder calculation, the inventory and the vendors',
   },
   {
+    // Added 2026-11-04; last in the second row (Harlie, 2026-11-05). The walkthrough's
+    // beginning on the car (the first 11s of Harlie's recording), muted, looping (Harlie's choice).
+    id: 'pdr-control',
+    title: 'PDR Control',
+    line: 'Measured, technician-guided paintless dent repair',
+    media: { kind: 'video', src: '/media/video/pdr-tile-car-960.mp4', poster: '/media/img/pdr-tile-car-poster-960.webp', position: '50% 50%' },
+    alt: 'The PDR Control prototype opening on a Rivian R1S, the vehicle turning before the damaged door is chosen',
+  },
+  {
+    id: 'spreadsheet-agent',
+    title: 'AI Spreadsheet Agent',
+    line: 'Written requests into reviewable plans and editable sheets',
+    // Harlie's choice (Spreadsheet Agent/Spreadsheet Video.mov from 24s, the sheet built and scrolled, then All Sheets;
+    // ends at 36.6s, before the screen-capture toolbar appears), muted at normal speed; it loops at its end.
+    media: { kind: 'video', src: '/media/video/spreadsheet-tile-960.mp4', poster: '/media/img/spreadsheet-tile-poster-960.webp', position: '50% 0%' },
+    alt: 'A recording of the AI Spreadsheet Agent: a finished sheet of B2B products with vendor, cost, retail price and margin, then the list of saved sheets',
+  },
+  {
+    id: 'jumpstart-finance',
+    title: 'Jumpstart Finance',
+    line: 'Financial education for students through interactive learning',
+    media: {
+      kind: 'screens',
+      // Harlie's three phones (PNG Tiles/jumpstart tile 1 to 3), made free-standing.
+      screens: ['jf-tile-profile', 'jf-tile-home', 'jf-tile-third'],
+    },
+    alt: 'Three Jumpstart Finance phone screens, redrawn in 2026 from the 2024 prototype: the learning journey, the home screen, and the community forum',
+  },
+  {
     id: 'ai-leasing-agent',
     title: 'AI Leasing Agent',
     line: 'Defining and testing an assistant for recurring leasing questions',
@@ -139,17 +150,6 @@ export const FIELD: readonly FieldProject[] = [
       ],
     },
     alt: 'An illustrative leasing conversation: a renter asks about a two-bedroom, a fee waiver and a unit hold, and the assistant answers the general questions and passes the requests to the leasing staff',
-  },
-  {
-    id: 'jumpstart-finance',
-    title: 'Jumpstart Finance',
-    line: 'Financial education for students through interactive learning',
-    media: {
-      kind: 'screens',
-      // Harlie's three phones (PNG Tiles/jumpstart tile 1 to 3), made free-standing.
-      screens: ['jf-tile-profile', 'jf-tile-home', 'jf-tile-third'],
-    },
-    alt: 'Three Jumpstart Finance phone screens, redrawn in 2026 from the 2024 prototype: the learning journey, the home screen, and the community forum',
   },
 ]
 

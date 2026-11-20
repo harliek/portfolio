@@ -4,7 +4,7 @@ import { projectById, projectPath, type ProjectId } from './projects'
 /**
  * The homepage's projects, in Harlie's order of 2026-11-05, which is the grid's three rows (ProjectGrid): Creative
  * Portfolio (opens /creative/, marked as a link to another site), About me (opens the About page), Creative
- * Production; CafePress UK Market Strategy, Merchandising Platform, PDR Control (added 2026-11-04); AI Spreadsheet
+ * Production; CafePress UK Market Strategy, PDR Control (added 2026-11-04), Merchandising Platform; AI Spreadsheet
  * Agent, Jumpstart Finance, AI Leasing Agent. The films sit in the rounded
  * frame and play muted; the Jumpstart phones grow and shrink a little in turn, and the leasing conversation arrives
  * message by message. The field is one flat strip that loops endlessly and turns by itself. The phone menu lists the
@@ -95,6 +95,15 @@ export const FIELD: readonly FieldProject[] = [
     alt: 'A recording scrolling through CafePress Business’s US storefront, the model the UK research started from: custom products, categories, featured brands and customer reviews',
   },
   {
+    // Added 2026-11-04; the middle of the second row (Harlie, 2026-11-05). The walkthrough's
+    // beginning on the car (the first 11s of Harlie's recording), muted, looping (Harlie's choice).
+    id: 'pdr-control',
+    title: 'PDR Control',
+    line: 'Measured, technician-guided paintless dent repair',
+    media: { kind: 'video', src: '/media/video/pdr-tile-car-960.mp4', poster: '/media/img/pdr-tile-car-poster-960.webp', position: '50% 50%' },
+    alt: 'The PDR Control prototype opening on a Rivian R1S, the vehicle turning before the damaged door is chosen',
+  },
+  {
     id: 'merchandising-platform',
     title: 'Merchandising Platform',
     line: 'Connecting product, supplier, sales, and promotion data',
@@ -102,15 +111,6 @@ export const FIELD: readonly FieldProject[] = [
     // through its site encode, merch-console-960.mp4, 56.3s): the whole walkthrough, muted at normal speed, looping.
     media: { kind: 'video', src: '/media/video/merch-console-960.mp4', poster: '/media/img/merch-console-poster-960.webp', position: '30% 50%' },
     alt: 'A recording of the Merchandising Platform prototype: the overview, the product catalog, a product’s reorder calculation, the inventory and the vendors',
-  },
-  {
-    // Added 2026-11-04; last in the second row (Harlie, 2026-11-05). The walkthrough's
-    // beginning on the car (the first 11s of Harlie's recording), muted, looping (Harlie's choice).
-    id: 'pdr-control',
-    title: 'PDR Control',
-    line: 'Measured, technician-guided paintless dent repair',
-    media: { kind: 'video', src: '/media/video/pdr-tile-car-960.mp4', poster: '/media/img/pdr-tile-car-poster-960.webp', position: '50% 50%' },
-    alt: 'The PDR Control prototype opening on a Rivian R1S, the vehicle turning before the damaged door is chosen',
   },
   {
     id: 'spreadsheet-agent',
